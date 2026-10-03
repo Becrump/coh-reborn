@@ -1,0 +1,7 @@
+# Game data stays outside the repo (large, not ours to redistribute)
+piggs/
+*.pigg
+i24/
+out/
+__pycache__/
+*.pyc
