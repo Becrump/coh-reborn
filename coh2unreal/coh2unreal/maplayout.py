@@ -13,7 +13,7 @@ _LIGHT_KEYS = {"omni", "sound", "fog", "cubemap", "volume", "ambient"}
 
 class Def:
     __slots__ = ("name", "groups", "obj", "flags", "has_editor_only",
-                 "source", "lod_far")
+                 "source", "lod_far", "omni", "fx", "props")
 
     def __init__(self, name, source):
         self.name = name
@@ -23,6 +23,9 @@ class Def:
         self.has_editor_only = False
         self.source = source
         self.lod_far = 0.0
+        self.omni = None          # (r, g, b, radius ft) point light
+        self.fx = None            # particle effect file ("Type ...fx")
+        self.props = {}           # Property "name" "value"
 
 
 def _lines(text):
@@ -59,8 +62,10 @@ def _parse_placement(it):
             break
         if key == "pos":
             pos = tuple(float(v) for v in tok[1:4])
-        elif key in ("pyr", "rot"):
+        elif key == "pyr":                    # degrees
             pyr = tuple(float(v) for v in tok[1:4])
+        elif key == "rot":                    # radians
+            pyr = tuple(math.degrees(float(v)) for v in tok[1:4])
     return pos, pyr
 
 
@@ -83,18 +88,28 @@ def _parse_def(it, d):
             d.obj = tok[1]
         elif key == "flags":
             d.flags.update(f.lower() for f in tok[1:])
+        elif key == "type" and len(tok) > 1:
+            d.fx = tok[1].replace("\\", "/")
+        elif key == "property" and len(tok) > 2:
+            d.props[tok[1].strip('"').lower()] = tok[2].strip('"')
         elif key in _LIGHT_KEYS:
             d.has_editor_only = True
+            if key == "omni" and len(tok) >= 5:
+                try:
+                    d.omni = tuple(float(v) for v in tok[1:5])
+                except ValueError:
+                    pass
 
 
 def parse_tricks(text):
-    """Returns {trick name lower: dict(hidden=bool, lod_near=float)}."""
+    """Returns {trick name lower: dict(hidden=bool, lod_near=float,
+    flags=set of lower-case TrickFlags/ObjFlags)}."""
     out = {}
     cur = None
     for tok in _lines(text):
         key = tok[0].lower()
         if key == "trick" and len(tok) > 1:
-            cur = {"hidden": False, "lod_near": 0.0}
+            cur = {"hidden": False, "lod_near": 0.0, "flags": set()}
             out[tok[1].lower()] = cur
         elif cur is None:
             continue
@@ -102,6 +117,7 @@ def parse_tricks(text):
             cur = None
         elif key in ("trickflags", "objflags"):
             fl = {f.lower() for f in tok[1:]}
+            cur["flags"] |= fl
             if "nodraw" in fl or "editorvisible" in fl:
                 cur["hidden"] = True
         elif key == "lodnear" and len(tok) > 1:
@@ -128,6 +144,11 @@ def parse_materials(text):
             continue
         elif key == "end":
             cur = None
+        elif key == "base1scale" and len(tok) >= 3:
+            try:
+                cur.setdefault("scale", (float(tok[1]), float(tok[2])))
+            except ValueError:
+                pass
         elif key in keys and len(tok) > 1 and tok[1].lower() != "none":
             cur.setdefault(keys[key], tok[1])
     return out
@@ -220,12 +241,25 @@ class Library:
         old.flags |= d.flags
         old.has_editor_only |= d.has_editor_only
         old.lod_far = d.lod_far or old.lod_far
+        old.omni = d.omni or old.omni
+        old.fx = d.fx or old.fx
+        old.props.update(d.props)
 
     def trick_for(self, model_name):
         n = model_name.lower()
         if "__" in n:
             return self.tricks.get(n.split("__", 1)[1])
         return self.tricks.get(n)
+
+
+class Light:
+    __slots__ = ("pos", "color", "radius", "path")
+
+    def __init__(self, pos, color, radius, path):
+        self.pos = pos            # game space, feet
+        self.color = color        # 0-255 RGB
+        self.radius = radius      # feet
+        self.path = path
 
 
 class Instance:
@@ -261,8 +295,10 @@ def load_map(store, library, map_path):
     return local, refs
 
 
-def resolve(library, local_defs, refs, skip_layers=()):
-    """Walks the map tree. Returns (instances, missing names)."""
+def resolve(library, local_defs, refs, skip_layers=(), lights=None,
+            markers=None):
+    """Walks the map tree. Returns (instances, missing names). Point lights
+    (Omni) are appended to `lights` when a list is given."""
     out = []
     missing = set()
     skip = tuple(s.lower() for s in skip_layers)
@@ -280,6 +316,11 @@ def resolve(library, local_defs, refs, skip_layers=()):
             return
         if d.source and any(s in d.source for s in skip):
             return
+        if markers is not None and (d.fx or d.props):
+            markers.append((short_name(name), d.fx, dict(d.props), mat, path))
+        if d.omni and lights is not None:
+            r, g, b, rad = d.omni
+            lights.append(Light(tuple(mat[3]), (r, g, b), rad, path))
         if d.obj:
             obj = short_name(d.obj)
             geo = library.geo_for.get(obj)
