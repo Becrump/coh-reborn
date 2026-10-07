@@ -179,3 +179,31 @@ Covers the Unreal 5.8 work done on Robert's PC from 2026-10-03 03:22 UTC to 2026
   - `after_reimport.py`.
   - `lineup.py`.
 - **`unreal/project/`:** the project's C++ (`Source/`) and `Config/DefaultGame.ini`, mirrored for review. The live copies are in the Unreal project folder.
+
+## 2026-10-07: original CoH characters exported as rigged glTF
+
+`coh2unreal/coh2unreal/character.py` (with `anim.py` and `defs.py`) exports villain costumes as skinned, animated glTF, without Unreal open:
+
+```
+python -m coh2unreal.character --data <i24/data> --piggs <piggs> --out <out>/characters --group Hellions --all-costumes
+```
+
+- **What it follows:** villain def → NPC costume (`.nd`) → `defs/ui/bodyparts.bp` → `player_library/<prefix>_<base>.geo` model `GEO_<bone>[R|L]_<geometry>`.
+- **What each character gets:**
+  - The ent type's base skeleton (for example `male/skel_ready2`, 68 bones with fingers).
+  - Five clips from the sequencer: idle, run, attack, hit and death. Creature sequencers fall back to their own moves, such as a claw swipe for an attack.
+  - Every costume piece as its own skinned mesh, named by part and side: `Hand_R`, `Hand_L`, `Foot_R`, `Head`, `Chest` and so on. Each also carries `extras` with the original bone, model and texture names, so hands can be swapped for finger-boned versions later.
+  - Colour tints baked into one base-colour PNG per part, with emblems alpha-masked.
+- **Output** (not in git): `C:\Users\rtcru\CoHReborn\out\characters\<group>\<costume>\`, plus `index.json` listing each costume with its glTF, parts, clips, villains, ranks and level range.
+- **Groups exported:**
+  - All Hellions (16 costumes).
+  - Up to level 10: Skulls, Clockwork, Vahzilok, Outcasts, The Lost, Trolls, Circle of Thorns, 5th Column and Council.
+  - 270 costumes in total.
+- **Skipped on purpose:** FX-only critters (fire puddles, runes, window fires). Some 5th Column "Night" pieces are not in the i24 piggs.
+- **Seam check:** `tools/check_seams.py <out>/characters` skins every character on the CPU at rest and across each clip, then measures the wrist and ankle rims against the neighbouring pieces.
+- **Not done yet:**
+  - Per-bone body scaling (BoneScale, ShoulderScale and so on) and RandomBoneScale.
+  - Fallback default-body geometry from an ent type's `Graphics` geo.
+  - FX attached to costume parts.
+  - Weapons.
+  - Importing into Unreal.

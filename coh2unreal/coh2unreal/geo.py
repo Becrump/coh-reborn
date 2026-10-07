@@ -116,6 +116,7 @@ class Geo:
         for i, fld in enumerate(fields):
             m.packs[fld] = struct.unpack_from("<iII", h, pk + i * 12)
         m.has_bones = bool(boneinfo)
+        m.boneinfo = boneinfo
         end = h.index(b"\0", objbase + name_off)
         m.name = h[objbase + name_off:end].decode("latin-1")
         for i in range(tex_count):
@@ -147,6 +148,29 @@ class Geo:
             t += cnt
         return {"positions": pos, "normals": nrm, "uvs": uv,
                 "groups": groups}
+
+    def skin(self, m):
+        """Per-vertex skinning for a boned model, or None.
+
+        Returns [(bone_id0, bone_id1, w0)] per vertex: two influences with
+        w1 = 1 - w0. The BoneInfo block (anim.h) sits in the data section:
+        i32 numbones, i32 bone_ID[15], then the weights/matidxs pointers.
+        matidxs are stored times 3 (model_cache.c).
+        """
+        if not m.has_bones:
+            return None
+        base = self.data_offset + m.boneinfo
+        numbones = struct.unpack_from("<i", self.data, base)[0]
+        ids = struct.unpack_from("<15i", self.data, base + 4)[:numbones]
+        w = self._pack_bytes(m, "weights")
+        mi = self._pack_bytes(m, "matidxs")
+        out = []
+        for v in range(m.vert_count):
+            w0 = (w[v] / 255.0) if w else 1.0
+            s0 = mi[2 * v] // 3 if mi else 0
+            s1 = mi[2 * v + 1] // 3 if mi else 0
+            out.append((ids[s0], ids[s1] if s1 < numbones else ids[s0], w0))
+        return out
 
 
 def _unpack_names(h, p):

@@ -70,3 +70,23 @@ Loader `geoLoadStubs` (Common/seq/anim.c:1594), writer Utilities/GetVrml/src/out
 - Bone scale propagation to children.
 - UV v-flip and handedness (the Atlas Park converter already negates Z, swaps winding and flips V, so reuse that).
 - Quaternion conjugation for glTF.
+
+## Checked against the real data (2026-10-07)
+
+- **Model id:** for v7 .geo files the `i16 id` at the end of the model record is -2 on disk. The attach bone comes from the model name (`GEO_Hips_...` → HIPS) with `bone_IdFromText`.
+- **Model name suffixes:** names may end in trick suffixes such as `__dblsided`, `__alpha` or `__Collar2x`. Strip everything from `__` on before matching.
+- **BoneInfo:** it sits at `data_offset + boneinfo` (the same base as the PackData offsets). The weights and matidxs packs are raw bytes (`vert_count` and `2*vert_count`), and matidx/3 is the slot. Confirmed.
+- **Quaternions:** stored as (x, y, z, w). `quatToMat` + `mulVecMat3` applies the conjugate. With the Z mirror, the glTF quaternion is (x, y, -z, w). Verified visually on run, attack, hit and death, with no flipped limbs.
+- **Non-linear packing:** it is `sin()` of the clamped angle (`unpackQuatElemQuarterPi` returns `sinf`).
+- **Skinning:**
+  - Vertices are relative to the attach bone's btt, with HIPS = 0.
+  - The exporter writes them in skeleton space: v + btt[attach] + the hips rest position.
+  - The inverse bind matrix is T(-world rest position), so the rest pose and the inverse bind matrices agree.
+- **Facing:** after the Z mirror the character faces -Z. The root node gets a 180° Y rotation so it faces +Z, the glTF forward axis.
+- **Body parts file:** `bodyparts.bp` uses `BodyPart ... End` blocks, not braces.
+- **Composite textures:** names such as `X_Hips_CoThorns_01` are `Texture` blocks in `tricks/**/*.txt`. Their `Base1` names the real texture file.
+- **Tint:**
+  - In costume textures the T1 alpha is mostly 0–40 (gloss), not a tint mask, so in practice the whole texture is tinted.
+  - A gain of 2 (`T1*2C`) washes pale colours to white. The default gain is 1, and `--tint-gain` changes it.
+  - Texture2's alpha cuts out emblems (alpha = c1.a * T2.a).
+- **Not checked yet:** whether bone scale propagates to children (body scaling is not implemented).
