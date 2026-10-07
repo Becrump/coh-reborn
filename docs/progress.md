@@ -174,6 +174,7 @@ Covers the Unreal 5.8 work done on Robert's PC from 2026-10-03 03:22 UTC to 2026
 - C++ `UCoHLoadingScreen` (game-instance subsystem) shows it through the MoviePlayer on every map load, with a throbber and "LOADING", for at least 2 s (`DefaultGame.ini` `[/Script/COHREBORN.CoHLoadingScreen]`).
 - `Build.cs` gains `MoviePlayer`, `Slate`, `SlateCore`; packaging stages `Content/Splash`.
 - **To apply on the PC:** copy `unreal/project/Source`, `Config/DefaultGame.ini` additions and `Content/Splash/*` into the live project, close the editor, run `Build.bat`. The loading screen only shows in Standalone Game or a packaged build (MoviePlayer is off inside the editor).
+- **2026-10-07, applied on the PC:** files copied into the live project (backups `*.bak-loadscreen` for `COHREBORN.Build.cs` and `DefaultGame.ini`), `Build.bat COHREBORNEditor Win64 Development` built clean with no code changes, and a `-game` run showed `Splash.bmp` at startup, then the key art with "LOADING" during the first map load. The startup map is still the engine `OpenWorld` template (`GameDefaultMap` in `DefaultEngine.ini`).
 
 ## Scripts in this repo
 - **`coh2unreal/`:** the converter, plus `coh2unreal/unreal/*.py`, the in-editor setup scripts. They're copied into each export folder and run with Unreal Python.
