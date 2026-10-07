@@ -1,9 +1,25 @@
+"""Build the 16:9 loading screen and boot splashes from key art.
+
+    python make_splash.py <art.png> <Content/Splash dir> [top]
+
+Art that is already 4:3 or wider is cropped to 16:9, keeping rows from
+`top` (0..1, fraction of the spare height; default 0.2 keeps the logo and
+drops the bottom strip). Taller art is centered over a blurred copy.
+"""
 import sys
 from PIL import Image, ImageFilter, ImageEnhance, ImageDraw
 src, outdir = sys.argv[1], sys.argv[2]
+top = float(sys.argv[3]) if len(sys.argv) > 3 else 0.2
 art = Image.open(src).convert("RGB")
 
+def crop_wide(W, H):
+    ch = round(art.width * H / W)
+    y = round((art.height - ch) * top)
+    return art.crop((0, y, art.width, y + ch)).resize((W, H), Image.LANCZOS)
+
 def compose(W, H):
+    if art.width / art.height >= 4 / 3 - 0.01:
+        return crop_wide(W, H)
     # blurred, darkened fill behind the portrait art so it reads at 16:9
     s = max(W / art.width, H / art.height)
     bg = art.resize((round(art.width * s), round(art.height * s)), Image.LANCZOS)

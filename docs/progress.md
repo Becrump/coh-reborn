@@ -168,8 +168,8 @@ Covers the Unreal 5.8 work done on Robert's PC from 2026-10-03 03:22 UTC to 2026
 5. **Later:** a slider-based hero creator (MetaHuman + Mutable), texture upscaling, and importing other zones.
 
 ## Loading screen (2026-10-07)
-- Robert's key art (`docs/art/coh_reborn_key_art.png`, 712x1024 portrait) is now the loading screen.
-- `unreal/scripts/make_splash.py` builds 16:9 versions with a blurred fill behind the portrait art:
+- Robert's wide key art (`docs/art/coh_reborn_key_art_wide.png`, 1024x765) is the loading screen, cropped to 16:9 so the Unreal Engine and DLSS logos at the bottom drop out. The first, portrait version is kept as `docs/art/coh_reborn_key_art.png`.
+- `unreal/scripts/make_splash.py` crops wide art to 16:9 (taller art gets a blurred fill instead):
   `Content/Splash/LoadingScreen.png` (1920x1080), `Splash.bmp` (game boot splash) and `EdSplash.bmp` (editor splash).
 - C++ `UCoHLoadingScreen` (game-instance subsystem) shows it through the MoviePlayer on every map load, with a throbber and "LOADING", for at least 2 s (`DefaultGame.ini` `[/Script/COHREBORN.CoHLoadingScreen]`).
 - `Build.cs` gains `MoviePlayer`, `Slate`, `SlateCore`; packaging stages `Content/Splash`.
