@@ -167,6 +167,14 @@ Covers the Unreal 5.8 work done on Robert's PC from 2026-10-03 03:22 UTC to 2026
    - Start with Fire Blast.
 5. **Later:** a slider-based hero creator (MetaHuman + Mutable), texture upscaling, and importing other zones.
 
+## Loading screen (2026-10-07)
+- Robert's key art (`docs/art/coh_reborn_key_art.png`, 712x1024 portrait) is now the loading screen.
+- `unreal/scripts/make_splash.py` builds 16:9 versions with a blurred fill behind the portrait art:
+  `Content/Splash/LoadingScreen.png` (1920x1080), `Splash.bmp` (game boot splash) and `EdSplash.bmp` (editor splash).
+- C++ `UCoHLoadingScreen` (game-instance subsystem) shows it through the MoviePlayer on every map load, with a throbber and "LOADING", for at least 2 s (`DefaultGame.ini` `[/Script/COHREBORN.CoHLoadingScreen]`).
+- `Build.cs` gains `MoviePlayer`, `Slate`, `SlateCore`; packaging stages `Content/Splash`.
+- **To apply on the PC:** copy `unreal/project/Source`, `Config/DefaultGame.ini` additions and `Content/Splash/*` into the live project, close the editor, run `Build.bat`. The loading screen only shows in Standalone Game or a packaged build (MoviePlayer is off inside the editor).
+
 ## Scripts in this repo
 - **`coh2unreal/`:** the converter, plus `coh2unreal/unreal/*.py`, the in-editor setup scripts. They're copied into each export folder and run with Unreal Python.
 - **`tools/meshy_make.py`:** a resumable Meshy batch generator.
