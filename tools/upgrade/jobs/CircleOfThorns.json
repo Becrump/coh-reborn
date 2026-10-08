@@ -1,0 +1,220 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/CircleOfThorns",
+ "parts": {
+  "cot_glove_f": {
+   "prompt": "3D render of a single slender female right human hand, wearing a dark leather glove wrapped with thorny vine patterns, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "cot_glove_m": {
+   "prompt": "3D render of a single male right human hand, wearing a dark leather glove wrapped with thorny vine patterns, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "cot_head_f": {
+   "prompt": "3D character bust, a female dark mage wearing a deep hood, face hidden behind a carved bone-white ritual mask with thorn patterns, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  },
+  "cot_head_m": {
+   "prompt": "3D character bust, a male dark mage wearing a deep hood, face hidden behind a carved bone-white ritual mask with thorn patterns, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "Behemoth_Minion_CoT_Portal",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/Behemoth_Minion_CoT_Portal",
+    "label": "Behemoth_Minion_CoT_Portal_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "CoT_Boss_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Boss_01",
+    "label": "CoT_Boss_01_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Boss_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Boss_02",
+    "label": "CoT_Boss_02_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Hordeling_Lasher_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Hordeling_Lasher_01",
+    "label": "CoT_Hordeling_Lasher_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "CoT_Hordeling_Lasher_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Hordeling_Lasher_02",
+    "label": "CoT_Hordeling_Lasher_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "CoT_Hordeling_Lasher_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Hordeling_Lasher_03",
+    "label": "CoT_Hordeling_Lasher_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "CoT_Lt_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Lt_01",
+    "label": "CoT_Lt_01_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Lt_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Lt_02",
+    "label": "CoT_Lt_02_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Lt_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Lt_03",
+    "label": "CoT_Lt_03_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Lt_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Lt_04",
+    "label": "CoT_Lt_04_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Lt_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Lt_05",
+    "label": "CoT_Lt_05_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Lt_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Lt_06",
+    "label": "CoT_Lt_06_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Minion_Female_1",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Minion_Female_1",
+    "label": "CoT_Minion_Female_1_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_f",
+   "hand": "cot_glove_f"
+  },
+  {
+   "costume": "CoT_Minion_Female_2",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Minion_Female_2",
+    "label": "CoT_Minion_Female_2_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_f",
+   "hand": "cot_glove_f"
+  },
+  {
+   "costume": "CoT_Minion_Female_3",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Minion_Female_3",
+    "label": "CoT_Minion_Female_3_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_f",
+   "hand": "cot_glove_f"
+  },
+  {
+   "costume": "CoT_Minion_Male_1",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Minion_Male_1",
+    "label": "CoT_Minion_Male_1_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Minion_Male_2",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Minion_Male_2",
+    "label": "CoT_Minion_Male_2_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_Minion_Male_3",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_Minion_Male_3",
+    "label": "CoT_Minion_Male_3_Upgraded",
+    "place": null
+   },
+   "head": "cot_head_m",
+   "hand": "cot_glove_m"
+  },
+  {
+   "costume": "CoT_New_Libri",
+   "unreal": {
+    "dest": "/Game/Upgraded/CircleOfThorns/CoT_New_Libri",
+    "label": "CoT_New_Libri_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

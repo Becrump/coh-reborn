@@ -1,0 +1,786 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/Skulls",
+ "parts": {
+  "skull_female_head": {
+   "prompt": "3D character bust, a female street gang member whose face is painted as a white skull with black eye sockets and painted teeth, long black hair, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  },
+  "skull_glove_f": {
+   "prompt": "3D render of a single slender female right human hand, wearing a black fingerless leather glove with a small white skull on the back, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "skull_glove_m": {
+   "prompt": "3D render of a single male right human hand, wearing a black fingerless leather glove with a small white skull on the back, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "skull_male_head": {
+   "prompt": "3D character bust, a male street gang member whose face is painted as a white skull with black eye sockets and painted teeth, shaved head, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "Necromancy_Ghost_Zombie",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Necromancy_Ghost_Zombie",
+    "label": "Necromancy_Ghost_Zombie_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Necromancy_Litch_01_U2",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Necromancy_Litch_01_U2",
+    "label": "Necromancy_Litch_01_U2_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Necromancy_Warrior_01_U2",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Necromancy_Warrior_01_U2",
+    "label": "Necromancy_Warrior_01_U2_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Thug_Skull_AV_Petrovic_Chernobog",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_AV_Petrovic_Chernobog",
+    "label": "Thug_Skull_AV_Petrovic_Chernobog_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Thug_Skull_AV_Petrovic_Morana",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_AV_Petrovic_Morana",
+    "label": "Thug_Skull_AV_Petrovic_Morana_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Thug_Skull_AV_Petrovic_Veles",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_AV_Petrovic_Veles",
+    "label": "Thug_Skull_AV_Petrovic_Veles_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_01",
+    "label": "Thug_Skull_Female_Death_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_02",
+    "label": "Thug_Skull_Female_Death_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_03",
+    "label": "Thug_Skull_Female_Death_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_04",
+    "label": "Thug_Skull_Female_Death_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_05",
+    "label": "Thug_Skull_Female_Death_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_06",
+    "label": "Thug_Skull_Female_Death_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_07",
+    "label": "Thug_Skull_Female_Death_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_08",
+    "label": "Thug_Skull_Female_Death_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_09",
+    "label": "Thug_Skull_Female_Death_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Death_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Death_10",
+    "label": "Thug_Skull_Female_Death_10_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_01",
+    "label": "Thug_Skull_Female_Lieutenant_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_02",
+    "label": "Thug_Skull_Female_Lieutenant_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_03",
+    "label": "Thug_Skull_Female_Lieutenant_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_04",
+    "label": "Thug_Skull_Female_Lieutenant_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_05",
+    "label": "Thug_Skull_Female_Lieutenant_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_06",
+    "label": "Thug_Skull_Female_Lieutenant_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_07",
+    "label": "Thug_Skull_Female_Lieutenant_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_08",
+    "label": "Thug_Skull_Female_Lieutenant_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_09",
+    "label": "Thug_Skull_Female_Lieutenant_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Lieutenant_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Lieutenant_10",
+    "label": "Thug_Skull_Female_Lieutenant_10_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_01",
+    "label": "Thug_Skull_Female_Minion_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_02",
+    "label": "Thug_Skull_Female_Minion_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_03",
+    "label": "Thug_Skull_Female_Minion_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_04",
+    "label": "Thug_Skull_Female_Minion_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_05",
+    "label": "Thug_Skull_Female_Minion_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_06",
+    "label": "Thug_Skull_Female_Minion_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_07",
+    "label": "Thug_Skull_Female_Minion_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_08",
+    "label": "Thug_Skull_Female_Minion_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_09",
+    "label": "Thug_Skull_Female_Minion_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_10",
+    "label": "Thug_Skull_Female_Minion_10_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Female_Minion_11",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Female_Minion_11",
+    "label": "Thug_Skull_Female_Minion_11_Upgraded",
+    "place": null
+   },
+   "head": "skull_female_head",
+   "hand": "skull_glove_f"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_01",
+    "label": "Thug_Skull_Male_Boss_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_02",
+    "label": "Thug_Skull_Male_Boss_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_03",
+    "label": "Thug_Skull_Male_Boss_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_04",
+    "label": "Thug_Skull_Male_Boss_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_05",
+    "label": "Thug_Skull_Male_Boss_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_06",
+    "label": "Thug_Skull_Male_Boss_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_07",
+    "label": "Thug_Skull_Male_Boss_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_08",
+    "label": "Thug_Skull_Male_Boss_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Boss_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Boss_09",
+    "label": "Thug_Skull_Male_Boss_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_01",
+    "label": "Thug_Skull_Male_Death_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_02",
+    "label": "Thug_Skull_Male_Death_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_03",
+    "label": "Thug_Skull_Male_Death_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_04",
+    "label": "Thug_Skull_Male_Death_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_05",
+    "label": "Thug_Skull_Male_Death_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_06",
+    "label": "Thug_Skull_Male_Death_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_07",
+    "label": "Thug_Skull_Male_Death_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_08",
+    "label": "Thug_Skull_Male_Death_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_09",
+    "label": "Thug_Skull_Male_Death_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Death_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Death_10",
+    "label": "Thug_Skull_Male_Death_10_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_01",
+    "label": "Thug_Skull_Male_Lieutenant_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_02",
+    "label": "Thug_Skull_Male_Lieutenant_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_03",
+    "label": "Thug_Skull_Male_Lieutenant_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_04",
+    "label": "Thug_Skull_Male_Lieutenant_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_05",
+    "label": "Thug_Skull_Male_Lieutenant_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_06",
+    "label": "Thug_Skull_Male_Lieutenant_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_07",
+    "label": "Thug_Skull_Male_Lieutenant_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_08",
+    "label": "Thug_Skull_Male_Lieutenant_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Lieutenant_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Lieutenant_09",
+    "label": "Thug_Skull_Male_Lieutenant_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_01",
+    "label": "Thug_Skull_Male_Minion_01_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_02",
+    "label": "Thug_Skull_Male_Minion_02_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_03",
+    "label": "Thug_Skull_Male_Minion_03_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_04",
+    "label": "Thug_Skull_Male_Minion_04_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_05",
+    "label": "Thug_Skull_Male_Minion_05_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_06",
+    "label": "Thug_Skull_Male_Minion_06_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_07",
+    "label": "Thug_Skull_Male_Minion_07_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_08",
+    "label": "Thug_Skull_Male_Minion_08_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_09",
+    "label": "Thug_Skull_Male_Minion_09_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skull_Male_Minion_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skull_Male_Minion_10",
+    "label": "Thug_Skull_Male_Minion_10_Upgraded",
+    "place": null
+   },
+   "head": "skull_male_head",
+   "hand": "skull_glove_m"
+  },
+  {
+   "costume": "Thug_Skulls_Bonebreaker",
+   "unreal": {
+    "dest": "/Game/Upgraded/Skulls/Thug_Skulls_Bonebreaker",
+    "label": "Thug_Skulls_Bonebreaker_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

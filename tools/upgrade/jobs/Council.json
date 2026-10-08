@@ -1,0 +1,164 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/Council",
+ "parts": {
+  "council_glove": {
+   "prompt": "3D render of a single male right human hand, wearing a black armoured tactical glove, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "council_head": {
+   "prompt": "3D character bust, a soldier wearing a dark military helmet with a red visor band over the eyes and a high armoured collar, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "Council_Galaxy_Boss",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Galaxy_Boss",
+    "label": "Council_Galaxy_Boss_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Galaxy_Lieutenant",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Galaxy_Lieutenant",
+    "label": "Council_Galaxy_Lieutenant_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Galaxy_Minion",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Galaxy_Minion",
+    "label": "Council_Galaxy_Minion_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Nebula_Green_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Nebula_Green_01",
+    "label": "Council_Nebula_Green_01_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Nebula_Green_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Nebula_Green_02",
+    "label": "Council_Nebula_Green_02_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Nebula_Khaki_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Nebula_Khaki_01",
+    "label": "Council_Nebula_Khaki_01_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Nebula_Khaki_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Nebula_Khaki_02",
+    "label": "Council_Nebula_Khaki_02_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Nightwolf_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Nightwolf_03",
+    "label": "Council_Nightwolf_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Council_Penumbra_Green_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Penumbra_Green_01",
+    "label": "Council_Penumbra_Green_01_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Penumbra_Green_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Penumbra_Green_02",
+    "label": "Council_Penumbra_Green_02_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Penumbra_Khaki_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Penumbra_Khaki_02",
+    "label": "Council_Penumbra_Khaki_02_Upgraded",
+    "place": null
+   },
+   "head": "council_head",
+   "hand": "council_glove"
+  },
+  {
+   "costume": "Council_Vampyri_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Vampyri_01",
+    "label": "Council_Vampyri_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Council_Vampyri_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Vampyri_02",
+    "label": "Council_Vampyri_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Council_Vampyri_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Council_Vampyri_03",
+    "label": "Council_Vampyri_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Model_Niles_Worthington",
+   "unreal": {
+    "dest": "/Game/Upgraded/Council/Model_Niles_Worthington",
+    "label": "Model_Niles_Worthington_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

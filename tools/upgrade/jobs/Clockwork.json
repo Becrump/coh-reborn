@@ -1,0 +1,127 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/Clockwork",
+ "parts": {},
+ "characters": [
+  {
+   "costume": "Sprocket_00",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_00",
+    "label": "Sprocket_00_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_01",
+    "label": "Sprocket_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_02",
+    "label": "Sprocket_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_09",
+    "label": "Sprocket_09_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_091",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_091",
+    "label": "Sprocket_091_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_092",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_092",
+    "label": "Sprocket_092_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_093",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_093",
+    "label": "Sprocket_093_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_094",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_094",
+    "label": "Sprocket_094_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_10",
+    "label": "Sprocket_10_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_11",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_11",
+    "label": "Sprocket_11_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_12",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_12",
+    "label": "Sprocket_12_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_21",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_21",
+    "label": "Sprocket_21_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_22",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_22",
+    "label": "Sprocket_22_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_23",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_23",
+    "label": "Sprocket_23_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Sprocket_Mini",
+   "unreal": {
+    "dest": "/Game/Upgraded/Clockwork/Sprocket_Mini",
+    "label": "Sprocket_Mini_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

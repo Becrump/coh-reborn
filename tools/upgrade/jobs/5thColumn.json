@@ -1,0 +1,88 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/5thColumn",
+ "parts": {
+  "fog_glove": {
+   "prompt": "3D render of a single male right human hand, wearing a black military tactical glove, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "fog_head": {
+   "prompt": "3D character bust, a soldier in a dark grey military helmet and a full gas mask with round glass eyepieces, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "5thFog_00",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/5thFog_00",
+    "label": "5thFog_00_Upgraded",
+    "place": null
+   },
+   "head": "fog_head",
+   "hand": "fog_glove"
+  },
+  {
+   "costume": "5thFog_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/5thFog_09",
+    "label": "5thFog_09_Upgraded",
+    "place": null
+   },
+   "head": "fog_head",
+   "hand": "fog_glove"
+  },
+  {
+   "costume": "5thFog_30",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/5thFog_30",
+    "label": "5thFog_30_Upgraded",
+    "place": null
+   },
+   "head": "fog_head",
+   "hand": "fog_glove"
+  },
+  {
+   "costume": "5thFog_39",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/5thFog_39",
+    "label": "5thFog_39_Upgraded",
+    "place": null
+   },
+   "head": "fog_head",
+   "hand": "fog_glove"
+  },
+  {
+   "costume": "Male_TargetDummy",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/Male_TargetDummy",
+    "label": "Male_TargetDummy_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Model_Protean",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/Model_Protean",
+    "label": "Model_Protean_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Nightwolf_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/5thColumn/Nightwolf_03",
+    "label": "Nightwolf_03_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

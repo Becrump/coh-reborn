@@ -1,0 +1,600 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/TheLost",
+ "parts": {
+  "lost_hand": {
+   "prompt": "3D render of a single thin dirty male right human hand, with grimy skin and cracked nails, a strip of dirty cloth wrapped around the wrist, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "lost_head": {
+   "prompt": "3D character bust, a homeless male cultist wearing a ragged dark grey hood, gaunt pale face, stubble, wild staring eyes, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "Lost_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_01",
+    "label": "Lost_01_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_02",
+    "label": "Lost_02_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_03",
+    "label": "Lost_03_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_04",
+    "label": "Lost_04_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_05",
+    "label": "Lost_05_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_06",
+    "label": "Lost_06_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_07",
+    "label": "Lost_07_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_08",
+    "label": "Lost_08_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_09",
+    "label": "Lost_09_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_10",
+    "label": "Lost_10_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_11",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_11",
+    "label": "Lost_11_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_12",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_12",
+    "label": "Lost_12_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_20",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_20",
+    "label": "Lost_20_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_21",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_21",
+    "label": "Lost_21_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_22",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_22",
+    "label": "Lost_22_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_23",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_23",
+    "label": "Lost_23_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_24",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_24",
+    "label": "Lost_24_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_25",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_25",
+    "label": "Lost_25_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_26",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_26",
+    "label": "Lost_26_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_27",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_27",
+    "label": "Lost_27_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_28",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_28",
+    "label": "Lost_28_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_29",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_29",
+    "label": "Lost_29_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_30",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_30",
+    "label": "Lost_30_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_31",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_31",
+    "label": "Lost_31_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_32",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_32",
+    "label": "Lost_32_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_40",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_40",
+    "label": "Lost_40_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_41",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_41",
+    "label": "Lost_41_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_42",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_42",
+    "label": "Lost_42_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_43",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_43",
+    "label": "Lost_43_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_44",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_44",
+    "label": "Lost_44_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_50",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_50",
+    "label": "Lost_50_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Lost_51",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_51",
+    "label": "Lost_51_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_52",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_52",
+    "label": "Lost_52_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_53",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_53",
+    "label": "Lost_53_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "Lost_54",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Lost_54",
+    "label": "Lost_54_Upgraded",
+    "place": null
+   },
+   "head": "lost_head",
+   "hand": "lost_hand"
+  },
+  {
+   "costume": "RiktiDrone_1",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/RiktiDrone_1",
+    "label": "RiktiDrone_1_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "RiktiDrone_2",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/RiktiDrone_2",
+    "label": "RiktiDrone_2_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "RiktiDrone_3",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/RiktiDrone_3",
+    "label": "RiktiDrone_3_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Gunman_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Gunman_01",
+    "label": "Rikti_Armour_Gunman_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Gunman_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Gunman_02",
+    "label": "Rikti_Armour_Gunman_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Gunman_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Gunman_03",
+    "label": "Rikti_Armour_Gunman_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Gunman_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Gunman_04",
+    "label": "Rikti_Armour_Gunman_04_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Gunman_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Gunman_05",
+    "label": "Rikti_Armour_Gunman_05_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Lieutenant_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Lieutenant_01",
+    "label": "Rikti_Armour_Lieutenant_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Lieutenant_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Lieutenant_02",
+    "label": "Rikti_Armour_Lieutenant_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Lieutenant_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Lieutenant_03",
+    "label": "Rikti_Armour_Lieutenant_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Lieutenant_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Lieutenant_04",
+    "label": "Rikti_Armour_Lieutenant_04_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Lieutenant_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Lieutenant_05",
+    "label": "Rikti_Armour_Lieutenant_05_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Minion_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Minion_01",
+    "label": "Rikti_Armour_Minion_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Minion_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Minion_02",
+    "label": "Rikti_Armour_Minion_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Minion_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Minion_03",
+    "label": "Rikti_Armour_Minion_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Minion_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Minion_04",
+    "label": "Rikti_Armour_Minion_04_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Armour_Minion_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Armour_Minion_05",
+    "label": "Rikti_Armour_Minion_05_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_01",
+    "label": "Rikti_Flesh_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_02",
+    "label": "Rikti_Flesh_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_03",
+    "label": "Rikti_Flesh_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_04",
+    "label": "Rikti_Flesh_04_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_05",
+    "label": "Rikti_Flesh_05_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_06",
+    "label": "Rikti_Flesh_06_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_07",
+    "label": "Rikti_Flesh_07_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Flesh_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Flesh_08",
+    "label": "Rikti_Flesh_08_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_01",
+    "label": "Rikti_Monkey_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_02",
+    "label": "Rikti_Monkey_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_03",
+    "label": "Rikti_Monkey_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_04",
+    "label": "Rikti_Monkey_04_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_05",
+    "label": "Rikti_Monkey_05_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_06",
+    "label": "Rikti_Monkey_06_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Rikti_Monkey_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/TheLost/Rikti_Monkey_07",
+    "label": "Rikti_Monkey_07_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

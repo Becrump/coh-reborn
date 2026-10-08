@@ -1,0 +1,180 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/Hellions",
+ "parts": {
+  "hellion_boss_head": {
+   "prompt": "3D character bust, a street gang boss, his whole face is a dark crimson demon mask with a snarling mouth of sharp teeth, two long curved ivory bone spikes jut outward from each cheek like tusks, short olive brown flat-top hair, thick neck, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  },
+  "hellion_glove": {
+   "prompt": "3D render of a single muscular right human hand, wearing a red fingerless leather glove with white studs on the knuckles, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "hellion_minion_head": {
+   "prompt": "3D character bust, a young male street gang thug, lower face covered by a dark red bandana printed with white skulls, red baseball cap worn backwards, angry eyes, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "Behemoth_Minion",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Behemoth_Minion",
+    "label": "Behemoth_Minion_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Duke_Mordrogar",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Duke_Mordrogar",
+    "label": "Duke_Mordrogar_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Mastermind_Demon_Demonling01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Mastermind_Demon_Demonling01",
+    "label": "Mastermind_Demon_Demonling01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Mastermind_Demon_Demonling02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Mastermind_Demon_Demonling02",
+    "label": "Mastermind_Demon_Demonling02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Model_3K_Kelvin",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Model_3K_Kelvin",
+    "label": "Model_3K_Kelvin_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Thug_Hellion_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_01",
+    "label": "Thug_Hellion_01_Upgraded",
+    "place": null
+   },
+   "head": "hellion_minion_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_02",
+    "label": "Thug_Hellion_02_Upgraded",
+    "place": null
+   },
+   "head": "hellion_minion_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_03",
+    "label": "Thug_Hellion_03_Upgraded",
+    "place": null
+   },
+   "head": "hellion_minion_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_04",
+    "label": "Thug_Hellion_04_Upgraded",
+    "place": null
+   },
+   "head": "hellion_minion_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_05",
+    "label": "Thug_Hellion_05_Upgraded",
+    "place": null
+   },
+   "head": "hellion_minion_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_06",
+    "label": "Thug_Hellion_06_Upgraded",
+    "place": null
+   },
+   "head": "hellion_minion_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_Boss_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_Boss_01",
+    "label": "Thug_Hellion_Boss_01_Upgraded",
+    "place": null
+   },
+   "head": "hellion_boss_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_Boss_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_Boss_02",
+    "label": "Thug_Hellion_Boss_02_Upgraded",
+    "place": null
+   },
+   "head": "hellion_boss_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_Boss_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_Boss_03",
+    "label": "Thug_Hellion_Boss_03_Upgraded",
+    "place": null
+   },
+   "head": "hellion_boss_head",
+   "hand": "hellion_glove"
+  },
+  {
+   "costume": "Thug_Hellion_Cinderburn",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_Cinderburn",
+    "label": "Thug_Hellion_Cinderburn_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Thug_Hellion_GFFH_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Hellions/Thug_Hellion_GFFH_01",
+    "label": "Thug_Hellion_GFFH_01_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}

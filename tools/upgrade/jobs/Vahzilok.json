@@ -1,0 +1,280 @@
+{
+ "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+ "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade/Vahzilok",
+ "parts": {
+  "reaper_glove": {
+   "prompt": "3D render of a single male right human hand, wearing a pale blue latex surgical glove with blood stains, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 9000,
+   "is_right_hand": true
+  },
+  "reaper_head": {
+   "prompt": "3D character bust, a sinister surgeon cultist wearing a white surgical cap, a blood-stained surgical mask over nose and mouth and round brass goggles, front view facing the camera, symmetrical, head and neck only, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",
+   "seed": 20261007,
+   "faces": 18000,
+   "replace": [
+    "Head",
+    "Hair",
+    "EyeDetail"
+   ]
+  }
+ },
+ "characters": [
+  {
+   "costume": "Eidola_Cortex",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Eidola_Cortex",
+    "label": "Eidola_Cortex_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Eidola_Female",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Eidola_Female",
+    "label": "Eidola_Female_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Eidola_Male",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Eidola_Male",
+    "label": "Eidola_Male_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Eidolon_Godwin_Blaire",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Eidolon_Godwin_Blaire",
+    "label": "Eidolon_Godwin_Blaire_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Reaper_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_01",
+    "label": "Reaper_01_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_02",
+    "label": "Reaper_02_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_03",
+    "label": "Reaper_03_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_04",
+    "label": "Reaper_04_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_05",
+    "label": "Reaper_05_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_06",
+    "label": "Reaper_06_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_07",
+    "label": "Reaper_07_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_08",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_08",
+    "label": "Reaper_08_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_09",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_09",
+    "label": "Reaper_09_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_10",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_10",
+    "label": "Reaper_10_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_11",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_11",
+    "label": "Reaper_11_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_12",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_12",
+    "label": "Reaper_12_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_13",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_13",
+    "label": "Reaper_13_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_14",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_14",
+    "label": "Reaper_14_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_15",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_15",
+    "label": "Reaper_15_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Reaper_16",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Reaper_16",
+    "label": "Reaper_16_Upgraded",
+    "place": null
+   },
+   "head": "reaper_head",
+   "hand": "reaper_glove"
+  },
+  {
+   "costume": "Vahzilok_Face_01",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_01",
+    "label": "Vahzilok_Face_01_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Face_02",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_02",
+    "label": "Vahzilok_Face_02_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Face_03",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_03",
+    "label": "Vahzilok_Face_03_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Face_04",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_04",
+    "label": "Vahzilok_Face_04_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Face_05",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_05",
+    "label": "Vahzilok_Face_05_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Face_06",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_06",
+    "label": "Vahzilok_Face_06_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Face_07",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Face_07",
+    "label": "Vahzilok_Face_07_Upgraded",
+    "place": null
+   }
+  },
+  {
+   "costume": "Vahzilok_Facemaker",
+   "unreal": {
+    "dest": "/Game/Upgraded/Vahzilok/Vahzilok_Facemaker",
+    "label": "Vahzilok_Facemaker_Upgraded",
+    "place": null
+   }
+  }
+ ]
+}
