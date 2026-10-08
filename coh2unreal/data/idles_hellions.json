@@ -196,6 +196,88 @@
    },
    {
     "entries": [
+     "Observe"
+    ],
+    "states": [
+     {
+      "move": "Observe",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Observe",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Observer",
+    "bits": [
+     "ENCOUNTER",
+     "OBSERVE"
+    ],
+    "needs": [],
+    "spawnCount": 6
+   },
+   {
+    "entries": [
+     "Bat_Menace_A",
+     "Bat_Menace_B"
+    ],
+    "states": [
+     {
+      "move": "Bat_Menace_A",
+      "anim": "male/bat_twirl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Bat_Menace_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Bat_Menace_B",
+      "anim": "male/bat_cycle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Bat_Menace_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatMenace",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "MENACE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 6
+   },
+   {
+    "entries": [
      "Cross_Arms",
      "Cross_Arms_look",
      "Arms_On_Hips",
@@ -283,7 +365,277 @@
      "LOW"
     ],
     "needs": [],
-    "spawnCount": 99
+    "spawnCount": 111
+   },
+   {
+    "entries": [
+     "BatLookout_A",
+     "BatLookout_B",
+     "BatLookout_B2"
+    ],
+    "states": [
+     {
+      "move": "BatLookout_A",
+      "anim": "male/bat_suspicious",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "BatLookout_B",
+      "anim": "male/bathold_lookright",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_B2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "BatLookout_B2",
+      "anim": "male/bathold_lookleft",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.9,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatLookout",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "LOOKOUT"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 4
+   },
+   {
+    "entries": [
+     "Encounter_Howl",
+     "Encounter_Howl_growl",
+     "Encounter_Howl_beatchest"
+    ],
+    "states": [
+     {
+      "move": "Encounter_Howl",
+      "anim": "Beast/howl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl_beatchest",
+        1
+       ],
+       [
+        "Encounter_Howl_growl",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Encounter_Howl_growl",
+      "anim": "Beast/growl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Encounter_Howl_beatchest",
+      "anim": "Beast/beatchest",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Howl",
+    "bits": [
+     "ENCOUNTER",
+     "HOWL"
+    ],
+    "needs": [],
+    "spawnCount": 4
+   },
+   {
+    "entries": [
+     "CrazyMenace_A",
+     "CrazyMenace_Aa",
+     "CrazyMenace_Ab",
+     "CrazyMenace_A2",
+     "CrazyMenace_A3",
+     "CrazyMenace_A4",
+     "CrazyMenace_A5"
+    ],
+    "states": [
+     {
+      "move": "CrazyMenace_A",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       50
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_Aa",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_Aa",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       50
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_Ab",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_Ab",
+      "anim": "male/suspicious",
+      "frames": [
+       63,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 8,
+      "next": [
+       [
+        "CrazyMenace_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A2",
+      "anim": "male/suspicious",
+      "frames": [
+       63,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A3",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A4",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A4",
+      "anim": "male/threat_C",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A5",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A5",
+      "anim": "male/vandal_kick_low",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "CrazyMenace",
+    "bits": [
+     "ENCOUNTER",
+     "MENACE",
+     "STRONG"
+    ],
+    "needs": [],
+    "spawnCount": 5
    },
    {
     "entries": [
@@ -902,237 +1254,6 @@
    },
    {
     "entries": [
-     "Receiving_A"
-    ],
-    "states": [
-     {
-      "move": "Receiving_A",
-      "anim": "male/deal_B",
-      "frames": [
-       1,
-       238
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "Receiving_A",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "Dealing_Receive",
-    "bits": [
-     "ENCOUNTER",
-     "RECEIVING"
-    ],
-    "needs": [
-     "partner"
-    ],
-    "spawnCount": 42
-   },
-   {
-    "entries": [
-     "PeerIn_Start",
-     "PeerIn_Cycle",
-     "PeerIn_LookQuick"
-    ],
-    "states": [
-     {
-      "move": "PeerIn_Start",
-      "anim": "male/PeerIn",
-      "frames": [
-       1,
-       20
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Cycle",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "PeerIn_Cycle",
-      "anim": "male/PeerIn",
-      "frames": [
-       20,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Cycle",
-        2
-       ],
-       [
-        "PeerIn_LookQuick",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "PeerIn_LookQuick",
-      "anim": "male/lookquick",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Start",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "PeerIn",
-    "bits": [
-     "ENCOUNTER",
-     "OBSERVE",
-     "WALL",
-     "MID"
-    ],
-    "needs": [
-     "wall"
-    ],
-    "spawnCount": 36
-   },
-   {
-    "entries": [
-     "wall_lean1"
-    ],
-    "states": [
-     {
-      "move": "wall_lean1",
-      "anim": "male/wall_lean1",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "wall_lean1",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "Wall_Lean",
-    "bits": [
-     "ENCOUNTER",
-     "POSE",
-     "LEANWALL",
-     "ONE"
-    ],
-    "needs": [
-     "wall"
-    ],
-    "spawnCount": 30
-   },
-   {
-    "entries": [
-     "Enc_AtEase"
-    ],
-    "states": [
-     {
-      "move": "Enc_AtEase",
-      "anim": "male/at_ease",
-      "frames": [
-       61,
-       65
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "Enc_AtEase",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "At_Ease",
-    "bits": [
-     "ENCOUNTER",
-     "SALUTE",
-     "HIGH",
-     "LOW",
-     "POSE"
-    ],
-    "needs": [],
-    "spawnCount": 24
-   },
-   {
-    "entries": [
-     "GunObserve",
-     "GunObserve2"
-    ],
-    "states": [
-     {
-      "move": "GunObserve",
-      "anim": "male/pointpistol_look_R",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "GunObserve",
-        2
-       ],
-       [
-        "GunObserve2",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "GunObserve2",
-      "anim": "male/pointpistol_look_L",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "GunObserve",
-        1
-       ],
-       [
-        "GunObserve2",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "PistolObserve",
-    "bits": [
-     "ENCOUNTER",
-     "COMBAT",
-     "WEAPON",
-     "HANDGUN",
-     "OBSERVE"
-    ],
-    "needs": [
-     "prop"
-    ],
-    "spawnCount": 18
-   },
-   {
-    "entries": [
      "TalkIdle"
     ],
     "states": [
@@ -1606,6 +1727,88 @@
    },
    {
     "entries": [
+     "Observe"
+    ],
+    "states": [
+     {
+      "move": "Observe",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Observe",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Observer",
+    "bits": [
+     "ENCOUNTER",
+     "OBSERVE"
+    ],
+    "needs": [],
+    "spawnCount": 6
+   },
+   {
+    "entries": [
+     "Bat_Menace_A",
+     "Bat_Menace_B"
+    ],
+    "states": [
+     {
+      "move": "Bat_Menace_A",
+      "anim": "male/bat_twirl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Bat_Menace_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Bat_Menace_B",
+      "anim": "male/bat_cycle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Bat_Menace_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatMenace",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "MENACE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 6
+   },
+   {
+    "entries": [
      "Cross_Arms",
      "Cross_Arms_look",
      "Arms_On_Hips",
@@ -1693,7 +1896,277 @@
      "LOW"
     ],
     "needs": [],
-    "spawnCount": 99
+    "spawnCount": 111
+   },
+   {
+    "entries": [
+     "BatLookout_A",
+     "BatLookout_B",
+     "BatLookout_B2"
+    ],
+    "states": [
+     {
+      "move": "BatLookout_A",
+      "anim": "male/bat_suspicious",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "BatLookout_B",
+      "anim": "male/bathold_lookright",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_B2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "BatLookout_B2",
+      "anim": "male/bathold_lookleft",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.9,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatLookout",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "LOOKOUT"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 4
+   },
+   {
+    "entries": [
+     "Encounter_Howl",
+     "Encounter_Howl_growl",
+     "Encounter_Howl_beatchest"
+    ],
+    "states": [
+     {
+      "move": "Encounter_Howl",
+      "anim": "Beast/howl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl_beatchest",
+        1
+       ],
+       [
+        "Encounter_Howl_growl",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Encounter_Howl_growl",
+      "anim": "Beast/growl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Encounter_Howl_beatchest",
+      "anim": "Beast/beatchest",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Howl",
+    "bits": [
+     "ENCOUNTER",
+     "HOWL"
+    ],
+    "needs": [],
+    "spawnCount": 4
+   },
+   {
+    "entries": [
+     "CrazyMenace_A",
+     "CrazyMenace_Aa",
+     "CrazyMenace_Ab",
+     "CrazyMenace_A2",
+     "CrazyMenace_A3",
+     "CrazyMenace_A4",
+     "CrazyMenace_A5"
+    ],
+    "states": [
+     {
+      "move": "CrazyMenace_A",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       50
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_Aa",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_Aa",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       50
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_Ab",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_Ab",
+      "anim": "male/suspicious",
+      "frames": [
+       63,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 8,
+      "next": [
+       [
+        "CrazyMenace_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A2",
+      "anim": "male/suspicious",
+      "frames": [
+       63,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A3",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A4",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A4",
+      "anim": "male/threat_C",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A5",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A5",
+      "anim": "male/vandal_kick_low",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "CrazyMenace",
+    "bits": [
+     "ENCOUNTER",
+     "MENACE",
+     "STRONG"
+    ],
+    "needs": [],
+    "spawnCount": 5
    },
    {
     "entries": [
@@ -2312,237 +2785,6 @@
    },
    {
     "entries": [
-     "Receiving_A"
-    ],
-    "states": [
-     {
-      "move": "Receiving_A",
-      "anim": "male/deal_B",
-      "frames": [
-       1,
-       238
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "Receiving_A",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "Dealing_Receive",
-    "bits": [
-     "ENCOUNTER",
-     "RECEIVING"
-    ],
-    "needs": [
-     "partner"
-    ],
-    "spawnCount": 42
-   },
-   {
-    "entries": [
-     "PeerIn_Start",
-     "PeerIn_Cycle",
-     "PeerIn_LookQuick"
-    ],
-    "states": [
-     {
-      "move": "PeerIn_Start",
-      "anim": "male/PeerIn",
-      "frames": [
-       1,
-       20
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Cycle",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "PeerIn_Cycle",
-      "anim": "male/PeerIn",
-      "frames": [
-       20,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Cycle",
-        2
-       ],
-       [
-        "PeerIn_LookQuick",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "PeerIn_LookQuick",
-      "anim": "male/lookquick",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Start",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "PeerIn",
-    "bits": [
-     "ENCOUNTER",
-     "OBSERVE",
-     "WALL",
-     "MID"
-    ],
-    "needs": [
-     "wall"
-    ],
-    "spawnCount": 36
-   },
-   {
-    "entries": [
-     "wall_lean1"
-    ],
-    "states": [
-     {
-      "move": "wall_lean1",
-      "anim": "male/wall_lean1",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "wall_lean1",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "Wall_Lean",
-    "bits": [
-     "ENCOUNTER",
-     "POSE",
-     "LEANWALL",
-     "ONE"
-    ],
-    "needs": [
-     "wall"
-    ],
-    "spawnCount": 30
-   },
-   {
-    "entries": [
-     "Enc_AtEase"
-    ],
-    "states": [
-     {
-      "move": "Enc_AtEase",
-      "anim": "male/at_ease",
-      "frames": [
-       61,
-       65
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "Enc_AtEase",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "At_Ease",
-    "bits": [
-     "ENCOUNTER",
-     "SALUTE",
-     "HIGH",
-     "LOW",
-     "POSE"
-    ],
-    "needs": [],
-    "spawnCount": 24
-   },
-   {
-    "entries": [
-     "GunObserve",
-     "GunObserve2"
-    ],
-    "states": [
-     {
-      "move": "GunObserve",
-      "anim": "male/pointpistol_look_R",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "GunObserve",
-        2
-       ],
-       [
-        "GunObserve2",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "GunObserve2",
-      "anim": "male/pointpistol_look_L",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "GunObserve",
-        1
-       ],
-       [
-        "GunObserve2",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "PistolObserve",
-    "bits": [
-     "ENCOUNTER",
-     "COMBAT",
-     "WEAPON",
-     "HANDGUN",
-     "OBSERVE"
-    ],
-    "needs": [
-     "prop"
-    ],
-    "spawnCount": 18
-   },
-   {
-    "entries": [
      "TalkIdle"
     ],
     "states": [
@@ -3016,6 +3258,88 @@
    },
    {
     "entries": [
+     "Observe"
+    ],
+    "states": [
+     {
+      "move": "Observe",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Observe",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Observer",
+    "bits": [
+     "ENCOUNTER",
+     "OBSERVE"
+    ],
+    "needs": [],
+    "spawnCount": 6
+   },
+   {
+    "entries": [
+     "Bat_Menace_A",
+     "Bat_Menace_B"
+    ],
+    "states": [
+     {
+      "move": "Bat_Menace_A",
+      "anim": "male/bat_twirl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Bat_Menace_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Bat_Menace_B",
+      "anim": "male/bat_cycle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Bat_Menace_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatMenace",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "MENACE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 6
+   },
+   {
+    "entries": [
      "Cross_Arms",
      "Cross_Arms_look",
      "Arms_On_Hips",
@@ -3103,7 +3427,277 @@
      "LOW"
     ],
     "needs": [],
-    "spawnCount": 99
+    "spawnCount": 111
+   },
+   {
+    "entries": [
+     "BatLookout_A",
+     "BatLookout_B",
+     "BatLookout_B2"
+    ],
+    "states": [
+     {
+      "move": "BatLookout_A",
+      "anim": "male/bat_suspicious",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "BatLookout_B",
+      "anim": "male/bathold_lookright",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_B2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "BatLookout_B2",
+      "anim": "male/bathold_lookleft",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.9,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatLookout_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatLookout",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "LOOKOUT"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 4
+   },
+   {
+    "entries": [
+     "Encounter_Howl",
+     "Encounter_Howl_growl",
+     "Encounter_Howl_beatchest"
+    ],
+    "states": [
+     {
+      "move": "Encounter_Howl",
+      "anim": "Beast/howl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl_beatchest",
+        1
+       ],
+       [
+        "Encounter_Howl_growl",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Encounter_Howl_growl",
+      "anim": "Beast/growl",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Encounter_Howl_beatchest",
+      "anim": "Beast/beatchest",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Encounter_Howl",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Howl",
+    "bits": [
+     "ENCOUNTER",
+     "HOWL"
+    ],
+    "needs": [],
+    "spawnCount": 4
+   },
+   {
+    "entries": [
+     "CrazyMenace_A",
+     "CrazyMenace_Aa",
+     "CrazyMenace_Ab",
+     "CrazyMenace_A2",
+     "CrazyMenace_A3",
+     "CrazyMenace_A4",
+     "CrazyMenace_A5"
+    ],
+    "states": [
+     {
+      "move": "CrazyMenace_A",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       50
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_Aa",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_Aa",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       50
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_Ab",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_Ab",
+      "anim": "male/suspicious",
+      "frames": [
+       63,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 8,
+      "next": [
+       [
+        "CrazyMenace_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A2",
+      "anim": "male/suspicious",
+      "frames": [
+       63,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A3",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A4",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A4",
+      "anim": "male/threat_C",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A5",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "CrazyMenace_A5",
+      "anim": "male/vandal_kick_low",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "CrazyMenace_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "CrazyMenace",
+    "bits": [
+     "ENCOUNTER",
+     "MENACE",
+     "STRONG"
+    ],
+    "needs": [],
+    "spawnCount": 5
    },
    {
     "entries": [
@@ -3722,237 +4316,6 @@
    },
    {
     "entries": [
-     "Receiving_A"
-    ],
-    "states": [
-     {
-      "move": "Receiving_A",
-      "anim": "male/deal_B",
-      "frames": [
-       1,
-       238
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "Receiving_A",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "Dealing_Receive",
-    "bits": [
-     "ENCOUNTER",
-     "RECEIVING"
-    ],
-    "needs": [
-     "partner"
-    ],
-    "spawnCount": 42
-   },
-   {
-    "entries": [
-     "PeerIn_Start",
-     "PeerIn_Cycle",
-     "PeerIn_LookQuick"
-    ],
-    "states": [
-     {
-      "move": "PeerIn_Start",
-      "anim": "male/PeerIn",
-      "frames": [
-       1,
-       20
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Cycle",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "PeerIn_Cycle",
-      "anim": "male/PeerIn",
-      "frames": [
-       20,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Cycle",
-        2
-       ],
-       [
-        "PeerIn_LookQuick",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "PeerIn_LookQuick",
-      "anim": "male/lookquick",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "PeerIn_Start",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "PeerIn",
-    "bits": [
-     "ENCOUNTER",
-     "OBSERVE",
-     "WALL",
-     "MID"
-    ],
-    "needs": [
-     "wall"
-    ],
-    "spawnCount": 36
-   },
-   {
-    "entries": [
-     "wall_lean1"
-    ],
-    "states": [
-     {
-      "move": "wall_lean1",
-      "anim": "male/wall_lean1",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "wall_lean1",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "Wall_Lean",
-    "bits": [
-     "ENCOUNTER",
-     "POSE",
-     "LEANWALL",
-     "ONE"
-    ],
-    "needs": [
-     "wall"
-    ],
-    "spawnCount": 30
-   },
-   {
-    "entries": [
-     "Enc_AtEase"
-    ],
-    "states": [
-     {
-      "move": "Enc_AtEase",
-      "anim": "huge/at_ease",
-      "frames": [
-       61,
-       65
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "Enc_AtEase",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "At_Ease",
-    "bits": [
-     "ENCOUNTER",
-     "SALUTE",
-     "HIGH",
-     "LOW",
-     "POSE"
-    ],
-    "needs": [],
-    "spawnCount": 24
-   },
-   {
-    "entries": [
-     "GunObserve",
-     "GunObserve2"
-    ],
-    "states": [
-     {
-      "move": "GunObserve",
-      "anim": "male/pointpistol_look_R",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "GunObserve",
-        2
-       ],
-       [
-        "GunObserve2",
-        1
-       ]
-      ]
-     },
-     {
-      "move": "GunObserve2",
-      "anim": "male/pointpistol_look_L",
-      "frames": [
-       1,
-       0
-      ],
-      "playRate": 1.0,
-      "blendFrames": 5,
-      "next": [
-       [
-        "GunObserve",
-        1
-       ],
-       [
-        "GunObserve2",
-        1
-       ]
-      ]
-     }
-    ],
-    "pose": "PistolObserve",
-    "bits": [
-     "ENCOUNTER",
-     "COMBAT",
-     "WEAPON",
-     "HANDGUN",
-     "OBSERVE"
-    ],
-    "needs": [
-     "prop"
-    ],
-    "spawnCount": 18
-   },
-   {
-    "entries": [
      "TalkIdle"
     ],
     "states": [
@@ -4232,5 +4595,58 @@
     "spawnCount": 0
    }
   ]
- }
+ },
+ "loops": [
+  [
+   {
+    "pose": "Observer",
+    "min": 3,
+    "max": 46
+   },
+   {
+    "pose": "BatMenace",
+    "min": 2,
+    "max": 8
+   },
+   {
+    "pose": "ArmsCrossed",
+    "min": 12,
+    "max": 88
+   },
+   {
+    "pose": "BatLookout",
+    "min": 5,
+    "max": 19
+   }
+  ],
+  [
+   {
+    "pose": "ArmsCrossed",
+    "min": 2,
+    "max": 67
+   },
+   {
+    "pose": "ArmsCrossed",
+    "min": 12,
+    "max": 88
+   },
+   {
+    "pose": "Howl",
+    "min": 5,
+    "max": 19
+   }
+  ],
+  [
+   {
+    "pose": "CrazyMenace",
+    "min": 2,
+    "max": 8
+   },
+   {
+    "pose": "Observer",
+    "min": 17,
+    "max": 188
+   }
+  ]
+ ]
 }

@@ -82,7 +82,43 @@ bool UCoHIdleComponent::LoadGraphs()
 			}
 		}
 	}
+	const TArray<TSharedPtr<FJsonValue>>* Loops;
+	if (Root->TryGetArrayField(TEXT("loops"), Loops))
+	{
+		for (const TSharedPtr<FJsonValue>& LV : *Loops)
+		{
+			TArray<FCoHPoseStep>& L = FileLoops.AddDefaulted_GetRef();
+			for (const TSharedPtr<FJsonValue>& SV : LV->AsArray())
+			{
+				const TSharedPtr<FJsonObject>& S = SV->AsObject();
+				FCoHPoseStep& Step = L.AddDefaulted_GetRef();
+				Step.Pose = FName(S->GetStringField(TEXT("pose")));
+				Step.MinSeconds = float(S->GetNumberField(TEXT("min")));
+				Step.MaxSeconds = float(S->GetNumberField(TEXT("max")));
+			}
+		}
+	}
 	return Graphs.Num() > 0;
+}
+
+void UCoHIdleComponent::NextLoopStep()
+{
+	// skip steps whose pose has no clips (e.g. a prop pose not imported)
+	for (int32 Tries = 0; Tries < PoseLoop.Num(); ++Tries)
+	{
+		LoopStep = (LoopStep + 1) % PoseLoop.Num();
+		const FCoHPoseStep& S = PoseLoop[LoopStep];
+		LoopTimeLeft = Rng.FRandRange(S.MinSeconds, FMath::Max(S.MinSeconds, S.MaxSeconds));
+		if (S.Pose == Pose && GraphIndex != INDEX_NONE)
+		{
+			return;     // same pose again: keep playing, just restart the timer
+		}
+		if (SetPose(S.Pose))
+		{
+			return;
+		}
+	}
+	LoopStep = INDEX_NONE;
 }
 
 void UCoHIdleComponent::FindClips()
@@ -180,6 +216,21 @@ void UCoHIdleComponent::BeginPlay()
 		UE_LOG(LogCoHIdle, Warning, TEXT("%s: could not create the idle anim instance"), *GetNameSafe(GetOwner()));
 		SetComponentTickEnabled(false);
 		return;
+	}
+
+	if (PoseLoop.Num() == 0 && Pose.IsNone() && FileLoops.Num() && Rng.FRand() < FileLoopChance)
+	{
+		PoseLoop = FileLoops[Rng.RandRange(0, FileLoops.Num() - 1)];
+	}
+	if (PoseLoop.Num())
+	{
+		// start somewhere in the loop so a group isn't in step
+		LoopStep = Rng.RandRange(0, PoseLoop.Num() - 1) - 1;
+		NextLoopStep();
+		if (LoopStep != INDEX_NONE)
+		{
+			return;
+		}
 	}
 
 	FName Start = Pose;
@@ -311,6 +362,14 @@ void UCoHIdleComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (bIdleActive && LoopStep != INDEX_NONE)
+	{
+		LoopTimeLeft -= DeltaTime;
+		if (LoopTimeLeft <= 0.f)
+		{
+			NextLoopStep();
+		}
+	}
 	if (!bIdleActive || !Anim || !Graphs.IsValidIndex(GraphIndex) || !Anim->IsClipFinished())
 	{
 		return;

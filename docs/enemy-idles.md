@@ -55,6 +55,26 @@ Chanting. Clockwork: Siphon. Run `coh2unreal.idles --group <name>` to list a
 group's poses. There is no smoking animation in the data. The closest
 "hang out" poses are Talk, Amused and Cheering.
 
+## Timed pose changes
+
+A few spawns didn't hold one pose. They ran a timed loop instead:
+
+```
+Loop("Observer(Timer(Rand(3,46))),DoNothing(AnimList(BatMenace),Timer(Rand(2,8))),
+     DoNothing(AnimList(ArmsCrossed),Timer(Rand(12,88))),DoNothing(AnimList(BatLookout),Timer(Rand(5,19))),")
+```
+
+Each pose is held for a random number of seconds, then the loop moves on to
+the next one, forever. In Atlas Park and Galaxy City, only about 20 spawn
+defs did this. Among the Hellions, it was only the Galaxy City "grunts" scene
+(watch, bat twirl, arms crossed, look around). Every other enemy held a
+single pose until a hero came near. Many Hellions walked instead
+(`Follow_Route` 105, `Loiter` 181, `Wander` 4).
+
+`coh2unreal.idles` writes these loops to the JSON (`loops`). On the
+component, set **Pose Loop** by hand, or set **File Loop Chance** so that
+some characters run one of the original loops.
+
 ## Pipeline
 
 1. **Extract the graphs.** This needs only i24 text data, no piggs:

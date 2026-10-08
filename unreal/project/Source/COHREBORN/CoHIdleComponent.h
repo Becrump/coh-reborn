@@ -15,6 +15,22 @@ class UAnimSequence;
 class USkeletalMeshComponent;
 class UCoHIdleAnimInstance;
 
+/** One step of a timed pose loop: hold Pose for MinSeconds..MaxSeconds. */
+USTRUCT(BlueprintType)
+struct FCoHPoseStep
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH Idle")
+	FName Pose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH Idle")
+	float MinSeconds = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH Idle")
+	float MaxSeconds = 30.f;
+};
+
 UCLASS(ClassGroup = (CoH), meta = (BlueprintSpawnableComponent))
 class COHREBORN_API UCoHIdleComponent : public UActorComponent
 {
@@ -40,6 +56,17 @@ public:
 	 *  that needs no prop or partner, weighted by how often spawns used it). */
 	UPROPERTY(EditAnywhere, Category = "CoH Idle")
 	TArray<FName> PosePool;
+
+	/** Timed pose loop, like the spawn defs' Loop("ArmsCrossed(Timer(Rand(2,67))),
+	 *  DoNothing(AnimList(Threaten),Timer(Rand(2,8))),..."): each pose is held
+	 *  for a random time, then the next, forever. Overrides Pose when set. */
+	UPROPERTY(EditAnywhere, Category = "CoH Idle")
+	TArray<FCoHPoseStep> PoseLoop;
+
+	/** Chance (0-1) that a character with no Pose or PoseLoop runs one of the
+	 *  file's original timed loops instead of holding one pose. */
+	UPROPERTY(EditAnywhere, Category = "CoH Idle", meta = (ClampMin = "0", ClampMax = "1"))
+	float FileLoopChance = 0.f;
 
 	/** Content folder holding the imported clips; a clip is found by its move
 	 *  name (exact, or as the end of the asset name after an underscore). */
@@ -98,11 +125,15 @@ private:
 	};
 
 	bool LoadGraphs();
+	void NextLoopStep();
 	void FindClips();
 	void PlayState(int32 Index, bool bRandomStart);
 	int32 PickNext(const FState& S);
 
 	TArray<FGraph> Graphs;
+	TArray<TArray<FCoHPoseStep>> FileLoops;
+	int32 LoopStep = INDEX_NONE;
+	float LoopTimeLeft = 0.f;
 	int32 GraphIndex = INDEX_NONE;
 	int32 StateIndex = INDEX_NONE;
 	float RateScale = 1.f;

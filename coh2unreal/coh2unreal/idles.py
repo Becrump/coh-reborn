@@ -192,9 +192,16 @@ def load_animlists(data_dir):
     return out
 
 
+_LOOP_STEP = re.compile(r"(?:DoNothing\(AnimList\((\w+)\)|(\w+)\()\s*,?\s*"
+                        r"Timer\(Rand\((\d+),\s*(\d+)\)\)")
+
+
 def spawn_poses(data_dir, group, zones=None):
     """Counter of the AnimList names a villain group's spawn defs use for
-    AI_InActive (what they do before a hero shows up)."""
+    AI_InActive (what they do before a hero shows up), and the timed pose
+    loops some spawns used instead: `Loop("ArmsCrossed(Timer(Rand(2,67))),
+    DoNothing(AnimList(Threaten),Timer(Rand(2,8))),...")` holds each pose
+    for a random number of seconds, then moves to the next, forever."""
     root = os.path.join(data_dir, "scripts.loc", "spawndefs")
     files = []
     for z in (zones or [d for d in os.listdir(root)
@@ -202,17 +209,26 @@ def spawn_poses(data_dir, group, zones=None):
         files += glob.glob(os.path.join(root, z, "*.spawndef"))
     g = group.lower().replace(" ", "")
     counts = collections.Counter()
+    loops = []
     for path in files:
         if g not in os.path.basename(path).lower().replace("_", ""):
             continue
         with open(path, encoding="latin-1") as f:
             for line in f:
                 line = line.split("//", 1)[0]
+                if "AI_InActive" in line and "Loop(" in line:
+                    steps = [[a or b, int(lo), int(hi)] for a, b, lo, hi in
+                             _LOOP_STEP.findall(line)]
+                    if steps and steps not in loops:
+                        loops.append(steps)
+                    for st in steps:
+                        counts[st[0].lower()] += 1
+                    continue
                 m = re.search(r"AI_InActive\s+\W*(?:PL_)?([A-Za-z0-9_]+)",
                               line)
                 if m:
                     counts[m.group(1).lower()] += 1
-    return counts
+    return counts, loops
 
 
 def _best_moves(seq, bits, seqtype):
@@ -306,9 +322,14 @@ def main(argv=None):
     seq = load_sequencer(args.data, args.sequencer)
     als = load_animlists(args.data)
     poses = collections.OrderedDict([("ready", 0)])
+    loops = []
     if args.group:
-        for name, n in spawn_poses(args.data, args.group,
-                                   args.zone).most_common():
+        counts, loops = spawn_poses(args.data, args.group, args.zone)
+        for steps in loops:
+            for st in steps:
+                if st[0].lower() in als:
+                    poses.setdefault(st[0].lower(), counts[st[0].lower()])
+        for name, n in counts.most_common():
             if name in als and len([p for p in poses if p != "ready"]) \
                     < args.top:
                 poses.setdefault(name, n)
@@ -318,7 +339,10 @@ def main(argv=None):
         else:
             print("unknown AnimList %s" % name, file=sys.stderr)
 
-    out = {"sequencer": args.sequencer, "group": args.group, "types": {}}
+    out = {"sequencer": args.sequencer, "group": args.group, "types": {},
+           "loops": [[{"pose": als[p.lower()][0], "min": lo, "max": hi}
+                      for p, lo, hi in steps if p.lower() in als]
+                     for steps in loops]}
     for st in args.seqtype or ["male", "fem", "huge"]:
         graphs = []
         for p, n in poses.items():
