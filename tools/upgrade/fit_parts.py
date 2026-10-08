@@ -170,6 +170,37 @@ def project(ob, image, box, u_axis, v_axis, v_down):
     me.materials.append(mat)
 
 
+def project_dirs(ob, image, box, u_dir, v_dir):
+    """Planar projection along arbitrary in-plane directions (local space)."""
+    me = ob.data
+    co = [v.co.copy() for v in me.vertices]
+    us = [c.dot(u_dir) for c in co]
+    vs = [c.dot(v_dir) for c in co]
+    u0, u1, v0, v1 = min(us), max(us), min(vs), max(vs)
+    uv = me.uv_layers.new(name="concept")
+    for poly in me.polygons:
+        for li in poly.loop_indices:
+            i = me.loops[li].vertex_index
+            fu = (us[i] - u0) / (u1 - u0)
+            fv = (vs[i] - v0) / (v1 - v0)
+            px = box["x0"] + fu * (box["x1"] - box["x0"])
+            py = box["y0"] + (1 - fv) * (box["y1"] - box["y0"])
+            uv.data[li].uv = (px / box["w"], 1 - py / box["h"])
+    for layer in list(me.uv_layers):
+        if layer.name != "concept":
+            me.uv_layers.remove(layer)
+    mat = bpy.data.materials.new("M_" + ob.name)
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    t = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    t.image = bpy.data.images.load(image, check_existing=True)
+    mat.node_tree.links.new(t.outputs["Color"], bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.6
+    bsdf.inputs["Metallic"].default_value = 0.0
+    me.materials.clear()
+    me.materials.append(mat)
+
+
 def bind(ob, weights_fn, name):
     for v in ob.data.vertices:
         for g, w in weights_fn(ob.matrix_world @ v.co):
@@ -198,19 +229,52 @@ H = JOB.get("head")
 if H:
     old = [meshes[n] for n in H.get("replace", ["Head"]) if n in meshes]
     hmn, hmx = bbox(old)
-    for o in old:
-        bpy.data.objects.remove(o)
+    old_head = meshes.get("Head")
+    # skull width of the old head: the top 45 % (cranium and face),
+    # 10th-90th percentile so tusks, ears and horns don't count
+    def skull_width(pts, top, height):
+        xs = sorted(p.x for p in pts if p.z > top - 0.45 * height)
+        return xs[int(len(xs) * 0.9)] - xs[int(len(xs) * 0.1)]
+    opts = world_verts(old_head) if old_head else \
+        [p for o in old for p in world_verts(o)]
+    ow = skull_width(opts, hmx.z, hmx.z - hmn.z)
     head = load_part(H["glb"], H.get("faces", 18000))
     project(head, H["image"], json.load(open(H["bbox"])), 0, 2, False)
-    mn, mx = bbox([head])
-    s = (hmx.z - hmn.z) * H.get("height_scale", 1.08) / (mx.z - mn.z)
+    # generated busts may include shoulders, hoods or capes: size by the
+    # head itself. The top 45 % of a bust is the head; for plain heads it is
+    # the cranium, so both match the old skull width.
+    pts = [v.co.copy() for v in head.data.vertices]
+    top = max(p.z for p in pts)
+    ht = top - min(p.z for p in pts)
+    hl = H.get("head_fraction", 0.45)
+    xs = sorted(p.x for p in pts if p.z > top - hl * ht)
+    nw = xs[int(len(xs) * 0.9)] - xs[int(len(xs) * 0.1)]
+    s = ow / max(nw, 1e-6) * H.get("width_scale", 1.12)
     head.scale = (s, s, s)
     apply(head)
     mn, mx = bbox([head])
     c = (hmn + hmx) / 2
+    # top of the new head a little above the old one, centred on it
     head.location = Vector((c.x - (mn.x + mx.x) / 2, c.y - (mn.y + mx.y) / 2,
-                            hmn.z - mn.z - 0.01))
+                            hmx.z + 0.01 - mx.z))
     apply(head)
+    # crop shoulders/capes that hang below the old neckline
+    cut = hmn.z - 0.03
+    bm = bmesh.new()
+    bm.from_mesh(head.data)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < cut],
+                     context="VERTS")
+    bm.to_mesh(head.data)
+    bm.free()
+    mn, mx = bbox([head])
+    # a head with no neck (helmet, gas mask) leaves a gap: keep the old head
+    # underneath as the neck
+    keep_old = mn.z > hmn.z + 0.03 and old_head is not None
+    for o in old:
+        if keep_old and o is old_head:
+            o.name = o.data.name = "Neck_Old"
+            continue
+        bpy.data.objects.remove(o)
     neck_z, head_z = bone("NECK").z, bone("HEAD").z
 
     def head_w(p):
@@ -220,8 +284,12 @@ if H:
         return [("HEAD", t), ("NECK", 1 - t)]
     bind(head, head_w, "Head")
     mn, mx = bbox([head])
-    check("head_on_neck", abs(mn.z - hmn.z) < 0.03,
-          gap_cm=round((mn.z - hmn.z) * 100, 1))
+    check("head_on_neck", mn.z < hmn.z + 0.03 or keep_old,
+          gap_cm=round((mn.z - hmn.z) * 100, 1), kept_old_neck=keep_old)
+    ratio = (mx.x - mn.x) / max(hmx.x - hmn.x, 1e-6)
+    check("head_size", 0.7 < (mx.z - mn.z) / max(hmx.z - hmn.z, 1e-6) < 1.6,
+          height_ratio=round((mx.z - mn.z) / max(hmx.z - hmn.z, 1e-6), 2),
+          width_ratio=round(ratio, 2))
 
 # ------------------------------------------------------------------ hands
 
@@ -252,39 +320,129 @@ if Hd:
         if old is None:
             continue
         omn, omx = bbox([old])
-        bpy.data.objects.remove(old)
-        ob = load_part(Hd["glb"], Hd.get("faces", 9000))
-        project(ob, Hd["image"], box, 0, 1, True)
-        # which end of the long (Y) axis holds the fingers: the wider one
-        pts = [v.co for v in ob.data.vertices]
-        y0 = min(p.y for p in pts)
-        y1 = max(p.y for p in pts)
-        span = y1 - y0
-
-        def width(lo, hi):
-            xs = [p.x for p in pts if lo <= p.y <= hi]
-            return (max(xs) - min(xs)) if xs else 0.0
-        w_neg = width(y0, y0 + 0.2 * span)
-        w_pos = width(y1 - 0.2 * span, y1)
-        fingers_neg = w_neg >= w_pos
-        print('HAND_ENDS', side, 'width -Y', round(w_neg, 3), '+Y', round(w_pos, 3))
-        if not fingers_neg:          # make the fingers point -Y
-            ob.data.transform(Matrix.Rotation(math.pi, 4, "Z"))
-        # a right hand on the left side (or vice versa): mirror X
-        want_right = side == "R"
-        if Hd.get("is_right_hand", True) != want_right:
-            ob.data.transform(Matrix.Scale(-1, 4, (1, 0, 0)))
-            ob.data.flip_normals()
         out = 1.0 if bone("HAND" + side).x > bone("LARM" + side).x else -1.0
-        # fingers -Y -> outward along the arm (out = -1 for the right arm)
-        ob.rotation_euler = (0, 0, math.radians(90 if out > 0 else -90))
-        apply(ob)
-        mn, mx = bbox([ob])
-        s = Hd.get("length_scale", 1.12) * (omx.x - omn.x) / (mx.x - mn.x)
+        segs = hand_segments(side)
+        wrist = bone("HAND" + side)
+        # keep the forearm part of the old glove when it runs up the arm (some
+        # costumes have no forearm in the arm piece); drop only its hand part
+        old_back = (omn.x if out > 0 else omx.x) * out
+        keep_forearm = wrist.x * out - old_back > 0.04
+        if keep_forearm:
+            bm = bmesh.new()
+            bm.from_mesh(old.data)
+            bmesh.ops.delete(bm, geom=[
+                v for v in bm.verts
+                if ((old.matrix_world @ v.co).x - wrist.x) * out > -0.02],
+                context="VERTS")
+            bm.to_mesh(old.data)
+            bm.free()
+            old.name = old.data.name = "Forearm_" + side
+        else:
+            bpy.data.objects.remove(old)
+        ob = load_part(Hd["glb"], Hd.get("faces", 9000))
+        # find the hand's own frame from its shape (Trellis2 orients meshes
+        # differently from run to run): long axis = principal axis, fingers
+        # = the wider end, palm = the side the fingertips curl towards,
+        # thumb = the side whose palm-band silhouette sticks out further
+        import numpy as np
+        P = np.array([v.co[:] for v in ob.data.vertices])
+        P0 = P - P.mean(0)
+        _, _, Vt = np.linalg.svd(P0, full_matrices=False)
+        e1, e2, e3 = Vt[0], Vt[1], Vt[2]
+        a1, a2, a3 = P0 @ e1, P0 @ e2, P0 @ e3
+        lo, hi = a1.min(), a1.max()
+        span = hi - lo
+
+        def band(frac0, frac1, sign):
+            # vertices between frac0..frac1 of the way back from that end
+            if sign > 0:
+                return (a1 > hi - frac1 * span) & (a1 < hi - frac0 * span)
+            return (a1 < lo + frac1 * span) & (a1 > lo + frac0 * span)
+        def pieces(sel):
+            """Separate blobs in a cross-section (fingers vs one cuff ring)."""
+            u, v = a2[sel], a3[sel]
+            if len(u) < 20:
+                return 0
+            n = 24
+            gu = np.clip(((u - u.min()) / (np.ptp(u) + 1e-9) * (n - 1)).astype(int), 0, n - 1)
+            gv = np.clip(((v - v.min()) / (np.ptp(v) + 1e-9) * (n - 1)).astype(int), 0, n - 1)
+            occ = np.zeros((n, n), bool)
+            occ[gu, gv] = True
+            # close small holes between neighbouring vertices
+            grow = occ.copy()
+            grow[1:, :] |= occ[:-1, :]
+            grow[:-1, :] |= occ[1:, :]
+            grow[:, 1:] |= occ[:, :-1]
+            grow[:, :-1] |= occ[:, 1:]
+            occ = grow
+            seen = np.zeros_like(occ)
+            count = 0
+            for i in range(n):
+                for j in range(n):
+                    if occ[i, j] and not seen[i, j]:
+                        count += 1
+                        stack = [(i, j)]
+                        seen[i, j] = True
+                        while stack:
+                            x, y = stack.pop()
+                            for dx in (-1, 0, 1):
+                                for dy in (-1, 0, 1):
+                                    xx, yy = x + dx, y + dy
+                                    if 0 <= xx < n and 0 <= yy < n and                                             occ[xx, yy] and not seen[xx, yy]:
+                                        seen[xx, yy] = True
+                                        stack.append((xx, yy))
+            return count
+        # a thin slice near each end: the fingertip end cuts several fingers
+        c_hi = max(pieces(band(0.03, 0.08, 1)), pieces(band(0.08, 0.13, 1)))
+        c_lo = max(pieces(band(0.03, 0.08, -1)), pieces(band(0.08, 0.13, -1)))
+        if c_hi != c_lo:
+            fs = 1.0 if c_hi > c_lo else -1.0       # fingers at +fs*e1
+        else:
+            w_hi = np.ptp(a2[band(0, 0.2, 1)]) if band(0, 0.2, 1).any() else 0
+            w_lo = np.ptp(a2[band(0, 0.2, -1)]) if band(0, 0.2, -1).any() else 0
+            fs = 1.0 if w_hi >= w_lo else -1.0
+        print("HAND_ENDS", side, "pieces +/-", c_hi, c_lo)
+        f = e1 * fs
+        b1 = fs * a1
+        bhi = b1.max()
+        tips = b1 > bhi - 0.12 * span
+        palm = (b1 < bhi - 0.25 * span) & (b1 > bhi - 0.55 * span)
+        curl = a3[tips].mean() - a3[palm].mean()
+        back = -e3 * (1.0 if curl > 0 else -1.0)   # fingertips curl to palm
+        side_ax = np.cross(back, f)
+        s2 = P0 @ side_ax
+        mid = s2[tips].mean()
+        thumb_sign = 1.0 if (s2[palm].max() - mid) > (mid - s2[palm].min())             else -1.0
+        thumb = side_ax * thumb_sign
+        # concept image projection: fingertips at the bottom of the image
+        project_dirs(ob, Hd["image"], box, Vector(side_ax), Vector(-f))
+        # target frame: fingers out along the arm, back of hand up, thumb to
+        # the front (-Y); a left/right mismatch becomes a mirror (det < 0)
+        S = np.column_stack([f, thumb, back])
+        T = np.column_stack([[out, 0, 0], [0, -1, 0], [0, 0, 1]])
+        R = T @ S.T
+        M = Matrix([list(R[0]) + [0], list(R[1]) + [0], list(R[2]) + [0],
+                    [0, 0, 0, 1]])
+        ob.data.transform(Matrix.Translation(-Vector(P.mean(0))))
+        ob.data.transform(M)
+        if np.linalg.det(R) < 0:
+            ob.data.flip_normals()
+        print("HAND_FRAME", side, "mirror" if np.linalg.det(R) < 0 else "turn",
+              "fingers_end", "+" if fs > 0 else "-")
+        # size by palm width (generated hands come with any forearm length)
+        knuckle = (bone("RING" + side) - wrist).length
+        target = Hd.get("palm_width", 0.095) * knuckle / 0.0814
+        pts = [v.co for v in ob.data.vertices]
+        tipx = max(p.x * out for p in pts)
+        backx = min(p.x * out for p in pts)
+        span = tipx - backx
+        palm_y = sorted(p.y for p in pts
+                        if tipx - 0.55 * span < p.x * out < tipx - 0.25 * span)
+        pw = palm_y[int(len(palm_y) * 0.9)] - palm_y[int(len(palm_y) * 0.1)]
+        s = target / max(pw, 1e-6)
         ob.scale = (s, s, s)
         apply(ob)
         # fingertips at the end of the finger chain, centred on the old hand
-        segs = hand_segments(side)
         tip = segs[3][2]
         mn, mx = bbox([ob])
         tip_x = mx.x if out > 0 else mn.x
@@ -292,7 +450,29 @@ if Hd:
         ob.location = Vector((tip.x - tip_x, c.y - (mn.y + mx.y) / 2,
                               c.z - (mn.z + mx.z) / 2))
         apply(ob)
-        wrist = bone("HAND" + side)
+        # where does the existing arm/sleeve (or kept old forearm) end?
+        def arm_end_x():
+            best = -1e9
+            for o in sc.objects:
+                if o.type != "MESH" or o.name in ("Hand_R", "Hand_L", "Head")                         or o is ob:
+                    continue
+                for p in world_verts(o):
+                    if (Vector((0, p.y, p.z)) - Vector((0, wrist.y, wrist.z))
+                            ).length < 0.12 and (p.x - wrist.x) * out > -0.4:
+                        best = max(best, p.x * out)
+            return best
+        arm_end = arm_end_x()
+        # crop the generated forearm so it overlaps the arm by 3 cm (never
+        # past the elbow); default 6 cm behind the wrist
+        elbow = bone("LARM" + side).x * out
+        cut = min(wrist.x * out - 0.06, arm_end - 0.03)
+        cut = max(cut, elbow + 0.01)
+        bm = bmesh.new()
+        bm.from_mesh(ob.data)
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.x * out < cut],
+                         context="VERTS")
+        bm.to_mesh(ob.data)
+        bm.free()
 
         def hand_w(p, segs=segs, wrist=wrist, side=side, out=out):
             u = (p.x - wrist.x) * out          # >0 past the wrist
@@ -334,18 +514,15 @@ if Hd:
         check("thumb_in_front_" + side, bool(thumb) and ty < wrist.y,
               thumb_y=round(ty, 3), wrist_y=round(wrist.y, 3),
               thumb_verts=len(thumb))
-        arm_mesh = [o for o in sc.objects if o.type == "MESH"
-                    and o.name not in ("Hand_R", "Hand_L", "Head")]
-        # wrist gap: nearest arm vertex to the cuff end of the new hand
-        cuff = [p for p in vs if (p.x - wrist.x) * out < -0.005]
-        armv = [p for o in arm_mesh for p in world_verts(o)
-                if abs(p.x - wrist.x) < 0.12 and abs(p.z - wrist.z) < 0.12]
-        if cuff and armv:
-            gap = min(min((a - p).length for a in armv) for p in cuff[::5])
-        else:
-            gap = 1.0
-        check("cuff_meets_forearm_" + side, gap < 0.015 and bool(cuff),
-              nearest_cm=round(gap * 100, 1), cuff_verts=len(cuff))
+        # the new piece must reach back under/over the end of the arm or
+        # sleeve: overlap along the arm, not radial distance (a wide cuff
+        # over a thin forearm is fine)
+        back = min(p.x * out for p in vs)
+        gap = max(0.0, back - arm_end)
+        check("cuff_meets_forearm_" + side, gap < 0.005,
+              gap_cm=round(gap * 100, 1),
+              overlap_cm=round(max(0.0, arm_end - back) * 100, 1),
+              palm_width_cm=round(target * 100, 1))
 
     # fist test: the punch must curl the fingers relative to the hand
     if pose("attack", 0.45):
