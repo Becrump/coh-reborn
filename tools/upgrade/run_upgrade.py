@@ -21,7 +21,8 @@ A batch file:
 
 Stages (all by default, in order): upscale, smooth, parts, fit, unreal.
 "head"/"hand" are optional; without them a character only gets the
-upscale + smooth pass. Each stage skips work whose output already exists
+upscale + smooth pass. New hands are only fitted when the batch sets
+"fit_hands": true (off by default: the original hands are kept). Each stage skips work whose output already exists
 (delete the folder to redo it).
 
 Writes <work_dir>/summary.json: per character, each stage's status and
@@ -85,6 +86,8 @@ def main():
     # ---- shared generated parts
     if "parts" in a.stages:
         for name, p in B.get("parts", {}).items():
+            if not B.get("fit_hands") and "is_right_hand" in p:
+                continue                    # hand part not needed
             if os.path.exists(os.path.join(parts_dir, name + ".glb")):
                 continue
             code, secs = run([sys.executable, os.path.join(HERE, "gen_parts.py"),
@@ -125,7 +128,9 @@ def main():
                        "check_dir": os.path.join(cw, "checks")}
                 for kind in ("head", "hand"):
                     pn = ch.get(kind)
-                    if not pn:
+                    # new hands are off for now (Robert: heads only); the
+                    # original hands stay, upscaled and smoothed
+                    if not pn or (kind == "hand" and not B.get("fit_hands")):
                         continue
                     pdef = B["parts"][pn]
                     job[kind] = {

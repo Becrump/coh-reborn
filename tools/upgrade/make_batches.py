@@ -112,7 +112,8 @@ def main(chars_dir, work_root):
             else:
                 p.update(faces=9000, is_right_hand=True)
             parts[name] = p
-        batch = {"characters_dir": chars_dir.replace("\\", "/"),
+        batch = {"fit_hands": False,      # heads only for now
+                 "characters_dir": chars_dir.replace("\\", "/"),
                  "work_dir": os.path.join(work_root, g).replace("\\", "/"),
                  "parts": parts, "characters": chars}
         path = os.path.join(HERE, "jobs", "%s.json" % g)

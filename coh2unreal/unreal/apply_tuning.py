@@ -244,9 +244,13 @@ def tune_materials(folder):
                     mi, "bHasGlowTexture", True)
                 mel.set_material_instance_texture_parameter_value(
                     mi, "GlowTexture", tex[e["glow"]])
-                mel.set_material_instance_scalar_parameter_value(
-                    mi, "GlowStrength", GLOW_STRENGTH)
                 gu, gv = e.get("glow_scale", [1, 1])
+                # glow maps stretched below 1x (deco skyscrapers, brick
+                # windows) light whole blocks of facade in Unreal instead
+                # of single windows: keep those dark (Robert, 2026-10-08)
+                mel.set_material_instance_scalar_parameter_value(
+                    mi, "GlowStrength",
+                    0.0 if min(gu, gv) < 1.0 else GLOW_STRENGTH)
                 mel.set_material_instance_vector_parameter_value(
                     mi, "GlowScale", unreal.LinearColor(gu, gv, 0, 0))
                 mask = tex.get(e.get("glow_mask"))
