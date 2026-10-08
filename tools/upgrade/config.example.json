@@ -1,0 +1,7 @@
+{
+  "blender": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
+  "comfyui_root": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install",
+  "comfyui_python": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install/python_embeded/python.exe",
+  "upscale_model": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install/ComfyUI/models/upscale_models/RealESRGAN_x4plus.pth",
+  "ue_exec": "unreal/scripts/ue_exec.py"
+}
