@@ -1,0 +1,4236 @@
+{
+ "sequencer": "player.txt",
+ "group": "Hellions",
+ "types": {
+  "male": [
+   {
+    "entries": [
+     "Ready"
+    ],
+    "states": [
+     {
+      "move": "Ready",
+      "anim": "male/Skel_ready2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready2",
+      "anim": "male/Skel_ready2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_2Hips",
+        1
+       ],
+       [
+        "Ready_Look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Look",
+      "anim": "male/idle_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready2",
+        1
+       ],
+       [
+        "Ready_2Hips",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips",
+      "anim": "male/stand_2Hhips",
+      "frames": [
+       1,
+       64
+      ],
+      "playRate": 0.5,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        2
+       ],
+       [
+        "Ready_2Hips_post",
+        1
+       ],
+       [
+        "Ready_Xarms",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips_look",
+      "anim": "male/idle_2hips_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        1
+       ],
+       [
+        "Ready_2Hips_post",
+        1
+       ],
+       [
+        "Ready_Xarms",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       1,
+       68
+      ],
+      "playRate": 0.6,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_Xarms_look",
+        2
+       ],
+       [
+        "Ready_Xarms_post",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips_post",
+      "anim": "male/stand_2Hhips",
+      "frames": [
+       109,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready2",
+        1
+       ],
+       [
+        "Ready_Look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms_look",
+      "anim": "male/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_Xarms_look",
+        1
+       ],
+       [
+        "Ready_Xarms_post",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms_post",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       90,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Ready",
+    "bits": [],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Cross_Arms",
+     "Cross_Arms_look",
+     "Arms_On_Hips",
+     "Arms_On_Hips_look"
+    ],
+    "states": [
+     {
+      "move": "Cross_Arms",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       1,
+       68
+      ],
+      "playRate": 0.8,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cross_Arms_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cross_Arms_look",
+      "anim": "male/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips",
+        1
+       ],
+       [
+        "Cross_Arms_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Arms_On_Hips",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       92,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Arms_On_Hips_look",
+      "anim": "male/idle_2hips_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips_look",
+        1
+       ],
+       [
+        "Cross_Arms",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "ArmsCrossed",
+    "bits": [
+     "ENCOUNTER",
+     "COMMAND",
+     "OBSERVE",
+     "LOW"
+    ],
+    "needs": [],
+    "spawnCount": 99
+   },
+   {
+    "entries": [
+     "ledgesit_var1a",
+     "ledgesit_var1b",
+     "ledgesit_var1c",
+     "ledgesit_var2a",
+     "ledgesit_var2b",
+     "ledgesit_var2c",
+     "ledgesit_var3a",
+     "ledgesit_var3b",
+     "ledgesit_var3c",
+     "ledgesit_var4a",
+     "ledgesit_var4b",
+     "ledgesit_var4c"
+    ],
+    "states": [
+     {
+      "move": "ledgesit_var1a",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var1b",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var1c",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2a",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2b",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2c",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3a",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3b",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3c",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4a",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4b",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4c",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "LedgeSit",
+    "bits": [
+     "ENCOUNTER",
+     "SIT",
+     "THREAT",
+     "MENACE",
+     "HIGH",
+     "POSE"
+    ],
+    "needs": [
+     "seat"
+    ],
+    "spawnCount": 95
+   },
+   {
+    "entries": [
+     "BatObserve"
+    ],
+    "states": [
+     {
+      "move": "BatObserve",
+      "anim": "male/bathold_lookleft",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatObserve",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatObserve",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "OBSERVE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 78
+   },
+   {
+    "entries": [
+     "Deal_A"
+    ],
+    "states": [
+     {
+      "move": "Deal_A",
+      "anim": "male/deal_A",
+      "frames": [
+       1,
+       238
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Deal_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Dealing_Deal",
+    "bits": [
+     "ENCOUNTER",
+     "DEALING"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 60
+   },
+   {
+    "entries": [
+     "PurseTug"
+    ],
+    "states": [
+     {
+      "move": "PurseTug",
+      "anim": "male/purse_tug",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PurseTug",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PurseTug",
+    "bits": [
+     "ENCOUNTER",
+     "PURSETUG"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 50
+   },
+   {
+    "entries": [
+     "Spray_A",
+     "Spray_A2",
+     "Spray_A3",
+     "Spray_A4"
+    ],
+    "states": [
+     {
+      "move": "Spray_A",
+      "anim": "male/spray_lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A2",
+      "anim": "male/spray_shakecan",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A3",
+      "anim": "male/spray_cycle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A",
+        1
+       ],
+       [
+        "Spray_A4",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A4",
+      "anim": "male/spray_cycle",
+      "frames": [
+       15,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A",
+        1
+       ],
+       [
+        "Spray_A4",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "SprayPaint",
+    "bits": [
+     "ENCOUNTER",
+     "SPRAYCAN"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 45
+   },
+   {
+    "entries": [
+     "Lookout_A",
+     "Lookout_A2",
+     "Lookout_B",
+     "Lookout_B2",
+     "Lookout_B3"
+    ],
+    "states": [
+     {
+      "move": "Lookout_A",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.6,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_A",
+        1
+       ],
+       [
+        "Lookout_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_A2",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B2",
+        1
+       ],
+       [
+        "Lookout_B3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B2",
+      "anim": "male/Look_L",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B3",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.6,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Lookout",
+    "bits": [
+     "ENCOUNTER",
+     "LOOKOUT"
+    ],
+    "needs": [],
+    "spawnCount": 44
+   },
+   {
+    "entries": [
+     "Receiving_A"
+    ],
+    "states": [
+     {
+      "move": "Receiving_A",
+      "anim": "male/deal_B",
+      "frames": [
+       1,
+       238
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Receiving_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Dealing_Receive",
+    "bits": [
+     "ENCOUNTER",
+     "RECEIVING"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 42
+   },
+   {
+    "entries": [
+     "PeerIn_Start",
+     "PeerIn_Cycle",
+     "PeerIn_LookQuick"
+    ],
+    "states": [
+     {
+      "move": "PeerIn_Start",
+      "anim": "male/PeerIn",
+      "frames": [
+       1,
+       20
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Cycle",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "PeerIn_Cycle",
+      "anim": "male/PeerIn",
+      "frames": [
+       20,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Cycle",
+        2
+       ],
+       [
+        "PeerIn_LookQuick",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "PeerIn_LookQuick",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Start",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PeerIn",
+    "bits": [
+     "ENCOUNTER",
+     "OBSERVE",
+     "WALL",
+     "MID"
+    ],
+    "needs": [
+     "wall"
+    ],
+    "spawnCount": 36
+   },
+   {
+    "entries": [
+     "wall_lean1"
+    ],
+    "states": [
+     {
+      "move": "wall_lean1",
+      "anim": "male/wall_lean1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "wall_lean1",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Wall_Lean",
+    "bits": [
+     "ENCOUNTER",
+     "POSE",
+     "LEANWALL",
+     "ONE"
+    ],
+    "needs": [
+     "wall"
+    ],
+    "spawnCount": 30
+   },
+   {
+    "entries": [
+     "Enc_AtEase"
+    ],
+    "states": [
+     {
+      "move": "Enc_AtEase",
+      "anim": "male/at_ease",
+      "frames": [
+       61,
+       65
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Enc_AtEase",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "At_Ease",
+    "bits": [
+     "ENCOUNTER",
+     "SALUTE",
+     "HIGH",
+     "LOW",
+     "POSE"
+    ],
+    "needs": [],
+    "spawnCount": 24
+   },
+   {
+    "entries": [
+     "GunObserve",
+     "GunObserve2"
+    ],
+    "states": [
+     {
+      "move": "GunObserve",
+      "anim": "male/pointpistol_look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "GunObserve",
+        2
+       ],
+       [
+        "GunObserve2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "GunObserve2",
+      "anim": "male/pointpistol_look_L",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "GunObserve",
+        1
+       ],
+       [
+        "GunObserve2",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PistolObserve",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "HANDGUN",
+     "OBSERVE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 18
+   },
+   {
+    "entries": [
+     "TalkIdle"
+    ],
+    "states": [
+     {
+      "move": "TalkIdle",
+      "anim": "male/PL_TalkIdle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Talk02",
+      "anim": "male/PL_Talk02",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.2,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk01",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Talk03",
+      "anim": "male/PL_Talk03",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk01",
+        1
+       ],
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Talk01",
+      "anim": "male/PL_Talk01",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     }
+    ],
+    "pose": "Talk",
+    "bits": [
+     "ENCOUNTER",
+     "GESTICULATE"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Amused_pre",
+     "Amused_B",
+     "Amused_C",
+     "Amused_D",
+     "Amused_E"
+    ],
+    "states": [
+     {
+      "move": "Amused_pre",
+      "anim": "male/your_welcome_sm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_E",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_B",
+      "anim": "male/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ],
+       [
+        "Amused_C",
+        1
+       ],
+       [
+        "Amused_D",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_C",
+      "anim": "male/listen_1",
+      "frames": [
+       111,
+       260
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_D",
+      "anim": "male/thankyou_sm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_E",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_E",
+      "anim": "male/no",
+      "frames": [
+       1,
+       115
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Amused",
+    "bits": [
+     "ENCOUNTER",
+     "AMUSED"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Cheer_A",
+     "Cheer_B",
+     "Cheer_C"
+    ],
+    "states": [
+     {
+      "move": "Cheer_A",
+      "anim": "male/chant_high",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cheer_B",
+      "anim": "male/chant_1arm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cheer_C",
+      "anim": "male/listen_1",
+      "frames": [
+       1,
+       200
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_C",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Cheering",
+    "bits": [
+     "ENCOUNTER",
+     "CHEER"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   }
+  ],
+  "fem": [
+   {
+    "entries": [
+     "Ready"
+    ],
+    "states": [
+     {
+      "move": "Ready",
+      "anim": "fem/Skel_ready2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready2",
+      "anim": "fem/Skel_ready2",
+      "frames": [
+       1,
+       60
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_2Hips",
+        1
+       ],
+       [
+        "Ready_Look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Look",
+      "anim": "fem/idle_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready2",
+        1
+       ],
+       [
+        "Ready_2Hips",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips",
+      "anim": "fem/stand_2Hhips",
+      "frames": [
+       1,
+       64
+      ],
+      "playRate": 0.5,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        2
+       ],
+       [
+        "Ready_2Hips_post",
+        1
+       ],
+       [
+        "Ready_Xarms",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips_look",
+      "anim": "fem/idle_2hips_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        1
+       ],
+       [
+        "Ready_2Hips_post",
+        1
+       ],
+       [
+        "Ready_Xarms",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms",
+      "anim": "fem/stand_Xarms",
+      "frames": [
+       1,
+       68
+      ],
+      "playRate": 0.6,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_Xarms_look",
+        2
+       ],
+       [
+        "Ready_Xarms_post",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips_post",
+      "anim": "fem/stand_2Hhips",
+      "frames": [
+       109,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready2",
+        1
+       ],
+       [
+        "Ready_Look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms_look",
+      "anim": "fem/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_Xarms_look",
+        1
+       ],
+       [
+        "Ready_Xarms_post",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms_post",
+      "anim": "fem/stand_Xarms",
+      "frames": [
+       90,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Ready",
+    "bits": [],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Cross_Arms",
+     "Cross_Arms_look",
+     "Arms_On_Hips",
+     "Arms_On_Hips_look"
+    ],
+    "states": [
+     {
+      "move": "Cross_Arms",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       1,
+       68
+      ],
+      "playRate": 0.8,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cross_Arms_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cross_Arms_look",
+      "anim": "male/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips",
+        1
+       ],
+       [
+        "Cross_Arms_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Arms_On_Hips",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       92,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Arms_On_Hips_look",
+      "anim": "male/idle_2hips_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips_look",
+        1
+       ],
+       [
+        "Cross_Arms",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "ArmsCrossed",
+    "bits": [
+     "ENCOUNTER",
+     "COMMAND",
+     "OBSERVE",
+     "LOW"
+    ],
+    "needs": [],
+    "spawnCount": 99
+   },
+   {
+    "entries": [
+     "ledgesit_var1a",
+     "ledgesit_var1b",
+     "ledgesit_var1c",
+     "ledgesit_var2a",
+     "ledgesit_var2b",
+     "ledgesit_var2c",
+     "ledgesit_var3a",
+     "ledgesit_var3b",
+     "ledgesit_var3c",
+     "ledgesit_var4a",
+     "ledgesit_var4b",
+     "ledgesit_var4c"
+    ],
+    "states": [
+     {
+      "move": "ledgesit_var1a",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var1b",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var1c",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2a",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2b",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2c",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3a",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3b",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3c",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4a",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4b",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4c",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "LedgeSit",
+    "bits": [
+     "ENCOUNTER",
+     "SIT",
+     "THREAT",
+     "MENACE",
+     "HIGH",
+     "POSE"
+    ],
+    "needs": [
+     "seat"
+    ],
+    "spawnCount": 95
+   },
+   {
+    "entries": [
+     "BatObserve"
+    ],
+    "states": [
+     {
+      "move": "BatObserve",
+      "anim": "male/bathold_lookleft",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatObserve",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatObserve",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "OBSERVE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 78
+   },
+   {
+    "entries": [
+     "Deal_A"
+    ],
+    "states": [
+     {
+      "move": "Deal_A",
+      "anim": "male/deal_A",
+      "frames": [
+       1,
+       238
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Deal_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Dealing_Deal",
+    "bits": [
+     "ENCOUNTER",
+     "DEALING"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 60
+   },
+   {
+    "entries": [
+     "PurseTug"
+    ],
+    "states": [
+     {
+      "move": "PurseTug",
+      "anim": "BF/purse_tug",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PurseTug",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PurseTug",
+    "bits": [
+     "ENCOUNTER",
+     "PURSETUG"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 50
+   },
+   {
+    "entries": [
+     "Spray_A",
+     "Spray_A2",
+     "Spray_A3",
+     "Spray_A4"
+    ],
+    "states": [
+     {
+      "move": "Spray_A",
+      "anim": "male/spray_lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A2",
+      "anim": "male/spray_shakecan",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A3",
+      "anim": "male/spray_cycle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A",
+        1
+       ],
+       [
+        "Spray_A4",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A4",
+      "anim": "male/spray_cycle",
+      "frames": [
+       15,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A",
+        1
+       ],
+       [
+        "Spray_A4",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "SprayPaint",
+    "bits": [
+     "ENCOUNTER",
+     "SPRAYCAN"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 45
+   },
+   {
+    "entries": [
+     "Lookout_A",
+     "Lookout_A2",
+     "Lookout_B",
+     "Lookout_B2",
+     "Lookout_B3"
+    ],
+    "states": [
+     {
+      "move": "Lookout_A",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.6,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_A",
+        1
+       ],
+       [
+        "Lookout_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_A2",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B2",
+        1
+       ],
+       [
+        "Lookout_B3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B2",
+      "anim": "male/Look_L",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B3",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.6,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Lookout",
+    "bits": [
+     "ENCOUNTER",
+     "LOOKOUT"
+    ],
+    "needs": [],
+    "spawnCount": 44
+   },
+   {
+    "entries": [
+     "Receiving_A"
+    ],
+    "states": [
+     {
+      "move": "Receiving_A",
+      "anim": "male/deal_B",
+      "frames": [
+       1,
+       238
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Receiving_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Dealing_Receive",
+    "bits": [
+     "ENCOUNTER",
+     "RECEIVING"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 42
+   },
+   {
+    "entries": [
+     "PeerIn_Start",
+     "PeerIn_Cycle",
+     "PeerIn_LookQuick"
+    ],
+    "states": [
+     {
+      "move": "PeerIn_Start",
+      "anim": "male/PeerIn",
+      "frames": [
+       1,
+       20
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Cycle",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "PeerIn_Cycle",
+      "anim": "male/PeerIn",
+      "frames": [
+       20,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Cycle",
+        2
+       ],
+       [
+        "PeerIn_LookQuick",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "PeerIn_LookQuick",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Start",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PeerIn",
+    "bits": [
+     "ENCOUNTER",
+     "OBSERVE",
+     "WALL",
+     "MID"
+    ],
+    "needs": [
+     "wall"
+    ],
+    "spawnCount": 36
+   },
+   {
+    "entries": [
+     "wall_lean1"
+    ],
+    "states": [
+     {
+      "move": "wall_lean1",
+      "anim": "male/wall_lean1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "wall_lean1",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Wall_Lean",
+    "bits": [
+     "ENCOUNTER",
+     "POSE",
+     "LEANWALL",
+     "ONE"
+    ],
+    "needs": [
+     "wall"
+    ],
+    "spawnCount": 30
+   },
+   {
+    "entries": [
+     "Enc_AtEase"
+    ],
+    "states": [
+     {
+      "move": "Enc_AtEase",
+      "anim": "male/at_ease",
+      "frames": [
+       61,
+       65
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Enc_AtEase",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "At_Ease",
+    "bits": [
+     "ENCOUNTER",
+     "SALUTE",
+     "HIGH",
+     "LOW",
+     "POSE"
+    ],
+    "needs": [],
+    "spawnCount": 24
+   },
+   {
+    "entries": [
+     "GunObserve",
+     "GunObserve2"
+    ],
+    "states": [
+     {
+      "move": "GunObserve",
+      "anim": "male/pointpistol_look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "GunObserve",
+        2
+       ],
+       [
+        "GunObserve2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "GunObserve2",
+      "anim": "male/pointpistol_look_L",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "GunObserve",
+        1
+       ],
+       [
+        "GunObserve2",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PistolObserve",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "HANDGUN",
+     "OBSERVE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 18
+   },
+   {
+    "entries": [
+     "TalkIdle"
+    ],
+    "states": [
+     {
+      "move": "TalkIdle",
+      "anim": "male/PL_TalkIdle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Talk02",
+      "anim": "male/PL_Talk02",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.2,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk01",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Talk03",
+      "anim": "male/PL_Talk03",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk01",
+        1
+       ],
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Talk01",
+      "anim": "male/PL_Talk01",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     }
+    ],
+    "pose": "Talk",
+    "bits": [
+     "ENCOUNTER",
+     "GESTICULATE"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Amused_pre",
+     "Amused_B",
+     "Amused_C",
+     "Amused_D",
+     "Amused_E"
+    ],
+    "states": [
+     {
+      "move": "Amused_pre",
+      "anim": "male/your_welcome_sm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_E",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_B",
+      "anim": "fem/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ],
+       [
+        "Amused_C",
+        1
+       ],
+       [
+        "Amused_D",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_C",
+      "anim": "male/listen_1",
+      "frames": [
+       111,
+       260
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_D",
+      "anim": "male/thankyou_sm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_E",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_E",
+      "anim": "male/no",
+      "frames": [
+       1,
+       115
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Amused",
+    "bits": [
+     "ENCOUNTER",
+     "AMUSED"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Cheer_A",
+     "Cheer_B",
+     "Cheer_C"
+    ],
+    "states": [
+     {
+      "move": "Cheer_A",
+      "anim": "male/chant_high",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cheer_B",
+      "anim": "male/chant_1arm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cheer_C",
+      "anim": "male/listen_1",
+      "frames": [
+       1,
+       200
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_C",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Cheering",
+    "bits": [
+     "ENCOUNTER",
+     "CHEER"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   }
+  ],
+  "huge": [
+   {
+    "entries": [
+     "Ready"
+    ],
+    "states": [
+     {
+      "move": "Ready",
+      "anim": "huge/Skel_ready",
+      "frames": [
+       1,
+       60
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready2",
+      "anim": "huge/Skel_ready",
+      "frames": [
+       1,
+       60
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_2Hips",
+        1
+       ],
+       [
+        "Ready_Look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Look",
+      "anim": "huge/idle_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready2",
+        1
+       ],
+       [
+        "Ready_2Hips",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips",
+      "anim": "huge/stand_2Hhips",
+      "frames": [
+       1,
+       64
+      ],
+      "playRate": 0.5,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        2
+       ],
+       [
+        "Ready_2Hips_post",
+        1
+       ],
+       [
+        "Ready_Xarms",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips_look",
+      "anim": "huge/idle_2hips_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        1
+       ],
+       [
+        "Ready_2Hips_post",
+        1
+       ],
+       [
+        "Ready_Xarms",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms",
+      "anim": "huge/stand_Xarms",
+      "frames": [
+       1,
+       68
+      ],
+      "playRate": 0.6,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_Xarms_look",
+        2
+       ],
+       [
+        "Ready_Xarms_post",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_2Hips_post",
+      "anim": "huge/stand_2Hhips",
+      "frames": [
+       109,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready2",
+        1
+       ],
+       [
+        "Ready_Look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms_look",
+      "anim": "huge/stand_Xarms",
+      "frames": [
+       68,
+       90
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Ready_Xarms_look",
+        1
+       ],
+       [
+        "Ready_Xarms_post",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Ready_Xarms_post",
+      "anim": "huge/stand_Xarms",
+      "frames": [
+       90,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Ready_2Hips_look",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Ready",
+    "bits": [],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Cross_Arms",
+     "Cross_Arms_look",
+     "Arms_On_Hips",
+     "Arms_On_Hips_look"
+    ],
+    "states": [
+     {
+      "move": "Cross_Arms",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       1,
+       68
+      ],
+      "playRate": 0.8,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cross_Arms_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cross_Arms_look",
+      "anim": "male/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips",
+        1
+       ],
+       [
+        "Cross_Arms_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Arms_On_Hips",
+      "anim": "male/stand_Xarms",
+      "frames": [
+       92,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips_look",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Arms_On_Hips_look",
+      "anim": "male/idle_2hips_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Arms_On_Hips_look",
+        1
+       ],
+       [
+        "Cross_Arms",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "ArmsCrossed",
+    "bits": [
+     "ENCOUNTER",
+     "COMMAND",
+     "OBSERVE",
+     "LOW"
+    ],
+    "needs": [],
+    "spawnCount": 99
+   },
+   {
+    "entries": [
+     "ledgesit_var1a",
+     "ledgesit_var1b",
+     "ledgesit_var1c",
+     "ledgesit_var2a",
+     "ledgesit_var2b",
+     "ledgesit_var2c",
+     "ledgesit_var3a",
+     "ledgesit_var3b",
+     "ledgesit_var3c",
+     "ledgesit_var4a",
+     "ledgesit_var4b",
+     "ledgesit_var4c"
+    ],
+    "states": [
+     {
+      "move": "ledgesit_var1a",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var1b",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var1c",
+      "anim": "male/ledgesit_var1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var1a",
+        1
+       ],
+       [
+        "ledgesit_var1b",
+        1
+       ],
+       [
+        "ledgesit_var1c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2a",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2b",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var2c",
+      "anim": "male/ledgesit_var2",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var2a",
+        1
+       ],
+       [
+        "ledgesit_var2b",
+        1
+       ],
+       [
+        "ledgesit_var2c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3a",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3b",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var3c",
+      "anim": "male/ledgesit_var3",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var3a",
+        1
+       ],
+       [
+        "ledgesit_var3b",
+        1
+       ],
+       [
+        "ledgesit_var3c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4a",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4b",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.5,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "ledgesit_var4c",
+      "anim": "male/ledgesit_var4",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.75,
+      "blendFrames": 30,
+      "next": [
+       [
+        "ledgesit_var4a",
+        1
+       ],
+       [
+        "ledgesit_var4b",
+        1
+       ],
+       [
+        "ledgesit_var4c",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "LedgeSit",
+    "bits": [
+     "ENCOUNTER",
+     "SIT",
+     "THREAT",
+     "MENACE",
+     "HIGH",
+     "POSE"
+    ],
+    "needs": [
+     "seat"
+    ],
+    "spawnCount": 95
+   },
+   {
+    "entries": [
+     "BatObserve"
+    ],
+    "states": [
+     {
+      "move": "BatObserve",
+      "anim": "male/bathold_lookleft",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.7,
+      "blendFrames": 5,
+      "next": [
+       [
+        "BatObserve",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "BatObserve",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "BLUNT",
+     "OBSERVE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 78
+   },
+   {
+    "entries": [
+     "Deal_A"
+    ],
+    "states": [
+     {
+      "move": "Deal_A",
+      "anim": "male/deal_A",
+      "frames": [
+       1,
+       238
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Deal_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Dealing_Deal",
+    "bits": [
+     "ENCOUNTER",
+     "DEALING"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 60
+   },
+   {
+    "entries": [
+     "PurseTug"
+    ],
+    "states": [
+     {
+      "move": "PurseTug",
+      "anim": "male/purse_tug",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PurseTug",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PurseTug",
+    "bits": [
+     "ENCOUNTER",
+     "PURSETUG"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 50
+   },
+   {
+    "entries": [
+     "Spray_A",
+     "Spray_A2",
+     "Spray_A3",
+     "Spray_A4"
+    ],
+    "states": [
+     {
+      "move": "Spray_A",
+      "anim": "male/spray_lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A2",
+      "anim": "male/spray_shakecan",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A3",
+      "anim": "male/spray_cycle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A",
+        1
+       ],
+       [
+        "Spray_A4",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Spray_A4",
+      "anim": "male/spray_cycle",
+      "frames": [
+       15,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Spray_A",
+        1
+       ],
+       [
+        "Spray_A4",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "SprayPaint",
+    "bits": [
+     "ENCOUNTER",
+     "SPRAYCAN"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 45
+   },
+   {
+    "entries": [
+     "Lookout_A",
+     "Lookout_A2",
+     "Lookout_B",
+     "Lookout_B2",
+     "Lookout_B3"
+    ],
+    "states": [
+     {
+      "move": "Lookout_A",
+      "anim": "male/suspicious",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.6,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_A",
+        1
+       ],
+       [
+        "Lookout_A2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_A2",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B2",
+        1
+       ],
+       [
+        "Lookout_B3",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B2",
+      "anim": "male/Look_L",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Lookout_B3",
+      "anim": "male/Look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.6,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Lookout_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Lookout",
+    "bits": [
+     "ENCOUNTER",
+     "LOOKOUT"
+    ],
+    "needs": [],
+    "spawnCount": 44
+   },
+   {
+    "entries": [
+     "Receiving_A"
+    ],
+    "states": [
+     {
+      "move": "Receiving_A",
+      "anim": "male/deal_B",
+      "frames": [
+       1,
+       238
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Receiving_A",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Dealing_Receive",
+    "bits": [
+     "ENCOUNTER",
+     "RECEIVING"
+    ],
+    "needs": [
+     "partner"
+    ],
+    "spawnCount": 42
+   },
+   {
+    "entries": [
+     "PeerIn_Start",
+     "PeerIn_Cycle",
+     "PeerIn_LookQuick"
+    ],
+    "states": [
+     {
+      "move": "PeerIn_Start",
+      "anim": "male/PeerIn",
+      "frames": [
+       1,
+       20
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Cycle",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "PeerIn_Cycle",
+      "anim": "male/PeerIn",
+      "frames": [
+       20,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Cycle",
+        2
+       ],
+       [
+        "PeerIn_LookQuick",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "PeerIn_LookQuick",
+      "anim": "male/lookquick",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "PeerIn_Start",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PeerIn",
+    "bits": [
+     "ENCOUNTER",
+     "OBSERVE",
+     "WALL",
+     "MID"
+    ],
+    "needs": [
+     "wall"
+    ],
+    "spawnCount": 36
+   },
+   {
+    "entries": [
+     "wall_lean1"
+    ],
+    "states": [
+     {
+      "move": "wall_lean1",
+      "anim": "male/wall_lean1",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "wall_lean1",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Wall_Lean",
+    "bits": [
+     "ENCOUNTER",
+     "POSE",
+     "LEANWALL",
+     "ONE"
+    ],
+    "needs": [
+     "wall"
+    ],
+    "spawnCount": 30
+   },
+   {
+    "entries": [
+     "Enc_AtEase"
+    ],
+    "states": [
+     {
+      "move": "Enc_AtEase",
+      "anim": "huge/at_ease",
+      "frames": [
+       61,
+       65
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Enc_AtEase",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "At_Ease",
+    "bits": [
+     "ENCOUNTER",
+     "SALUTE",
+     "HIGH",
+     "LOW",
+     "POSE"
+    ],
+    "needs": [],
+    "spawnCount": 24
+   },
+   {
+    "entries": [
+     "GunObserve",
+     "GunObserve2"
+    ],
+    "states": [
+     {
+      "move": "GunObserve",
+      "anim": "male/pointpistol_look_R",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "GunObserve",
+        2
+       ],
+       [
+        "GunObserve2",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "GunObserve2",
+      "anim": "male/pointpistol_look_L",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "GunObserve",
+        1
+       ],
+       [
+        "GunObserve2",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "PistolObserve",
+    "bits": [
+     "ENCOUNTER",
+     "COMBAT",
+     "WEAPON",
+     "HANDGUN",
+     "OBSERVE"
+    ],
+    "needs": [
+     "prop"
+    ],
+    "spawnCount": 18
+   },
+   {
+    "entries": [
+     "TalkIdle"
+    ],
+    "states": [
+     {
+      "move": "TalkIdle",
+      "anim": "male/PL_TalkIdle",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Talk02",
+      "anim": "male/PL_Talk02",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.2,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk01",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Talk03",
+      "anim": "male/PL_Talk03",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Talk01",
+        1
+       ],
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     },
+     {
+      "move": "Talk01",
+      "anim": "male/PL_Talk01",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Talk02",
+        1
+       ],
+       [
+        "Talk03",
+        1
+       ],
+       [
+        "TalkIdle",
+        2
+       ]
+      ]
+     }
+    ],
+    "pose": "Talk",
+    "bits": [
+     "ENCOUNTER",
+     "GESTICULATE"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Amused_pre",
+     "Amused_B",
+     "Amused_C",
+     "Amused_D",
+     "Amused_E"
+    ],
+    "states": [
+     {
+      "move": "Amused_pre",
+      "anim": "male/your_welcome_sm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_E",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_B",
+      "anim": "huge/idle_xarms_look",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 0.8,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ],
+       [
+        "Amused_C",
+        1
+       ],
+       [
+        "Amused_D",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_C",
+      "anim": "huge/listen_1",
+      "frames": [
+       111,
+       190
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_D",
+      "anim": "male/thankyou_sm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_E",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Amused_E",
+      "anim": "male/no",
+      "frames": [
+       1,
+       115
+      ],
+      "playRate": 1.0,
+      "blendFrames": 15,
+      "next": [
+       [
+        "Amused_B",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Amused",
+    "bits": [
+     "ENCOUNTER",
+     "AMUSED"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   },
+   {
+    "entries": [
+     "Cheer_A",
+     "Cheer_B",
+     "Cheer_C"
+    ],
+    "states": [
+     {
+      "move": "Cheer_A",
+      "anim": "male/chant_high",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_A",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cheer_B",
+      "anim": "male/chant_1arm",
+      "frames": [
+       1,
+       0
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_B",
+        1
+       ]
+      ]
+     },
+     {
+      "move": "Cheer_C",
+      "anim": "male/listen_1",
+      "frames": [
+       1,
+       200
+      ],
+      "playRate": 1.0,
+      "blendFrames": 5,
+      "next": [
+       [
+        "Cheer_C",
+        1
+       ]
+      ]
+     }
+    ],
+    "pose": "Cheering",
+    "bits": [
+     "ENCOUNTER",
+     "CHEER"
+    ],
+    "needs": [],
+    "spawnCount": 0
+   }
+  ]
+ }
+}
