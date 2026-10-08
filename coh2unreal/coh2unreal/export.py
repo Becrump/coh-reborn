@@ -84,6 +84,7 @@ class Exporter:
         self.library = False
         self.placements = []       # (mesh name, has night part, matrix)
         self.khr_lights = False    # also put them in the glTF
+        self.ruins = {}            # id(instance) -> edits.Rule (cut down)
         self.textures = {}         # texname -> (png rel path or None, alpha)
         self.stats = {"instances": 0, "placed": 0, "hidden": 0, "lod": 0,
                       "fake_fx": 0, "modes": {},
@@ -202,7 +203,8 @@ class Exporter:
             return
         cx, cz = m[3][0], m[3][2]
         tile = (math.floor(cx / self.tile), math.floor(-cz / self.tile))
-        self._fill(self.tiles.setdefault(tile, {}), mesh, mode, m)
+        self._fill(self.tiles.setdefault(tile, {}), mesh, mode, m,
+                   self.ruins.get(id(inst)))
         self.stats["placed"] += 1
 
     def add_water_tops(self, instances):
@@ -233,9 +235,10 @@ class Exporter:
             n += 1
         return n
 
-    def _fill(self, prims, mesh, mode, m):
+    def _fill(self, prims, mesh, mode, m, ruin=None):
         """Appends a model's triangles, transformed by game matrix m, to the
-        primitives of one output mesh (keyed by texture and draw mode)."""
+        primitives of one output mesh (keyed by texture and draw mode).
+        A ruin rule (edits.Rule) clamps the model's height."""
         pos = mesh["positions"]
         nrm = mesh["normals"]
         uv = mesh["uvs"]
@@ -249,6 +252,8 @@ class Exporter:
             for k in range(3):
                 wp[v * 3 + k] = (x * m[0][k] + y * m[1][k] + z * m[2][k]
                                  + m[3][k])
+            if ruin is not None:
+                wp[v * 3 + 1] = min(wp[v * 3 + 1], ruin.height_at(wp[v * 3]))
         for texname, tris in mesh["groups"]:
             if not tris:
                 continue
