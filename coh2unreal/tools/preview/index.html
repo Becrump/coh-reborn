@@ -1,0 +1,16 @@
+<!doctype html><html><body style="margin:0;background:#88a">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const q=new URLSearchParams(location.search);
+const r=new THREE.WebGLRenderer({antialias:true}); r.setSize(1280,800); document.body.appendChild(r.domElement);
+const s=new THREE.Scene(); s.background=new THREE.Color(0x9ab8d8);
+s.add(new THREE.HemisphereLight(0xffffff,0x555544,2.2)); const d=new THREE.DirectionalLight(0xffffff,1.5); d.position.set(1,2,1); s.add(d);
+const cam=new THREE.PerspectiveCamera(+(q.get('fov')||60),1280/800,0.5,20000);
+new GLTFLoader().load(q.get('f'),g=>{s.add(g.scene);
+ const box=new THREE.Box3().setFromObject(g.scene); const c=box.getCenter(new THREE.Vector3()); const sz=box.getSize(new THREE.Vector3());
+ const p=(q.get('cam')||'').split(',').map(Number); const t=(q.get('at')||'').split(',').map(Number);
+ if(p.length==3&&!isNaN(p[0])){cam.position.set(...p); cam.lookAt(...t);} else {cam.position.set(c.x, c.y+Math.max(sz.x,sz.z)*0.9, c.z+Math.max(sz.x,sz.z)*0.5); cam.lookAt(c);}
+ r.render(s,cam); window.DONE=JSON.stringify({min:box.min,max:box.max});},undefined,e=>{window.DONE='ERR '+e;});
+</script></body></html>
