@@ -46,6 +46,10 @@ NIGHT_FADE_H = 0.75
 # statue/City Hall floods and braziers: on before dusk, unlike the CoH street
 # lamps (which come on after sunset); (off hour, on hour)
 FEATURE_LIGHT_TIME = (6.0, 18.0)
+# street lamps and night windows: CoH's own times (4.8 off, 19.5 on) leave
+# the streets dark for the last hour before our sunrise, so cover the whole
+# dark period: (off hour, on hour). None = use the zone's sky file.
+LAMP_TIME = (6.25, 18.75)
 FEATURE_PREFIXES = ("StatueLight_", "Fire_")             # hours to fade night in/out at lamp times
 RESERVED_LABELS = {"Moon", "StarDome"}
 FT_TO_CM = 30.48
@@ -747,7 +751,7 @@ def state_at(sky, hour):
     amb = sample(keys, hour, "ambient", [100, 100, 160])
     fog = sample(keys, hour, "fog", [61, 135, 179])
     fog_dist = sample(keys, hour, "fog_dist_ft", [800, 1780])
-    on, off = sky.get("lamp_light_time") or [4.8, 19.5]
+    on, off = LAMP_TIME or sky.get("lamp_light_time") or [4.8, 19.5]
     # 0 by day, 1 by night, fading over NIGHT_FADE_H around lamp times
     to_on = (hour - on) % 24            # hours since lamps went off (dawn)
     to_off = (hour - off) % 24          # hours since lamps came on (dusk)
@@ -927,7 +931,7 @@ def build_sequence(sky_data, sun, sky, fog, nights, moon=None):
     _key_float(fcb, "StartDistance", [(f, s["fog_start"]) for f, s in states])
 
     # night-only tiles: visibility switches at lamp-light time
-    on, off = sky_data.get("lamp_light_time") or [4.8, 19.5]
+    on, off = LAMP_TIME or sky_data.get("lamp_light_time") or [4.8, 19.5]
     def frame_of(hour):
         return int(((hour - START_HOUR) % 24) * frames_per_hour)
     def switches_for(a):
