@@ -3,5 +3,6 @@
   "comfyui_root": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install",
   "comfyui_python": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install/python_embeded/python.exe",
   "upscale_model": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install/ComfyUI/models/upscale_models/RealESRGAN_x4plus.pth",
+  "rmbg_model_dir": "C:/Users/rtcru/Downloads/ComfyUI-Easy-Install/ComfyUI-Easy-Install/ComfyUI/models/rembg/models/bria-rmbg",
   "ue_exec": "unreal/scripts/ue_exec.py"
 }

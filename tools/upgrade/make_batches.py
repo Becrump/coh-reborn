@@ -81,6 +81,9 @@ RULES = {
     "Council": [(r"^Council_(Nebula|Penumbra|Galaxy)_", "council_head", "council_glove")],
 }
 HUMAN = ("male/skel_ready2", "fem/skel_ready2")
+# per-head fitting tweaks found by checking the renders: long hair makes a
+# head read wider than its skull, so scale it up to the old head's size
+HEAD_TUNING = {"skull_female_head": {"width_scale": 1.55}}
 
 
 def main(chars_dir, work_root):
@@ -109,6 +112,7 @@ def main(chars_dir, work_root):
             p = {"prompt": PARTS[g][name], "seed": 20261007}
             if "head" in name:
                 p.update(faces=18000, replace=["Head", "Hair", "EyeDetail"])
+                p.update(HEAD_TUNING.get(name, {}))
             else:
                 p.update(faces=9000, is_right_hand=True)
             parts[name] = p

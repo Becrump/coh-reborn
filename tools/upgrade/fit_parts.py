@@ -272,6 +272,16 @@ if H:
     keep_old = mn.z > hmn.z + 0.03 and old_head is not None
     for o in old:
         if keep_old and o is old_head:
+            # keep only the old neck: cut away everything that would show
+            # above the new head's lower edge (the old face, ears, hair)
+            top_keep = mn.z + 0.02
+            bm = bmesh.new()
+            bm.from_mesh(o.data)
+            bmesh.ops.delete(bm, geom=[
+                v for v in bm.verts if (o.matrix_world @ v.co).z > top_keep],
+                context="VERTS")
+            bm.to_mesh(o.data)
+            bm.free()
             o.name = o.data.name = "Neck_Old"
             continue
         bpy.data.objects.remove(o)

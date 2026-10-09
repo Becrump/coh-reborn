@@ -11,7 +11,8 @@
     "Head",
     "Hair",
     "EyeDetail"
-   ]
+   ],
+   "width_scale": 1.55
   },
   "skull_glove_f": {
    "prompt": "3D render of a single slender female right human hand, wearing a black fingerless leather glove with a small white skull on the back, fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated",

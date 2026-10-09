@@ -7,7 +7,8 @@ stopped again afterwards so the GPU is free for Unreal):
 1. Z-Image Turbo draws a concept image (workflows/zimage_concept.json).
 2. Trellis2 (GGUF, low VRAM) turns it into a mesh
    (workflows/trellis2_image_to_3d.json).
-3. fill_bg.py prepares the concept for projection.
+3. matte.py cuts the concept out of its backdrop (BRIA RMBG) and
+   fill_bg.py prepares it for projection.
 
 Writes <out_dir>/<name>_concept.png, <name>.glb, <name>_filled.png,
 <name>_bbox.json and <name>_gen.json (timings and checks). Trellis2's own
@@ -139,10 +140,17 @@ def main():
     size = os.path.getsize(os.path.join(a.out_dir, a.name + ".glb"))
     report["checks"].append({"name": "mesh_written", "ok": size > 100000,
                              "bytes": size})
+    concept = os.path.join(a.out_dir, a.name + "_concept.png")
+    mask = os.path.join(a.out_dir, a.name + "_mask.png")
+    # cut the concept out of its backdrop (BRIA RMBG via ComfyUI's Python)
+    if c.get("rmbg_model_dir"):
+        subprocess.call([c["comfyui_python"], os.path.join(HERE, "matte.py"),
+                         c["rmbg_model_dir"], concept, mask])
     subprocess.check_call([sys.executable, os.path.join(HERE, "fill_bg.py"),
-                           os.path.join(a.out_dir, a.name + "_concept.png"),
+                           concept,
                            os.path.join(a.out_dir, a.name + "_filled.png"),
-                           os.path.join(a.out_dir, a.name + "_bbox.json")])
+                           os.path.join(a.out_dir, a.name + "_bbox.json")]
+                          + ([mask] if os.path.exists(mask) else []))
     box = json.load(open(os.path.join(a.out_dir, a.name + "_bbox.json")))
     fill = (box["x1"] - box["x0"]) * (box["y1"] - box["y0"]) / \
         float(box["w"] * box["h"])
