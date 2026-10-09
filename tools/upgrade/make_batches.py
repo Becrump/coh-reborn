@@ -83,7 +83,9 @@ RULES = {
 HUMAN = ("male/skel_ready2", "fem/skel_ready2")
 # per-head fitting tweaks found by checking the renders: long hair makes a
 # head read wider than its skull, so scale it up to the old head's size
-HEAD_TUNING = {"skull_female_head": {"width_scale": 1.55}}
+HEAD_TUNING = {"skull_female_head": {"width_scale": 1.55},
+               "outcast_head": {"top_offset": 0.14, "width_band": [0.4, 0.7]},
+               "fog_head": {"width_scale": 1.35, "top_offset": 0.03}}
 
 
 def main(chars_dir, work_root):

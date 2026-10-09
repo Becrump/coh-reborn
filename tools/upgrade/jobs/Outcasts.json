@@ -17,6 +17,11 @@
     "Head",
     "Hair",
     "EyeDetail"
+   ],
+   "top_offset": 0.14,
+   "width_band": [
+    0.4,
+    0.7
    ]
   }
  },

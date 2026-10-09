@@ -17,7 +17,9 @@
     "Head",
     "Hair",
     "EyeDetail"
-   ]
+   ],
+   "width_scale": 1.35,
+   "top_offset": 0.03
   }
  },
  "characters": [

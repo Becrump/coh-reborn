@@ -247,7 +247,10 @@ if H:
     top = max(p.z for p in pts)
     ht = top - min(p.z for p in pts)
     hl = H.get("head_fraction", 0.45)
-    xs = sorted(p.x for p in pts if p.z > top - hl * ht)
+    # width_band: measure the skull between these fractions down from the
+    # top (e.g. [0.4, 0.7] skips a tall mohawk); default = the top hl
+    b0, b1 = H.get("width_band", [0.0, hl])
+    xs = sorted(p.x for p in pts if top - b1 * ht < p.z < top - b0 * ht)
     nw = xs[int(len(xs) * 0.9)] - xs[int(len(xs) * 0.1)]
     s = ow / max(nw, 1e-6) * H.get("width_scale", 1.12)
     head.scale = (s, s, s)
@@ -255,8 +258,10 @@ if H:
     mn, mx = bbox([head])
     c = (hmn + hmx) / 2
     # top of the new head a little above the old one, centred on it
+    # top_offset: how far the new head may rise above the old one (tall
+    # hair, mohawks, helmets), set per head in the batch
     head.location = Vector((c.x - (mn.x + mx.x) / 2, c.y - (mn.y + mx.y) / 2,
-                            hmx.z + 0.01 - mx.z))
+                            hmx.z + 0.01 + H.get("top_offset", 0.0) - mx.z))
     apply(head)
     # crop shoulders/capes that hang below the old neckline
     cut = hmn.z - 0.03
