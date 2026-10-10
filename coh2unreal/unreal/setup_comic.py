@@ -74,22 +74,27 @@ float g = dot(paint, lw);
 paint = lerp(g.xxx, paint, Saturation);
 
 // 4. ink lines: depth discontinuities and normal creases
-float2 o = px * LineThickness;
-float d  = SceneTextureLookup(uv, 1, false).r;
-float dl = SceneTextureLookup(uv + float2(-o.x, 0), 1, false).r;
-float dr = SceneTextureLookup(uv + float2( o.x, 0), 1, false).r;
-float du = SceneTextureLookup(uv + float2(0, -o.y), 1, false).r;
-float dd = SceneTextureLookup(uv + float2(0,  o.y), 1, false).r;
+// After tonemapping, PostProcessInput0 is at output resolution while depth
+// and normals stay at render resolution (lower whenever TSR/screen
+// percentage upscales), so they need their own UV and texel size or the
+// lines drift off the edges.
+float2 uvG = GetDefaultSceneTextureUV(Parameters, 1);
+float2 o = View.BufferSizeAndInvSize.zw * max(LineThickness, 0.5);
+float d  = SceneTextureLookup(uvG, 1, false).r;
+float dl = SceneTextureLookup(uvG + float2(-o.x, 0), 1, false).r;
+float dr = SceneTextureLookup(uvG + float2( o.x, 0), 1, false).r;
+float du = SceneTextureLookup(uvG + float2(0, -o.y), 1, false).r;
+float dd = SceneTextureLookup(uvG + float2(0,  o.y), 1, false).r;
 // Laplacian of 1/depth: zero on any flat surface (1/z is linear across a
 // plane in screen space), so grazing floors don't streak; a real depth step
 // still gives roughly its relative size
 float depthEdge = abs(1 / max(dl, 1.0) + 1 / max(dr, 1.0) + 1 / max(du, 1.0)
                       + 1 / max(dd, 1.0) - 4 / max(d, 1.0)) * max(d, 1.0);
-float3 n0 = SceneTextureLookup(uv, 8, false).rgb;
-float3 nl = SceneTextureLookup(uv + float2(-o.x, 0), 8, false).rgb;
-float3 nr = SceneTextureLookup(uv + float2( o.x, 0), 8, false).rgb;
-float3 nu = SceneTextureLookup(uv + float2(0, -o.y), 8, false).rgb;
-float3 nd = SceneTextureLookup(uv + float2(0,  o.y), 8, false).rgb;
+float3 n0 = SceneTextureLookup(uvG, 8, false).rgb;
+float3 nl = SceneTextureLookup(uvG + float2(-o.x, 0), 8, false).rgb;
+float3 nr = SceneTextureLookup(uvG + float2( o.x, 0), 8, false).rgb;
+float3 nu = SceneTextureLookup(uvG + float2(0, -o.y), 8, false).rgb;
+float3 nd = SceneTextureLookup(uvG + float2(0,  o.y), 8, false).rgb;
 float normalEdge = (1 - dot(n0, nl)) + (1 - dot(n0, nr)) + (1 - dot(n0, nu)) + (1 - dot(n0, nd));
 float edge = max(saturate((depthEdge * DepthSensitivity - 0.15) * 4),
                  saturate((normalEdge * NormalSensitivity - 0.35) * 3));

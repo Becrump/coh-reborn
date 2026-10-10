@@ -453,10 +453,42 @@ def export_npc(gd, npc_name, out_dir, name=None, moves=DEFAULT_MOVES,
                log=print):
     npc = gd.npcs().get(npc_name.lower())
     if npc is None:
+        # Vehicle villain definitions can name the costume file prefix rather
+        # than its NPC record (PPD_SquadCar -> Cars_PPD). Require a unique match.
+        aliases = [n for n in gd.npcs().values() if n.get("Costume") and
+                   (n.get("Costume").arg("CostumeFilePrefix") or "").lower() == npc_name.lower()]
+        if len(aliases) == 1:
+            npc = aliases[0]
+            log("  costume prefix alias %s -> %s" % (npc_name, npc.args[0]))
+    if npc is None:
         raise KeyError("NPC costume %s not found" % npc_name)
     name = name or npc_name
     ent_name, prefix, parts = resolve_costume(gd, npc, log)
     et = gd.ent_type(ent_name)
+    if not parts and et.get("graphics"):
+        # Non-costume entities use the complete Graphics .geo. Keep each
+        # native texture group separate while retaining the embedded skin.
+        graphics = et["graphics"][0].replace("\\", "/").lower()
+        geo = gd.geo(graphics)
+        if geo:
+            model_names = {m.name.split("__")[0].lower() for m in geo.models}
+            for model in geo.models:
+                if not model.vert_count or not model.tri_count:
+                    continue
+                base_model = model.name.split("__")[0].lower()
+                lod_base = base_model.rsplit("_lod", 1)[0]
+                if lod_base != base_model and lod_base in model_names:
+                    continue
+                for texture, triangles in geo.mesh(model)["groups"]:
+                    if not triangles:
+                        continue
+                    attach = A.bone_id_from_text(model.name[4:])
+                    texture_base = texture.replace("\\", "/").rsplit("/", 1)[-1].rsplit(".", 1)[0]
+                    part = Part("Graphics_%d" % len(parts), "", max(0, attach),
+                                graphics, [model.name.split("__")[0]], texture_base, None,
+                                (255, 255, 255), (255, 255, 255))
+                    part.native_texture_group = texture
+                    parts.append(part)
     seq_file = (et.get("sequencer") or ["player.txt"])[0]
     seq_type = (et.get("sequencertype") or [ent_name])[0]
     seq = gd.sequencer(seq_file)
@@ -586,6 +618,8 @@ def export_npc(gd, npc_name, out_dir, name=None, moves=DEFAULT_MOVES,
         prims = []
         for _tname, tris in mesh["groups"]:
             if not tris:
+                continue
+            if hasattr(part, "native_texture_group") and _tname != part.native_texture_group:
                 continue
             idx = []
             for t in range(0, len(tris), 3):

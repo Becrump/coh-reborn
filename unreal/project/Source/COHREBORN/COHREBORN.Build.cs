@@ -7,7 +7,8 @@ public class COHREBORN : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core", "CoreUObject", "Engine", "Json", "JsonUtilities",
-			"EnhancedInput", "InputCore"
+			"EnhancedInput", "InputCore",
+			"MoviePlayer", "Slate", "SlateCore"
 		});
 	}
 }

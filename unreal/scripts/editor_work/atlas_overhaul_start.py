@@ -1,0 +1,10 @@
+import unreal
+u=unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+w=u.get_editor_world()
+assert w.get_path_name().startswith('/Game/AtlasPark4/AtlasPark_CitySampleStudy.')
+assert unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True,True)
+assert unreal.EditorLoadingAndSavingUtils.save_map(w,'/Game/AtlasPark4/AtlasPark_Upgraded')
+assert unreal.EditorLoadingAndSavingUtils.load_map('/Game/AtlasPark4/AtlasPark_Upgraded')
+unreal.WorldPartitionBlueprintLibrary.load_actors([d.guid for d in unreal.WorldPartitionBlueprintLibrary.get_actor_descs()])
+print('MAP',u.get_editor_world().get_path_name())
+print('SAVED',unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True,True))

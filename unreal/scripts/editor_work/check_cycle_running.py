@@ -1,0 +1,10 @@
+import unreal
+s=unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+a=next(a for a in s.get_all_level_actors() if isinstance(a,unreal.LevelSequenceActor) and a.get_actor_label()=='DayNightCycle')
+ps=a.get_editor_property('playback_settings');print('SETTINGS',ps)
+p=a.get_editor_property('sequence_player');print('PLAYER',p)
+if p:print('PLAYING',p.is_playing(),'PAUSED',p.is_paused(),'TIME',p.get_current_time())
+print('WORLD',unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world().get_path_name())
+a.modify();ps.play_rate=2.0;a.set_editor_property('playback_settings',ps)
+print('RESTORED OLD RATE',a.get_editor_property('playback_settings').play_rate)
+print('SAVE',unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True,True))

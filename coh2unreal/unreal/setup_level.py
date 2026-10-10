@@ -35,7 +35,7 @@ SEQ_DIR = "/Game/CoH"
 SEQ_NAME = "DayNight"
 FPS = 30
 MINUTES_PER_HOUR = 1.0          # real minutes per game hour
-PLAY_RATE = 2.0                 # cycle speed: 2 = 2 game hours per real minute
+PLAY_RATE = 2.0                 # 2 game hours per real minute; full day = 12 minutes
 START_HOUR = 10.0               # game time when the sequence starts
 SUN_LUX = 10.0                  # sun at CoH diffuse 255
 SKY_INTENSITY = 12.0            # sky light at CoH ambient 255 (fill for shade; CoH faked the rest)

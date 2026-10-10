@@ -1,0 +1,58 @@
+{
+    "FileVersion":  3,
+    "EngineAssociation":  "5.8",
+    "Category":  "",
+    "Description":  "",
+    "Plugins":  [
+                    {
+                        "Name":  "ModelingToolsEditorMode",
+                        "Enabled":  true,
+                        "TargetAllowList":  [
+                                                "Editor"
+                                            ]
+                    },
+                    {
+                        "Name":  "MCPClientToolset",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "ModelContextProtocol",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "EditorToolset",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "MetaHumanCharacter",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "MetaHumanGenerator",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "MetaHumanCrowd",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "MetaHumanSDK",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "DynamicWind",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "ProceduralVegetationEditor",
+                        "Enabled":  true
+                    }
+                ],
+    "Modules":  [
+                    {
+                        "Name":  "COHREBORN",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "Default"
+                    }
+                ]
+}
