@@ -36,6 +36,7 @@ Open `/Game/AtlasReborn/AtlasPark_Reborn` first.
 | `measure_buildings.py` | footprint/height of every packed City Sample building |
 | `build_zones.py` | lot markers (TargetPoints) and planting zone splines |
 | `build_pcg.py` | PCG graphs: buildings per lot bucket, trees and shrubs |
+| `check_water.py` | fails if any building footprint (plus margin) touches water |
 | `window_lights.py` | City Sample windows dark by day, lit by `MPC_Reborn.Night` |
 | `build_lighting.py` | physical daylight and exposure range |
 | `save_map.py` | saves the level |

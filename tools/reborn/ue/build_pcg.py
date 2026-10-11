@@ -138,6 +138,10 @@ def volume(label, g):
 
 
 def buildings():
+    # buildings from an earlier run outlive their deleted PCG volume
+    for a in actors.get_all_level_actors():
+        if "BPP_" in a.get_class().get_name():
+            actors.destroy_actor(a)
     g = new_graph("PCG_Reborn_Buildings")
     by = {b["name"]: b for b in plan["buildings"]}
     merge, _ = node(g, unreal.PCGMergeSettings, 2600, 0)

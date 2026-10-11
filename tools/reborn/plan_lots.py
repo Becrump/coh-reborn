@@ -76,7 +76,8 @@ for i, lot in enumerate(lay["lots"]):
                  "size": [L, W], "class": cls, "height": lot["height"], "candidates": c, "poly": lot["poly"]})
 
 # north district: cut blocks into parcels along their long side
-PARCEL = {"district_mid": (62, 48, ["mid", "high"]), "waterfront_mid": (55, 40, ["low", "mid"]),
+PARCEL = {"outer_district": (58, 46, ["mid", "low", "high", "mid"]),
+          "district_mid": (62, 48, ["mid", "high"]), "waterfront_mid": (55, 40, ["low", "mid"]),
           "harbor_rebuild": (90, 60, ["low"])}
 for j, blk in enumerate(lay["blocks"]):
     if blk["kind"] not in PARCEL:
@@ -102,6 +103,24 @@ for j, blk in enumerate(lay["blocks"]):
             lots.append({"id": "north_%02d_%d_%d" % (j, ix, iy), "kind": blk["kind"],
                          "center": [part.centroid.x, part.centroid.y], "yaw": yaw, "size": [L, W],
                          "class": cls, "candidates": c, "poly": [list(p) for p in part.exterior.coords]})
+
+# nothing may stand in or right next to water: the bay, the inlet and the ponds
+from shapely.ops import unary_union
+coast = [w for w in lay["waters"] if w["kind"] == "bay"][0]["coast"]
+sea = Polygon([(-5000, -9000), (5000, -9000), (5000, coast[-1][1])] + [tuple(p) for p in coast[::-1]] +
+              [(-5000, coast[0][1])])
+WATER = unary_union([sea] + [Polygon(w["poly"]) for w in lay["waters"] if w["kind"] == "pond"])
+WATER_MARGIN = 12.0
+kept = []
+for lot in lots:
+    d = Polygon(lot["poly"]).distance(WATER)
+    lot["water_clearance"] = round(d, 1)
+    if d < WATER_MARGIN and not lot["kind"].startswith("landmark"):
+        print("skip lot near water", lot["id"], round(d, 1))
+        continue
+    kept.append(lot)
+lots = kept
+
 
 def size_bucket(W):
     return "S" if W < 30 else "M" if W < 45 else "L" if W < 70 else "X"
@@ -160,7 +179,9 @@ for k, pk in enumerate(lay["parks"]):
         kind, dens = ("park_woods", 1 / 140.0) if cover > 0.2 else ("park", 1 / 350.0)
     zones.append({"name": "Park_%03d" % k, "kind": kind, "density": dens, "area": pk["area"],
                   "poly": [list(p) for p in poly.simplify(1).exterior.coords]})
-plan = {"buildings": blds, "lots": lots, "buckets": bucket_list, "zones": zones}
+# landmark spots stay empty: atlas_layout paints them as paved plazas
+plan = {"buildings": blds, "lots": lots, "buckets": bucket_list, "zones": zones,
+        "water_margin_m": WATER_MARGIN, "water": [list(p) for p in Polygon(sea).exterior.coords]}
 with open(os.path.join(OUT, "lots_plan.json"), "w") as f:
     json.dump(plan, f, indent=1)
 empty = [l["id"] for l in lots if not l["candidates"] and not l["kind"].startswith("landmark")]

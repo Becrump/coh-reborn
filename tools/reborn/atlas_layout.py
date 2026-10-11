@@ -143,6 +143,21 @@ roads["North_Gate"] = LineString([(320, -312), (320, y0r)])
 roads["South_Gate"] = LineString([(220, 738), (220, y1r)])
 roads["West_Gate"] = LineString([(-538, 200), (x0r, 200)])
 roads["East_Gate"] = LineString([(856, 580), (x1r, 580)])
+# outer districts on the west, south and east: an outer avenue parallel to
+# the ring and cross streets every ~130 m; a wooded belt stays at the map edge
+BELT = 55.0
+LX1, LY1 = LX0 + 2016, LY0 + 2016
+xw, xe, ys = x0r - 135, x1r + 135, y1r + 95
+roads["West_Avenue"] = LineString([(xw, y0r - 20), (xw, ys)])
+roads["East_Avenue"] = LineString([(xe, coast_y(xe) + 60), (xe, ys)])
+roads["South_Avenue"] = LineString([(xw, ys), (xe, ys)])
+for k, y in enumerate(np.arange(y0r + 60, y1r, 130)):
+    roads["West_St_%d" % k] = LineString([(LX0 + BELT, y), (x0r, y)])
+    roads["East_St_%d" % k] = LineString([(x1r, y), (LX1 - BELT, y)])
+for k, x in enumerate(np.arange(x0r + 60, x1r, 140)):
+    roads["South_St_%d" % k] = LineString([(x, y1r), (x, LY1 - BELT)])
+roads["West_Edge_Rd"] = LineString([(LX0 + BELT, y0r - 20), (LX0 + BELT, LY1 - BELT), (LX1 - BELT, LY1 - BELT),
+                                    (LX1 - BELT, coast_y(LX1 - BELT) + 60)])
 road_poly = unary_union([r.buffer(ROAD_W / 2, cap_style=2, join_style=1) for r in roads.values()]) & land_poly
 walk_poly = unary_union([r.buffer(ROAD_W / 2 + WALK_W, cap_style=2, join_style=1) for r in roads.values()]) & land_poly
 # piers into the bay, like the sketch (three, angled slightly east)
@@ -156,6 +171,9 @@ core_poly = box(*CORE)
 north = (land_poly - box(WALL[0] - 60, WALL[1] - 60, WALL[2] + 60, WALL[3] + 60))
 north = north & box(LX0, LY0, LX0 + 2016, WALL[1] - RING_OFF - ROAD_W / 2 - WALK_W)
 blocks = [b for b in getattr(north - walk_poly, "geoms", [north - walk_poly]) if b.area > 1500]
+outer = (land_poly & box(LX0 + BELT, y0r - 20, LX1 - BELT, LY1 - BELT)) - box(x0r - 14, y0r - 14, x1r + 14, y1r + 14)
+outer = outer - box(LX0, LY0, LX1, y0r - 20)
+outer_blocks = [b for b in getattr(outer - walk_poly, "geoms", [outer - walk_poly]) if b.area > 1500]
 
 # ---------------------------------------------------------------- core lots
 lots, parks, waters = [], [], []
@@ -236,6 +254,15 @@ for i, sl in enumerate(ndimage.find_objects(lab), 1):
 # west, the rest city blocks (sketch zone 22 = rebuilding near the piers)
 rng = np.random.default_rng(7)
 nblocks = []
+for k, g in enumerate(outer_blocks):
+    g = g.buffer(-1.0)
+    if g.is_empty:
+        continue
+    g = max(getattr(g, "geoms", [g]), key=lambda q: q.area)
+    c = g.centroid
+    # a neighbourhood park every few blocks, the rest city
+    kind = "outer_park" if k % 7 == 3 else "outer_district"
+    nblocks.append({"kind": kind, "poly": [list(map(float, p)) for p in g.exterior.coords], "area": round(g.area)})
 for b in blocks:
     b = b.buffer(-1.0)
     if b.is_empty:
@@ -258,9 +285,9 @@ for b in blocks:
         nblocks.append({"kind": kind, "poly": [list(map(float, p)) for p in g.exterior.coords],
                         "area": round(g.area)})
 for b in nblocks:
-    if b["kind"] in ("waterfront_park", "inlet_woods"):
+    if b["kind"] in ("waterfront_park", "inlet_woods", "outer_park"):
         parks.append({"kind": b["kind"], "poly": b["poly"], "area": b["area"],
-                      "tree_cover": 0.25 if b["kind"] == "waterfront_park" else 0.6})
+                      "tree_cover": 0.6 if b["kind"] == "inlet_woods" else 0.25})
 
 # ---------------------------------------------------------------- heights
 X, Y = grid_xy(LN, LX0, LY0, LRES)
@@ -286,7 +313,8 @@ dsea = ndimage.distance_transform_edt(~land) * LRES        # offshore distance
 # hills on W/E/S beyond the ring boulevard (none on the north waterfront)
 ring_m = (X > x0r - 30) & (X < x1r + 30) & (Y > y0r - 30) & (Y < y1r + 30)
 dring = ndimage.distance_transform_edt(~ring_m) * LRES
-hills = 42 * smoothstep(10, 230, dring) * (0.75 + 0.25 * noise(X, Y, 90, 3))
+dedge = np.minimum.reduce([X - LX0, LX0 + 2016 - X, LY0 + 2016 - Y]) if True else None
+hills = 14 * smoothstep(BELT + 10, 0, dedge) * (0.75 + 0.25 * noise(X, Y, 90, 3))
 hills *= smoothstep(20, 160, dcoast) * (Y > y0r - 80)
 northland = 0.6 + 0.8 * smoothstep(0, 200, dcoast)
 design = np.where(Y < y0r - 30, northland, 0.0) + hills
@@ -311,6 +339,10 @@ R = score & np.isin(B, [1, 7])
 Gl = score & (B == 3) & ~Sbld
 Bp = score & ((B == 2) | Sbld)
 A = score & np.isin(B, [5, 8])
+for lot in lots:
+    if lot["kind"].startswith("landmark"):
+        Bp |= poly_mask(Polygon(lot["poly"]).buffer(4), SX, SY, SRES, LX0, LY0)
+        Gl &= ~poly_mask(Polygon(lot["poly"]).buffer(4), SX, SY, SRES, LX0, LY0)
 sland = poly_mask(land_poly, SX, SY, SRES, LX0, LY0)
 sroad = poly_mask(road_poly, SX, SY, SRES, LX0, LY0) & ~score
 swalk = poly_mask(walk_poly, SX, SY, SRES, LX0, LY0) & ~score & ~sroad
@@ -318,7 +350,7 @@ R |= sroad
 Bp |= swalk
 for b in nblocks:
     m = poly_mask(Polygon(b["poly"]), SX, SY, SRES, LX0, LY0)
-    if b["kind"] == "waterfront_park":
+    if b["kind"] in ("waterfront_park", "outer_park"):
         Gl |= m
     elif b["kind"] == "inlet_woods":
         pass
@@ -372,7 +404,7 @@ colors = {"low": "#e8d36a", "mid": "#e9a24a", "high": "#e0603a", "tower": "#b020
 for lot in lots:
     c = "#7a5cff" if lot["kind"].startswith("landmark") else colors[lot["class"]]
     ax.add_patch(MP(lot["poly"], closed=True, fc=c, ec="k", lw=0.3, alpha=0.9))
-kc = {"promenade": "#b9b9b0", "inlet_woods": "#2f6a2c", "harbor_rebuild": "#c98bd6", "waterfront_mid": "#e9a24a", "district_mid": "#e9c27a", "waterfront_park": "#4f9a4a"}
+kc = {"outer_district": "#d9b98a", "outer_park": "#4f9a4a", "promenade": "#b9b9b0", "inlet_woods": "#2f6a2c", "harbor_rebuild": "#c98bd6", "waterfront_mid": "#e9a24a", "district_mid": "#e9c27a", "waterfront_park": "#4f9a4a"}
 for b in nblocks:
     ax.add_patch(MP(b["poly"], closed=True, fc=kc[b["kind"]], ec="k", lw=0.5, alpha=0.55))
 for p in parks:
