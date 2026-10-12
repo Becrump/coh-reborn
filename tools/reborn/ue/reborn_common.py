@@ -80,3 +80,9 @@ def expr(mat, cls, x, y, **props):
 
 def link(a, a_out, b, b_in):
     assert mel.connect_material_expressions(a, a_out, b, b_in), (a, a_out, b, b_in)
+
+
+def mark_spline_edited(s):
+    """Keep script-made points: a Blueprint's spline component is rebuilt from
+    its defaults on load / Play unless it is flagged as edited."""
+    s.set_editor_property("spline_has_been_edited", True)

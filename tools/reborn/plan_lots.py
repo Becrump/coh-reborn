@@ -111,8 +111,22 @@ sea = Polygon([(-5000, -9000), (5000, -9000), (5000, coast[-1][1])] + [tuple(p) 
               [(-5000, coast[0][1])])
 WATER = unary_union([sea] + [Polygon(w["poly"]) for w in lay["waters"] if w["kind"] == "pond"])
 WATER_MARGIN = 12.0
+# keep clear of the monorail (track and station), when it has been planned
+mono_path = os.path.join(OUT, "monorail.json")
+RAIL = None
+if os.path.exists(mono_path):
+    mono = json.load(open(mono_path))
+    from shapely.geometry import LineString as _LS
+    from shapely import affinity as _aff
+    st = mono["station"]
+    sbox = _aff.rotate(box(-40, -12, 40, 12), st["yaw"], origin=(0, 0))
+    sbox = _aff.translate(sbox, st["center"][0], st["center"][1])
+    RAIL = unary_union([_LS([p[:2] for p in mono["track"]]).buffer(9), sbox.buffer(4)])
 kept = []
 for lot in lots:
+    if RAIL is not None and Polygon(lot["poly"]).intersects(RAIL) and not lot["kind"].startswith("landmark"):
+        print("skip lot under the monorail", lot["id"])
+        continue
     d = Polygon(lot["poly"]).distance(WATER)
     lot["water_clearance"] = round(d, 1)
     if d < WATER_MARGIN and not lot["kind"].startswith("landmark"):

@@ -66,5 +66,6 @@ for z in plan["zones"]:
     for i in range(len(pts)):
         s.set_spline_point_type(i, unreal.SplinePointType.LINEAR, False)
     s.set_closed_loop(True, True)
+    mark_spline_edited(s)
     n_zones += 1
 print("lots", n_lots, "zones", n_zones)

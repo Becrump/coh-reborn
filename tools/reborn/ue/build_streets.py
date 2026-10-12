@@ -159,6 +159,7 @@ for r in roads["roads"]:
     for i in range(len(dense)):
         s.set_spline_point_type(i, unreal.SplinePointType.LINEAR, False)
     s.set_closed_loop(False, True)
+    mark_spline_edited(s)
 print("road splines", len(roads["roads"]))
 
 # ------------------------------------------------------------ PCG graph
