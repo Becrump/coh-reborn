@@ -229,7 +229,9 @@ void UCoHPowerDatabase::Initialize(FSubsystemCollectionBase& Collection)
 	if (LoadJson(Dir, TEXT("ai_configs.json"), Root))
 		for (const auto& KV : Root->AsObject()->Values)
 		{
-			const auto O = KV.Value->AsObject();
+			TSharedPtr<FJsonObject> O = KV.Value->AsObject();
+			const TSharedPtr<FJsonObject>* Inner;
+			if (O->TryGetObjectField(TEXT("values"), Inner)) O = *Inner;    // tools/ai/coh_ai.py shape
 			FCoHAIConfig A;
 			auto Num = [&](const TCHAR* K, float D) { return JNum(O, K, D); };
 			A.bPreferMelee = Num(TEXT("Misc.PreferMelee"), 0) > 0;
@@ -242,7 +244,38 @@ void UCoHPowerDatabase::Initialize(FSubsystemCollectionBase& Collection)
 			A.GriefHPRatio = Num(TEXT("Misc.GriefHPRatio"), 0.7f); A.GriefTimeBegin = Num(TEXT("Misc.GriefTimeBegin"), 10);
 			A.GriefTimeEnd = Num(TEXT("Misc.GriefTimeEnd"), 30); A.Fear = Num(TEXT("Feeling.Base.Fear"), 0.2f);
 			A.Brain = JStr(O, TEXT("Brain.Name"));
+			A.ProtectSpawnRadius = Num(TEXT("Misc.ProtectSpawnRadius"), 100);
+			A.ProtectSpawnOutsideRadius = Num(TEXT("Misc.ProtectSpawnOutsideRadius"), 20);
+			A.ProtectSpawnTime = Num(TEXT("Misc.ProtectSpawnTime"), 30);
+			A.EventMemoryDuration = Num(TEXT("Misc.EventMemoryDuration"), 20);
 			AIConfigs.Add(FString(KV.Key), A);
+		}
+	if (LoadJson(Dir, TEXT("behavior_aliases.json"), Root))
+		for (const auto& KV : Root->AsObject()->Values)
+		{
+			// e.g. Loiter: DoNothing(AnimList(Observer),Timer(Rand(10,20))),WanderAround(Radius(40),AnimList(M_Sneak),Timer(Rand(2,5)))
+			const FString R = JStr(KV.Value->AsObject(), TEXT("recipe"));
+			const int32 Stand = R.Find(TEXT("DoNothing(")), Walk = R.Find(TEXT("WanderAround("));
+			if (Walk == INDEX_NONE) continue;
+			auto Rand = [&](int32 From, float& Lo, float& Hi)
+			{
+				const int32 T = R.Find(TEXT("Timer(Rand("), ESearchCase::IgnoreCase, ESearchDir::FromStart, From);
+				if (T == INDEX_NONE) return;
+				TArray<FString> P; R.Mid(T + 11, 16).ParseIntoArray(P, TEXT(","));
+				if (P.Num() >= 2) { Lo = FCString::Atof(*P[0]); Hi = FCString::Atof(*P[1]); }
+			};
+			FCoHIdleRecipe I;
+			if (Stand != INDEX_NONE && Stand < Walk)
+			{
+				Rand(Stand, I.StandMin, I.StandMax);
+				const int32 A = R.Find(TEXT("AnimList("), ESearchCase::IgnoreCase, ESearchDir::FromStart, Stand);
+				if (A != INDEX_NONE && A < Walk) I.StandAnim = R.Mid(A + 9, R.Find(TEXT(")"), ESearchCase::IgnoreCase, ESearchDir::FromStart, A) - A - 9);
+			}
+			else { I.StandMin = I.StandMax = 0.f; }
+			const int32 Rad = R.Find(TEXT("Radius("), ESearchCase::IgnoreCase, ESearchDir::FromStart, Walk);
+			if (Rad != INDEX_NONE) I.Radius = FCString::Atof(*R.Mid(Rad + 7, 6));
+			Rand(Walk, I.WalkMin, I.WalkMax);
+			IdleRecipes.Add(FString(KV.Key), I);
 		}
 	if (LoadJson(Dir, TEXT("hero_all_sets.json"), Root))
 		for (const auto& SV : Root->AsObject()->GetArrayField(TEXT("sets")))
@@ -275,6 +308,13 @@ const FCoHAIConfig& UCoHPowerDatabase::AIConfig(const FString& Name) const
 	const FCoHAIConfig* A = AIConfigs.Find(Name);
 	if (!A) A = AIConfigs.Find(TEXT("Default"));
 	return A ? *A : Default;
+}
+
+const FCoHIdleRecipe& UCoHPowerDatabase::IdleRecipe(const FString& Name) const
+{
+	static const FCoHIdleRecipe Default;
+	const FCoHIdleRecipe* I = IdleRecipes.Find(Name);
+	return I ? *I : Default;
 }
 
 float UCoHPowerDatabase::LevelToHit(int32 AttackerLevel, int32 TargetLevel) const
@@ -837,7 +877,7 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 	}
 	else if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(GetOwner()))
 	{
-		if (IsDefeated()) H->OnDefeated();
+		if (IsDefeated()) { ++Defeats; H->OnDefeated(); }
 	}
 	return Final;
 }

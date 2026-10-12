@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
+#include "NavigationData.h"
 #include "NavigationInvokerComponent.h"
 #include "EngineUtils.h"
 #include "Misc/FileHelper.h"
@@ -39,7 +40,7 @@ ACoHCombatEnemy::ACoHCombatEnemy()
  Powers->ClassName=TEXT("Class_Minion_Grunt");
  Powers->Level=5;
 }
-void ACoHCombatEnemy::InitializeFromCatalog(const TMap<FString,FString>& Entry,const FString& Faction,const FString& RankClass,int32 InLevel)
+void ACoHCombatEnemy::InitializeFromCatalog(const TMap<FString,FString>& Entry,const FString& FactionName,const FString& RankClass,int32 InLevel)
 {
  Home=GetActorLocation();
  auto Path=[&](const TCHAR* K){const FString* P=Entry.Find(K);return P?*P:FString();};
@@ -54,7 +55,8 @@ void ACoHCombatEnemy::InitializeFromCatalog(const TMap<FString,FString>& Entry,c
  GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
  // numbers from the original critter class tables
  Powers->ClassName=RankClass; Powers->Level=InLevel;
- Powers->DisplayName=Faction+(RankClass.Contains(TEXT("Boss"))?TEXT(" Boss"):RankClass.Contains(TEXT("Lt_"))?TEXT(" Lieutenant"):TEXT(""));
+ Faction=FactionName;
+ Powers->DisplayName=FactionName+(RankClass.Contains(TEXT("Boss"))?TEXT(" Boss"):RankClass.Contains(TEXT("Lt_"))?TEXT(" Lieutenant"):TEXT(""));
  if(const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this))
   if(const FCoHClassDef* C=DB->FindClass(RankClass)) AttackDamage=FMath::Max(1.f,-C->TableValue(TEXT("Melee_Damage"),InLevel));
  Powers->InitStats();
@@ -67,9 +69,14 @@ void ACoHCombatEnemy::ApplyVillain(const FString& VillainName,int32 InLevel)
  if(!V) return;
  Villain=VillainName;
  AIConfigName=V->AIConfig;
- // chase about 60 m from where they were before giving up (players can
- // still drag a group a long way, but not across the zone)
- LeashRange=6000.f; AggroRange=1800.f;
+ Rank=V->Rank;
+ // the leash: the config's protect-spawn radius plus the distance allowed
+ // outside it (100 + 20 ft by default) with some slack for the chase
+ const FCoHAIConfig& Cfg=DB->AIConfig(V->AIConfig);
+ LeashRange=(Cfg.ProtectSpawnRadius+Cfg.ProtectSpawnOutsideRadius)*30.48f+1500.f;
+ AggroRange=1800.f;
+ IdleBehavior=FMath::FRand()<0.5f?TEXT("Loiter"):TEXT("Wander");
+ IdleUntil=GetWorld()->GetTimeSeconds()+FMath::FRandRange(0.f,6.f);
  Powers->SetClassAndLevel(V->Class,InLevel);
  Powers->DisplayName=V->Name.Replace(TEXT("_"),TEXT(" "));
  Attacks.Reset(); Powers->Tray.Reset(); Powers->Tray.SetNum(10);
@@ -80,6 +87,8 @@ void ACoHCombatEnemy::ApplyVillain(const FString& VillainName,int32 InLevel)
   if(P->Type==TEXT("kAuto")){ if(Auto<10) Powers->Tray[Auto++]=Id; }
   else if(P->Type==TEXT("kClick") && P->Target==TEXT("kFoe")) Attacks.Add(Id);
  }
+ // support villains (runes, healers) still swing when cornered, and so run the full brain
+ if(Attacks.Num()==0 && DB->FindPower(TEXT("Inherent.Inherent.Brawl"))) Attacks.Add(TEXT("Inherent.Inherent.Brawl"));
 }
 FName ACoHCombatEnemy::PickAttack(float Distance,float& OutReach) const
 {
@@ -105,6 +114,8 @@ void ACoHCombatEnemy::OnHurt(AActor* Causer,float Damage)
  {
   const bool bNew=!Threat.Contains(P);
   Threat.FindOrAdd(P)+=FMath::Max(1.f,Damage);
+  LastEvent.Add(P,GetWorld()->GetTimeSeconds());
+  bReturning=false;
   if(bNew) Shout(P);
   if(!Target) Target=P;
  }
@@ -477,37 +488,58 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
  for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)
  {
   APawn* P=It->Get()?It->Get()->GetPawn():nullptr; const UCoHPowerComponent* C=UCoHPowerComponent::Of(P);
-  if(!P || (C && C->IsDefeated()) || Threat.Contains(P)) continue;
+  if(!P || (C && C->IsDefeated()) || bReturning) continue;
   const FVector To=P->GetActorLocation()-GetActorLocation();
   if(To.Size()>AggroRange) continue;
   const float Ang=FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(To.GetSafeNormal2D(),GetActorForwardVector())));
-  if(Ang>Cfg.FOVDegrees*0.5f || !CanSee(P)) continue;
+  if((!Threat.Contains(P) && Ang>Cfg.FOVDegrees*0.5f) || !CanSee(P)) continue;
+  LastEvent.Add(P,Now);
+  if(Threat.Contains(P)) continue;
   Threat.Add(P,1.f);
   Shout(P);
+ }
+ for(auto It=Threat.CreateIterator();It;++It)
+ {
+  const UCoHPowerComponent* TC=UCoHPowerComponent::Of(It.Key().Get());
+  int32& D=DefeatsSeen.FindOrAdd(It.Key(),TC?TC->Defeats:0);
+  if(TC && TC->Defeats!=D){ DefeatsSeen.Remove(It.Key()); LastEvent.Remove(It.Key()); It.RemoveCurrent(); continue; }
+  const double* Seen=LastEvent.Find(It.Key());
+  if(Seen && Now-*Seen>Cfg.EventMemoryDuration){ LastEvent.Remove(It.Key()); It.RemoveCurrent(); }
  }
  APawn* Was=Target;
  Target=ChooseTarget();
  if(!Target)
  {
-  Thought=FString::Printf(TEXT("idle (home %.0f m away)"),FVector::Dist(GetActorLocation(),Home)/100.f);
-  bFled=false; bBuffed=false;
-  if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(300.f))
+  if(Was)
   {
-   SetState(ECoHEnemyState::ReturnHome);
-   if(Now>NextPathTime){AI->MoveToLocation(Home,50);NextPathTime=Now+.5;}
+   // lost the fight's target: go back and guard the spawn for ProtectSpawnTime
+   bReturning=FVector::Dist2D(GetActorLocation(),Home)>300.f;
+   ProtectUntil=Now+Cfg.ProtectSpawnTime;
   }
-  else { if(State==ECoHEnemyState::ReturnHome) AI->StopMovement(); SetState(ECoHEnemyState::Idle); }
+  bFled=false; bBuffed=false; bCalledHelp=false;
+  Idle(AI,Now);
   return true;
  }
+ GetCharacterMovement()->MaxWalkSpeed=360.f;
  if(Target!=Was && !Was) Shout(Target);
  const float Distance=FVector::Dist(GetActorLocation(),Target->GetActorLocation());
  // leashed too far from home: give up and go back
- if(FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(LeashRange))
+ // a helper on its way to the caller is not leashed until it gets there
+ if(bHelping && FVector::DistSquared(GetActorLocation(),Home)<FMath::Square(LeashRange*0.5f)) bHelping=false;
+ if(!bHelping && FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(LeashRange))
  {
-  Threat.Reset(); Target=nullptr; Thought=TEXT("going home");
+  Threat.Reset(); LastEvent.Reset(); Target=nullptr; Thought=TEXT("going home");
+  bReturning=true; ProtectUntil=Now+Cfg.ProtectSpawnTime;
   UE_LOG(LogTemp,Log,TEXT("CoH AI %s leashed: %.0f m from home"),*GetName(),FVector::Dist(GetActorLocation(),Home)/100.f);
-  SetState(ECoHEnemyState::ReturnHome); AI->MoveToLocation(Home,50); NextPathTime=Now+.5;
+  SetState(ECoHEnemyState::ReturnHome); GoTo(Home,50); NextPathTime=Now+.5;
   return true;
+ }
+ // hurt: call every villain within 500 ft for help (once per fight)
+ const float HPNow=Powers->MaxHealth>0?Powers->Health/Powers->MaxHealth:1.f;
+ if(!bCalledHelp && HPNow<0.7f)
+ {
+  bCalledHelp=true; CallForHelp(Target,500.f);
+  Thought=TEXT("calling for help");
  }
  // hurt badly: some minions run for it (grief), once per fight
  const float HP=Powers->MaxHealth>0?Powers->Health/Powers->MaxHealth:1.f;
@@ -546,11 +578,18 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
   if(R<Distance || Powers->RechargeLeft(Id)>0.f || Powers->Endurance<P->EndCost) continue;
   float Score=0; for(const FCoHMod& M:P->Mods) if(M.Aspect==TEXT("kAbs")) Score+=FMath::Abs(M.Scale);
   const bool bMeleePower=P->IsMelee();
+  const bool bRangedRank=Cfg.bPreferRanged || Rank==TEXT("Lieutenant");
   if(Cfg.bPreferMelee && bMeleePower) Score*=Cfg.MeleeScale;
-  if(Cfg.bPreferRanged && !bMeleePower) Score*=Cfg.RangedScale;
+  if(bRangedRank && !bMeleePower) Score*=FMath::Max(Cfg.RangedScale,2.f);
+  if(bRangedRank && bMeleePower) Score*=0.25f;
+  // area and lingering powers (Molotov, grenades) by their AI group or area:
+  // worth using whenever they are ready, whatever their small damage
+  if(P->Area!=TEXT("kCharacter") || P->AIGroups.Num()) Score=FMath::Max(Score,0.8f);
+  if(Id==LastAttack) Score*=0.6f;
+  Score*=FMath::FRandRange(0.75f,1.25f);
   if(Score>BestScore){BestScore=Score;Use=Id;Reach=R;}
  }
- const bool bRangedStyle=Cfg.bPreferRanged || (!Cfg.bPreferMelee && MaxReach>800.f && Distance>MinReach);
+ const bool bRangedStyle=Cfg.bPreferRanged || Rank==TEXT("Lieutenant") || (!Cfg.bPreferMelee && MaxReach>800.f && Distance>MinReach);
  const float Standoff=FMath::Max(Cfg.Standoff*30.48f,500.f);
  FVector Aim=Target->GetActorLocation()-GetActorLocation();Aim.Z=0;
  if(!Use.IsNone() && CanSee(Target))
@@ -571,30 +610,116 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
    Thought=FString::Printf(TEXT("attacking with %s"),*Use.ToString());
    SetState(ECoHEnemyState::Attack);
    Powers->ServerActivate(Use,Target,Target->GetActorLocation());
+   LastAttack=Use;
+   LastEvent.Add(Target,Now);
    NextAttackTime=Now+Cast+0.4f;
    GetWorldTimerManager().SetTimer(ReactionTimer,this,&ACoHCombatEnemy::FinishReaction,Cast,false);
   }
   else { Thought=TEXT("waiting for recharge"); SetState(ECoHEnemyState::Idle); }
   return true;
  }
+ // ranged villains in reach of their longest power wait for it instead of walking in
+ if(bRangedStyle && Distance<=MaxReach && CanSee(Target))
+ {
+  AI->StopMovement(); SetActorRotation(Aim.Rotation());
+  Thought=TEXT("holding range, recharging"); SetState(ECoHEnemyState::Idle); return true;
+ }
  // close in: ranged villains stop at their standoff, melee ones get close
  if(Cfg.bDoNotMove){ SetState(ECoHEnemyState::Idle); Thought=TEXT("holding position"); return true; }
  Thought=FString::Printf(TEXT("closing in (%.0f m, nav %s)"),Distance/100.f,AI->GetPathFollowingComponent() && AI->GetPathFollowingComponent()->GetStatus()==EPathFollowingStatus::Moving?TEXT("moving"):TEXT("no path")); SetState(ECoHEnemyState::Chase);
  const float Want=bRangedStyle?FMath::Min(MaxReach*0.8f,FMath::Max(Standoff,MinReach*0.8f)):FMath::Max(80.f,MinReach*0.7f);
- if(Now>=NextPathTime){AI->MoveToActor(Target,Want);NextPathTime=Now+.4;}
+ if(Now>=NextPathTime){GoToActor(Target,Want);NextPathTime=Now+.4;}
  return true;
 }
 
 // ------------------------------------------------------------------ spawner
+
+void ACoHCombatEnemy::GoTo(const FVector& Where,float Acceptance)
+{
+ auto* AI=Cast<AAIController>(GetController()); if(!AI) return;
+ if(AI->MoveToLocation(Where,Acceptance)==EPathFollowingRequestResult::Failed)
+  AI->MoveToLocation(Where,Acceptance,true,false,false); // straight line: no path, no projection onto the nav mesh
+}
+void ACoHCombatEnemy::GoToActor(AActor* Who,float Acceptance)
+{
+ auto* AI=Cast<AAIController>(GetController()); if(!AI || !Who) return;
+ if(AI->MoveToActor(Who,Acceptance)==EPathFollowingRequestResult::Failed)
+  AI->MoveToLocation(Who->GetActorLocation(),Acceptance,true,false,false);
+}
+void ACoHCombatEnemy::CallForHelp(APawn* Who,float RadiusFeet)
+{
+ // every villain within the radius joins (OldCallForHelp: Radius(500))
+ for(TActorIterator<ACoHCombatEnemy> It(GetWorld());It;++It)
+ {
+  ACoHCombatEnemy* F=*It;
+  if(F==this || F->IsDead() || F->Target || F->Faction!=Faction) continue;
+  if(FVector::Dist(F->GetActorLocation(),GetActorLocation())<=RadiusFeet*30.48f)
+  {
+   // helpers come to the caller: the fight there becomes their home ground,
+   // and they carry their own nav mesh so they can path all the way
+   F->Home=GetActorLocation(); F->bReturning=false; F->ProtectUntil=0; F->bHelping=true;
+   if(!F->FindComponentByClass<UNavigationInvokerComponent>())
+   {
+    auto* Inv=NewObject<UNavigationInvokerComponent>(F); Inv->SetGenerationRadii(2500.f,3500.f); Inv->RegisterComponent();
+   }
+   F->Alert(Who);
+  }
+ }
+}
+void ACoHCombatEnemy::Idle(AAIController* AI,double Now)
+{
+ // no one to fight: walk home first, guard the spawn for a while after a
+ // chase, then the idle routine from behavior_aliases (Loiter / Wander)
+ const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
+ const FCoHIdleRecipe& R=DB?DB->IdleRecipe(IdleBehavior):FCoHIdleRecipe();
+ const float FromHome=FVector::Dist2D(GetActorLocation(),Home);
+ if(bReturning || FromHome>R.Radius*30.48f+400.f)
+ {
+  if(FromHome<200.f){ bReturning=false; AI->StopMovement(); SetState(ECoHEnemyState::Idle); IdleUntil=Now+FMath::FRandRange(R.StandMin,R.StandMax); bIdleWalking=false; return; }
+  Thought=FString::Printf(TEXT("%s (%.0f m to go)"),bReturning?TEXT("going home"):TEXT("rejoining the group"),FromHome/100.f);
+  GetCharacterMovement()->MaxWalkSpeed=360.f;
+  SetState(ECoHEnemyState::ReturnHome);
+  if(Now>NextPathTime){GoTo(Home,80);NextPathTime=Now+.6;}
+  return;
+ }
+ if(Now<ProtectUntil){ Thought=TEXT("guarding its spot"); if(State!=ECoHEnemyState::Idle){AI->StopMovement();SetState(ECoHEnemyState::Idle);} return; }
+ if(Now<IdleUntil)
+ {
+  Thought=bIdleWalking?FString::Printf(TEXT("%s: strolling"),*IdleBehavior):FString::Printf(TEXT("%s: standing (%s)"),*IdleBehavior,*R.StandAnim);
+  if(bIdleWalking && AI->GetPathFollowingComponent() && AI->GetPathFollowingComponent()->GetStatus()!=EPathFollowingStatus::Moving) SetState(ECoHEnemyState::Idle);
+  return;
+ }
+ if(!bIdleWalking)
+ {
+  // stroll to a random reachable spot within the recipe radius of home
+  FNavLocation To;
+  auto* Nav=FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+  if(Nav && Nav->GetRandomReachablePointInRadius(Home,R.Radius*30.48f,To))
+  {
+   GetCharacterMovement()->MaxWalkSpeed=150.f;      // a walk, not the combat run
+   AI->MoveToLocation(To.Location,40);
+   SetState(ECoHEnemyState::ReturnHome);            // plays the move clip
+  }
+  bIdleWalking=true; IdleUntil=Now+FMath::FRandRange(R.WalkMin,R.WalkMax);
+ }
+ else
+ {
+  AI->StopMovement(); SetState(ECoHEnemyState::Idle);
+  bIdleWalking=false; IdleUntil=Now+FMath::FRandRange(R.StandMin,R.StandMax);
+ }
+}
+
 ACoHEnemySpawner::ACoHEnemySpawner()
 {
  PrimaryActorTick.bCanEverTick=true; PrimaryActorTick.TickInterval=1.f;
  Factions.Add(TEXT("Hellions"),3.f); Factions.Add(TEXT("Skulls"),3.f); Factions.Add(TEXT("Clockwork"),2.f);
  Factions.Add(TEXT("Outcasts"),2.f); Factions.Add(TEXT("Vahzilok"),1.5f); Factions.Add(TEXT("Arachnos"),0.5f);
 }
+TArray<FVector> ACoHEnemySpawner::NoSpawn;
 void ACoHEnemySpawner::BeginPlay()
 {
  Super::BeginPlay();
+ NoSpawn=NoSpawnZones;
  FString Json;TSharedPtr<FJsonObject> Root;
  if(FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/CatalogRelativePath)) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Root))
   for(const auto& F:Root->Values)
@@ -609,6 +734,7 @@ static bool OpenGround(UWorld* W,FVector XY,FVector& Out)
 {
  // a spot on the landscape or a street, not a roof or inside a building
  FHitResult Hit;FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHSpawnGround),false);
+ for(const FVector& Z:ACoHEnemySpawner::NoSpawn) if(FVector::Dist2D(XY,FVector(Z.X,Z.Y,0))<Z.Z) return false;
  if(!W->LineTraceSingleByChannel(Hit,FVector(XY.X,XY.Y,30000.f),FVector(XY.X,XY.Y,-5000.f),ECC_Visibility,Q)) return false;
  const AActor* A=Hit.GetActor();
  if(!A || !A->GetClass()->GetName().Contains(TEXT("Landscape"))) return false;
@@ -705,13 +831,16 @@ void ACoHEnemySpawner::Tick(float Delta)
    if(OpenGround(W,G.Center+Dir*FMath::FRandRange(800.f,2500.f),To))
    {
     G.Center=To;
-    for(auto& E:G.Members) if(E.IsValid()) E->SetHome(To+FVector(FMath::FRandRange(-300.f,300.f),FMath::FRandRange(-300.f,300.f),0));
+    for(auto& E:G.Members) if(E.IsValid() && !E->IsBusy()) E->SetHome(To+FVector(FMath::FRandRange(-300.f,300.f),FMath::FRandRange(-300.f,300.f),0));
    }
    G.NextWander=Now+FMath::FRandRange(25.f,45.f);
   }
  }
  AliveGroups=Groups.Num();
- if(bSpawning && Groups.Num()<MaxGroups && Now>=NextSpawn)
+ // wandering gangs: a server setting (on by default), capped by the player
+ // count so 7 players do not fill the zone
+ const int32 Cap=FMath::Min(MaxGroups,FMath::Max(1,Players.Num())*GroupsPerPlayer);
+ if(bSpawning && bWanderingGangs && Groups.Num()<Cap && Now>=NextSpawn)
  {
   SpawnGroup(Players[FMath::RandRange(0,Players.Num()-1)]);
   NextSpawn=Now+2.0;

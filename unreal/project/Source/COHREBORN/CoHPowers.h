@@ -81,7 +81,18 @@ struct FCoHAIConfig
 	float ShoutChance = 50, ShoutRadius = 30;
 	float FOVDegrees = 240, Standoff = 10;
 	float GriefHPRatio = 0.7f, GriefTimeBegin = 10, GriefTimeEnd = 30, Fear = 0.2f;
+	float ProtectSpawnRadius = 100, ProtectSpawnOutsideRadius = 20, ProtectSpawnTime = 30, EventMemoryDuration = 20;
 	FString Brain;
+};
+
+/** Idle routine from behavior_aliases (Loiter, Wander...): stand for a
+ *  while, then walk to a random spot near home for a while, repeating. */
+struct FCoHIdleRecipe
+{
+	float StandMin = 10, StandMax = 20;   // seconds
+	float Radius = 40;                    // feet around home
+	float WalkMin = 2, WalkMax = 5;       // seconds
+	FString StandAnim;                    // original anim list name (Observer, Lookout...)
 };
 
 /** A set the test hero owns (hero_all_sets.json). */
@@ -125,6 +136,8 @@ public:
 	TMap<FString, FCoHVillainDef> Villains;
 	TMap<FString, FCoHAIConfig> AIConfigs;
 	const FCoHAIConfig& AIConfig(const FString& Name) const;
+	TMap<FString, FCoHIdleRecipe> IdleRecipes;
+	const FCoHIdleRecipe& IdleRecipe(const FString& Name) const;
 	TArray<FCoHHeroSet> HeroSets;
 	/** combat_mods.def: to-hit multipliers by level difference (index =
 	 *  levels apart) when the target is higher / lower than the attacker. */
@@ -218,6 +231,8 @@ public:
 	float RechargeTotal(FName Power) const;
 	bool IsToggleOn(FName Power) const { return ActiveToggles.Contains(Power); }
 	UFUNCTION(BlueprintPure, Category = "CoH|Powers") bool IsDefeated() const { return Health <= 0.f; }
+	/** Times this character has been defeated (villains forget a hero who went down). */
+	int32 Defeats = 0;
 	bool IsMezzed() const;
 	float Resistance(ECoHDamage Type) const;
 	float Defense(bool bMelee) const;
