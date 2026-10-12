@@ -43,6 +43,8 @@ Open `/Game/AtlasReborn/AtlasPark_Reborn` first.
 | `build_streets.py` | road splines; PCG curbs, centre and lane lines, street lights |
 | `build_lanes.py` | ZoneGraph lanes: cars (Reborn_Road4), sidewalks (Reborn_Sidewalk), junction polygons |
 | `build_daynight.py` | looping 24-minute day/night sequence driving the sun and `MPC_Reborn.Night` |
+| `dump_zonegraph.py` | saves the built lane data for `make_life.py` |
+| `build_life.py` | places the life manager (cars, parked cars, civilians) reading `reborn_life.json` |
 | `window_lights.py` | City Sample windows dark by day, lit by `MPC_Reborn.Night` |
 | `build_lighting.py` | physical daylight and exposure range |
 | `save_map.py` | saves the level |
@@ -51,6 +53,10 @@ PCG decides which building goes on each lot (random among those that fit
 the lot's size and height class), turns it, and spawns it; the planting
 graph scatters Megaplant trees and shrubs over the woods and parks.
 Re-running `build_pcg.py` regenerates everything.
+
+After `build_lanes.py`: `ue/dump_zonegraph.py`, then offline
+`make_life.py <out>/zonegraph_dump.txt <out> <original life.json>`, then
+`build_life.py`.
 
 Lane profiles and tags are in the project's `Config/DefaultPlugins.ini`
 (ZoneGraphSettings). `unreal/scripts/mcp_call.py` calls the editor's MCP
