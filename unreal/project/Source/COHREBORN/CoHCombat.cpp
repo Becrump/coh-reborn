@@ -32,8 +32,12 @@ ACoHCombatEnemy::ACoHCombatEnemy()
  GetCapsuleComponent()->InitCapsuleSize(36.f,90.f);
  GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
  GetMesh()->SetCanEverAffectNavigation(false);
- GetCharacterMovement()->bOrientRotationToMovement=true;
- GetCharacterMovement()->RotationRate=FRotator(0,540,0);
+ // turning is smooth: the controller's focus (the target, or the path while
+ // walking) turns the pawn every frame at RotationRate instead of snapping
+ GetCharacterMovement()->bOrientRotationToMovement=false;
+ GetCharacterMovement()->bUseControllerDesiredRotation=true;
+ GetCharacterMovement()->RotationRate=FRotator(0,420,0);
+ bUseControllerRotationYaw=false;
  GetCharacterMovement()->MaxWalkSpeed=360;
  Tags.Add(TEXT("CoHCombatEnemy"));
  Powers=CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
@@ -189,6 +193,8 @@ void ACoHCombatEnemy::SetState(ECoHEnemyState Next)
 void ACoHCombatEnemy::Tick(float Delta)
 {
  Super::Tick(Delta);
+ if((State==ECoHEnemyState::Chase || State==ECoHEnemyState::ReturnHome) && !bRagdoll && RunClip)
+  GetMesh()->SetPlayRate(FMath::Clamp(GetVelocity().Size2D()/380.f,0.35f,1.4f));
  if(bRagdoll || State==ECoHEnemyState::Dead || State==ECoHEnemyState::Hit || State==ECoHEnemyState::Attack) return;
  auto* AI=Cast<AAIController>(GetController()); if(!AI) return;
  if(Powers && Powers->IsMezzed()){AI->StopMovement();return;}
@@ -228,7 +234,7 @@ void ACoHCombatEnemy::Tick(float Delta)
   if(bInReach)
   {
    AI->StopMovement();GetCharacterMovement()->StopMovementImmediately();
-   FVector Aim=Target->GetActorLocation()-GetActorLocation();Aim.Z=0;SetActorRotation(Aim.Rotation());
+   AI->SetFocus(Target);
    if(!Use.IsNone() && GetWorld()->GetTimeSeconds()>=NextAttackTime)
    {
     const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
@@ -251,7 +257,7 @@ void ACoHCombatEnemy::Tick(float Delta)
  if(Distance<=AttackRange && CanSee(Target))
  {
   AI->StopMovement();GetCharacterMovement()->StopMovementImmediately();
-  FVector Aim=Target->GetActorLocation()-GetActorLocation();Aim.Z=0;SetActorRotation(Aim.Rotation());
+  AI->SetFocus(Target);
   if(GetWorld()->GetTimeSeconds()>=NextAttackTime)
   {
    SetState(ECoHEnemyState::Attack);NextAttackTime=GetWorld()->GetTimeSeconds()+AttackCooldown;
@@ -523,6 +529,7 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
    ProtectUntil=Now+Cfg.ProtectSpawnTime;
   }
   bFled=false; bBuffed=false; bCalledHelp=false;
+  if(HarassRole==0) AI->ClearFocus(EAIFocusPriority::Gameplay);
   if(HarassRole!=0 && Harass(AI,Now)) return true;
   Idle(AI,Now);
   return true;
@@ -558,6 +565,7 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
  if(Now<FleeUntil)
  {
   Thought=TEXT("fleeing");
+  AI->ClearFocus(EAIFocusPriority::Gameplay);
   SetState(ECoHEnemyState::Chase);
   if(Now>NextPathTime)
   {
@@ -610,7 +618,7 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
    return true;
   }
   AI->StopMovement();GetCharacterMovement()->StopMovementImmediately();
-  SetActorRotation(Aim.Rotation());
+  AI->SetFocus(Target);
   if(Now>=NextAttackTime)
   {
    const FCoHPowerDef* P=DB->FindPower(Use);
@@ -629,7 +637,7 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
  // ranged villains in reach of their longest power wait for it instead of walking in
  if(bRangedStyle && Distance<=MaxReach && CanSee(Target))
  {
-  AI->StopMovement(); SetActorRotation(Aim.Rotation());
+  AI->StopMovement(); AI->SetFocus(Target);
   Thought=TEXT("holding range, recharging"); SetState(ECoHEnemyState::Idle); return true;
  }
  // close in: ranged villains stop at their standoff, melee ones get close
@@ -733,7 +741,7 @@ bool ACoHCombatEnemy::Harass(AAIController* AI,double Now)
   return true;
  }
  AI->StopMovement();
- SetActorRotation(FRotator(0,To.Rotation().Yaw,0));
+ AI->SetFocalPoint(HarassSpot);
  if(!bHarassPosed && AttackClip)
  {
   // placeholder poses until proper clips exist: the attack clip held at its
