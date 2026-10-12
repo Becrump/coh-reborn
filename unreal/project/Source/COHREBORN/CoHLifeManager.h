@@ -51,6 +51,8 @@ struct FCoHMover
 	USceneComponent* Comp = nullptr;
 	int32 Route = INDEX_NONE;    // walking circuit being followed (civilians)
 	int32 RouteStep = 0;         // index of From in that circuit
+	float HeldUntil = 0.f;       // held by villains until this clock time (renewed while held)
+	int32 HeldBy = 0;            // gang id holding them (0 = free)
 };
 
 UCLASS()
@@ -141,6 +143,20 @@ public:
 	 *  gameplay code on each client; cheap. */
 	UFUNCTION(BlueprintCallable, Category = "CoH", meta = (WorldContext = "WorldContextObject"))
 	static void ReportDanger(UObject* WorldContextObject, FVector Location, float Radius = 2500.f, float Seconds = 8.f);
+
+	// --- villains harassing civilians (server) ---
+	/** A free, visible civilian within Radius of At, or INDEX_NONE. */
+	int32 FindCivilianNear(const FVector& At, float Radius) const;
+	FVector CivilianLocation(int32 Index) const;
+	/** Stop the civilian, face Toward and cower. A hold lasts HoldSeconds and
+	 *  must be renewed, so a civilian is never left trapped if the gang vanishes. */
+	bool HoldCivilian(int32 Index, int32 Gang, const FVector& Toward, float HoldSeconds = 3.f);
+	/** Let them go: they run from From; with Hero set they first turn and thank the hero. */
+	void ReleaseCivilian(int32 Index, int32 Gang, const FVector& From, AActor* Hero = nullptr);
+	/** Pose for a held civilian (a flinch held on one frame). */
+	UPROPERTY(EditAnywhere, Category = "CoH|Civilians")
+	TObjectPtr<UAnimSequence> CowerAnim;
+	static ACoHLifeManager* Get(const UObject* WorldContext);
 
 	/** Console/testing: danger at the camera's look point. */
 	UFUNCTION(Exec)

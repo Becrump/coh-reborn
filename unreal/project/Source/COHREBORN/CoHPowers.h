@@ -231,6 +231,8 @@ public:
 	float RechargeTotal(FName Power) const;
 	bool IsToggleOn(FName Power) const { return ActiveToggles.Contains(Power); }
 	UFUNCTION(BlueprintPure, Category = "CoH|Powers") bool IsDefeated() const { return Health <= 0.f; }
+	/** Reputation (vigilante) / notoriety (hero), 0..1: makes villains break sooner. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") float Reputation = 0.f;
 	/** Times this character has been defeated (villains forget a hero who went down). */
 	int32 Defeats = 0;
 	bool IsMezzed() const;

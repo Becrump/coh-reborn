@@ -378,6 +378,7 @@ void UCoHPowerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME_CONDITION(UCoHPowerComponent, Tray, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UCoHPowerComponent, Recharges, COND_OwnerOnly);
 	DOREPLIFETIME(UCoHPowerComponent, ActiveToggles);
+	DOREPLIFETIME(UCoHPowerComponent, Reputation);
 }
 
 FSoftObjectPath UCoHPowerComponent::FindClip(const FString& NameOrPath)

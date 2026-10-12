@@ -14,6 +14,7 @@ UCLASS()
 class COHREBORN_API ACoHCombatEnemy : public ACharacter
 {
  GENERATED_BODY()
+ friend class ACoHEnemySpawner;
 public:
  ACoHCombatEnemy();
  void InitializeFromPreview(AActor* Preview, const TMap<FString,FString>& Clips);
@@ -67,6 +68,17 @@ public:
  void PlayAttackAnimation();
  /** Wander: the group moves its home around now and then. */
  void SetHome(const FVector& NewHome) { Home = NewHome; }
+ /** Morale (for later): would this villain break and scatter against Hero?
+  *  Chance from the level gap (5% per level above the villain's +2,
+  *  bosses steadier) plus the hero's reputation / notoriety (0..1). Rolls
+  *  a random number; the server setting bMorale can turn it off. */
+ UFUNCTION(BlueprintCallable, Category="CoH|Combat") bool ShouldScatter(APawn* Hero) const;
+ void FinishReaction();
+ UFUNCTION(BlueprintPure, Category="CoH|Combat") float ScatterChance(APawn* Hero) const;
+ /** Harassment role while the gang holds a civilian: 1 grabs, 2 threatens. */
+ int32 HarassRole = 0;
+ bool bHarassPosed = false;
+ FVector HarassSpot = FVector::ZeroVector;
  /** Fighting, helping or walking home: the spawner leaves it alone. */
  bool IsBusy() const { return Target != nullptr || bReturning; }
  /** Walk somewhere; with no nav mesh on the way (it is only built near
@@ -85,6 +97,7 @@ private:
  TMap<TWeakObjectPtr<APawn>, double> LastEvent;     // event memory: last seen / hurt by
  TMap<TWeakObjectPtr<APawn>, int32> DefeatsSeen;    // a hero who went down since is forgotten
  void Idle(class AAIController* AI, double Now);
+ bool Harass(class AAIController* AI, double Now);
  void CallForHelp(APawn* Who, float RadiusFeet);
  double IdleUntil = 0, ProtectUntil = 0;
  bool bIdleWalking = false, bCalledHelp = false, bReturning = false, bHelping = false;
@@ -94,7 +107,6 @@ private:
  bool bFled = false, bBuffed = false;
  bool CanSee(APawn* Pawn) const;
  void LandAttack();
- void FinishReaction();
  UPROPERTY(Transient) TObjectPtr<APawn> Target;
 public:
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat") TObjectPtr<UAnimSequence> IdleClip;
@@ -148,6 +160,11 @@ public:
  UPROPERTY(EditAnywhere, Config, Category="CoH|Spawning") int32 MaxGroups = 16;
  /** Server setting: wandering villain gangs on or off (DefaultGame.ini). */
  UPROPERTY(EditAnywhere, Config, Category="CoH|Spawning") bool bWanderingGangs = true;
+ /** Server setting: idle gangs grab and threaten a passing civilian. */
+ UPROPERTY(EditAnywhere, Config, Category="CoH|Spawning") bool bCivilianHarassment = true;
+ /** Server setting: villains may break and scatter (ShouldScatter). */
+ UPROPERTY(EditAnywhere, Config, Category="CoH|Spawning") bool bMorale = true;
+ static bool bMoraleOn;
  /** Groups kept alive per player online (capped by MaxGroups: 16 is enough for about 7 players). */
  UPROPERTY(EditAnywhere, Config, Category="CoH|Spawning") int32 GroupsPerPlayer = 3;
  /** No spawning or wandering destinations inside these circles: X, Y and radius (Z), cm. Default: City Hall plaza. */
@@ -171,11 +188,19 @@ public:
  UFUNCTION(BlueprintCallable, Category="CoH|Spawning") bool SpawnTestGroup(APawn* Near, const FString& Faction, int32 Level, float Distance = 2000.f) { return SpawnGroup(Near, Faction, Level, Distance); }
  UPROPERTY(EditAnywhere, Category="CoH|Spawning") bool bSpawning = true;
 private:
- struct FGroup { FString Faction; FVector Center; TArray<TWeakObjectPtr<ACoHCombatEnemy>> Members; double NextWander = 0; };
+ struct FGroup
+ {
+  FString Faction; FVector Center; TArray<TWeakObjectPtr<ACoHCombatEnemy>> Members; double NextWander = 0;
+  int32 Id = 0;
+  int32 Victim = INDEX_NONE;    // civilian held (life manager index)
+  double HarassUntil = 0, NextHarass = 0;
+  bool bHolding = false;
+ };
  TArray<FGroup> Groups;
  TMap<FString,TArray<TMap<FString,FString>>> Catalog;
  double NextSpawn = 0;
  int32 NextGroupId = 1;
  bool SpawnGroup(APawn* Near, const FString& ForceFaction = FString(), int32 ForceLevel = 0, float ForceDistance = 0.f);
+ void TickHarassment(double Now);
  const TMap<FString,FString>& BodyFor(const struct FCoHVillainDef* V,int32 Level,const TArray<TMap<FString,FString>>& Members) const;
 };

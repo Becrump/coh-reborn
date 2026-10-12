@@ -533,12 +533,86 @@ void ACoHLifeManager::ReportDanger(UObject* WorldContextObject, FVector Location
 		Mgr->Dangers.Add({Location, Radius, Mgr->Clock + Seconds});
 		for (FCoHMover& M : Mgr->Walkers)
 		{
-			if (M.Comp && FVector::Dist2D(M.Comp->GetComponentLocation(), Location) < Radius)
+			if (M.Comp && M.HeldBy == 0 && FVector::Dist2D(M.Comp->GetComponentLocation(), Location) < Radius)
 			{
 				Mgr->StartFleeing(M, Location, Seconds * FMath::FRandRange(0.8f, 1.3f));
 			}
 		}
 	}
+}
+
+ACoHLifeManager* ACoHLifeManager::Get(const UObject* WorldContext)
+{
+	UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
+	if (!World) return nullptr;
+	for (TActorIterator<ACoHLifeManager> It(World); It; ++It) return *It;
+	return nullptr;
+}
+
+int32 ACoHLifeManager::FindCivilianNear(const FVector& At, float Radius) const
+{
+	int32 Best = INDEX_NONE; float BestD = Radius;
+	for (int32 I = 0; I < Walkers.Num(); ++I)
+	{
+		const FCoHMover& M = Walkers[I];
+		if (!M.Comp || !M.Comp->IsVisible() || M.HeldBy != 0 || M.Fear > 0.f) continue;
+		const float D = FVector::Dist2D(M.Comp->GetComponentLocation(), At);
+		if (D < BestD) { BestD = D; Best = I; }
+	}
+	return Best;
+}
+
+FVector ACoHLifeManager::CivilianLocation(int32 Index) const
+{
+	return Walkers.IsValidIndex(Index) && Walkers[Index].Comp ? Walkers[Index].Comp->GetComponentLocation() : FVector::ZeroVector;
+}
+
+bool ACoHLifeManager::HoldCivilian(int32 Index, int32 Gang, const FVector& Toward, float HoldSeconds)
+{
+	if (!Walkers.IsValidIndex(Index)) return false;
+	FCoHMover& M = Walkers[Index];
+	if (!M.Comp || (M.HeldBy != 0 && M.HeldBy != Gang)) return false;
+	const bool bNew = M.HeldBy == 0;
+	if (bNew) UE_LOG(LogTemp, Log, TEXT("CoH civilian %d held by gang %d"), Index, Gang);
+	M.HeldBy = Gang;
+	M.HeldUntil = Clock + HoldSeconds;
+	M.Fear = 0.f; M.Velocity = FVector::ZeroVector;
+	if (bNew)
+	{
+		const FVector P = M.Comp->GetComponentLocation();
+		M.Comp->SetWorldRotation(FRotator(0, (Toward - P).Rotation().Yaw - 90.f, 0));
+		if (USkeletalMeshComponent* S = Cast<USkeletalMeshComponent>(M.Comp))
+		{
+			UAnimSequence* Pose = CowerAnim ? CowerAnim.Get() : IdleAnim.Get();
+			if (Pose)
+			{
+				S->PlayAnimation(Pose, false);
+				S->SetPosition(Pose->GetPlayLength() * 0.35f);   // the flinch, held
+				S->SetPlayRate(0.f);
+			}
+			M.Instance = 3;
+		}
+	}
+	return true;
+}
+
+void ACoHLifeManager::ReleaseCivilian(int32 Index, int32 Gang, const FVector& From, AActor* Hero)
+{
+	if (!Walkers.IsValidIndex(Index)) return;
+	FCoHMover& M = Walkers[Index];
+	if (M.HeldBy != Gang) return;
+	M.HeldBy = 0; M.HeldUntil = 0.f;
+	UE_LOG(LogTemp, Log, TEXT("CoH civilian %d released by gang %d%s"), Index, Gang, Hero ? TEXT(", thanks the hero and runs") : TEXT(", runs"));
+	if (USkeletalMeshComponent* S = Cast<USkeletalMeshComponent>(M.Comp)) S->SetPlayRate(1.f);
+	M.Instance = -1;
+	if (Hero && M.Comp)
+	{
+		// turn to the hero for a moment of thanks, then run
+		const FVector P = M.Comp->GetComponentLocation();
+		M.Comp->SetWorldRotation(FRotator(0, (Hero->GetActorLocation() - P).Rotation().Yaw - 90.f, 0));
+		M.Pause = 1.5f;
+	}
+	StartFleeing(M, From, 8.f * FMath::FRandRange(0.8f, 1.3f));
 }
 
 void ACoHLifeManager::CoHPanic()
@@ -856,6 +930,14 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
         {
             if (Place(M, ActiveRadius * .4f)) Positions[I] = S->GetComponentLocation();
             continue;
+        }
+        if (M.HeldBy != 0)
+        {
+            if (Clock < M.HeldUntil) { M.Velocity = FVector::ZeroVector; continue; }
+            // the gang stopped renewing the hold (gone, defeated): free them
+            UE_LOG(LogTemp, Log, TEXT("CoH civilian %d hold expired, runs"), I);
+            M.HeldBy = 0; S->SetPlayRate(1.f); M.Instance = -1;
+            StartFleeing(M, Positions[I], 6.f);
         }
         if (M.Pause > 0.f)
         {

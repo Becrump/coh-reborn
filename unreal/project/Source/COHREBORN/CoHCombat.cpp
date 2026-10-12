@@ -1,5 +1,6 @@
 #include "CoHCombat.h"
 #include "CoHPowers.h"
+#include "CoHLifeManager.h"
 #include "GameFramework/PlayerController.h"
 #include "AIController.h"
 #include "Animation/AnimSequence.h"
@@ -517,10 +518,12 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
    ProtectUntil=Now+Cfg.ProtectSpawnTime;
   }
   bFled=false; bBuffed=false; bCalledHelp=false;
+  if(HarassRole!=0 && Harass(AI,Now)) return true;
   Idle(AI,Now);
   return true;
  }
  GetCharacterMovement()->MaxWalkSpeed=360.f;
+ if(HarassRole!=0 || bHarassPosed){ HarassRole=0; bHarassPosed=false; GetMesh()->SetPlayRate(1.f); }
  if(Target!=Was && !Was) Shout(Target);
  const float Distance=FVector::Dist(GetActorLocation(),Target->GetActorLocation());
  // leashed too far from home: give up and go back
@@ -709,6 +712,105 @@ void ACoHCombatEnemy::Idle(AAIController* AI,double Now)
  }
 }
 
+
+bool ACoHCombatEnemy::Harass(AAIController* AI,double Now)
+{
+ // the grabber stands at the civilian holding them, the other leans in and threatens
+ const FVector To=HarassSpot-GetActorLocation();
+ const float Want=HarassRole==1?110.f:230.f;
+ if(To.Size2D()>Want+60.f)
+ {
+  Thought=HarassRole==1?TEXT("going to grab a civilian"):TEXT("joining the shakedown");
+  bHarassPosed=false;
+  GetCharacterMovement()->MaxWalkSpeed=200.f;
+  SetState(ECoHEnemyState::ReturnHome);
+  if(Now>NextPathTime){GoTo(HarassSpot,Want);NextPathTime=Now+.5;}
+  return true;
+ }
+ AI->StopMovement();
+ SetActorRotation(FRotator(0,To.Rotation().Yaw,0));
+ if(!bHarassPosed && AttackClip)
+ {
+  // placeholder poses until proper clips exist: the attack clip held at its
+  // reach (grab) or played slowly on a loop (threaten). State stays Idle so
+  // the brain keeps looking around while posing.
+  bHarassPosed=true; State=ECoHEnemyState::Idle;
+  GetMesh()->PlayAnimation(AttackClip,HarassRole==2);
+  if(HarassRole==1){ GetMesh()->SetPosition(AttackClip->GetPlayLength()*0.4f); GetMesh()->SetPlayRate(0.f); }
+  else GetMesh()->SetPlayRate(0.35f);
+ }
+ Thought=HarassRole==1?TEXT("holding a civilian"):TEXT("threatening a civilian");
+ return true;
+}
+
+float ACoHCombatEnemy::ScatterChance(APawn* Hero) const
+{
+ const UCoHPowerComponent* H=UCoHPowerComponent::Of(Hero);
+ if(!H || !Powers) return 0.f;
+ // level gap: nothing until the hero is 3+ levels above, then 5% a level
+ float C=FMath::Max(0,H->Level-Powers->Level-2)*0.05f;
+ // reputation (vigilantes) / notoriety (heroes): up to +25%
+ C+=FMath::Clamp(H->Reputation,0.f,1.f)*0.25f;
+ // lieutenants and bosses are steadier
+ if(Rank==TEXT("Lieutenant")) C*=0.6f; else if(Rank!=TEXT("Minion")) C*=0.25f;
+ return FMath::Clamp(C,0.f,0.9f);
+}
+
+bool ACoHCombatEnemy::ShouldScatter(APawn* Hero) const
+{
+ return ACoHEnemySpawner::bMoraleOn && FMath::FRand()<ScatterChance(Hero);
+}
+
+void ACoHEnemySpawner::TickHarassment(double Now)
+{
+ // an idle gang picks one civilian walking within ~20 m, one villain grabs,
+ // one threatens; the civilian cowers. 30-60 s later (no hero near) they let
+ // go and the civilian flees; a fight lets them go at once and the
+ // civilian thanks the hero and runs
+ ACoHLifeManager* Life=ACoHLifeManager::Get(this);
+ if(!Life) return;
+ for(FGroup& G:Groups)
+ {
+  TArray<ACoHCombatEnemy*> Free;
+  bool bFighting=false;
+  for(auto& E:G.Members) if(E.IsValid() && !E->IsDead()){ if(E->Target) bFighting=true; else Free.Add(E.Get()); }
+  if(G.bHolding)
+  {
+   AActor* Hero=nullptr;
+   for(auto& E:G.Members) if(E.IsValid() && E->Target){ Hero=E->Target; break; }
+   const bool bDone=bFighting || Now>G.HarassUntil || Free.Num()<2 || !bCivilianHarassment;
+   if(bDone)
+   {
+    Life->ReleaseCivilian(G.Victim,G.Id,G.Center,Hero);
+    for(auto& E:G.Members) if(E.IsValid()){ if(E->bHarassPosed && !E->Target){ E->GetMesh()->SetPlayRate(1.f); E->State=ECoHEnemyState::Hit; E->SetState(ECoHEnemyState::Idle); } E->HarassRole=0; E->bHarassPosed=false; }
+    G.bHolding=false; G.Victim=INDEX_NONE; G.NextHarass=Now+FMath::FRandRange(40.f,90.f);
+    continue;
+   }
+   // renew the hold once the grabber has reached them
+   ACoHCombatEnemy* Grabber=nullptr; for(ACoHCombatEnemy* E:Free) if(E->HarassRole==1) Grabber=E;
+   if(Grabber && FVector::Dist2D(Grabber->GetActorLocation(),Life->CivilianLocation(G.Victim))<260.f)
+    Life->HoldCivilian(G.Victim,G.Id,Grabber->GetActorLocation(),3.f);
+   else if(Grabber) Life->HoldCivilian(G.Victim,G.Id,Grabber->GetActorLocation(),3.f);   // freeze them as the grabber walks up
+   continue;
+  }
+  if(!bCivilianHarassment || bFighting || Free.Num()<2 || Now<G.NextHarass) continue;
+  G.NextHarass=Now+5.0;
+  const int32 Civ=Life->FindCivilianNear(G.Center,2000.f);
+  if(Civ==INDEX_NONE) continue;
+  const FVector Spot=Life->CivilianLocation(Civ);
+  bool bBlocked=false; for(const FVector& Z:NoSpawn) if(FVector::Dist2D(Spot,FVector(Z.X,Z.Y,0))<Z.Z) bBlocked=true;
+  if(bBlocked) continue;
+  if(!Life->HoldCivilian(Civ,G.Id,Free[0]->GetActorLocation(),3.f)) continue;
+  G.bHolding=true; G.Victim=Civ; G.HarassUntil=Now+FMath::FRandRange(30.f,60.f);
+  // grabber: a minion if there is one; threatener: the next
+  Free.Sort([](const ACoHCombatEnemy& A,const ACoHCombatEnemy& B){ return (A.Rank==TEXT("Minion"))>(B.Rank==TEXT("Minion")); });
+  Free[0]->HarassRole=1; Free[0]->HarassSpot=Spot;
+  Free[1]->HarassRole=2; Free[1]->HarassSpot=Spot;
+ }
+}
+
+bool ACoHEnemySpawner::bMoraleOn=true;
+
 ACoHEnemySpawner::ACoHEnemySpawner()
 {
  PrimaryActorTick.bCanEverTick=true; PrimaryActorTick.TickInterval=1.f;
@@ -801,6 +903,7 @@ bool ACoHEnemySpawner::SpawnGroup(APawn* Near,const FString& ForceFaction,int32 
   E->GroupId=NextGroupId;
   G.Members.Add(E);
  }
+ G.Id=NextGroupId; G.NextHarass=W->GetTimeSeconds()+FMath::FRandRange(5.f,20.f);
  ++NextGroupId;
  if(G.Members.Num()==0) return false;
  Groups.Add(MoveTemp(G));
@@ -822,6 +925,7 @@ void ACoHEnemySpawner::Tick(float Delta)
   for(APawn* P:Players) Nearest=FMath::Min(Nearest,(float)FVector::Dist(P->GetActorLocation(),G.Center));
   if(G.Members.Num()==0 || Nearest>DespawnDistance)
   {
+   if(G.bHolding) if(ACoHLifeManager* Life=ACoHLifeManager::Get(this)) Life->ReleaseCivilian(G.Victim,G.Id,G.Center,nullptr);
    for(auto& E:G.Members) if(E.IsValid()) E->Destroy();
    Groups.RemoveAt(g); continue;
   }
@@ -837,6 +941,8 @@ void ACoHEnemySpawner::Tick(float Delta)
   }
  }
  AliveGroups=Groups.Num();
+ bMoraleOn=bMorale;
+ TickHarassment(Now);
  // wandering gangs: a server setting (on by default), capped by the player
  // count so 7 players do not fill the zone
  const int32 Cap=FMath::Min(MaxGroups,FMath::Max(1,Players.Num())*GroupsPerPlayer);
