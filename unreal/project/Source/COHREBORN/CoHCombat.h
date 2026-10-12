@@ -43,7 +43,17 @@ public:
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString Villain;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TArray<FName> Attacks;
  // power system hooks (server)
- void OnHurt(AActor* Causer);
+ void OnHurt(AActor* Causer, float Damage = 0.f);
+ /** Taunt: attack this pawn for Seconds whatever else is going on. */
+ void Taunt(APawn* Who, float Seconds);
+ /** A group mate or someone nearby called for help against Who. */
+ void Alert(APawn* Who);
+ /** Spawn group (members share aggro when one is attacked). */
+ int32 GroupId = INDEX_NONE;
+ /** AI config name from the villain definition (aiscript/config). */
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString AIConfigName;
+ /** What the brain is doing, for tests and debugging. */
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString Thought;
  void OnDefeated(AActor* Causer);
  void OnMezzed(float Seconds);
  void Aggro(APawn* Who);
@@ -54,6 +64,14 @@ private:
  void SetState(ECoHEnemyState Next);
  void BindPowers();
  FName PickAttack(float Distance, float& OutReach) const;
+ bool Think(float Delta, class AAIController* AI);
+ APawn* ChooseTarget();
+ void Shout(APawn* Who);
+ bool UseSupportPower(const TCHAR* Group);
+ TMap<TWeakObjectPtr<APawn>, float> Threat;
+ TWeakObjectPtr<APawn> TauntedBy;
+ double TauntUntil = 0, FleeUntil = 0, NextSupportTime = 0;
+ bool bFled = false, bBuffed = false;
  bool CanSee(APawn* Pawn) const;
  void LandAttack();
  void FinishReaction();
@@ -122,12 +140,15 @@ public:
  UFUNCTION(BlueprintCallable, Category="CoH|Spawning") ACoHCombatEnemy* SpawnVillainNear(const FString& VillainName, int32 Level, APawn* Near, float Distance = 1200.f);
  /** Tests: stop spawning groups (and clear the ones alive). */
  UFUNCTION(BlueprintCallable, Category="CoH|Spawning") void SetSpawning(bool bOn);
+ /** Tests: spawn one group of a faction at a level, Distance cm from Near. */
+ UFUNCTION(BlueprintCallable, Category="CoH|Spawning") bool SpawnTestGroup(APawn* Near, const FString& Faction, int32 Level, float Distance = 2000.f) { return SpawnGroup(Near, Faction, Level, Distance); }
  UPROPERTY(EditAnywhere, Category="CoH|Spawning") bool bSpawning = true;
 private:
  struct FGroup { FString Faction; FVector Center; TArray<TWeakObjectPtr<ACoHCombatEnemy>> Members; double NextWander = 0; };
  TArray<FGroup> Groups;
  TMap<FString,TArray<TMap<FString,FString>>> Catalog;
  double NextSpawn = 0;
- bool SpawnGroup(APawn* Near);
+ int32 NextGroupId = 1;
+ bool SpawnGroup(APawn* Near, const FString& ForceFaction = FString(), int32 ForceLevel = 0, float ForceDistance = 0.f);
  const TMap<FString,FString>& BodyFor(const struct FCoHVillainDef* V,int32 Level,const TArray<TMap<FString,FString>>& Members) const;
 };

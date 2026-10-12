@@ -52,6 +52,7 @@ struct FCoHPowerDef
 	float Accuracy = 1, Range = 0, Radius = 0, Arc = 0, EndCost = 0, Activate = 1, Recharge = 1, Period = 0;
 	int32 MaxTargets = 0;
 	TArray<FCoHMod> Mods;
+	TArray<FString> AIGroups;   // how villain AI uses it: kBuff, kHealSelf, kHealAlly, kDebuff...
 	bool IsMelee() const;
 	bool IsHostile() const { return Target == TEXT("kFoe") || Affects == TEXT("kFoe"); }
 };
@@ -65,11 +66,22 @@ struct FCoHPowerSetDef
 /** A villain from defs/villains: rank class and its powers. */
 struct FCoHVillainDef
 {
-	FString Name, Class, Rank, Group;
+	FString Name, Class, Rank, Group, AIConfig;
 	TArray<FName> Powers;     // expanded power ids (auto powers included)
 	TMap<int32, TArray<FString>> Costumes;   // by level: the original costume (mesh) names
 	/** Costumes for a level (the nearest level listed). */
 	const TArray<FString>* CostumesAt(int32 Level) const;
+};
+
+/** A villain AI config from aiscript/config (inheritance resolved). Distances in feet. */
+struct FCoHAIConfig
+{
+	bool bPreferMelee = false, bPreferRanged = false, bDoNotMove = false, bIgnoreFriendsAttacked = false;
+	float MeleeScale = 1, RangedScale = 1;
+	float ShoutChance = 50, ShoutRadius = 30;
+	float FOVDegrees = 240, Standoff = 10;
+	float GriefHPRatio = 0.7f, GriefTimeBegin = 10, GriefTimeEnd = 30, Fear = 0.2f;
+	FString Brain;
 };
 
 /** A set the test hero owns (hero_all_sets.json). */
@@ -111,6 +123,8 @@ public:
 	TMap<FName, FCoHPowerDef> Powers;
 	TArray<FCoHClassDef> Critters;
 	TMap<FString, FCoHVillainDef> Villains;
+	TMap<FString, FCoHAIConfig> AIConfigs;
+	const FCoHAIConfig& AIConfig(const FString& Name) const;
 	TArray<FCoHHeroSet> HeroSets;
 	/** combat_mods.def: to-hit multipliers by level difference (index =
 	 *  levels apart) when the target is higher / lower than the attacker. */

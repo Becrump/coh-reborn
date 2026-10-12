@@ -7,10 +7,12 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "EngineUtils.h"
+#include "Navigation/PathFollowingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
 #include "NavigationInvokerComponent.h"
+#include "EngineUtils.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
@@ -64,6 +66,10 @@ void ACoHCombatEnemy::ApplyVillain(const FString& VillainName,int32 InLevel)
  const FCoHVillainDef* V=DB?DB->Villains.Find(VillainName):nullptr;
  if(!V) return;
  Villain=VillainName;
+ AIConfigName=V->AIConfig;
+ // chase about 60 m from where they were before giving up (players can
+ // still drag a group a long way, but not across the zone)
+ LeashRange=6000.f; AggroRange=1800.f;
  Powers->SetClassAndLevel(V->Class,InLevel);
  Powers->DisplayName=V->Name.Replace(TEXT("_"),TEXT(" "));
  Attacks.Reset(); Powers->Tray.Reset(); Powers->Tray.SetNum(10);
@@ -93,9 +99,15 @@ FName ACoHCombatEnemy::PickAttack(float Distance,float& OutReach) const
  }
  return Best;
 }
-void ACoHCombatEnemy::OnHurt(AActor* Causer)
+void ACoHCombatEnemy::OnHurt(AActor* Causer,float Damage)
 {
- if(APawn* P=Cast<APawn>(Causer)) Target=P;
+ if(APawn* P=Cast<APawn>(Causer))
+ {
+  const bool bNew=!Threat.Contains(P);
+  Threat.FindOrAdd(P)+=FMath::Max(1.f,Damage);
+  if(bNew) Shout(P);
+  if(!Target) Target=P;
+ }
  if(bRagdoll || IsDead()) return;
  GetWorldTimerManager().ClearTimer(AttackTimer);GetWorldTimerManager().ClearTimer(ReactionTimer);
  if(auto* AI=Cast<AAIController>(GetController()))AI->StopMovement();
@@ -163,6 +175,7 @@ void ACoHCombatEnemy::Tick(float Delta)
  if(bRagdoll || State==ECoHEnemyState::Dead || State==ECoHEnemyState::Hit || State==ECoHEnemyState::Attack) return;
  auto* AI=Cast<AAIController>(GetController()); if(!AI) return;
  if(Powers && Powers->IsMezzed()){AI->StopMovement();return;}
+ if(Think(Delta,AI)) return;
  // the nearest player (any of the group) is who we care about
  APawn* Player=nullptr; float Best=TNumericLimits<float>::Max();
  for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)
@@ -384,6 +397,194 @@ bool ACoHCombatEnemy::EnsureRagdollPhysics(USkeletalMesh* BodyMesh)
 #endif
 }
 
+
+// ------------------------------------------------------------------ brain (rules villains)
+void ACoHCombatEnemy::Taunt(APawn* Who,float Seconds)
+{
+ if(!Who) return;
+ TauntedBy=Who; TauntUntil=GetWorld()->GetTimeSeconds()+Seconds;
+ Threat.FindOrAdd(Who)+=100.f;
+ Target=Who;
+}
+void ACoHCombatEnemy::Alert(APawn* Who)
+{
+ if(!Who || IsDead()) return;
+ Threat.FindOrAdd(Who)+=1.f;
+ if(!Target) Target=Who;
+}
+void ACoHCombatEnemy::Shout(APawn* Who)
+{
+ // call for help (AI config: ShoutChance % to each friend within ShoutRadius;
+ // the spawn group always hears it)
+ const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
+ const FCoHAIConfig& Cfg=DB?DB->AIConfig(AIConfigName):FCoHAIConfig();
+ for(TActorIterator<ACoHCombatEnemy> It(GetWorld());It;++It)
+ {
+  ACoHCombatEnemy* F=*It;
+  if(F==this || F->IsDead() || F->Target) continue;
+  const bool bGroup=GroupId!=INDEX_NONE && F->GroupId==GroupId;
+  const bool bNear=FVector::Dist(F->GetActorLocation(),GetActorLocation())<=Cfg.ShoutRadius*30.48f;
+  if(bGroup || (bNear && FMath::FRand()*100.f<Cfg.ShoutChance)) F->Alert(Who);
+ }
+}
+APawn* ACoHCombatEnemy::ChooseTarget()
+{
+ const double Now=GetWorld()->GetTimeSeconds();
+ auto Valid=[](APawn* P){ const UCoHPowerComponent* C=UCoHPowerComponent::Of(P); return IsValid(P) && (!C || !C->IsDefeated()); };
+ if(TauntedBy.IsValid() && Now<TauntUntil && Valid(TauntedBy.Get())) return TauntedBy.Get();
+ // highest threat (damage done to me, decaying), ties to the nearest
+ APawn* Best=nullptr; float BestT=-1;
+ for(auto It=Threat.CreateIterator();It;++It)
+ {
+  APawn* P=It.Key().Get();
+  if(!Valid(P) || FVector::DistSquared(P->GetActorLocation(),Home)>FMath::Square(LeashRange*1.3f))
+  {
+   UE_LOG(LogTemp,Log,TEXT("CoH AI %s drops %s: %s (%.0f m from home)"),*GetName(),*GetNameSafe(P),Valid(P)?TEXT("too far from home"):TEXT("gone or defeated"),P?FVector::Dist(P->GetActorLocation(),Home)/100.f:0.f);
+   It.RemoveCurrent(); continue;
+  }
+  const float T=It.Value()-FVector::Dist(P->GetActorLocation(),GetActorLocation())*0.0001f;
+  if(T>BestT){BestT=T;Best=P;}
+ }
+ return Best;
+}
+bool ACoHCombatEnemy::UseSupportPower(const TCHAR* Group)
+{
+ const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
+ if(!DB) return false;
+ const FCoHVillainDef* V=DB->Villains.Find(Villain);
+ if(!V) return false;
+ for(const FName& Id:V->Powers)
+ {
+  const FCoHPowerDef* P=DB->FindPower(Id);
+  if(!P || !P->AIGroups.Contains(Group) || P->Type==TEXT("kAuto") || Powers->RechargeLeft(Id)>0.f || Powers->Endurance<P->EndCost) continue;
+  if(P->Type==TEXT("kToggle") && Powers->IsToggleOn(Id)) continue;
+  Powers->ServerActivate(Id,this,GetActorLocation());
+  return true;
+ }
+ return false;
+}
+bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
+{
+ // villains from the rules: perception with a field of view, shouting for
+ // help, threat and taunt, attack choice by the AI config's melee / ranged
+ // preference, ranged standoff, support powers and running away when hurt
+ const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
+ if(!DB || Attacks.Num()==0) return false;
+ const FCoHAIConfig& Cfg=DB->AIConfig(AIConfigName);
+ const double Now=GetWorld()->GetTimeSeconds();
+ for(auto& KV:Threat) KV.Value*=FMath::Pow(0.95f,Delta);      // threat fades ~5% a second
+ // notice players in front (field of view) and within aggro range
+ for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)
+ {
+  APawn* P=It->Get()?It->Get()->GetPawn():nullptr; const UCoHPowerComponent* C=UCoHPowerComponent::Of(P);
+  if(!P || (C && C->IsDefeated()) || Threat.Contains(P)) continue;
+  const FVector To=P->GetActorLocation()-GetActorLocation();
+  if(To.Size()>AggroRange) continue;
+  const float Ang=FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(To.GetSafeNormal2D(),GetActorForwardVector())));
+  if(Ang>Cfg.FOVDegrees*0.5f || !CanSee(P)) continue;
+  Threat.Add(P,1.f);
+  Shout(P);
+ }
+ APawn* Was=Target;
+ Target=ChooseTarget();
+ if(!Target)
+ {
+  Thought=FString::Printf(TEXT("idle (home %.0f m away)"),FVector::Dist(GetActorLocation(),Home)/100.f);
+  bFled=false; bBuffed=false;
+  if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(300.f))
+  {
+   SetState(ECoHEnemyState::ReturnHome);
+   if(Now>NextPathTime){AI->MoveToLocation(Home,50);NextPathTime=Now+.5;}
+  }
+  else { if(State==ECoHEnemyState::ReturnHome) AI->StopMovement(); SetState(ECoHEnemyState::Idle); }
+  return true;
+ }
+ if(Target!=Was && !Was) Shout(Target);
+ const float Distance=FVector::Dist(GetActorLocation(),Target->GetActorLocation());
+ // leashed too far from home: give up and go back
+ if(FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(LeashRange))
+ {
+  Threat.Reset(); Target=nullptr; Thought=TEXT("going home");
+  UE_LOG(LogTemp,Log,TEXT("CoH AI %s leashed: %.0f m from home"),*GetName(),FVector::Dist(GetActorLocation(),Home)/100.f);
+  SetState(ECoHEnemyState::ReturnHome); AI->MoveToLocation(Home,50); NextPathTime=Now+.5;
+  return true;
+ }
+ // hurt badly: some minions run for it (grief), once per fight
+ const float HP=Powers->MaxHealth>0?Powers->Health/Powers->MaxHealth:1.f;
+ if(!bFled && !Powers->ClassName.Contains(TEXT("Boss")) && HP<1.f-Cfg.GriefHPRatio && FMath::FRand()<Cfg.Fear*2.f)
+ {
+  bFled=true; FleeUntil=Now+FMath::FRandRange(Cfg.GriefTimeBegin,Cfg.GriefTimeEnd)*0.4f;
+ }
+ if(Now<FleeUntil)
+ {
+  Thought=TEXT("fleeing");
+  SetState(ECoHEnemyState::Chase);
+  if(Now>NextPathTime)
+  {
+   const FVector Away=(GetActorLocation()-Target->GetActorLocation()).GetSafeNormal2D();
+   AI->MoveToLocation(GetActorLocation()+Away*1200.f,100); NextPathTime=Now+1.0;
+  }
+  return true;
+ }
+ // support powers: buffs and toggles once the fight starts, a self heal when low
+ if(Now>=NextSupportTime && Now>=NextAttackTime)
+ {
+  NextSupportTime=Now+2.0;
+  if((!bBuffed && (UseSupportPower(TEXT("kBuff")) || UseSupportPower(TEXT("kToggleDefense")))) || (HP<0.5f && UseSupportPower(TEXT("kHealSelf"))))
+  {
+   bBuffed=true; Thought=TEXT("support power"); NextAttackTime=Now+1.2; return true;
+  }
+  bBuffed=true;
+ }
+ // attack: the config's preference weights melee or ranged powers
+ FName Use; float Reach=0, BestScore=-1, MinReach=0, MaxReach=0;
+ for(const FName& Id:Attacks)
+ {
+  const FCoHPowerDef* P=DB->FindPower(Id); if(!P) continue;
+  const float R=FMath::Max(P->Range,7.f)*30.48f+60.f;
+  MinReach=MinReach<=0?R:FMath::Min(MinReach,R); MaxReach=FMath::Max(MaxReach,R);
+  if(R<Distance || Powers->RechargeLeft(Id)>0.f || Powers->Endurance<P->EndCost) continue;
+  float Score=0; for(const FCoHMod& M:P->Mods) if(M.Aspect==TEXT("kAbs")) Score+=FMath::Abs(M.Scale);
+  const bool bMeleePower=P->IsMelee();
+  if(Cfg.bPreferMelee && bMeleePower) Score*=Cfg.MeleeScale;
+  if(Cfg.bPreferRanged && !bMeleePower) Score*=Cfg.RangedScale;
+  if(Score>BestScore){BestScore=Score;Use=Id;Reach=R;}
+ }
+ const bool bRangedStyle=Cfg.bPreferRanged || (!Cfg.bPreferMelee && MaxReach>800.f && Distance>MinReach);
+ const float Standoff=FMath::Max(Cfg.Standoff*30.48f,500.f);
+ FVector Aim=Target->GetActorLocation()-GetActorLocation();Aim.Z=0;
+ if(!Use.IsNone() && CanSee(Target))
+ {
+  // ranged villains keep their distance: step back when crowded, but shoot first
+  if(bRangedStyle && Distance<Standoff*0.6f && MaxReach>Standoff && !Cfg.bDoNotMove && FMath::FRand()<0.5f)
+  {
+   Thought=TEXT("backing off"); SetState(ECoHEnemyState::Chase);
+   if(Now>NextPathTime){AI->MoveToLocation(GetActorLocation()-Aim.GetSafeNormal()*Standoff,80);NextPathTime=Now+0.8;}
+   return true;
+  }
+  AI->StopMovement();GetCharacterMovement()->StopMovementImmediately();
+  SetActorRotation(Aim.Rotation());
+  if(Now>=NextAttackTime)
+  {
+   const FCoHPowerDef* P=DB->FindPower(Use);
+   const float Cast=P?FMath::Max(.5f,P->Activate):1.f;
+   Thought=FString::Printf(TEXT("attacking with %s"),*Use.ToString());
+   SetState(ECoHEnemyState::Attack);
+   Powers->ServerActivate(Use,Target,Target->GetActorLocation());
+   NextAttackTime=Now+Cast+0.4f;
+   GetWorldTimerManager().SetTimer(ReactionTimer,this,&ACoHCombatEnemy::FinishReaction,Cast,false);
+  }
+  else { Thought=TEXT("waiting for recharge"); SetState(ECoHEnemyState::Idle); }
+  return true;
+ }
+ // close in: ranged villains stop at their standoff, melee ones get close
+ if(Cfg.bDoNotMove){ SetState(ECoHEnemyState::Idle); Thought=TEXT("holding position"); return true; }
+ Thought=FString::Printf(TEXT("closing in (%.0f m, nav %s)"),Distance/100.f,AI->GetPathFollowingComponent() && AI->GetPathFollowingComponent()->GetStatus()==EPathFollowingStatus::Moving?TEXT("moving"):TEXT("no path")); SetState(ECoHEnemyState::Chase);
+ const float Want=bRangedStyle?FMath::Min(MaxReach*0.8f,FMath::Max(Standoff,MinReach*0.8f)):FMath::Max(80.f,MinReach*0.7f);
+ if(Now>=NextPathTime){AI->MoveToActor(Target,Want);NextPathTime=Now+.4;}
+ return true;
+}
+
 // ------------------------------------------------------------------ spawner
 ACoHEnemySpawner::ACoHEnemySpawner()
 {
@@ -426,23 +627,24 @@ const TMap<FString,FString>& ACoHEnemySpawner::BodyFor(const FCoHVillainDef* V,i
   }
  return Members[FMath::RandRange(0,Members.Num()-1)];
 }
-bool ACoHEnemySpawner::SpawnGroup(APawn* Near)
+bool ACoHEnemySpawner::SpawnGroup(APawn* Near,const FString& ForceFaction,int32 ForceLevel,float ForceDistance)
 {
  UWorld* W=GetWorld();
  float Total=0; for(const auto& F:Factions) if(Catalog.Contains(F.Key)) Total+=F.Value;
  if(Total<=0) return false;
  float Pick=FMath::FRand()*Total; FString Faction;
  for(const auto& F:Factions){ if(!Catalog.Contains(F.Key)) continue; Pick-=F.Value; if(Pick<=0){Faction=F.Key;break;} }
- if(Faction.IsEmpty()) return false;
+ if(!ForceFaction.IsEmpty()) Faction=ForceFaction;
+ if(Faction.IsEmpty() || !Catalog.Contains(Faction)) return false;
  FVector Center; bool bFound=false;
  for(int32 Try=0;Try<12 && !bFound;++Try)
  {
   const FVector Dir=FVector(FMath::FRandRange(-1.f,1.f),FMath::FRandRange(-1.f,1.f),0).GetSafeNormal();
-  bFound=OpenGround(W,Near->GetActorLocation()+Dir*FMath::FRandRange(MinDistance,MaxDistance),Center);
+  bFound=OpenGround(W,Near->GetActorLocation()+Dir*(ForceDistance>0?ForceDistance:FMath::FRandRange(MinDistance,MaxDistance)),Center);
  }
  if(!bFound) return false;
  const UCoHPowerComponent* PC=UCoHPowerComponent::Of(Near);
- const int32 Base=PC?PC->Level:5;
+ const int32 Base=ForceLevel>0?ForceLevel:(PC?PC->Level:5);
  const auto& Members=Catalog[Faction];
  FGroup G; G.Faction=Faction; G.Center=Center; G.NextWander=W->GetTimeSeconds()+FMath::FRandRange(20.f,40.f);
  const int32 Count=FMath::RandRange(3,5);
@@ -457,7 +659,10 @@ bool ACoHEnemySpawner::SpawnGroup(APawn* Near)
   const FString Want=i==0 ? (FMath::FRand()<0.12f?TEXT("Boss"):TEXT("Lieutenant")) : TEXT("Minion");
   TArray<const FCoHVillainDef*> Pool;
   if(const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this))
-   for(const auto& KV:DB->Villains) if(KV.Value.Group==Faction && KV.Value.Rank==Want && KV.Value.Powers.Num()) Pool.Add(&KV.Value);
+   for(const auto& KV:DB->Villains)
+    if(KV.Value.Group==Faction && KV.Value.Rank==Want && KV.Value.Powers.Num()
+       && !KV.Key.Contains(TEXT("Trial")) && !KV.Key.Contains(TEXT("Tutorial")) && !KV.Key.Contains(TEXT("_TF")) && !KV.Key.Contains(TEXT("Event")))
+     Pool.Add(&KV.Value);
   const int32 Lvl=FMath::Max(1,Base+FMath::RandRange(-LevelBelow,LevelAbove)+(i==0?1:0));
   const FCoHVillainDef* Who=Pool.Num()?Pool[FMath::RandRange(0,Pool.Num()-1)]:nullptr;
   E->InitializeFromCatalog(BodyFor(Who,Lvl,Members),Faction,Who?Who->Class:TEXT("Class_Minion_Grunt"),Lvl);
@@ -467,8 +672,10 @@ bool ACoHEnemySpawner::SpawnGroup(APawn* Near)
    // the group's own nav mesh, so it can walk wherever it was put
    auto* Inv=NewObject<UNavigationInvokerComponent>(E); Inv->SetGenerationRadii(2500.f,3500.f); Inv->RegisterComponent();
   }
+  E->GroupId=NextGroupId;
   G.Members.Add(E);
  }
+ ++NextGroupId;
  if(G.Members.Num()==0) return false;
  Groups.Add(MoveTemp(G));
  return true;

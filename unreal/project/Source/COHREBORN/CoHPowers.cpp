@@ -124,6 +124,7 @@ static FCoHPowerDef ReadPower(const FString& Id, const TSharedPtr<FJsonObject>& 
 	P.Icon = JStr(O, TEXT("IconName")); P.Type = JStr(O, TEXT("Type")); P.Area = JStr(O, TEXT("EffectArea"));
 	P.Target = JStr(O, TEXT("Target")); P.Affects = FString::Join(JList(O, TEXT("EntsAffected")), TEXT(" "));
 	P.AttackTypes = JList(O, TEXT("AttackTypes"));
+	P.AIGroups = JList(O, TEXT("AIGroups"));
 	P.Accuracy = JNum(O, TEXT("Accuracy"), 1); P.Range = JNum(O, TEXT("Range")); P.Radius = JNum(O, TEXT("Radius"));
 	P.Arc = JNum(O, TEXT("Arc")); P.EndCost = JNum(O, TEXT("EnduranceCost")); P.Activate = JNum(O, TEXT("TimeToActivate"), 1);
 	P.Recharge = JNum(O, TEXT("RechargeTime"), 1); P.Period = JNum(O, TEXT("ActivatePeriod")); P.MaxTargets = (int32)JNum(O, TEXT("MaxTargetsHit"));
@@ -202,6 +203,7 @@ void UCoHPowerDatabase::Initialize(FSubsystemCollectionBase& Collection)
 			FCoHVillainDef V;
 			V.Name = FString(KV.Key);
 			V.Class = JStr(O, TEXT("Class")); V.Rank = JStr(O, TEXT("Rank")); V.Group = JStr(O, TEXT("VillainGroup"));
+			V.AIConfig = JStr(O, TEXT("AIConfig"));
 			const TArray<TSharedPtr<FJsonValue>>* List;
 			if (O->TryGetArrayField(TEXT("powers"), List))
 				for (const auto& PV : *List)
@@ -223,6 +225,24 @@ void UCoHPowerDatabase::Initialize(FSubsystemCollectionBase& Collection)
 					if (LO.IsValid()) V.Costumes.Add(FCString::Atoi(*FString(L.Key)), JList(LO, TEXT("Costumes")));
 				}
 			Villains.Add(V.Name, MoveTemp(V));
+		}
+	if (LoadJson(Dir, TEXT("ai_configs.json"), Root))
+		for (const auto& KV : Root->AsObject()->Values)
+		{
+			const auto O = KV.Value->AsObject();
+			FCoHAIConfig A;
+			auto Num = [&](const TCHAR* K, float D) { return JNum(O, K, D); };
+			A.bPreferMelee = Num(TEXT("Misc.PreferMelee"), 0) > 0;
+			A.bPreferRanged = Num(TEXT("Misc.PreferRanged"), 0) > 0;
+			A.bDoNotMove = Num(TEXT("Misc.DoNotMove"), 0) > 0;
+			A.bIgnoreFriendsAttacked = Num(TEXT("Misc.IgnoreFriendsAttacked"), 0) > 0;
+			A.MeleeScale = Num(TEXT("Misc.PreferMeleeScale"), 1); A.RangedScale = Num(TEXT("Misc.PreferRangedScale"), 1);
+			A.ShoutChance = Num(TEXT("Misc.ShoutChance"), 50); A.ShoutRadius = Num(TEXT("Misc.ShoutRadius"), 30);
+			A.FOVDegrees = Num(TEXT("Misc.FOVDegrees"), 240); A.Standoff = Num(TEXT("Misc.StandoffDistance"), 10);
+			A.GriefHPRatio = Num(TEXT("Misc.GriefHPRatio"), 0.7f); A.GriefTimeBegin = Num(TEXT("Misc.GriefTimeBegin"), 10);
+			A.GriefTimeEnd = Num(TEXT("Misc.GriefTimeEnd"), 30); A.Fear = Num(TEXT("Feeling.Base.Fear"), 0.2f);
+			A.Brain = JStr(O, TEXT("Brain.Name"));
+			AIConfigs.Add(FString(KV.Key), A);
 		}
 	if (LoadJson(Dir, TEXT("hero_all_sets.json"), Root))
 		for (const auto& SV : Root->AsObject()->GetArrayField(TEXT("sets")))
@@ -247,6 +267,14 @@ const TArray<FString>* FCoHVillainDef::CostumesAt(int32 Level) const
 	for (const auto& KV : Costumes)
 		if (KV.Value.Num() && FMath::Abs(KV.Key - Level) < BestD) { BestD = FMath::Abs(KV.Key - Level); Best = &KV.Value; }
 	return Best;
+}
+
+const FCoHAIConfig& UCoHPowerDatabase::AIConfig(const FString& Name) const
+{
+	static const FCoHAIConfig Default;
+	const FCoHAIConfig* A = AIConfigs.Find(Name);
+	if (!A) A = AIConfigs.Find(TEXT("Default"));
+	return A ? *A : Default;
 }
 
 float UCoHPowerDatabase::LevelToHit(int32 AttackerLevel, int32 TargetLevel) const
@@ -759,7 +787,7 @@ void UCoHPowerComponent::ApplyMod(const FCoHPowerDef& P, const FCoHMod& M, UCoHP
 	}
 	if (M.Attrib == TEXT("kTaunt"))
 	{
-		if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Victim->GetOwner())) E->Aggro(Cast<APawn>(Causer));
+		if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Victim->GetOwner())) E->Taunt(Cast<APawn>(Causer), FMath::Max(Duration, 4.f));
 		return;
 	}
 	// buffs and debuffs that last a while: resistance, defence, to-hit,
@@ -805,7 +833,7 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 	MulticastText(Final < 1.f ? FString::Printf(TEXT("%.1f"), Final) : FString::Printf(TEXT("%.0f"), Final), DamageColour(Type));
 	if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(GetOwner()))
 	{
-		if (IsDefeated()) E->OnDefeated(Causer); else E->OnHurt(Causer);
+		if (IsDefeated()) E->OnDefeated(Causer); else E->OnHurt(Causer, Final);
 	}
 	else if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(GetOwner()))
 	{

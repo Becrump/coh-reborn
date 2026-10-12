@@ -148,6 +148,50 @@ def load_combat_mods(defs):
     return out
 
 
+# ---------------------------------------------------------------- AI configs
+_CFG_START = re.compile(r"^\s*Config:\s*(\S+)")
+_CFG_KEY = re.compile(r"^\s*([A-Za-z][\w.]*):\s*(.*?)\s*$")
+
+
+def load_ai_configs(defs):
+    """aiscript/config/*.cfg: `Config: Name { Key: value }` blocks, with
+    BaseConfig inheritance resolved (child keys win). Repeated keys such as
+    AssignPowerByFlag are kept as lists."""
+    folder = os.path.join(os.path.dirname(os.path.normpath(defs)), "aiscript", "config")
+    raw = {}
+    for path in sorted(os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith(".cfg")):
+        cur = None
+        for line in _read(path).splitlines():
+            line = line.split("//", 1)[0]
+            m = _CFG_START.match(line)
+            if m:
+                cur = raw.setdefault(m.group(1), {})
+                continue
+            if cur is None or line.strip() in ("{", ""):
+                continue
+            if line.strip() == "}":
+                cur = None
+                continue
+            m = _CFG_KEY.match(line)
+            if not m:
+                continue
+            k, v = m.group(1), m.group(2)
+            vals = [_num(x.strip()) for x in v.split(",")] if "," in v else _num(v)
+            if k in cur and k.startswith("Assign"):
+                cur[k] = (cur[k] if isinstance(cur[k], list) and isinstance(cur[k][0], list) else [cur[k]]) + [vals]
+            else:
+                cur[k] = vals
+
+    def resolve(name, seen=()):
+        c = raw.get(name, {})
+        base = c.get("BaseConfig")
+        out = dict(resolve(base, seen + (name,))) if isinstance(base, str) and base not in seen and base in raw else {}
+        out.update({k: v for k, v in c.items() if k != "BaseConfig"})
+        return out
+
+    return {n: resolve(n) for n in raw}
+
+
 # ------------------------------------------------------------------ queries
 def mod_value(cls, table, level):
     vals = cls["tables"].get(table)
@@ -278,7 +322,7 @@ def main():
         os.makedirs(a.name, exist_ok=True)
         for fn, data in (("classes", load_classes(a.defs)), ("powers", load_powers(a.defs)),
                          ("powersets", load_powersets(a.defs)), ("villains", load_villains(a.defs)),
-                         ("combat_mods", load_combat_mods(a.defs))):
+                         ("combat_mods", load_combat_mods(a.defs)), ("ai_configs", load_ai_configs(a.defs))):
             with open(os.path.join(a.name, fn + ".json"), "w") as f:
                 json.dump(data, f)
             print(fn, len(data))
