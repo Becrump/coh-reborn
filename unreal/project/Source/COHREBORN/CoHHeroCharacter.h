@@ -9,6 +9,8 @@ class UCameraComponent;
 class USpringArmComponent;
 class UInputAction;
 class UInputMappingContext;
+class UCoHPowerComponent;
+class UCoHHudWidget;
 struct FInputActionValue;
 
 /**
@@ -96,6 +98,38 @@ public:
 	UPROPERTY(Transient)
 	TObjectPtr<class UCoHGraphicsMenu> GraphicsMenu;
 
+	/** Powers: health, endurance, tray and the original power data. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Powers")
+	TObjectPtr<UCoHPowerComponent> Powers;
+
+	/** Test hero: archetype tables, level and the powers on the tray at start
+	 *  (any power can be added from the Power Browser, P). */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	FString TestArchetype = TEXT("Class_Blaster");
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	int32 TestLevel = 10;
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	TArray<FName> StartTray;
+	/** Power animations: ranged (thrust), area (charged slam). */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	TArray<FSoftObjectPath> RangedAnims;
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	TArray<FSoftObjectPath> AreaAnims;
+
+	/** Plays the animation for a power: Kind 0 melee, 1 ranged, 2 area. */
+	void PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip = FSoftObjectPath());
+	/** Animation test bench: play any clip on the hero now. */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Animation") bool PreviewAnimation(const FString& ClipNameOrPath);
+	/** Where the effect should leave a clip: a notify named CoHRelease (or
+	 *  Release / Fire / Hit), else 45% of the clip. Seconds from the start. */
+	static float ReleaseTime(const class UAnimSequenceBase* Clip, bool* bFromNotify = nullptr);
+	void ToggleAnimBench();
+	/** Editor tool: add (or move) a socket on a skeleton. Bone-space offset. */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Animation") static bool AddSkeletonSocket(class USkeleton* Skeleton, FName Socket, FName Bone, FVector Location);
+	/** Health reached zero: back to the start point, healed. */
+	void OnDefeated();
+	void CycleTarget();
+
 	/** Monorail: a rider picked a destination in the train's menu. */
 	UFUNCTION(Server, Reliable)
 	void ServerChooseMonorailDestination(class ARebornMonorail* Train, int32 Destination);
@@ -148,6 +182,8 @@ private:
 	bool bFirstPerson = false;
 	UPROPERTY(Transient)
 	TObjectPtr<UClass> LocomotionAnimClass;
+	UPROPERTY(Transient) TObjectPtr<UCoHHudWidget> Hud;
+	void TogglePowerBrowser();
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> Boom;

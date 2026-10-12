@@ -11,6 +11,7 @@ into the repo; `export` writes JSON to a folder you choose (keep it outside git)
 """
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -26,9 +27,12 @@ def _read(path):
 
 def _num(s):
     try:
-        return float(s)
+        f = float(s)
     except (TypeError, ValueError):
         return s
+    # "inf" / "nan" would be written as Infinity / NaN, which is not valid
+    # JSON (Unreal's reader rejects the whole file): keep those as text
+    return f if math.isfinite(f) else s
 
 
 def _simple(node):

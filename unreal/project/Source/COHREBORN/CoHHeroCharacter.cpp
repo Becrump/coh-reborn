@@ -1,4 +1,11 @@
 #include "CoHHeroCharacter.h"
+#include "CoHPowers.h"
+#include "CoHPowerUI.h"
+#include "Animation/AnimSequenceBase.h"
+#include "Animation/Skeleton.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Engine/GameViewportClient.h"
+#include "Framework/Commands/InputChord.h"
 #include "CoHCombat.h"
 #include "CoHGraphicsMenu.h"
 #include "RebornMonorail.h"
@@ -53,6 +60,9 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(Boom, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
+
+	Powers = CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
+	Powers->bPlayerSide = true;
 }
 
 void ACoHHeroCharacter::BeginPlay()
@@ -66,6 +76,14 @@ void ACoHHeroCharacter::BeginPlay()
 			GetMesh()->SetAnimInstanceClass(Anim);
 			LocomotionAnimClass = Anim;
 		}
+	}
+	if (HasAuthority())
+	{
+		Powers->ClassName = TestArchetype;
+		Powers->Level = FMath::Clamp(TestLevel, 1, 50);
+		Powers->DisplayName = TEXT("Test Hero");
+		Powers->Tray.SetNum(10);
+		for (int32 i = 0; i < StartTray.Num() && i < 10; ++i) Powers->Tray[i] = StartTray[i];
 	}
 	Super::BeginPlay();
  Health = MaxHealth;
@@ -83,6 +101,11 @@ void ACoHHeroCharacter::BeginPlay()
 				Sub->AddMappingContext(Mapping, 0);
 			}
 		}
+		if (PC->IsLocalController())
+		{
+			Hud = CreateWidget<UCoHHudWidget>(PC, UCoHHudWidget::StaticClass());
+			if (Hud) Hud->AddToViewport(5);
+		}
 	}
 }
 
@@ -90,6 +113,17 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
 	Input->BindKey(EKeys::F10, IE_Pressed, this, &ACoHHeroCharacter::ToggleGraphicsMenu);
+	// power tray 1..0, Tab target, P power browser
+	const FKey SlotKeys[10] = { EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four, EKeys::Five, EKeys::Six, EKeys::Seven, EKeys::Eight, EKeys::Nine, EKeys::Zero };
+	for (int32 i = 0; i < 10; ++i)
+	{
+		FInputKeyBinding KB(FInputChord(SlotKeys[i]), IE_Pressed);
+		KB.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i] { if (Powers) Powers->ActivateSlot(i); });
+		Input->KeyBindings.Add(KB);
+	}
+	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
+	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
+	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
 
 	// input assets built here so the project needs none
 	Mapping = NewObject<UInputMappingContext>(this);
@@ -172,6 +206,7 @@ void ACoHHeroCharacter::ToggleGraphicsMenu()
 void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
     if (GraphicsMenu) GraphicsMenu->Close();
+    if (Hud) { Hud->RemoveFromParent(); Hud = nullptr; }
     Super::EndPlay(Reason);
 }
 
@@ -304,6 +339,7 @@ void ACoHHeroCharacter::EndPunch()
 
 void ACoHHeroCharacter::RestoreLocomotion()
 {
+	GetMesh()->SetPlayRate(1.f);
 	if (LocomotionAnimClass)
 	{
 		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
@@ -522,22 +558,133 @@ void ACoHHeroCharacter::LandPunch()
 }
 float ACoHHeroCharacter::TakeDamage(float Damage, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer)
 {
- if (Damage<=0.f) return 0.f;
- Health = FMath::Max(0.f, Health-Damage);
- if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 2.f, FColor::Yellow, FString::Printf(TEXT("Hero health: %.0f / %.0f"), Health, MaxHealth));
- if (Health<=0.f)
+ // all damage goes through the power component (resistance, numbers, defeat)
+ if (Damage<=0.f || !Powers) return 0.f;
+ AActor* Who = EventInstigator && EventInstigator->GetPawn() ? EventInstigator->GetPawn() : Causer;
+ const float Done = Powers->ApplyDamage(Damage, ECoHDamage::Smashing, Who);
+ Health = Powers->Health;
+ return Done;
+}
+
+void ACoHHeroCharacter::OnDefeated()
+{
+ PunchTimeLeft=0.f; bQueuedPunch=false;
+ if (bClimbing) StopClimb();
+ bFlight = false;
+ ApplyMovementMode();
+ GetCharacterMovement()->StopMovementImmediately();
+ GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+ SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
+ Powers->Reset();
+ Health=Powers->Health; RestoreLocomotion();
+ if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 3.f, FColor::Cyan, TEXT("Defeated: back at the start point, fully healed"));
+}
+
+void ACoHHeroCharacter::PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip)
+{
+ if (bClimbing) return;
+ const TArray<FSoftObjectPath>& Set = Kind == 2 && AreaAnims.Num() ? AreaAnims : (Kind == 1 && RangedAnims.Num() ? RangedAnims : PunchAnims);
+ UAnimSequenceBase* Anim = Clip.IsValid() ? Cast<UAnimSequenceBase>(Clip.TryLoad()) : nullptr;
+ if (!Anim && Set.Num())
  {
-  PunchTimeLeft=0.f; bQueuedPunch=false;
-  if (bClimbing) StopClimb();
-  bFlight = false;
-  ApplyMovementMode();
-  GetCharacterMovement()->StopMovementImmediately();
-  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-  SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
-  Health=MaxHealth; RestoreLocomotion();
-  if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 3.f, FColor::Cyan, TEXT("Combat test: hero returned to spawn with full health"));
+  const int32 Pick = AnimIndex >= 0 ? AnimIndex % Set.Num() : (Kind == 0 ? ComboStep++ % Set.Num() : FMath::RandRange(0, Set.Num() - 1));
+  Anim = Cast<UAnimSequenceBase>(Set[Pick].TryLoad());
  }
- return Damage;
+ if (!Anim) return;
+ // the power's own activation time rules; the clip is fitted to it
+ const float Time = FMath::Max(0.4f, Duration);
+ GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+ GetMesh()->PlayAnimation(Anim, false);
+ GetMesh()->SetPlayRate(FMath::Clamp(Anim->GetPlayLength() / Time, 0.5f, 2.5f));
+ PunchTimeLeft = Time;
+ bPunchLanded = true;          // no brawl hit: the power system applies the effects
+ bQueuedPunch = false;
+ GetCharacterMovement()->StopMovementImmediately();
+ GetCharacterMovement()->DisableMovement();
+}
+
+bool ACoHHeroCharacter::PreviewAnimation(const FString& ClipNameOrPath)
+{
+ UAnimSequenceBase* Anim = Cast<UAnimSequenceBase>(UCoHPowerComponent::FindClip(ClipNameOrPath).TryLoad());
+ if (!Anim || bClimbing) return false;
+ // at its own speed (a power fits a clip to its activation time instead)
+ GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+ GetMesh()->PlayAnimation(Anim, false);
+ GetMesh()->SetPlayRate(1.f);
+ PunchTimeLeft = FMath::Max(0.2f, Anim->GetPlayLength());
+ bPunchLanded = true; bQueuedPunch = false;
+ GetCharacterMovement()->StopMovementImmediately();
+ GetCharacterMovement()->DisableMovement();
+ return true;
+}
+
+float ACoHHeroCharacter::ReleaseTime(const UAnimSequenceBase* Clip, bool* bFromNotify)
+{
+ if (bFromNotify) *bFromNotify = false;
+ if (!Clip) return 0.f;
+ for (const FAnimNotifyEvent& N : Clip->Notifies)
+ {
+  const FString Name = N.NotifyName.ToString();
+  if (Name.Contains(TEXT("CoHRelease")) || Name.Equals(TEXT("Release"), ESearchCase::IgnoreCase) || Name.Equals(TEXT("Fire"), ESearchCase::IgnoreCase) || Name.Equals(TEXT("Hit"), ESearchCase::IgnoreCase))
+  {
+   if (bFromNotify) *bFromNotify = true;
+   return N.GetTriggerTime();
+  }
+ }
+ return Clip->GetPlayLength() * 0.45f;
+}
+
+bool ACoHHeroCharacter::AddSkeletonSocket(USkeleton* Skeleton, FName Socket, FName Bone, FVector Location)
+{
+#if WITH_EDITOR
+ if (!Skeleton || Skeleton->GetReferenceSkeleton().FindBoneIndex(Bone) == INDEX_NONE) return false;
+ USkeletalMeshSocket* S = Skeleton->FindSocket(Socket);
+ if (!S)
+ {
+  S = NewObject<USkeletalMeshSocket>(Skeleton);
+  S->SocketName = Socket;
+  Skeleton->Sockets.Add(S);
+ }
+ S->BoneName = Bone;
+ S->RelativeLocation = Location;
+ Skeleton->MarkPackageDirty();
+ return true;
+#else
+ return false;
+#endif
+}
+
+void ACoHHeroCharacter::ToggleAnimBench()
+{
+ if (Hud) Hud->ToggleBench();
+}
+
+void ACoHHeroCharacter::CycleTarget()
+{
+ if (!Powers) return;
+ // nearest foes in front first, then the next one along on each press
+ TArray<TPair<float, AActor*>> Foes;
+ const FVector Eye = GetActorLocation();
+ const FVector Look = Controller ? Controller->GetControlRotation().Vector() : GetActorForwardVector();
+ for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
+ {
+  const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
+  if (!C || C->bPlayerSide || C->IsDefeated()) continue;
+  const FVector To = It->GetActorLocation() - Eye;
+  const float D = To.Size();
+  if (D > 6000.f || FVector::DotProduct(To.GetSafeNormal2D(), Look.GetSafeNormal2D()) < 0.3f) continue;
+  Foes.Add({ D, *It });
+ }
+ Foes.Sort([](const TPair<float, AActor*>& A, const TPair<float, AActor*>& B) { return A.Key < B.Key; });
+ if (Foes.Num() == 0) { Powers->Target = nullptr; return; }
+ int32 Next = 0;
+ for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Next = (i + 1) % Foes.Num(); break; }
+ Powers->Target = Foes[Next].Value;
+}
+
+void ACoHHeroCharacter::TogglePowerBrowser()
+{
+ if (Hud) Hud->ToggleBrowser();
 }
 
 void ACoHHeroCharacter::SetFlightEnabled(bool bEnabled)
