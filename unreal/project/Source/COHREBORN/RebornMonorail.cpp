@@ -312,15 +312,11 @@ bool ARebornMonorail::IsAboard(const APawn* Pawn) const
 	{
 		return false;
 	}
+	// standing on any part of this train (car floor, door sill...). The Cars
+	// list can point at stale components in a duplicated (PIE) world, so test
+	// the base's owner instead.
 	const UPrimitiveComponent* Base = C->GetCharacterMovement()->GetMovementBase();
-	for (const UStaticMeshComponent* Car : Cars)
-	{
-		if (Base == Car)
-		{
-			return true;
-		}
-	}
-	return false;
+	return Base && Base->GetOwner() == this;
 }
 
 void ARebornMonorail::ChooseDestination(int32 Index, APawn* Who)
@@ -364,11 +360,14 @@ void ARebornMonorail::TickTravel(float Dist)
 	}
 	if (!Aboard)
 	{
+		UE_LOG(LogTemp, Verbose, TEXT("Monorail: at the portal with nobody aboard"));
 		return;
 	}
 	bTravelling = true;
-	const FString Dest = Destinations[Destination].Map.ToSoftObjectPath().GetLongPackageName();
-	const FString Ride = RideMap.IsNull() ? Dest : RideMap.ToSoftObjectPath().GetLongPackageName();
+	// in Play-In-Editor the soft paths can carry the PIE prefix (UEDPIE_0_);
+	// travel wants the plain map name and adds the prefix back itself
+	const FString Dest = UWorld::RemovePIEPrefix(Destinations[Destination].Map.ToSoftObjectPath().GetLongPackageName());
+	const FString Ride = RideMap.IsNull() ? Dest : UWorld::RemovePIEPrefix(RideMap.ToSoftObjectPath().GetLongPackageName());
 	UE_LOG(LogTemp, Log, TEXT("Monorail: riding to %s via %s"), *Dest, *Ride);
 	GetWorld()->ServerTravel(FString::Printf(TEXT("%s?Dest=%s?listen"), *Ride, *Dest));
 }

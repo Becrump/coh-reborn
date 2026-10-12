@@ -32,6 +32,20 @@ def ground(x, y):
     return float(np.median(win))
 
 
+def footprint_ground(lot, max_drop=3.0):
+    """Lowest ground under the lot, so a building on a slope touches all
+    round (its high side sinks in). A lot that dips far deeper than its
+    centre (a bank or cutting) keeps the centre height."""
+    poly = Polygon(lot["poly"])
+    x0, y0, x1, y1 = poly.bounds
+    from shapely.geometry import Point
+    zs = [float(hm[min(max(int(round(y - LY0)), 0), 2016), min(max(int(round(x - LX0)), 0), 2016)])
+          for x in np.arange(x0 + 1, x1, 2.0) for y in np.arange(y0 + 1, y1, 2.0) if poly.contains(Point(x, y))]
+    mid = ground(*lot["center"])
+    low = min(zs) if zs else mid
+    return low if mid - low <= max_drop else mid
+
+
 blds = []
 for b in cat:
     sx, sy = b["size_m"]
@@ -142,7 +156,7 @@ def size_bucket(W):
 
 groups = defaultdict(list)
 for lot in lots:
-    lot["ground"] = ground(*lot["center"])
+    lot["ground"] = footprint_ground(lot)
     if lot["kind"].startswith("landmark"):
         continue
     groups[(lot["class"], size_bucket(lot["size"][1]))].append(lot)

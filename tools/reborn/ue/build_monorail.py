@@ -4,8 +4,8 @@ C++ ARebornMonorail, placed by place_train.py once the module is built).
 Imports the Blender kit (blender/monorail_kit.py FBX, with UCX collision),
 gives it materials, makes the track spline from monorail.json
 (plan_monorail.py), and runs PCG_Reborn_Monorail: the guideway beam as
-spline meshes along the track and a support pillar every 30 m (pillars
-reach 40 m down, so the ground's height under them does not matter)."""
+spline meshes along the track. The pillars are placed by place_pillars.py
+(they reach 40 m down, so the ground's height under them does not matter)."""
 import json
 import math
 import os
@@ -128,7 +128,7 @@ for p in mono["portals"]:
     a.set_actor_scale3d(unreal.Vector(0.6, 6.0, 7.0))   # a dark tunnel mouth the train runs into
     a.static_mesh_component.set_collision_profile_name("NoCollision")
 
-# ------------------------------------------------------------ PCG: beam + pillars
+# ------------------------------------------------------------ PCG: beam
 g = P.new_graph("PCG_Reborn_Monorail")
 gs_n, gs = P.node(g, unreal.PCGGetSplineSettings, 0, 0)
 P.by_tag(gs, "RebornMonorail")
@@ -141,23 +141,7 @@ pp.set_editor_property("scale_mesh_to_bounds", False)
 sset.set_editor_property("spline_mesh_params", pp)
 P.edge(g, gs_n, "Out", n, "In")
 P.edge(g, n, "Out", g.get_output_node(), "Out")
-smp, ss = P.node(g, unreal.PCGSplineSamplerSettings, 300, 300)
-sp = ss.get_editor_property("sampler_params")
-sp.set_editor_property("mode", unreal.PCGSplineSamplingMode.DISTANCE)
-sp.set_editor_property("distance_increment", 3000.0)
-sp.set_editor_property("start_offset", 500.0)
-ss.set_editor_property("sampler_params", sp)
-P.edge(g, gs_n, "Out", smp, "Spline")
-sm, sms = P.node(g, unreal.PCGStaticMeshSpawnerSettings, 600, 300)
-e = unreal.PCGMeshSelectorWeightedEntry()
-dd = e.get_editor_property("descriptor")
-dd.set_editor_property("static_mesh", meshes["SM_Mono_Pillar"])
-e.set_editor_property("descriptor", dd)
-e.set_editor_property("weight", 1)
-sms.set_editor_property("mesh_selector_type", unreal.PCGMeshSelectorWeighted)
-sms.get_editor_property("mesh_selector_parameters").set_editor_property("mesh_entries", [e])
-P.edge(g, smp, "Out", sm, "In")
-P.edge(g, sm, "Out", g.get_output_node(), "Out")
+# pillars: place_pillars.py (planned off the streets by plan_pillars.py)
 comp = P.volume("PCG_Reborn_Monorail", g)
 comp.generate(True)
 print("monorail track", len(tr), "points,", mono["length_m"], "m; station at", [round(v) for v in st["center"]])

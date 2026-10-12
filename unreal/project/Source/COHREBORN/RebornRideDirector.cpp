@@ -17,7 +17,7 @@ void ARebornRideDirector::BeginPlay()
 	Super::BeginPlay();
 	if (const AGameModeBase* GM = GetWorld()->GetAuthGameMode())
 	{
-		Destination = UGameplayStatics::ParseOption(GM->OptionsString, TEXT("Dest"));
+		Destination = UWorld::RemovePIEPrefix(UGameplayStatics::ParseOption(GM->OptionsString, TEXT("Dest")));
 	}
 	// tunnel: each section is a floor, two walls, a roof and a light band,
 	// built from one box mesh; sections scroll past the stationary train
@@ -76,6 +76,15 @@ void ARebornRideDirector::Tick(float DeltaSeconds)
 	if (HasAuthority() && !bLeft && Elapsed > RideSeconds && !Destination.IsEmpty())
 	{
 		bLeft = true;
+		// Play-In-Editor cannot seamless-travel out of the transition map
+		// itself (its UEDPIE_ name never matches the configured one, so the
+		// engine reloads this level and cancels): hard-travel there instead.
+		// Packaged and standalone games keep seamless travel.
+		AGameModeBase* GM = GetWorld()->GetAuthGameMode();
+		if (GM && GetWorld()->WorldType == EWorldType::PIE)
+		{
+			GM->bUseSeamlessTravel = false;
+		}
 		GetWorld()->ServerTravel(FString::Printf(TEXT("%s?Arrive=Monorail?listen"), *Destination));
 	}
 }
