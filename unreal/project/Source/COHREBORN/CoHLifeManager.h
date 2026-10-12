@@ -46,6 +46,8 @@ struct FCoHMover
 	int32 Instance = INDEX_NONE; // ISM instance index (cars)
 	float Fear = 0.f;            // seconds left fleeing
 	FVector Danger = FVector::ZeroVector;
+	FVector Velocity = FVector::ZeroVector;
+	float BlockedSeconds = 0.f;
 	USceneComponent* Comp = nullptr;
 	int32 Route = INDEX_NONE;    // walking circuit being followed (civilians)
 	int32 RouteStep = 0;         // index of From in that circuit
@@ -66,6 +68,10 @@ public:
 	/** Simulate only within this distance of the camera (cm). */
 	UPROPERTY(EditAnywhere, Category = "CoH|Data")
 	float ActiveRadius = 12000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Crowds")
+	float CrowdDensity = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Traffic")
+	float TrafficDensity = 1.f;
 
 	// --- civilians ---
 	UPROPERTY(EditAnywhere, Category = "CoH|Civilians")
@@ -228,6 +234,30 @@ private:
 	void BuildCircuits();
 	bool WalkPath(int32 From, int32 To, TArray<int32>& Out) const;
 	bool RouteSpotNear(const FVector& Center, float MinDist, float MaxDist, int32& OutRoute, int32& OutStep) const;
+
+	// --- traffic signals ---
+	/** Writes SignalClock (server seconds) here each frame; the signal-head
+	 *  material reads it, so lamps and stopping cars share one timing. */
+	UPROPERTY(EditAnywhere, Category = "CoH|Traffic")
+	TObjectPtr<UMaterialParameterCollection> SignalCollection;
+
+	/** Seconds for a full signal cycle (each direction: green, amber, red). */
+	UPROPERTY(EditAnywhere, Category = "CoH|Traffic")
+	float SignalCycle = 40.f;
+
+	UPROPERTY(EditAnywhere, Category = "CoH|Traffic")
+	float SignalAmber = 3.f;
+
+public:
+	/** 0 green, 1 amber, 2 red for a signal group at junction phase Offset. */
+	UFUNCTION(BlueprintPure, Category = "CoH|Traffic")
+	int32 SignalState(float Offset, int32 Group) const;
+
+private:
+	/** Stop lines from the life file: where a lane meets a signalled junction. */
+	struct FCoHSignal { FVector P; FVector D; float Offset; int32 Group; };
+	TArray<FCoHSignal> Signals;
+	double SignalTime = 0.0;
 
 	struct FDanger { FVector P; float Radius; float Until; };
 	TArray<FDanger> Dangers;

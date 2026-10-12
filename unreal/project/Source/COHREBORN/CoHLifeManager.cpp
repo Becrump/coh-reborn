@@ -10,11 +10,13 @@
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "GameFramework/GameStateBase.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Misc/FileHelper.h"
+#include "Misc/ConfigCacheIni.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -174,6 +176,23 @@ bool ACoHLifeManager::LoadLife()
 			Walk.D.Add(FVector::ZeroVector);
 		}
 	}
+	if (Root->TryGetArrayField(TEXT("signals"), Arr))
+	{
+		for (const TSharedPtr<FJsonValue>& V : *Arr)
+		{
+			const TSharedPtr<FJsonObject>* O;
+			if (V->TryGetObject(O))
+			{
+				FCoHSignal S;
+				S.P = ReadPoint((*O)->TryGetField(TEXT("p")));
+				const TArray<TSharedPtr<FJsonValue>>& Dir = (*O)->GetArrayField(TEXT("d"));
+				S.D = FVector(Dir[0]->AsNumber(), Dir[1]->AsNumber(), 0.f).GetSafeNormal();
+				S.Offset = (*O)->GetNumberField(TEXT("offset"));
+				S.Group = (*O)->GetIntegerField(TEXT("group"));
+				Signals.Add(S);
+			}
+		}
+	}
 	if (Root->TryGetArrayField(TEXT("drones"), Arr))
 	{
 		for (const TSharedPtr<FJsonValue>& V : *Arr)
@@ -230,8 +249,8 @@ void ACoHLifeManager::BuildWalkGraph()
 			const int32 j = Near[k].Value;
 			FHitResult Hit;
 			// chest height: benches, planters and low walls don't cut a path
-			const FVector Up(0, 0, 140.f);
-			if (World && World->LineTraceSingleByChannel(Hit, Walk.P[i] + Up, Walk.P[j] + Up, ECC_Visibility, Params))
+			const FVector Up(0, 0, 85.f);
+			if (World && World->SweepSingleByChannel(Hit, Walk.P[i] + Up, Walk.P[j] + Up, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeCapsule(35.f, 75.f), Params))
 			{
 				continue;
 			}
@@ -290,6 +309,8 @@ void ACoHLifeManager::BuildWalkGraph()
 void ACoHLifeManager::BeginPlay()
 {
 	Super::BeginPlay();
+	GConfig->GetFloat(TEXT("CoH.CitySettings"), TEXT("CrowdDensity"), CrowdDensity, GGameUserSettingsIni);
+	GConfig->GetFloat(TEXT("CoH.CitySettings"), TEXT("TrafficDensity"), TrafficDensity, GGameUserSettingsIni);
 	if (!LoadLife())
 	{
 		return;
@@ -708,6 +729,15 @@ void ACoHLifeManager::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	Clock += DeltaSeconds;
+	{
+		const AGameStateBase* GS = GetWorld()->GetGameState();
+		SignalTime = GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds();
+		if (SignalCollection)
+		{
+			UKismetMaterialLibrary::SetScalarParameterValue(this, SignalCollection, TEXT("SignalClock"),
+				float(FMath::Fmod(SignalTime, 3600.0)));
+		}
+	}
 	Dangers.RemoveAll([this](const FDanger& D) { return Clock > D.Until; });
 	if (NightCollection)
 	{
@@ -730,215 +760,187 @@ void ACoHLifeManager::Tick(float DeltaSeconds)
 
 void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
 {
-	if (Walk.Num() == 0 || CivilianMeshes.Num() == 0 || !WalkAnim)
-	{
-		return;
-	}
-	// spread people out: of several random walk nodes, take the one furthest
-	// from everyone already out (CoH packs its nodes into plazas and doors)
-	auto SpreadNode = [this](float MinDist, float MaxDist, const FVector& Center) -> int32
-	{
-		int32 Best = INDEX_NONE;
-		float BestGap = -1.f;
-		for (int32 Try = 0; Try < 10; ++Try)
-		{
-			const int32 N = RandomNodeNear(Walk, Center, MinDist, MaxDist);
-			if (N == INDEX_NONE)
-			{
-				continue;
-			}
-			float Gap = FLT_MAX;
-			for (const FCoHMover& W : Walkers)
-			{
-				if (W.Comp)
-				{
-					Gap = FMath::Min(Gap, FVector::DistSquared2D(W.Comp->GetComponentLocation(), Walk.P[N]));
-				}
-			}
-			if (Gap > BestGap)
-			{
-				BestGap = Gap;
-				Best = N;
-			}
-		}
-		return Best;
-	};
-	while (Walkers.Num() < MaxCivilians)
-	{
-		FCoHMover M;
-		int32 R, Step;
-		if (FMath::FRand() < CircuitShare && RouteSpotNear(Cam, 0.f, ActiveRadius * 0.8f, R, Step))
-		{
-			M.Route = R;
-			M.RouteStep = Step;
-			M.From = Circuits[R][Step];
-			M.To = Circuits[R][(Step + 1) % Circuits[R].Num()];
-		}
-		else
-		{
-			M.From = SpreadNode(0.f, ActiveRadius * 0.8f, Cam);
-			if (M.From == INDEX_NONE)
-			{
-				break;
-			}
-			PickNext(Walk, M);
-		}
-		M.T = FMath::FRand();
-		M.Speed = WalkSpeed * FMath::FRandRange(0.8f, 1.2f);
-		M.Kind = FMath::RandRange(0, CivilianMeshes.Num() - 1);
-		USkeletalMeshComponent* S = NewObject<USkeletalMeshComponent>(this);
-		S->SetSkeletalMeshAsset(CivilianMeshes[M.Kind]);
-		S->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		S->SetupAttachment(RootComponent);
-		// cheap crowds: no ray tracing (skips per-frame skin-cache work) and
-		// no animation while off screen
-		S->bVisibleInRayTracing = false;
-		S->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
-		S->RegisterComponent();
-		S->SetAnimationMode(EAnimationMode::AnimationSingleNode);
-		S->PlayAnimation(WalkAnim, true);
-		S->SetPlayRate(M.Speed / WalkAnimSpeed);
-		M.Instance = 1;   // 1 = walking, 0 = idle
-		M.Comp = S;
-		Walkers.Add(M);
-	}
-	const int32 ActiveWalkers = FMath::RoundToInt(MaxCivilians * FMath::Lerp(1.f, NightCivilianScale, Night));
-	// where everyone is now, to spot crowds: walk graphs have tight knots
-	// (door spawn points) that random walkers drift into and rarely leave
-	TArray<FVector> WalkerPos;
-	for (const FCoHMover& W : Walkers)
-	{
-		WalkerPos.Add(W.Comp ? W.Comp->GetComponentLocation() : FVector::ZeroVector);
-	}
-	for (int32 w = 0; w < Walkers.Num(); ++w)
-	{
-		FCoHMover& M = Walkers[w];
-		USkeletalMeshComponent* S = Cast<USkeletalMeshComponent>(M.Comp);
-		if (M.Fear <= 0.f && w < ActiveWalkers)
-		{
-			int32 Close = 0;
-			for (int32 o = 0; o < Walkers.Num(); ++o)
-			{
-				if (o != w && o < ActiveWalkers && FVector::DistSquared2D(WalkerPos[o], WalkerPos[w]) < FMath::Square(CrowdRadius))
-				{
-					++Close;
-				}
-			}
-			if (Close >= 2 && FMath::FRand() < Dt * 0.5f)
-			{
-				M.To = INDEX_NONE;   // the "stuck" branch below moves them elsewhere
-			}
-		}
-		const bool bOut = w < ActiveWalkers || M.Fear > 0.f;
-		if (S->IsVisible() != bOut)
-		{
-			S->SetVisibility(bOut);   // gone home for the night / back out
-		}
-		if (!bOut)
-		{
-			continue;
-		}
-		if (M.To == INDEX_NONE || FVector::Dist2D(Walk.P[M.From], Cam) > ActiveRadius)
-		{
-			// out of range or stuck: reappear somewhere near the camera
-			int32 R, Step;
-			if (FMath::FRand() < CircuitShare && RouteSpotNear(Cam, ActiveRadius * 0.4f, ActiveRadius * 0.8f, R, Step))
-			{
-				M.Route = R;
-				M.RouteStep = Step;
-				M.From = Circuits[R][Step];
-				M.To = Circuits[R][(Step + 1) % Circuits[R].Num()];
-				M.Prev = INDEX_NONE;
-				M.T = 0.f;
-			}
-			else
-			{
-				const int32 N = SpreadNode(ActiveRadius * 0.4f, ActiveRadius * 0.8f, Cam);
-				if (N != INDEX_NONE)
-				{
-					M.Route = INDEX_NONE;
-					M.From = N;
-					M.Prev = INDEX_NONE;
-					PickNext(Walk, M);
-				}
-			}
-			continue;
-		}
-		if (M.Pause > 0.f)
-		{
-			M.Pause -= Dt;
-			if (M.Pause <= 0.f && M.Instance == 0)
-			{
-				S->PlayAnimation(WalkAnim, true);
-				S->SetPlayRate(M.Speed / WalkAnimSpeed);
-				M.Instance = 1;
-			}
-			continue;
-		}
-		const bool bFleeing = M.Fear > 0.f;
-		if (bFleeing)
-		{
-			M.Fear -= Dt;
-			if (M.Fear <= 0.f)
-			{
-				S->PlayAnimation(WalkAnim, true);   // calmed down
-				S->SetPlayRate(M.Speed / WalkAnimSpeed);
-				M.Instance = 1;
-			}
-		}
-		const float Speed = bFleeing ? RunSpeed : M.Speed;
-		M.T += Speed * Dt / FMath::Max(Walk.SegLength(M.From, M.To), 1.f);
-		if (M.T >= 1.f)
-		{
-			M.Prev = M.From;
-			M.From = M.To;
-			if (M.Route != INDEX_NONE && Circuits.IsValidIndex(M.Route))
-			{
-				const TArray<int32>& L = Circuits[M.Route];
-				M.RouteStep = (M.RouteStep + 1) % L.Num();
-				M.To = L[(M.RouteStep + 1) % L.Num()];
-				M.T = 0.f;
-			}
-			else
-			{
-				PickNext(Walk, M);
-			}
-			if (bFleeing)
-			{
-				// run on to whichever neighbour is furthest from the danger
-				float Best = -1.f;
-				for (int32 n : Walk.Next[M.From])
-				{
-					const float Dist = FVector::Dist2D(Walk.P[n], M.Danger);
-					if (Dist > Best)
-					{
-						Best = Dist;
-						M.To = n;
-					}
-				}
-			}
-			else if (FMath::FRand() < (M.Route != INDEX_NONE ? 0.03f : 0.15f))   // commuters rarely stop
-			{
-				M.Pause = FMath::FRandRange(2.f, 6.f);
-				if (IdleAnim)
-				{
-					S->PlayAnimation(IdleAnim, true);
-					S->SetPlayRate(1.f);
-					M.Instance = 0;
-				}
-			}
-			if (M.To == INDEX_NONE)
-			{
-				continue;
-			}
-		}
-		FVector Pos;
-		FRotator Rot;
-		Walk.Eval(M.From, M.To, M.T, Pos, Rot);
-		Pos.Z = GroundZ(Pos);
-		// UE mannequins face +Y, so turn them a quarter to face travel
-		S->SetWorldLocationAndRotation(Pos, FRotator(0.f, Rot.Yaw - 90.f, 0.f));
-	}
+    if (!Walk.Num() || !CivilianMeshes.Num() || !WalkAnim || Dt <= 0.f) return;
+    Dt = FMath::Min(Dt, 0.1f); // no long collision jumps after a frame hitch
+    FCollisionQueryParams Query(SCENE_QUERY_STAT(CoHCrowdClearance), false, this);
+    const FVector BodyUp(0, 0, 85.f);
+    const FCollisionShape Body = FCollisionShape::MakeCapsule(35.f, 75.f);
+    auto Clear = [&](const FVector& A, const FVector& B) {
+        FHitResult Hit;
+        return !GetWorld()->SweepSingleByChannel(Hit, A + BodyUp, B + BodyUp,
+            FQuat::Identity, ECC_Visibility, Body, Query);
+    };
+    // Sample positions along routes, rather than packing people at marker nodes.
+    // Every candidate, including circuit commuters, uses the same clearance score.
+    auto Place = [&](FCoHMover& M, float MinDist) {
+        FCoHMover Best;
+        FVector BestPos;
+        FRotator BestRot;
+        float BestGap = 0.f;
+        for (int32 Try = 0; Try < 48; ++Try)
+        {
+            FCoHMover Candidate;
+            int32 R, Step;
+            if (FMath::FRand() < CircuitShare && RouteSpotNear(Cam, MinDist, ActiveRadius * .9f, R, Step))
+            {
+                Candidate.Route = R;
+                Candidate.RouteStep = Step;
+                Candidate.From = Circuits[R][Step];
+                Candidate.To = Circuits[R][(Step + 1) % Circuits[R].Num()];
+            }
+            else
+            {
+                Candidate.From = RandomNodeNear(Walk, Cam, MinDist, ActiveRadius * .9f);
+                if (Candidate.From == INDEX_NONE) continue;
+                PickNext(Walk, Candidate);
+            }
+            if (Candidate.To == INDEX_NONE) continue;
+            Candidate.T = FMath::FRand();
+            FVector P;
+            FRotator Rot;
+            Walk.Eval(Candidate.From, Candidate.To, Candidate.T, P, Rot);
+            P.Z = GroundZ(P);
+            if (FVector::Dist2D(P, Cam) > ActiveRadius || !Clear(P, P)) continue;
+            float Gap = ActiveRadius;
+            for (const FCoHMover& Other : Walkers)
+            {
+                if (Other.Comp && Other.Comp != M.Comp && Other.Comp->IsVisible())
+                    Gap = FMath::Min(Gap, FVector::Dist2D(P, Other.Comp->GetComponentLocation()));
+            }
+            if (Gap > BestGap)
+            {
+                Best = Candidate; BestPos = P; BestRot = Rot; BestGap = Gap;
+            }
+        }
+        if (BestGap < 220.f) return false; // postpone spawning rather than stack bodies
+        M.From = Best.From; M.To = Best.To; M.T = Best.T;
+        M.Route = Best.Route; M.RouteStep = Best.RouteStep;
+        M.Prev = INDEX_NONE; M.Velocity = FVector::ZeroVector; M.BlockedSeconds = 0.f;
+        if (M.Comp) M.Comp->SetWorldLocationAndRotation(BestPos, FRotator(0, BestRot.Yaw - 90.f, 0));
+        return true;
+    };
+    const int32 Active = FMath::RoundToInt(MaxCivilians * CrowdDensity * FMath::Lerp(1.f, NightCivilianScale, Night));
+    // Limit initialization work per frame; all newly spawned positions are committed immediately.
+    for (int32 Spawn = 0; Spawn < 4 && Walkers.Num() < MaxCivilians; ++Spawn)
+    {
+        FCoHMover M;
+        USkeletalMeshComponent* S = NewObject<USkeletalMeshComponent>(this);
+        S->SetSkeletalMeshAsset(CivilianMeshes[FMath::RandRange(0, CivilianMeshes.Num() - 1)]);
+        S->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        S->SetupAttachment(RootComponent);
+        S->bVisibleInRayTracing = false;
+        S->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+        S->RegisterComponent();
+        M.Comp = S;
+        if (!Place(M, 0.f)) { S->DestroyComponent(); break; }
+        M.Speed = WalkSpeed * FMath::FRandRange(.8f, 1.2f);
+        S->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+        S->PlayAnimation(WalkAnim, true);
+        M.Instance = 1;
+        Walkers.Add(M);
+    }
+    TArray<FVector> Positions, Velocities;
+    for (const FCoHMover& M : Walkers)
+    {
+        Positions.Add(M.Comp->GetComponentLocation()); Velocities.Add(M.Velocity);
+    }
+    for (int32 I = 0; I < Walkers.Num(); ++I)
+    {
+        FCoHMover& M = Walkers[I];
+        USkeletalMeshComponent* S = Cast<USkeletalMeshComponent>(M.Comp);
+        const bool Visible = I < Active || M.Fear > 0.f;
+        const bool Returning = Visible && !S->IsVisible();
+        S->SetVisibility(Visible);
+        if (!Visible) { M.Velocity = FVector::ZeroVector; continue; }
+        if (Returning || M.To == INDEX_NONE || FVector::Dist2D(Positions[I], Cam) > ActiveRadius * 1.1f)
+        {
+            if (Place(M, ActiveRadius * .4f)) Positions[I] = S->GetComponentLocation();
+            continue;
+        }
+        if (M.Pause > 0.f)
+        {
+            M.Pause -= Dt; M.Velocity = FVector::ZeroVector;
+            if (IdleAnim && M.Instance != 0) { S->PlayAnimation(IdleAnim, true); M.Instance = 0; }
+            continue;
+        }
+        const bool Fleeing = M.Fear > 0.f;
+        M.Fear = FMath::Max(0.f, M.Fear - Dt);
+        const float Speed = Fleeing ? RunSpeed : M.Speed;
+        const FVector Old = S->GetComponentLocation();
+        // A short look-ahead along the corridor leaves room for local steering.
+        FVector Target;
+        FRotator Heading;
+        Walk.Eval(M.From, M.To, FMath::Min(1.f, M.T + 120.f / FMath::Max(1.f, Walk.SegLength(M.From, M.To))), Target, Heading);
+        FVector Wanted = (Target - Old).GetSafeNormal2D() * Speed;
+        for (int32 J = 0; J < Walkers.Num(); ++J)
+        {
+            if (J == I || !Walkers[J].Comp->IsVisible() || FMath::Abs(Positions[J].Z - Old.Z) > 160.f) continue;
+            const FVector Delta = Old - Positions[J];
+            const FVector Predicted = Delta + (Wanted - Velocities[J]) * .6f;
+            const float Distance = Delta.Size2D();
+            if (Distance < 150.f || (Predicted.Size2D() < 100.f && Distance < 350.f))
+            {
+                FVector Away = Delta.GetSafeNormal2D();
+                if (Away.IsNearlyZero()) Away = FVector(I < J ? 1.f : -1.f, 0, 0);
+                Wanted += Away * Speed * FMath::Clamp((180.f - FMath::Min(Distance, Predicted.Size2D())) / 100.f, 0.f, 1.5f);
+            }
+        }
+        Wanted = Wanted.GetClampedToMaxSize2D(Speed);
+        FVector Next = Old + Wanted * Dt;
+        Next.Z = GroundZ(Next);
+        FHitResult Hit;
+        if (GetWorld()->SweepSingleByChannel(Hit, Old + BodyUp, Next + BodyUp, FQuat::Identity, ECC_Visibility, Body, Query))
+        {
+            // Slide tangentially around poles/walls instead of walking through them.
+            FVector Slide = FVector::VectorPlaneProject(Wanted, Hit.Normal).GetSafeNormal2D();
+            if (Slide.IsNearlyZero()) Slide = FVector(-Hit.Normal.Y, Hit.Normal.X, 0);
+            Next = Old + Slide * Speed * Dt;
+            Next.Z = GroundZ(Next);
+            if (!Clear(Old, Next)) Next = Old;
+        }
+        for (int32 J = 0; J < Walkers.Num(); ++J)
+        {
+            if (J != I && Walkers[J].Comp->IsVisible() && FMath::Abs(Positions[J].Z - Next.Z) < 160.f
+                && FVector::Dist2D(Next, Positions[J]) < 75.f
+                && FVector::Dist2D(Next, Positions[J]) < FVector::Dist2D(Old, Positions[J])) { Next = Old; break; }
+        }
+        M.Velocity = (Next - Old) / Dt;
+        const float ActualSpeed = M.Velocity.Size2D();
+        M.BlockedSeconds = ActualSpeed < 5.f ? M.BlockedSeconds + Dt : 0.f;
+        if (M.BlockedSeconds > 3.f)
+        {
+            // Reverse onto a known corridor instead of teleporting a visible person.
+            Swap(M.From, M.To); M.T = 1.f - M.T; M.Route = INDEX_NONE; M.BlockedSeconds = 0.f;
+        }
+        const FVector Segment = Walk.P[M.To] - Walk.P[M.From];
+        M.T = FMath::Clamp(FVector::DotProduct(Next - Walk.P[M.From], Segment) / FMath::Max(1.f, Segment.SizeSquared()), 0.f, 1.f);
+        if (FVector::Dist2D(Next, Walk.P[M.To]) < 85.f)
+        {
+            M.Prev = M.From; M.From = M.To;
+            if (M.Route != INDEX_NONE && Circuits.IsValidIndex(M.Route))
+            {
+                const auto& Loop = Circuits[M.Route];
+                M.RouteStep = (M.RouteStep + 1) % Loop.Num(); M.To = Loop[(M.RouteStep + 1) % Loop.Num()]; M.T = 0.f;
+            }
+            else PickNext(Walk, M);
+            if (Fleeing)
+            {
+                float Best = -1.f;
+                for (int32 N : Walk.Next[M.From])
+                    if (FVector::Dist2D(Walk.P[N], M.Danger) > Best) { Best = FVector::Dist2D(Walk.P[N], M.Danger); M.To = N; }
+            }
+        }
+        const int32 Animation = ActualSpeed < 8.f ? 0 : (Fleeing && RunAnim ? 2 : 1);
+        if (Animation != M.Instance)
+        {
+            S->PlayAnimation(Animation == 0 && IdleAnim ? IdleAnim : (Animation == 2 ? RunAnim : WalkAnim), true);
+            M.Instance = Animation;
+        }
+        S->SetPlayRate(Animation == 0 ? (IdleAnim ? 1.f : 0.f) : ActualSpeed / (Animation == 2 ? RunAnimSpeed : WalkAnimSpeed));
+        const FRotator Rot = ActualSpeed > 8.f ? FRotator(0, M.Velocity.Rotation().Yaw - 90.f, 0) : S->GetComponentRotation();
+        S->SetWorldLocationAndRotation(Next, Rot);
+        Positions[I] = Next;
+    }
 }
 
 void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
@@ -1006,7 +1008,7 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 		Positions.Add(P);
 		Headings.Add(R.Vector());
 	}
-	const int32 ActiveCars = FMath::RoundToInt(MaxCars * FMath::Lerp(1.f, NightCarScale, Night));
+	const int32 ActiveCars = FMath::RoundToInt(MaxCars * TrafficDensity * FMath::Lerp(1.f, NightCarScale, Night));
 	for (int32 i = 0; i < Cars.Num(); ++i)
 	{
 		FCoHMover& M = Cars[i];
@@ -1040,7 +1042,7 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 		}
 		for (int32 j = 0; j < Cars.Num(); ++j)
 		{
-			if (j == i)
+			if (j == i || j >= ActiveCars)
 			{
 				continue;
 			}
@@ -1069,6 +1071,39 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 				}
 			}
 		}
+        // red (or amber) signal ahead in this lane: stop at the line
+        for (const FCoHSignal& S : Signals)
+        {
+            const FVector Delta = S.P - Positions[i];
+            if (FMath::Abs(Delta.Z) > 300.f || FVector::DotProduct(Headings[i], S.D) < 0.8f) continue;
+            const float Ahead = FVector::DotProduct(Delta, Headings[i]);
+            const float Side = FMath::Abs(FVector::CrossProduct(Headings[i], Delta).Z);
+            if (Ahead > -50.f && Ahead < 300.f + M.Speed * 1.2f && Side < 800.f && SignalState(S.Offset, S.Group) != 0)
+            {
+                // already over the line when it turned amber: carry on
+                if (!(Ahead < 150.f && SignalState(S.Offset, S.Group) == 1))
+                {
+                    Target = FMath::Min(Target, CarSpeed * FMath::Clamp((Ahead - 150.f) / 1200.f, 0.f, 1.f));
+                }
+            }
+        }
+        // Pedestrians have priority. Look ahead by braking distance and predict
+        // crossing movement; parked sidewalk pedestrians do not stop road traffic.
+        const float Look = CarBodyRadius + 120.f + M.Speed * .8f + M.Speed * M.Speed / 1200.f;
+        for (const FCoHMover& W : Walkers)
+        {
+            if (!W.Comp || !W.Comp->IsVisible()) continue;
+            const FVector Ped = W.Comp->GetComponentLocation();
+            if (FMath::Abs(Ped.Z - Positions[i].Z) > 180.f) continue;
+            for (float Horizon : {0.f, .5f, 1.f})
+            {
+                const FVector Delta = Ped + W.Velocity * Horizon - Positions[i];
+                const float Ahead = FVector::DotProduct(Delta, Headings[i]);
+                const float Side = FMath::Abs(FVector::CrossProduct(Headings[i], Delta).Z);
+                if (Ahead > -CarBodyRadius && Ahead < Look && Side < 165.f)
+                    Target = FMath::Min(Target, FMath::Sqrt(1200.f * FMath::Max(0.f, Ahead - CarBodyRadius - 140.f)));
+            }
+        }
 		M.Speed = FMath::FInterpTo(M.Speed, Target, Dt, Target < M.Speed ? 6.f : 1.5f);
 		const float PrevT = M.T;
 		M.T += M.Speed * Dt / FMath::Max(Lanes.SegLength(M.From, M.To), 1.f);
@@ -1091,6 +1126,20 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 				}
 			}
 		}
+        FVector CandidatePosition;
+        FRotator CandidateRotation;
+        Lanes.Eval(M.From, M.To, FMath::Min(1.f, M.T), CandidatePosition, CandidateRotation);
+        for (const FCoHMover& W : Walkers)
+        {
+            if (!W.Comp || !W.Comp->IsVisible()) continue;
+            const FVector Ped = W.Comp->GetComponentLocation();
+            const FVector Delta = Ped - CandidatePosition;
+            if (FMath::Abs(Delta.Z) < 180.f
+                && FMath::Abs(FVector::DotProduct(Delta, CandidateRotation.Vector())) < CarBodyRadius + 65.f
+                && FMath::Abs(FVector::CrossProduct(CandidateRotation.Vector(), Delta).Z) < 165.f
+                && FVector::DistSquared2D(Ped, CandidatePosition) < FVector::DistSquared2D(Ped, Positions[i]))
+            { M.T = PrevT; M.Speed = 0.f; break; }
+        }
 		if (M.T >= 1.f)
 		{
 			M.Prev = M.From;
@@ -1202,4 +1251,15 @@ void ACoHLifeManager::TickDrones(float Dt, const FVector& Cam)
 		const FVector P = Post + FVector(FMath::Cos(A) * 600.f, FMath::Sin(A) * 600.f, 900.f + FMath::Sin(M.T * 1.7f) * 60.f);
 		M.Comp->SetWorldLocationAndRotation(P, FRotator(0.f, FMath::RadiansToDegrees(A) + 90.f, 0.f));
 	}
+}
+
+int32 ACoHLifeManager::SignalState(float Offset, int32 Group) const
+{
+	// group 0 is green for the first half of the cycle, group 1 for the second
+	const float Half = SignalCycle * 0.5f;
+	float T = FMath::Fmod(float(FMath::Fmod(SignalTime, 3600.0)) + Offset + (Group ? Half : 0.f), SignalCycle);
+	if (T < 0.f) T += SignalCycle;
+	if (T < Half - SignalAmber) return 0;
+	if (T < Half) return 1;
+	return 2;
 }

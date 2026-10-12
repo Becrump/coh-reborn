@@ -62,12 +62,48 @@ for mask, b, e in lanes:
     elif mask & 4:
         for p, _ in resample(seq, 1000.0):
             npc.append([round(p[0], 1), round(p[1], 1), round(p[2] + 15, 1)])
-life = {"traffic": traffic, "npc": npc, "monorail": [], "blimp": [], "drones": [], "cars": [], "fx": []}
+# traffic signals: at every junction of 3+ roads, one per approach. Stop
+# point = middle of the approach's incoming lanes at the road end; the two
+# crossing directions alternate (group 0/1); each junction has its own phase
+import random
+rng = random.Random(11)
+roads_json = json.load(open(os.path.join(out, "roads.json")))
+R = roads_json["roads"]
+signals, heads = [], []
+for j in roads_json["junctions"]:
+    if len(j["roads"]) < 3:
+        continue
+    cx, cy = j["center"]
+    offset = round(rng.uniform(0, 40), 1)
+    ref = None
+    for rid in j["roads"]:
+        pts = R[rid]["dense"]
+        start = math.dist(pts[0][:2], (cx, cy)) < math.dist(pts[-1][:2], (cx, cy))
+        end, prev = (pts[0], pts[1]) if start else (pts[-1], pts[-2])
+        dx, dy = end[0] - prev[0], end[1] - prev[1]
+        n = math.hypot(dx, dy) or 1.0
+        dx, dy = dx / n, dy / n                      # direction cars approach in
+        ang = math.degrees(math.atan2(dy, dx)) % 180
+        if ref is None:
+            ref = ang
+        diff = abs(ang - ref) % 180
+        group = 0 if min(diff, 180 - diff) < 45 else 1
+        rx, ry = -dy, dx                              # right of travel
+        half = R[rid]["width"] / 2
+        stop = (end[0] + rx * half / 2, end[1] + ry * half / 2, end[2])
+        signals.append({"p": [round(stop[0] * 100, 1), round(stop[1] * 100, 1), round(stop[2] * 100, 1)],
+                        "d": [round(dx, 4), round(dy, 4)], "offset": offset, "group": group})
+        pole = (end[0] + rx * (half + 1.2), end[1] + ry * (half + 1.2), end[2])
+        heads.append({"p": [round(v, 2) for v in pole], "yaw": round(math.degrees(math.atan2(-dy, -dx)), 2),
+                      "offset": offset, "group": group})
+with open(os.path.join(out, "signals.json"), "w") as f:
+    json.dump(heads, f)
+life = {"traffic": traffic, "signals": signals, "npc": npc, "monorail": [], "blimp": [], "drones": [], "cars": [], "fx": []}
 if orig:
     o = json.load(open(orig))
     for k in ("monorail", "blimp", "drones"):
         life[k] = o.get(k, [])
 with open(os.path.join(out, "reborn_life.json"), "w") as f:
     json.dump(life, f)
-print("lanes", len(lanes), "traffic points", len(traffic), "civilian nodes", len(npc),
+print("signals", len(signals), "lanes", len(lanes), "traffic points", len(traffic), "civilian nodes", len(npc),
       "monorail", len(life["monorail"]))
