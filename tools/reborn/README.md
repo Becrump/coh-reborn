@@ -19,7 +19,10 @@ from the original game ends up in the level.
    waterfront district down to a bay (shoreline, piers, inlet) and wooded
    hills around. Writes `heightmap.png` (2017², 1 m), `surface.png`
    (ground mask), `layout.json` and `layout_plan.png`.
-5. `plan_lots.py <out dir>`: building lots (original plots plus parcels in
+5. `plan_roads.py <guide dir> <out dir>`: road centerlines for the whole map
+   (the old zone from the original cars' lane points, the new districts from
+   the layout), noded into junctions; writes `roads.json`.
+6. `plan_lots.py <out dir>`: building lots (original plots plus parcels in
    the new district), the City Sample buildings that fit each lot, lot
    buckets, and planting zones. Needs `buildings_catalog.json` from
    `ue/measure_buildings.py`.
@@ -37,6 +40,9 @@ Open `/Game/AtlasReborn/AtlasPark_Reborn` first.
 | `build_zones.py` | lot markers (TargetPoints) and planting zone splines |
 | `build_pcg.py` | PCG graphs: buildings per lot bucket, trees and shrubs |
 | `check_water.py` | fails if any building footprint (plus margin) touches water |
+| `build_streets.py` | road splines; PCG curbs, centre and lane lines, street lights |
+| `build_lanes.py` | ZoneGraph lanes: cars (Reborn_Road4), sidewalks (Reborn_Sidewalk), junction polygons |
+| `build_daynight.py` | looping 24-minute day/night sequence driving the sun and `MPC_Reborn.Night` |
 | `window_lights.py` | City Sample windows dark by day, lit by `MPC_Reborn.Night` |
 | `build_lighting.py` | physical daylight and exposure range |
 | `save_map.py` | saves the level |
@@ -45,3 +51,7 @@ PCG decides which building goes on each lot (random among those that fit
 the lot's size and height class), turns it, and spawns it; the planting
 graph scatters Megaplant trees and shrubs over the woods and parks.
 Re-running `build_pcg.py` regenerates everything.
+
+Lane profiles and tags are in the project's `Config/DefaultPlugins.ini`
+(ZoneGraphSettings). `unreal/scripts/mcp_call.py` calls the editor's MCP
+tools directly when the connector is down.

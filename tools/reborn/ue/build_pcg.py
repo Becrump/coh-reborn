@@ -262,9 +262,10 @@ def planting():
     return comp
 
 
-if ONLY in ("", "buildings"):
-    buildings()
-    print("buildings graph generated")
-if ONLY in ("", "planting"):
-    planting()
-    print("planting graph generated")
+if __name__ == "__main__":
+    if ONLY in ("", "buildings"):
+        buildings()
+        print("buildings graph generated")
+    if ONLY in ("", "planting"):
+        planting()
+        print("planting graph generated")

@@ -157,9 +157,11 @@ x0r, y0r, x1r, y1r = lay["ring"]
 land = Polygon([(x, y) for x, y in [(LX0, 1400)] + [tuple(p) for p in
                [w for w in lay["waters"] if w["kind"] == "bay"][0]["coast"]] + [(LX0 + 2016, 1400)]])
 zones = []
-for name, b in [("Woods_West", box(LX0 + 2, y0r - 40, x0r - 45, LY0 + 2014)),
-                ("Woods_East", box(x1r + 45, y0r - 40, LX0 + 2014, LY0 + 2014)),
-                ("Woods_South", box(x0r - 45, y1r + 45, x1r + 45, LY0 + 2014))]:
+BELT = 50.0
+LX1, LY1 = LX0 + 2016, LY0 + 2016
+for name, b in [("Woods_West", box(LX0 + 2, y0r - 40, LX0 + BELT, LY1 - 2)),
+                ("Woods_East", box(LX1 - BELT, y0r - 40, LX1 - 2, LY1 - 2)),
+                ("Woods_South", box(LX0 + BELT, LY1 - BELT, LX1 - BELT, LY1 - 2))]:
     g = b & land
     for k, part in enumerate(getattr(g, "geoms", [g])):
         if part.area > 2000:
