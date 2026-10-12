@@ -5,6 +5,19 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "CoHHeroCharacter.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "Net/UnrealNetwork.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Text/STextBlock.h"
 
 ARebornMonorail::ARebornMonorail()
 {
@@ -160,6 +173,18 @@ void ARebornMonorail::BuildTimetable()
 		Legs.Add(L);
 	}
 	Cycle = T;
+	StartOffset = 0.f;
+	if (bStartAtFirstStop)
+	{
+		for (const FLeg& L : Legs)
+		{
+			if (L.StopTo != INDEX_NONE)
+			{
+				StartOffset = L.Start + L.Move;
+				break;
+			}
+		}
+	}
 }
 
 void ARebornMonorail::Evaluate(double Time, float& OutDist, float& OutDoors, int32& OutStop, int32& OutNext) const
@@ -248,11 +273,188 @@ void ARebornMonorail::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	const AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
-	const double Now = GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds();
+	const double Now = (GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds()) + StartOffset;
 	float Dist, Open;
 	Evaluate(Now, Dist, Open, AtStop, NextStop);
 	PlaceCars(Dist, Open, 1.f);
+	// riders must move after the cars each frame, or the floor slides out
+	// from under them: make every player's movement tick wait for the train
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		const ACharacter* C = It->Get() ? Cast<ACharacter>(It->Get()->GetPawn()) : nullptr;
+		if (UCharacterMovementComponent* Move = C ? C->GetCharacterMovement() : nullptr)
+		{
+			bool bHas = false;
+			for (const FTickPrerequisite& P : Move->PrimaryComponentTick.GetPrerequisites())
+			{
+				bHas |= P.PrerequisiteObject.Get() == this;
+			}
+			if (!bHas)
+			{
+				Move->AddTickPrerequisiteActor(this);
+			}
+		}
+	}
+	TickTravel(Dist);
+	UpdateMenu();
 }
+
+void ARebornMonorail::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ARebornMonorail, Destination);
+}
+
+bool ARebornMonorail::IsAboard(const APawn* Pawn) const
+{
+	const ACharacter* C = Cast<ACharacter>(Pawn);
+	if (!C || !C->GetCharacterMovement())
+	{
+		return false;
+	}
+	const UPrimitiveComponent* Base = C->GetCharacterMovement()->GetMovementBase();
+	for (const UStaticMeshComponent* Car : Cars)
+	{
+		if (Base == Car)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void ARebornMonorail::ChooseDestination(int32 Index, APawn* Who)
+{
+	if (!HasAuthority() || !Destinations.IsValidIndex(Index) || Destinations[Index].Map.IsNull())
+	{
+		return;
+	}
+	Destination = Index;
+	OnRep_Destination();
+}
+
+void ARebornMonorail::OnRep_Destination()
+{
+	HideMenu();
+}
+
+void ARebornMonorail::TickTravel(float Dist)
+{
+	// Server: heading into the start-of-track portal with a destination picked
+	// and someone aboard -> everyone rides to that zone (group travel).
+	if (!HasAuthority() || bTravelling || !Destinations.IsValidIndex(Destination) || AtStop != INDEX_NONE)
+	{
+		return;
+	}
+	// either end of the line is a tunnel portal into the next zones
+	USplineComponent* S = TrackSpline();
+	const float Len = S ? S->GetSplineLength() : 0.f;
+	const float Half = 0.5f * CarPitch * NumCars;
+	if (Dist - Half > 3000.f && Len - Half - Dist > 3000.f)
+	{
+		return;     // still out in the city
+	}
+	bool Aboard = false;
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (const APlayerController* PC = It->Get())
+		{
+			Aboard |= IsAboard(PC->GetPawn());
+		}
+	}
+	if (!Aboard)
+	{
+		return;
+	}
+	bTravelling = true;
+	const FString Dest = Destinations[Destination].Map.ToSoftObjectPath().GetLongPackageName();
+	const FString Ride = RideMap.IsNull() ? Dest : RideMap.ToSoftObjectPath().GetLongPackageName();
+	UE_LOG(LogTemp, Log, TEXT("Monorail: riding to %s via %s"), *Dest, *Ride);
+	GetWorld()->ServerTravel(FString::Printf(TEXT("%s?Dest=%s?listen"), *Ride, *Dest));
+}
+
+void ARebornMonorail::UpdateMenu()
+{
+	// Client: standing in the train at a stop with no destination yet -> menu
+	APlayerController* PC = GEngine ? GEngine->GetFirstLocalPlayerController(GetWorld()) : nullptr;
+	const bool Aboard = PC && AtStop != INDEX_NONE && IsAboard(PC->GetPawn());
+	if (!Aboard)
+	{
+		bMenuDismissed = false;     // ask again next time
+	}
+	const bool Want = Aboard && Destination == INDEX_NONE && !bMenuDismissed;
+	if (Want && !Menu.IsValid())
+	{
+		ShowMenu(PC);
+	}
+	else if (!Want && Menu.IsValid())
+	{
+		HideMenu();
+	}
+}
+
+void ARebornMonorail::ShowMenu(APlayerController* PC)
+{
+	if (!GEngine || !GEngine->GameViewport)
+	{
+		return;
+	}
+	MenuPlayer = PC;
+	TSharedRef<SVerticalBox> Rows = SNew(SVerticalBox);
+	Rows->AddSlot().AutoHeight().Padding(0, 0, 0, 6)
+		[SNew(STextBlock).Text(FText::FromString(TEXT("PARAGON CITY MONORAIL"))).Font(FCoreStyle::GetDefaultFontStyle("Bold", 20))];
+	Rows->AddSlot().AutoHeight().Padding(0, 0, 0, 14)
+		[SNew(STextBlock).Text(FText::FromString(TEXT("Choose your destination. The train leaves when the doors close.")))];
+	for (int32 i = 0; i < Destinations.Num(); ++i)
+	{
+		const bool bOpen = !Destinations[i].Map.IsNull();
+		const FText Label = bOpen ? Destinations[i].Name
+			: FText::FromString(Destinations[i].Name.ToString() + TEXT("  (coming soon)"));
+		Rows->AddSlot().AutoHeight().Padding(0, 0, 0, 8)
+			[SNew(SButton).IsEnabled(bOpen).Text(Label).OnClicked_Lambda([this, i]
+			{
+				if (MenuPlayer.IsValid())
+				{
+					if (ACoHHeroCharacter* Hero = Cast<ACoHHeroCharacter>(MenuPlayer->GetPawn()))
+					{
+						Hero->ServerChooseMonorailDestination(this, i);
+					}
+				}
+				bMenuDismissed = true;
+				HideMenu();
+				return FReply::Handled();
+			})];
+	}
+	Rows->AddSlot().AutoHeight()[SNew(SButton).Text(FText::FromString(TEXT("Just riding"))).OnClicked_Lambda([this]
+	{
+		bMenuDismissed = true;
+		HideMenu();
+		return FReply::Handled();
+	})];
+	Menu = SNew(SOverlay) + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)
+		[SNew(SBox).WidthOverride(440)[SNew(SBorder).Padding(22).BorderBackgroundColor(FLinearColor(.02f, .05f, .12f, .97f))[Rows]]];
+	GEngine->GameViewport->AddViewportWidgetContent(Menu.ToSharedRef(), 90);
+	PC->bShowMouseCursor = true;
+	FInputModeGameAndUI Mode;
+	Mode.SetWidgetToFocus(Menu);
+	Mode.SetHideCursorDuringCapture(false);
+	PC->SetInputMode(Mode);
+}
+
+void ARebornMonorail::HideMenu()
+{
+	if (Menu.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->RemoveViewportWidgetContent(Menu.ToSharedRef());
+	}
+	Menu.Reset();
+	if (MenuPlayer.IsValid())
+	{
+		MenuPlayer->SetInputMode(FInputModeGameOnly());
+		MenuPlayer->bShowMouseCursor = false;
+	}
+}
+
 
 FText ARebornMonorail::CurrentStopName() const
 {

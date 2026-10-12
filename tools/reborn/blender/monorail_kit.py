@@ -184,7 +184,7 @@ export("SM_Mono_Door")
 # ------------------------------------------------------------- station
 reset()
 P_LEN, P_W = 70.0, 5.0          # each side platform
-TOP = FLOOR                      # platform surface = train floor (beam top = 0)
+TOP = FLOOR - 0.05               # platform surface just under the train floor
 GAP = 1.75                       # beam centre to platform edge
 parts, cols = [], []
 for side in (1, -1):

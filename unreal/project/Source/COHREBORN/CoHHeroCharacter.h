@@ -52,6 +52,18 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "CoH|Travel")
 	float ClimbSpeed = 350.f;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Travel")
+ float SuperSpeedRunSpeed = 2400.f;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Travel")
+ float FlightSpeed = 1200.f;
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Travel")
+ bool bFlight = false;
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Travel")
+ bool bSuperSpeed = false;
+ UFUNCTION(BlueprintCallable, Category="CoH|Travel")
+ void SetFlightEnabled(bool bEnabled);
+ UFUNCTION(BlueprintCallable, Category="CoH|Travel")
+ void SetSuperSpeedEnabled(bool bEnabled);
 
 	/** Brawl combo (left mouse): animations played in order. */
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Brawl")
@@ -61,8 +73,32 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Travel")
 	TArray<FSoftObjectPath> ClimbAnims;
 
-	virtual void Tick(float DeltaSeconds) override;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CoH|Combat")
+ float MaxHealth = 100.f;
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Combat")
+ float Health = 100.f;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Combat")
+ float BrawlDamage = 25.f;
+ virtual float TakeDamage(float Damage, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer) override;
+ UFUNCTION(BlueprintCallable, Category="CoH|Brawl")
+ void PerformBrawl();
+ UFUNCTION(BlueprintCallable, Category="CoH|Combat")
+ void PerformUppercut();
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat")
+ float UppercutDamage=35.f;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat")
+ float UppercutLaunchSpeed=1100.f;
+ virtual void Tick(float DeltaSeconds) override;
 	virtual void Jump() override;
+	UFUNCTION(BlueprintCallable, Category="CoH|Settings")
+	void ToggleGraphicsMenu();
+	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+	UPROPERTY(Transient)
+	TObjectPtr<class UCoHGraphicsMenu> GraphicsMenu;
+
+	/** Monorail: a rider picked a destination in the train's menu. */
+	UFUNCTION(Server, Reliable)
+	void ServerChooseMonorailDestination(class ARebornMonorail* Train, int32 Destination);
 
 protected:
 	virtual void BeginPlay() override;
@@ -74,11 +110,22 @@ private:
 	void SprintOn(const FInputActionValue& Value);
 	void SprintOff(const FInputActionValue& Value);
 	void ToggleSuperJump(const FInputActionValue& Value);
+ void ToggleFlight(const FInputActionValue& Value);
+ void ToggleSuperSpeed(const FInputActionValue& Value);
+ void FlyUp(const FInputActionValue& Value);
+ void FlyDown(const FInputActionValue& Value);
 	void LetGo(const FInputActionValue& Value);
 	void Punch(const FInputActionValue& Value);
 	void Zoom(const FInputActionValue& Value);
 	void UpdateCamera(float DeltaSeconds);
 	void EndPunch();
+ void LandPunch();
+ void UppercutInput(const FInputActionValue& Value);
+ bool bUppercutPunch=false;
+ double NextUppercutTime=0;
+ FVector RespawnLocation;
+ float PunchHitTimeLeft = 0.f;
+ bool bPunchLanded = false;
 	void RestoreLocomotion();
 	void UpdateClimbAnim();
 	void ApplyMovementMode();
@@ -125,12 +172,20 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputAction> SuperJumpAction;
+ UPROPERTY(Transient)
+ TObjectPtr<UInputAction> FlightAction;
+ UPROPERTY(Transient)
+ TObjectPtr<UInputAction> SuperSpeedAction;
+ UPROPERTY(Transient)
+ TObjectPtr<UInputAction> FlyDownAction;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputAction> LetGoAction;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputAction> PunchAction;
+ UPROPERTY(Transient)
+ TObjectPtr<UInputAction> UppercutAction;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputAction> ZoomAction;
@@ -144,4 +199,8 @@ class COHREBORN_API ACoHGameMode : public AGameModeBase
 
 public:
 	ACoHGameMode();
+
+	/** Players arriving by monorail (URL option Arrive=Monorail) start at
+	 *  the PlayerStarts tagged MonorailArrival, inside the waiting train. */
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 };

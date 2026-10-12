@@ -50,6 +50,7 @@ Open `/Game/AtlasReborn/AtlasPark_Reborn` first.
 | `build_life.py` | places the life manager (cars, parked cars, civilians) reading `reborn_life.json` |
 | `build_monorail.py` | monorail kit import, track spline, station, end portals, PCG beam and pillars |
 | `place_train.py` | the rideable train (C++ `ARebornMonorail`, source in `unreal/project/Source`) |
+| `build_ride.py` | zone travel: train destinations, arrival PlayerStarts, the ride level `L_MonorailRide` (also the seamless-travel transition map) |
 | `build_signals.py` | traffic signals (instanced, lamps timed by `MPC_Reborn.SignalClock`; cars stop at red) |
 | `window_lights.py` | City Sample windows dark by day, lit by `MPC_Reborn.Night` |
 | `build_lighting.py` | physical daylight and exposure range |

@@ -35,6 +35,19 @@ struct FRebornMonorailStop
 	float Distance = 0.f;
 };
 
+USTRUCT(BlueprintType)
+struct FRebornDestination
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Monorail")
+	FText Name;
+
+	/** Zone map to travel to; leave empty for "coming soon". */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Monorail")
+	TSoftObjectPtr<UWorld> Map;
+};
+
 UCLASS()
 class COHREBORN_API ARebornMonorail : public AActor
 {
@@ -88,6 +101,29 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Monorail")
 	float DoorSlide = 85.f;
 
+	/** Zones this line serves. Riders pick one in the train; when the train
+	 *  heads into the tunnel portal at either end of the line
+	 *  the server takes everyone through the ride level to that zone. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Monorail|Travel")
+	TArray<FRebornDestination> Destinations;
+
+	/** Transition level shown while the next zone loads. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Monorail|Travel")
+	TSoftObjectPtr<UWorld> RideMap;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Destination, BlueprintReadOnly, Category = "Monorail|Travel")
+	int32 Destination = INDEX_NONE;
+
+	/** Server: a rider chose a destination. */
+	void ChooseDestination(int32 Index, APawn* Who);
+
+	/** Start the timetable with the train standing at its first stop, doors
+	 *  opening (riders arriving by monorail appear inside it). */
+	UPROPERTY(EditAnywhere, Category = "Monorail")
+	bool bStartAtFirstStop = true;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	/** Name of the stop the train is at (empty while moving). */
 	UFUNCTION(BlueprintPure, Category = "Monorail")
 	FText CurrentStopName() const;
@@ -127,6 +163,18 @@ private:
 
 	TArray<FLeg> Legs;
 	float Cycle = 0.f;
+	float StartOffset = 0.f;
+	bool bTravelling = false;
+	bool IsAboard(const APawn* Pawn) const;
+	void TickTravel(float Dist);
+	void UpdateMenu();
+	UFUNCTION()
+	void OnRep_Destination();
+	TSharedPtr<class SWidget> Menu;
+	TWeakObjectPtr<class APlayerController> MenuPlayer;
+	bool bMenuDismissed = false;
+	void ShowMenu(class APlayerController* PC);
+	void HideMenu();
 	int32 AtStop = INDEX_NONE;
 	int32 NextStop = INDEX_NONE;
 };

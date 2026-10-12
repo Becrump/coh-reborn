@@ -76,12 +76,40 @@ for i in range(k, len(xy) - k):
     sm[i] = xy[i - k:i + k + 1].mean(0)
 line = LineString(sm).simplify(2.5)
 full = dense([(x, y, H) for x, y in line.coords], 10.0)
-# the original station (trainstation model) stood beside the line south of the ponds
+# the original station (trainstation model) stood beside the line south of
+# the ponds; the station needs straight track under its whole length, so take
+# the straightest stretch of line within 120 m of that spot
 STATION_HINT = (190.0, 470.0)
-si = min(range(len(full)), key=lambda i: math.dist(full[i][:2], STATION_HINT))
-a, b = full[max(si - 3, 0)], full[min(si + 3, len(full) - 1)]
+HALF = 48.0                      # half the platform plus a car
+
+
+def deviation(i):
+    a = next((q for q in full[i::-1] if math.dist(q[:2], full[i][:2]) >= HALF), full[0])
+    b = next((q for q in full[i:] if math.dist(q[:2], full[i][:2]) >= HALF), full[-1])
+    ax, ay, bx, by = a[0], a[1], b[0], b[1]
+    L = math.hypot(bx - ax, by - ay) or 1.0
+    seg = [q for q in full if min(math.dist(q[:2], (ax, ay)), math.dist(q[:2], (bx, by))) <= 2 * HALF]
+    return max(abs((bx - ax) * (ay - q[1]) - (ax - q[0]) * (by - ay)) / L
+               for q in full if math.dist(q[:2], full[i][:2]) <= HALF), (a, b)
+
+
+cands = [i for i in range(len(full)) if math.dist(full[i][:2], STATION_HINT) < 120]
+si = min(cands, key=lambda i: deviation(i)[0] + 0.01 * math.dist(full[i][:2], STATION_HINT))
+dev, (a, b) = deviation(si)
 yaw = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
-station = {"center": list(full[si]), "yaw": round(yaw, 2), "ground": ground(*full[si][:2])}
+c = full[si]
+ux, uy = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+# pull the track onto the straight line under the station (and ease off it)
+out = []
+for p in full:
+    along = (p[0] - c[0]) * ux + (p[1] - c[1]) * uy
+    d = math.dist(p[:2], c[:2])
+    on = (c[0] + ux * along, c[1] + uy * along, p[2])
+    w = 1.0 if d <= HALF else max(0.0, 1.0 - (d - HALF) / 25.0)
+    w = w * w * (3 - 2 * w)
+    out.append((p[0] + (on[0] - p[0]) * w, p[1] + (on[1] - p[1]) * w, p[2]))
+full = out
+station = {"center": list(c), "yaw": round(yaw, 2), "ground": ground(*c[:2]), "straightness_m": round(dev, 2)}
 
 
 def end_yaw(p, q):

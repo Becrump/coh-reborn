@@ -1,4 +1,13 @@
 #include "CoHHeroCharacter.h"
+#include "CoHCombat.h"
+#include "CoHGraphicsMenu.h"
+#include "RebornMonorail.h"
+#include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "NavigationInvokerComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
 
 #include "Animation/AnimSequenceBase.h"
 #include "CoHLifeManager.h"
@@ -59,6 +68,11 @@ void ACoHHeroCharacter::BeginPlay()
 		}
 	}
 	Super::BeginPlay();
+ Health = MaxHealth;
+ RespawnLocation = GetActorLocation();
+ auto* Invoker = NewObject<UNavigationInvokerComponent>(this);
+ Invoker->SetGenerationRadii(3500.f, 5000.f);
+ Invoker->RegisterComponent();
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Sub =
@@ -75,6 +89,7 @@ void ACoHHeroCharacter::BeginPlay()
 void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
+	Input->BindKey(EKeys::F10, IE_Pressed, this, &ACoHHeroCharacter::ToggleGraphicsMenu);
 
 	// input assets built here so the project needs none
 	Mapping = NewObject<UInputMappingContext>(this);
@@ -85,8 +100,12 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	JumpAction = NewObject<UInputAction>(this);
 	SprintAction = NewObject<UInputAction>(this);
 	SuperJumpAction = NewObject<UInputAction>(this);
+ FlightAction = NewObject<UInputAction>(this);
+ SuperSpeedAction = NewObject<UInputAction>(this);
+ FlyDownAction = NewObject<UInputAction>(this);
 	LetGoAction = NewObject<UInputAction>(this);
 	PunchAction = NewObject<UInputAction>(this);
+ UppercutAction = NewObject<UInputAction>(this);
 	ZoomAction = NewObject<UInputAction>(this);
 	ZoomAction->ValueType = EInputActionValueType::Axis1D;
 
@@ -115,24 +134,45 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Mapping->MapKey(JumpAction, EKeys::SpaceBar);
 	Mapping->MapKey(SprintAction, EKeys::LeftShift);
 	Mapping->MapKey(SuperJumpAction, EKeys::F);
+ Mapping->MapKey(FlightAction, EKeys::G);
+ Mapping->MapKey(SuperSpeedAction, EKeys::R);
+ Mapping->MapKey(FlyDownAction, EKeys::LeftControl);
 	Mapping->MapKey(LetGoAction, EKeys::C);
 	Mapping->MapKey(PunchAction, EKeys::LeftMouseButton);
+ Mapping->MapKey(UppercutAction, EKeys::Q);
 	Mapping->MapKey(ZoomAction, EKeys::MouseWheelAxis);
 
 	if (UEnhancedInputComponent* EI = Cast<UEnhancedInputComponent>(Input))
 	{
 		EI->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACoHHeroCharacter::Move);
 		EI->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACoHHeroCharacter::Look);
-		EI->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EI->BindAction(JumpAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::Jump);
+ EI->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACoHHeroCharacter::FlyUp);
+ EI->BindAction(FlyDownAction, ETriggerEvent::Triggered, this, &ACoHHeroCharacter::FlyDown);
+ EI->BindAction(FlightAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::ToggleFlight);
+ EI->BindAction(SuperSpeedAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::ToggleSuperSpeed);
 		EI->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 		EI->BindAction(SprintAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::SprintOn);
 		EI->BindAction(SprintAction, ETriggerEvent::Completed, this, &ACoHHeroCharacter::SprintOff);
 		EI->BindAction(SuperJumpAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::ToggleSuperJump);
 		EI->BindAction(LetGoAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::LetGo);
 		EI->BindAction(PunchAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::Punch);
+ EI->BindAction(UppercutAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::UppercutInput);
 		EI->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &ACoHHeroCharacter::Zoom);
 		EI->BindAction(MoveAction, ETriggerEvent::Completed, this, &ACoHHeroCharacter::Move);
 	}
+}
+
+void ACoHHeroCharacter::ToggleGraphicsMenu()
+{
+    if (!GraphicsMenu) GraphicsMenu = NewObject<UCoHGraphicsMenu>(this);
+    GraphicsMenu->Toggle(Cast<APlayerController>(GetController()));
+}
+
+void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if (GraphicsMenu) GraphicsMenu->Close();
+    Super::EndPlay(Reason);
 }
 
 void ACoHHeroCharacter::Move(const FInputActionValue& Value)
@@ -185,16 +225,19 @@ void ACoHHeroCharacter::ToggleSuperJump(const FInputActionValue&)
 void ACoHHeroCharacter::ApplyMovementMode()
 {
 	UCharacterMovementComponent* M = GetCharacterMovement();
-	const float Run = bSuperJump ? SuperJumpRunSpeed : RunSpeed;
+	const float Run = bSuperSpeed ? SuperSpeedRunSpeed : (bSuperJump ? SuperJumpRunSpeed : RunSpeed);
 	M->MaxWalkSpeed = bSprint ? FMath::Max(Run, SprintSpeed) : Run;
 	M->JumpZVelocity = bSuperJump ? SuperJumpVelocity : 900.f;
 	M->AirControl = bSuperJump ? 0.9f : 0.4f;
 	M->GravityScale = bSuperJump ? 1.5f : 1.f;
-	M->MaxFlySpeed = ClimbSpeed;
+	M->MaxFlySpeed = bClimbing ? ClimbSpeed : (bSuperSpeed ? SuperSpeedRunSpeed : FlightSpeed);
+ M->MaxAcceleration = bSuperSpeed ? 6000.f : 2048.f;
+ M->BrakingDecelerationFlying = bClimbing ? 4000.f : 1800.f;
 }
 
 void ACoHHeroCharacter::Jump()
 {
+ if (bFlight) return;
 	if (bClimbing)
 	{
 		// kick off the wall
@@ -231,6 +274,9 @@ void ACoHHeroCharacter::Punch(const FInputActionValue&)
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	GetMesh()->PlayAnimation(Anim, false);
 	PunchTimeLeft = Anim->GetPlayLength() * 0.8f;
+ PunchHitTimeLeft = Anim->GetPlayLength() * 0.35f;
+ bPunchLanded = false;
+ if (Controller) SetActorRotation(FRotator(0.f, Controller->GetControlRotation().Yaw, 0.f));
 	ComboStep = (ComboStep + 1) % PunchAnims.Num();
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
@@ -241,8 +287,9 @@ void ACoHHeroCharacter::Punch(const FInputActionValue&)
 void ACoHHeroCharacter::EndPunch()
 {
 	PunchTimeLeft = 0.f;
+ bUppercutPunch=false;
 	ComboWindow = 0.6f;
-	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	GetCharacterMovement()->SetMovementMode(bFlight ? MOVE_Flying : MOVE_Falling);
 	if (bQueuedPunch)
 	{
 		bQueuedPunch = false;
@@ -355,6 +402,7 @@ void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 	M->Velocity = FVector::ZeroVector;
 	SetActorRotation(FRotator(0.f, (-WallNormal).Rotation().Yaw, 0.f));
 	ClimbClip = -1;
+ ApplyMovementMode();
 	UpdateClimbAnim();
 }
 
@@ -378,7 +426,9 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	UpdateCamera(DeltaSeconds);
 	if (PunchTimeLeft > 0.f)
 	{
-		PunchTimeLeft -= DeltaSeconds;
+		PunchHitTimeLeft -= DeltaSeconds;
+  if (!bPunchLanded && PunchHitTimeLeft <= 0.f) { bPunchLanded = true; LandPunch(); }
+  PunchTimeLeft -= DeltaSeconds;
 		if (PunchTimeLeft <= 0.f)
 		{
 			EndPunch();
@@ -390,7 +440,7 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	if (!bClimbing)
 	{
 		// grab a wall when jumping or falling into it while pushing towards it
-		if (ClimbCooldown <= 0.f && M->IsFalling() && MoveInput.Y > 0.5f && TraceWall(Hit, 40.f, 80.f))
+		if (!bFlight && ClimbCooldown <= 0.f && M->IsFalling() && MoveInput.Y > 0.5f && TraceWall(Hit, 40.f, 80.f))
 		{
 			StartClimb(Hit.ImpactNormal);
 		}
@@ -418,4 +468,105 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 ACoHGameMode::ACoHGameMode()
 {
 	DefaultPawnClass = ACoHHeroCharacter::StaticClass();
+	// zone-to-zone monorail: keep player controllers and ride through the
+	// transition level (L_MonorailRide) while the next zone loads
+	bUseSeamlessTravel = true;
+}
+
+AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+	if (UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail"))
+	{
+		TArray<APlayerStart*> Starts;
+		for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+		{
+			if (It->PlayerStartTag == TEXT("MonorailArrival"))
+			{
+				Starts.Add(*It);
+			}
+		}
+		if (Starts.Num())
+		{
+			return Starts[FMath::RandRange(0, Starts.Num() - 1)];
+		}
+	}
+	return Super::ChoosePlayerStart_Implementation(Player);
+}
+
+void ACoHHeroCharacter::ServerChooseMonorailDestination_Implementation(ARebornMonorail* Train, int32 Destination)
+{
+	if (Train)
+	{
+		Train->ChooseDestination(Destination, this);
+	}
+}
+
+void ACoHHeroCharacter::LandPunch()
+{
+ TArray<FHitResult> Hits;
+ FCollisionObjectQueryParams Objects; Objects.AddObjectTypesToQuery(ECC_Pawn);
+ FCollisionQueryParams Params(SCENE_QUERY_STAT(CoHBrawl), false, this);
+ const FVector Start = GetActorLocation() + GetActorForwardVector()*40.f;
+ GetWorld()->SweepMultiByObjectType(Hits, Start, Start+GetActorForwardVector()*140.f, FQuat::Identity, Objects, FCollisionShape::MakeSphere(60.f), Params);
+ TSet<AActor*> Damaged;
+ for (const FHitResult& Hit : Hits)
+ {
+  auto* Enemy = Cast<ACoHCombatEnemy>(Hit.GetActor());
+  if (!Enemy || Enemy->IsDead() || Damaged.Contains(Enemy)) continue;
+  FHitResult Block;
+  if (GetWorld()->LineTraceSingleByChannel(Block, Start, Enemy->GetActorLocation(), ECC_Visibility, Params) && Block.GetActor()!=Enemy) continue;
+  Damaged.Add(Enemy);
+  UGameplayStatics::ApplyDamage(Enemy, bUppercutPunch ? UppercutDamage : BrawlDamage, GetController(), this, UDamageType::StaticClass());
+  if (bUppercutPunch) Enemy->LaunchRagdoll(GetActorForwardVector()*250.f+FVector(0,0,UppercutLaunchSpeed));
+ }
+}
+float ACoHHeroCharacter::TakeDamage(float Damage, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer)
+{
+ if (Damage<=0.f) return 0.f;
+ Health = FMath::Max(0.f, Health-Damage);
+ if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 2.f, FColor::Yellow, FString::Printf(TEXT("Hero health: %.0f / %.0f"), Health, MaxHealth));
+ if (Health<=0.f)
+ {
+  PunchTimeLeft=0.f; bQueuedPunch=false;
+  if (bClimbing) StopClimb();
+  bFlight = false;
+  ApplyMovementMode();
+  GetCharacterMovement()->StopMovementImmediately();
+  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+  SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
+  Health=MaxHealth; RestoreLocomotion();
+  if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 3.f, FColor::Cyan, TEXT("Combat test: hero returned to spawn with full health"));
+ }
+ return Damage;
+}
+
+void ACoHHeroCharacter::SetFlightEnabled(bool bEnabled)
+{
+ if (bFlight == bEnabled) return;
+ if (bClimbing) StopClimb();
+ bFlight = bEnabled;
+ StopJumping();
+ ApplyMovementMode();
+ if (PunchTimeLeft <= 0.f) GetCharacterMovement()->SetMovementMode(bFlight ? MOVE_Flying : MOVE_Falling);
+ if (GEngine) GEngine->AddOnScreenDebugMessage(7121, 2.f, FColor::Cyan, bFlight ? TEXT("Flight ON: Space rises, Ctrl descends") : TEXT("Flight OFF"));
+}
+void ACoHHeroCharacter::SetSuperSpeedEnabled(bool bEnabled)
+{
+ bSuperSpeed = bEnabled;
+ ApplyMovementMode();
+ if (GEngine) GEngine->AddOnScreenDebugMessage(7122, 2.f, FColor::Cyan, bSuperSpeed ? TEXT("Super Speed ON") : TEXT("Super Speed OFF"));
+}
+void ACoHHeroCharacter::ToggleFlight(const FInputActionValue&) { SetFlightEnabled(!bFlight); }
+void ACoHHeroCharacter::ToggleSuperSpeed(const FInputActionValue&) { SetSuperSpeedEnabled(!bSuperSpeed); }
+void ACoHHeroCharacter::FlyUp(const FInputActionValue&) { if (bFlight) AddMovementInput(FVector::UpVector); }
+void ACoHHeroCharacter::FlyDown(const FInputActionValue&) { if (bFlight) AddMovementInput(-FVector::UpVector); }
+
+void ACoHHeroCharacter::PerformBrawl() { Punch(FInputActionValue()); }
+
+void ACoHHeroCharacter::UppercutInput(const FInputActionValue&) { PerformUppercut(); }
+void ACoHHeroCharacter::PerformUppercut()
+{
+ if (bClimbing || PunchTimeLeft>0 || GetWorld()->GetTimeSeconds()<NextUppercutTime) return;
+ Punch(FInputActionValue());
+ if (PunchTimeLeft>0) { bUppercutPunch=true; NextUppercutTime=GetWorld()->GetTimeSeconds()+3.f; }
 }
