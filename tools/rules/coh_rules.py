@@ -169,10 +169,61 @@ def power_summary(power, cls=None, level=1):
     return s
 
 
+PLAYER_FAMILIES = {"Blaster", "Controller", "Defender", "Scrapper", "Tanker", "Peacebringer",
+                   "Warshade", "Brute", "Stalker", "Dominator", "Corruptor", "Mastermind",
+                   "Arachnos", "Pool", "Epic"}
+DAMAGE_TYPES = {"smashing", "lethal", "fire", "cold", "energy", "negative_energy",
+                "psionic", "toxic"}
+
+
+def _attrib(m):
+    return str(m.get("Attrib", "")).lower().lstrip("k")
+
+
+def power_row(name, power, available):
+    """One power flattened for the creator and the Unreal data tables."""
+    dmg, riders = {}, set()
+    for m in power["mods"]:
+        a = _attrib(m)
+        # Skip bookkeeping mods (the "Ones" tables that mark a hit) and self-targeted aspects.
+        if not a or str(m.get("Table", "")).endswith("_Ones") or m.get("Aspect") == "kStr":
+            continue
+        if a in DAMAGE_TYPES and m.get("Aspect") == "kAbs" and isinstance(m.get("Scale"), float):
+            dmg[a] = round(dmg.get(a, 0) + m["Scale"], 4)
+        else:
+            riders.add(a)
+    row = {k: power.get(k) for k in ("Type", "Range", "Radius", "Arc", "Accuracy",
+                                     "TimeToActivate", "RechargeTime", "EnduranceCost",
+                                     "EffectArea", "Target")}
+    row.update({"power": name, "available": available, "damage_scale": dmg,
+                "riders": sorted(riders)})
+    return row
+
+
+def catalog(defs):
+    """Every player power set, flattened, with its dominant damage type as the
+    element guess. Output stays out of git (derived from the game data)."""
+    powers, sets = load_powers(defs), load_powersets(defs)
+    out = []
+    for key, s in sorted(sets.items()):
+        cat, _, name = key.partition(".")
+        rows = [power_row(e["power"], powers[e["power"]], e["available"])
+                for e in s["powers"] if e["power"] in powers]
+        total = {}
+        for r in rows:
+            for t, v in r["damage_scale"].items():
+                total[t] = total.get(t, 0) + v
+        element = max(total, key=total.get) if total else None
+        out.append({"set": key, "category": cat, "name": name, "element": element,
+                    "damage_total": {k: round(v, 3) for k, v in total.items()},
+                    "powers": rows})
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("defs", help="path to i24 data/defs")
-    ap.add_argument("cmd", choices=["show", "villain", "export", "counts"])
+    ap.add_argument("cmd", choices=["show", "villain", "export", "counts", "catalog", "testhero"])
     ap.add_argument("name", nargs="?")
     ap.add_argument("--class", dest="cls", default="Class_Minion_Grunt")
     ap.add_argument("--level", type=int, default=1)
@@ -202,6 +253,23 @@ def main():
                 for fn, pw in powers.items():
                     if fn.startswith("%s.%s." % (g, s)):
                         print(fn, json.dumps(power_summary(pw, cls, a.level)))
+    elif a.cmd == "catalog":
+        cat = catalog(a.defs)
+        os.makedirs(a.name, exist_ok=True)
+        with open(os.path.join(a.name, "catalog.json"), "w") as f:
+            json.dump(cat, f)
+        print("sets", len(cat), "powers", sum(len(c["powers"]) for c in cat))
+    elif a.cmd == "testhero":
+        # A hero that owns every player power set, for testing the tray and creator.
+        cat = catalog(a.defs)
+        hero = {"format": 1, "name": "Test Hero", "level": 50, "class": "Class_Blaster",
+                "sets": [{"set": c["set"], "element": c["element"],
+                          "powers": [r["power"] for r in c["powers"]]}
+                         for c in cat if c["category"].split("_")[0] in PLAYER_FAMILIES]}
+        os.makedirs(a.name, exist_ok=True)
+        with open(os.path.join(a.name, "hero_all_sets.json"), "w") as f:
+            json.dump(hero, f, indent=1)
+        print("sets", len(hero["sets"]), "powers", sum(len(x["powers"]) for x in hero["sets"]))
     elif a.cmd == "export":
         os.makedirs(a.name, exist_ok=True)
         for fn, data in (("classes", load_classes(a.defs)), ("powers", load_powers(a.defs)),
