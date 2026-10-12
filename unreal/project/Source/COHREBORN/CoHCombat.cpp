@@ -48,7 +48,12 @@ void ACoHCombatEnemy::InitializeFromCatalog(const TMap<FString,FString>& Entry,c
  USkeletalMesh* Body=LoadObject<USkeletalMesh>(nullptr,*Path(TEXT("mesh")));
  if(!Body) return;
  GetMesh()->SetSkeletalMeshAsset(Body);
- GetMesh()->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,180,0));
+ // the original villain meshes face -Y in their rest pose, and their
+ // animations turn the body round to +Y: in motion they face +Y, so a -90
+ // turn makes them face the way the villain moves and aims (checked with the
+ // nose bone while animating)
+ MeshYaw=-90.f;
+ GetMesh()->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
  auto Load=[&](const TCHAR* Name)->UAnimSequence*{auto* Clip=LoadObject<UAnimSequence>(nullptr,*Path(Name));return Clip && Clip->GetSkeleton()==Body->GetSkeleton()?Clip:nullptr;};
  IdleClip=Load(TEXT("idle"));RunClip=Load(TEXT("run"));AttackClip=Load(TEXT("attack"));HitClip=Load(TEXT("hit"));DeathClip=Load(TEXT("death"));
  GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
@@ -376,7 +381,7 @@ void ACoHCombatEnemy::RecoverRagdoll()
  BodyMesh->SetSimulatePhysics(false);
  BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
  BodyMesh->AttachToComponent(GetCapsuleComponent(),FAttachmentTransformRules::KeepRelativeTransform);
- BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,180,0));
+ BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
  FVector Destination=bFloor ? Floor.ImpactPoint+FVector(0,0,92) : Home;
  FHitResult Block;
  if (GetWorld()->SweepSingleByChannel(Block,Destination,Destination,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(36,90),Params)) Destination=Home;

@@ -77,6 +77,8 @@ public:
  UFUNCTION(BlueprintPure, Category="CoH|Combat") float ScatterChance(APawn* Hero) const;
  /** Harassment role while the gang holds a civilian: 1 grabs, 2 threatens. */
  int32 HarassRole = 0;
+ /** Mesh turn relative to the capsule (preview-placed enemies: 180, rules villains: 90). */
+ float MeshYaw = 180.f;
  bool bHarassPosed = false;
  FVector HarassSpot = FVector::ZeroVector;
  /** Fighting, helping or walking home: the spawner leaves it alone. */
