@@ -1,15 +1,13 @@
-"""Step 7: streets - road splines, curbs, lane markings, street lights (PCG).
+"""Step 7: street splines and street lights (PCG).
 
-Reads roads.json (plan_roads.py). Every road piece becomes a spline actor
-(BP_RebornZone, tagged RebornRoad and RebornRoad_W<width>) following the
-landscape every 20 m. PCG_Reborn_Streets then, per width class:
-  * curbs on both edges (spline meshes),
-  * a double yellow centre line (spline meshes),
-  * dashed white lane lines between the lanes,
-  * street lights on both sides every 40 m (BP_RebornStreetLamp: the
-    modern street light mesh plus a spot light; lamp glow and light both
-    follow MPC_Reborn.Night, so they are off by day).
-Pieces stop short of every junction, so intersections stay open."""
+Reads roads.json (since stage 2: build_road_surface.py, the approved dense
+plan). Every avenue / street piece becomes a spline actor (BP_RebornZone,
+tagged RebornRoad and RebornRoad_W<width>) at the shared road height every
+20 m. PCG_Reborn_Streets puts street lights on both sidewalks every 40 m
+(BP_RebornStreetLamp: the modern street light mesh plus a spot light; lamp
+glow and light follow MPC_Reborn.Night).
+Curbs, markings, asphalt and sidewalks are the road surface meshes of
+stage 2 (ue/build_road_surface.py), no longer made here."""
 import json
 import math
 import os
@@ -145,7 +143,7 @@ for a in actors.get_all_level_actors():
         actors.destroy_actor(a)
 widths = set()
 for r in roads["roads"]:
-    w = 18 if r["width"] >= 17 else 16
+    w = int(round(r["width"]))
     widths.add(w)
     dense = r["dense"]
     a = actors.spawn_actor_from_class(zone_cls, unreal.Vector(dense[0][0] * 100, dense[0][1] * 100, 0))
@@ -223,16 +221,10 @@ for w in sorted(widths):
     gs_n, gs = P.node(g, unreal.PCGGetSplineSettings, 0, y)
     P.by_tag(gs, "RebornRoad_W%d" % w)
     half = w * 50.0
-    for k, side in enumerate((-1, 1)):
-        spline_mesh(400, y + k * 160, gs_n, curb, concrete, side * half, 8.0)
-        spline_mesh(400, y + 320 + k * 160, gs_n, line, yellow, side * 12.0, 1.0)
-    s9 = sampler(400, y + 700, gs_n, 900.0)
-    d1 = shift(700, y + 700, s9, half / 2, dz=1.0)
-    d2 = shift(700, y + 860, s9, -half / 2, dz=1.0)
-    mesh_spawn(1000, y + 760, [d1, d2], dash, white)
+    # on the sidewalk, 1.1 m out from the curb face, 15 cm up
     s40 = sampler(400, y + 1100, gs_n, 4000.0, 800.0)
-    l1 = shift(700, y + 1100, s40, half + 120, yaw=-90.0)
-    l2 = shift(700, y + 1260, s40, -(half + 120), yaw=90.0)
+    l1 = shift(700, y + 1100, s40, half + 110, yaw=-90.0, dz=15.0)
+    l2 = shift(700, y + 1260, s40, -(half + 110), yaw=90.0, dz=15.0)
     sp, ss = P.node(g, unreal.PCGSpawnActorSettings, 1000, y + 1160, template_actor_class=lamp_cls,
                     option=unreal.PCGSpawnActorOption.NO_MERGING)
     P.edge(g, l1, "Out", sp, "In")

@@ -60,6 +60,10 @@ loop = [(x, y - 4) for x, y in coast] + [(1180, 1000), (-860, 1000)]
 ocean = body(unreal.WaterBodyOcean, "Reborn_Water_Bay", loop, sea["z"], zn)
 oc = ocean.get_editor_property("water_body_component")
 oc.set_editor_property("ocean_extents", unreal.Vector2D(700000, 360000))
+# the ocean's swim / underwater box is centred on the actor and would reach
+# the sunken parks of the old zone (they lie below the bay level): keep it to
+# the bay, north of y = -331 m
+oc.set_editor_property("collision_extents", unreal.Vector(350000, 9000, 10000))
 ponds = [w for w in lay["waters"] if w["kind"] == "pond"]
 xs = [p[0] for w in ponds for p in w["poly"]]
 ys = [p[1] for w in ponds for p in w["poly"]]
