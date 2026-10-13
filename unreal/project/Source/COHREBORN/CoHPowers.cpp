@@ -569,6 +569,75 @@ void UCoHPowerComponent::ActivatePower(FName Power)
 
 static float Now0(const UWorld* W) { return W ? W->GetTimeSeconds() : 0.f; }
 
+void UCoHPowerComponent::LocalText(const FString& Text) const
+{
+	OnCombatText.Broadcast(GetOwner(), Text, FLinearColor(1.f, 0.6f, 0.2f));
+}
+
+void UCoHPowerComponent::ToggleAutoSlot(int32 Slot)
+{
+	if (!Tray.IsValidIndex(Slot) || Tray[Slot].IsNone()) return;
+	const FName Power = Tray[Slot];
+	UE_LOG(LogTemp, Log, TEXT("CoH auto lock key: slot %d (%s)"), Slot + 1, *Power.ToString());
+	if (AutoPower == Power) { StopAuto(TEXT("off")); return; }
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
+	if (!P) return;
+	if (P->Type == TEXT("kToggle") || P->Type == TEXT("kAuto")) { LocalText(P->Display + TEXT(" can't be auto-fired")); return; }
+	AutoPower = Power;
+	AutoTarget = nullptr;
+	NextAutoTry = 0;
+	LocalText(TEXT("Auto: ") + P->Display);
+}
+
+void UCoHPowerComponent::StopAuto(const FString& Why)
+{
+	if (AutoPower.IsNone()) return;
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* P = DB ? DB->FindPower(AutoPower) : nullptr;
+	UE_LOG(LogTemp, Log, TEXT("CoH auto lock %s ended: %s"), *AutoPower.ToString(), *Why);
+	LocalText((P ? P->Display : AutoPower.ToString()) + TEXT(" auto ") + Why);
+	AutoPower = NAME_None;
+	AutoTarget = nullptr;
+}
+
+void UCoHPowerComponent::TickAutoAttack()
+{
+	const float Now = Now0(GetWorld());
+	if (AutoPower.IsNone() || Now < NextAutoTry) return;
+	NextAutoTry = Now + 0.2f;
+	if (IsDefeated()) { StopAuto(TEXT("off (defeated)")); return; }
+	if (!Tray.Contains(AutoPower)) { StopAuto(TEXT("off (left the tray)")); return; }
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* P = DB ? DB->FindPower(AutoPower) : nullptr;
+	if (!P) { StopAuto(TEXT("off")); return; }
+	const AActor* Owner = GetOwner();
+	const float Reach = P->Range * FeetToCm + 120.f;
+	// the locked target: defeated or gone -> the lock ends
+	if (AutoTarget.IsValid() || !AutoTarget.IsExplicitlyNull())
+	{
+		const UCoHPowerComponent* LC = Of(AutoTarget.Get());
+		if (!LC || LC->IsDefeated()) { StopAuto(TEXT("off (target defeated)")); return; }
+		if (FVector::Dist(Owner->GetActorLocation(), AutoTarget->GetActorLocation()) > Reach * 1.5f + 300.f) { StopAuto(TEXT("off (target out of range)")); return; }
+	}
+	// fire only at a valid target the power can take
+	AActor* T = Target.Get();
+	const UCoHPowerComponent* TC = Of(T);
+	bool bValid = false;
+	if (P->Target == TEXT("kFoe")) bValid = TC && IsFoe(TC) && !TC->IsDefeated();
+	else if (P->Target == TEXT("kFriend")) bValid = TC && !IsFoe(TC) && !TC->IsDefeated();
+	else bValid = true;     // self and location powers
+	if (!bValid) return;
+	if (T && T != Owner)
+	{
+		AutoTarget = T;     // switching targets carries the lock over
+		if (FVector::Dist(Owner->GetActorLocation(), T->GetActorLocation()) > Reach) return;
+	}
+	if (RechargeLeft(AutoPower) > 0.f || Endurance < P->EndCost) return;
+	ActivatePower(AutoPower);
+	NextAutoTry = Now + 0.6f;     // let the server answer before trying again
+}
+
 static AActor* NearestFoe(const UCoHPowerComponent* Me, float MaxRange, bool bInFront)
 {
 	const AActor* Owner = Me->GetOwner();
@@ -816,12 +885,23 @@ void UCoHPowerComponent::ApplyMod(const FCoHPowerDef& P, const FCoHMod& M, UCoHP
 		if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Victim->GetOwner())) E->OnMezzed(Duration);
 		return;
 	}
-	if (M.Attrib == TEXT("kKnockback") || M.Attrib == TEXT("kKnockup"))
+	// knockback / knockup: only an instant kCur with a positive magnitude is a
+	// knock. Holds carry knockback protection (kRes +100 and kCur -100 for
+	// a while): those are buffs, handled below, never a launch.
+	if ((M.Attrib == TEXT("kKnockback") || M.Attrib == TEXT("kKnockup")) && M.Aspect == TEXT("kCur") && Duration <= 0.f)
 	{
-		if (Amount < 0.75f || !IsFoe(Victim)) return;
+		if (Amount <= 0.f || !IsFoe(Victim)) return;
+		// protected (held, or a protection power) -> no knock
+		if (Victim->BuffSum(M.Attrib, TEXT("kRes")) > 0.f || Victim->BuffSum(M.Attrib, TEXT("kCur")) < 0.f) return;
 		FVector Away = Victim->GetOwner()->GetActorLocation() - Causer->GetActorLocation(); Away.Z = 0;
-		const FVector Launch = M.Attrib == TEXT("kKnockup") ? FVector(0, 0, 500 + Amount * 120)
-			: Away.GetSafeNormal() * (250.f + Amount * 160.f) + FVector(0, 0, 220);
+		const FVector Dir = Away.GetSafeNormal().IsNearlyZero() ? Causer->GetActorForwardVector() : Away.GetSafeNormal();
+		// magnitude under 0.75 = knockdown (a short shove off the feet);
+		// above that the distance grows with magnitude, capped
+		FVector Launch;
+		if (M.Attrib == TEXT("kKnockup")) Launch = Dir * 120.f + FVector(0, 0, FMath::Min(650.f + Amount * 120.f, 1300.f));
+		else if (Amount < 0.75f) Launch = Dir * 260.f + FVector(0, 0, 180.f);
+		else Launch = Dir * FMath::Min(450.f + Amount * 180.f, 1400.f) + FVector(0, 0, FMath::Min(260.f + Amount * 40.f, 500.f));
+		UE_LOG(LogTemp, Log, TEXT("CoH %s %s mag %.2f -> %.0f cm/s"), *P.Id.ToString(), *M.Attrib, Amount, Launch.Size());
 		if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Victim->GetOwner())) E->LaunchRagdoll(Launch);
 		else if (ACharacter* Ch = Cast<ACharacter>(Victim->GetOwner())) Ch->LaunchCharacter(Launch, true, true);
 		return;
@@ -879,6 +959,7 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 	else if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(GetOwner()))
 	{
 		if (IsDefeated()) { ++Defeats; H->OnDefeated(); }
+		else MulticastHurt(Final);
 	}
 	return Final;
 }
@@ -894,6 +975,8 @@ void UCoHPowerComponent::Heal(float Amount)
 void UCoHPowerComponent::TickComponent(float Dt, ELevelTick TickType, FActorComponentTickFunction* Fn)
 {
 	Super::TickComponent(Dt, TickType, Fn);
+	if (!AutoPower.IsNone())
+		if (const APawn* Pawn = Cast<APawn>(GetOwner())) if (Pawn->IsLocallyControlled()) TickAutoAttack();
 	if (GetOwnerRole() != ROLE_Authority || IsDefeated()) return;
 	const float Now = GetWorld()->GetTimeSeconds();
 	Buffs.RemoveAll([&](const FCoHBuff& B) { return B.Until < Now; });
@@ -922,6 +1005,11 @@ void UCoHPowerComponent::MulticastText_Implementation(const FString& Text, FLine
 	OnCombatText.Broadcast(GetOwner(), Text, Colour);
 }
 
+void UCoHPowerComponent::MulticastHurt_Implementation(float Amount)
+{
+	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(GetOwner())) H->PlayHitReaction(Amount);
+}
+
 void UCoHPowerComponent::MulticastPlay_Implementation(FName Power, AActor* TargetActor, FVector_NetQuantize Location, uint8 Hits)
 {
 	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
@@ -942,7 +1030,12 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	const bool bMelee = P.IsMelee();
 	const bool bArea = P.Area == TEXT("kSphere") || P.Area == TEXT("kLocation") || P.Area == TEXT("kCone");
 	float Release = FMath::Max(0.15f, P.Activate * (bMelee ? 0.45f : 0.55f));
-	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(Owner)) H->PlayPowerAnimation(bMelee ? 0 : (bArea ? 2 : 1), P.Activate, S.Animation, S.Clip);
+	// body animation by kind: melee, ranged (single target or cone), area
+	// around the hero, thrown area (Fire Ball), self / ally
+	const bool bSelfOrAlly = P.Target == TEXT("kCaster") && !bArea || P.Target == TEXT("kFriend") || P.Type == TEXT("kToggle") || P.Type == TEXT("kAuto");
+	const bool bAroundMe = P.Area == TEXT("kSphere") && P.Range <= 0.f && P.Target != TEXT("kLocation");   // Foot Stomp
+	const int32 Kind = bSelfOrAlly && !P.IsHostile() ? 4 : bAroundMe ? 2 : bMelee ? 0 : P.Area == TEXT("kCone") ? 1 : bArea ? 3 : 1;
+	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(Owner)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
 	else if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Owner)) E->PlayAttackAnimation();
 	if (P.Type == TEXT("kToggle") || P.Type == TEXT("kAuto"))
 	{

@@ -12,6 +12,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
+#include "GameFramework/Volume.h"
 #include "NavigationInvokerComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
@@ -105,6 +106,8 @@ void ACoHHeroCharacter::BeginPlay()
 		{
 			Hud = CreateWidget<UCoHHudWidget>(PC, UCoHHudWidget::StaticClass());
 			if (Hud) Hud->AddToViewport(5);
+			RestoreGameInput(PC);
+			UCoHGraphicsMenu::ApplyComic(this, UCoHGraphicsMenu::SavedComic());
 		}
 	}
 }
@@ -113,13 +116,29 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
 	Input->BindKey(EKeys::F10, IE_Pressed, this, &ACoHHeroCharacter::ToggleGraphicsMenu);
-	// power tray 1..0, Tab target, P power browser
+	// power tray: 1..0 fire the slot once; Ctrl + 1..0 locks that power as
+	// the auto attack (Ctrl + the same number again unlocks). Each press is
+	// logged ("CoH key ...") so a test shows which key did what.
 	const FKey SlotKeys[10] = { EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four, EKeys::Five, EKeys::Six, EKeys::Seven, EKeys::Eight, EKeys::Nine, EKeys::Zero };
 	for (int32 i = 0; i < 10; ++i)
 	{
 		FInputKeyBinding KB(FInputChord(SlotKeys[i]), IE_Pressed);
-		KB.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i] { if (Powers) Powers->ActivateSlot(i); });
+		KB.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i]
+		{
+			const APlayerController* PC = Cast<APlayerController>(GetController());
+			if (!Powers || (PC && (PC->IsInputKeyDown(EKeys::LeftControl) || PC->IsInputKeyDown(EKeys::RightControl)))) return;
+			UE_LOG(LogTemp, Log, TEXT("CoH key: %d -> fire slot %d once%s"), (i + 1) % 10, i + 1,
+				PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)) ? TEXT(" (Shift held: no effect)") : TEXT(""));
+			Powers->ActivateSlot(i);
+		});
 		Input->KeyBindings.Add(KB);
+		FInputKeyBinding Lock(FInputChord(SlotKeys[i], false, true, false, false), IE_Pressed);
+		Lock.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i]
+		{
+			UE_LOG(LogTemp, Log, TEXT("CoH key: Ctrl+%d -> auto lock toggle on slot %d"), (i + 1) % 10, i + 1);
+			if (Powers) Powers->ToggleAutoSlot(i);
+		});
+		Input->KeyBindings.Add(Lock);
 	}
 	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
 	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
@@ -138,8 +157,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
  SuperSpeedAction = NewObject<UInputAction>(this);
  FlyDownAction = NewObject<UInputAction>(this);
 	LetGoAction = NewObject<UInputAction>(this);
-	PunchAction = NewObject<UInputAction>(this);
- UppercutAction = NewObject<UInputAction>(this);
+	SelectAction = NewObject<UInputAction>(this);
+	CameraDragAction = NewObject<UInputAction>(this);
 	ZoomAction = NewObject<UInputAction>(this);
 	ZoomAction->ValueType = EInputActionValueType::Axis1D;
 
@@ -170,10 +189,10 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Mapping->MapKey(SuperJumpAction, EKeys::F);
  Mapping->MapKey(FlightAction, EKeys::G);
  Mapping->MapKey(SuperSpeedAction, EKeys::R);
- Mapping->MapKey(FlyDownAction, EKeys::LeftControl);
+ Mapping->MapKey(FlyDownAction, EKeys::X);     // as in the original game; Ctrl is the auto-attack lock
 	Mapping->MapKey(LetGoAction, EKeys::C);
-	Mapping->MapKey(PunchAction, EKeys::LeftMouseButton);
- Mapping->MapKey(UppercutAction, EKeys::Q);
+	Mapping->MapKey(SelectAction, EKeys::LeftMouseButton);     // select, never attack
+	Mapping->MapKey(CameraDragAction, EKeys::RightMouseButton); // hold to turn the camera
 	Mapping->MapKey(ZoomAction, EKeys::MouseWheelAxis);
 
 	if (UEnhancedInputComponent* EI = Cast<UEnhancedInputComponent>(Input))
@@ -190,8 +209,9 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 		EI->BindAction(SprintAction, ETriggerEvent::Completed, this, &ACoHHeroCharacter::SprintOff);
 		EI->BindAction(SuperJumpAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::ToggleSuperJump);
 		EI->BindAction(LetGoAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::LetGo);
-		EI->BindAction(PunchAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::Punch);
- EI->BindAction(UppercutAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::UppercutInput);
+		EI->BindAction(SelectAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::SelectTarget);
+		EI->BindAction(CameraDragAction, ETriggerEvent::Started, this, &ACoHHeroCharacter::CameraDragOn);
+		EI->BindAction(CameraDragAction, ETriggerEvent::Completed, this, &ACoHHeroCharacter::CameraDragOff);
 		EI->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &ACoHHeroCharacter::Zoom);
 		EI->BindAction(MoveAction, ETriggerEvent::Completed, this, &ACoHHeroCharacter::Move);
 	}
@@ -231,8 +251,33 @@ void ACoHHeroCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y), V.X);
 }
 
+void ACoHHeroCharacter::RestoreGameInput(APlayerController* PC)
+{
+	if (!PC) return;
+	PC->SetShowMouseCursor(true);
+	FInputModeGameAndUI Mode;
+	Mode.SetHideCursorDuringCapture(false);
+	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	PC->SetInputMode(Mode);
+}
+
+void ACoHHeroCharacter::CameraDragOn(const FInputActionValue&)
+{
+	bCameraDrag = true;
+	if (APlayerController* PC = Cast<APlayerController>(GetController())) PC->SetShowMouseCursor(false);
+}
+
+void ACoHHeroCharacter::CameraDragOff(const FInputActionValue&)
+{
+	bCameraDrag = false;
+	if (APlayerController* PC = Cast<APlayerController>(GetController())) PC->SetShowMouseCursor(true);
+}
+
 void ACoHHeroCharacter::Look(const FInputActionValue& Value)
 {
+	// the camera turns only while the right button is held (first person
+	// keeps free mouse-look)
+	if (!bCameraDrag && !bFirstPerson) return;
 	const FVector2D V = Value.Get<FVector2D>();
 	AddControllerYawInput(V.X);
 	AddControllerPitchInput(V.Y);
@@ -583,7 +628,11 @@ void ACoHHeroCharacter::OnDefeated()
 void ACoHHeroCharacter::PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip)
 {
  if (bClimbing) return;
- const TArray<FSoftObjectPath>& Set = Kind == 2 && AreaAnims.Num() ? AreaAnims : (Kind == 1 && RangedAnims.Num() ? RangedAnims : PunchAnims);
+ const TArray<FSoftObjectPath>& Set =
+  Kind == 4 ? SelfAnims :
+  Kind == 3 ? (ThrowAnims.Num() ? ThrowAnims : RangedAnims) :
+  Kind == 2 ? (AreaAnims.Num() ? AreaAnims : PunchAnims) :
+  Kind == 1 ? (RangedAnims.Num() ? RangedAnims : PunchAnims) : PunchAnims;
  UAnimSequenceBase* Anim = Clip.IsValid() ? Cast<UAnimSequenceBase>(Clip.TryLoad()) : nullptr;
  if (!Anim && Set.Num())
  {
@@ -662,9 +711,10 @@ void ACoHHeroCharacter::ToggleAnimBench()
 void ACoHHeroCharacter::CycleTarget()
 {
  if (!Powers) return;
- // nearest foes in front first, then the next one along on each press
+ // foes in view (buildings block, people don't) within 50 m, nearest first;
+ // the ones behind the camera count as a little further away
  TArray<TPair<float, AActor*>> Foes;
- const FVector Eye = GetActorLocation();
+ const FVector Eye = GetActorLocation() + FVector(0, 0, 60);
  const FVector Look = Controller ? Controller->GetControlRotation().Vector() : GetActorForwardVector();
  for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
  {
@@ -672,14 +722,82 @@ void ACoHHeroCharacter::CycleTarget()
   if (!C || C->bPlayerSide || C->IsDefeated()) continue;
   const FVector To = It->GetActorLocation() - Eye;
   const float D = To.Size();
-  if (D > 6000.f || FVector::DotProduct(To.GetSafeNormal2D(), Look.GetSafeNormal2D()) < 0.3f) continue;
-  Foes.Add({ D, *It });
+  if (D > 5000.f) continue;
+  FHitResult Block;
+  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHTab), false, this); Q.AddIgnoredActor(*It);
+  if (GetWorld()->LineTraceSingleByObjectType(Block, Eye, It->GetActorLocation(), FCollisionObjectQueryParams(ECC_WorldStatic), Q) && !Cast<AVolume>(Block.GetActor())) continue;
+  const float Front = FVector::DotProduct(To.GetSafeNormal2D(), Look.GetSafeNormal2D());
+  Foes.Add({ D * (Front < 0.f ? 1.6f : 1.f), *It });
  }
  Foes.Sort([](const TPair<float, AActor*>& A, const TPair<float, AActor*>& B) { return A.Key < B.Key; });
- if (Foes.Num() == 0) { Powers->Target = nullptr; return; }
+ const double Now = GetWorld()->GetTimeSeconds();
+ const bool bCycling = Now - LastTabTime < 2.0;     // a fresh press starts at the nearest
+ LastTabTime = Now;
+ if (Foes.Num() == 0) { Powers->Target = nullptr; UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> no foe in view")); return; }
  int32 Next = 0;
- for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Next = (i + 1) % Foes.Num(); break; }
+ if (bCycling)
+  for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Next = (i + 1) % Foes.Num(); break; }
  Powers->Target = Foes[Next].Value;
+ UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> target %s at %.0f m (%d of %d)"), *GetNameSafe(Foes[Next].Value),
+  FVector::Dist(GetActorLocation(), Foes[Next].Value->GetActorLocation()) / 100.f, Next + 1, Foes.Num());
+}
+
+void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
+{
+ APlayerController* PC = Cast<APlayerController>(GetController());
+ if (!PC || !Powers) return;
+ // the aim ray: through the cursor when it shows, else the screen centre
+ FVector Origin, Dir;
+ bool bRay = false;
+ if (PC->bShowMouseCursor) bRay = PC->DeprojectMousePositionToWorld(Origin, Dir);
+ if (!bRay)
+ {
+  int32 W = 0, H = 0; PC->GetViewportSize(W, H);
+  bRay = PC->DeprojectScreenPositionToWorld(W * 0.5f, H * 0.5f, Origin, Dir);
+ }
+ if (!bRay) return;
+ // whoever is closest to the ray (looser further out) and in view
+ AActor* Best = nullptr; float BestScore = TNumericLimits<float>::Max();
+ for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
+ {
+  if (*It == this) continue;
+  const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
+  if (!C || C->IsDefeated()) continue;
+  const FVector P = It->GetActorLocation();
+  const float Along = FVector::DotProduct(P - Origin, Dir);
+  if (Along < 0.f || Along > 10000.f) continue;
+  const float Off = FVector::Dist(P, Origin + Dir * Along);
+  const float Tol = 80.f + Along * 0.03f;
+  if (Off > Tol) continue;
+  FHitResult Block;
+  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPick), false, this); Q.AddIgnoredActor(*It);
+  if (GetWorld()->LineTraceSingleByObjectType(Block, Origin, P, FCollisionObjectQueryParams(ECC_WorldStatic), Q) && !Cast<AVolume>(Block.GetActor())) continue;
+  const float Score = Off / Tol + Along / 10000.f;
+  if (Score < BestScore) { BestScore = Score; Best = *It; }
+ }
+ UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> select %s"), Best ? *GetNameSafe(Best) : TEXT("nothing (target kept)"));
+ if (Best) Powers->Target = Best;
+}
+
+void ACoHHeroCharacter::PlayHitReaction(float Amount)
+{
+ // never cut a power animation, a climb or flight; at most every 0.6 s
+ if (bClimbing || bFlight || PunchTimeLeft > 0.f || HitReactAnims.Num() == 0) return;
+ const double Now = GetWorld()->GetTimeSeconds();
+ if (Now < NextHitReact) return;
+ NextHitReact = Now + 0.6;
+ const bool bHeavy = Powers && Amount > Powers->MaxHealth * 0.12f;
+ const int32 Pick = bHeavy || HitReactAnims.Num() == 1 ? 0 : FMath::RandRange(1, HitReactAnims.Num() - 1);
+ UAnimSequenceBase* Anim = Cast<UAnimSequenceBase>(HitReactAnims[Pick].TryLoad());
+ if (!Anim) return;
+ GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+ GetMesh()->PlayAnimation(Anim, false);
+ GetMesh()->SetPlayRate(1.f);
+ // a short stagger: movement pauses, then locomotion takes over again
+ PunchTimeLeft = FMath::Min(Anim->GetPlayLength(), bHeavy ? 0.8f : 0.45f);
+ bPunchLanded = true; bQueuedPunch = false;
+ GetCharacterMovement()->StopMovementImmediately();
+ GetCharacterMovement()->DisableMovement();
 }
 
 void ACoHHeroCharacter::TogglePowerBrowser()
@@ -695,7 +813,7 @@ void ACoHHeroCharacter::SetFlightEnabled(bool bEnabled)
  StopJumping();
  ApplyMovementMode();
  if (PunchTimeLeft <= 0.f) GetCharacterMovement()->SetMovementMode(bFlight ? MOVE_Flying : MOVE_Falling);
- if (GEngine) GEngine->AddOnScreenDebugMessage(7121, 2.f, FColor::Cyan, bFlight ? TEXT("Flight ON: Space rises, Ctrl descends") : TEXT("Flight OFF"));
+ if (GEngine) GEngine->AddOnScreenDebugMessage(7121, 2.f, FColor::Cyan, bFlight ? TEXT("Flight ON: Space rises, X descends") : TEXT("Flight OFF"));
 }
 void ACoHHeroCharacter::SetSuperSpeedEnabled(bool bEnabled)
 {

@@ -216,6 +216,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void ActivatePower(FName Power);
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetTargetActor(AActor* NewTarget) { Target = NewTarget; }
 	UFUNCTION(BlueprintPure, Category = "CoH|Powers") AActor* GetTargetActor() const { return Target.Get(); }
+	/** Auto-attack lock (Ctrl + number, as in the original game): the locked
+	 *  power fires whenever it is ready and the target is valid and in range.
+	 *  One lock at a time; locking another power moves it; the same slot again
+	 *  turns it off. It ends when the target is defeated or leaves range. */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void ToggleAutoSlot(int32 Slot);
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void StopAuto(const FString& Why);
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "CoH|Powers") FName AutoPower;
 	/** Presentation: play this clip for the power (asset path, or just the
 	 *  clip name, e.g. "MM_Attack_02"); empty = the default for its type. */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") bool SetPowerAnimation(FName Power, const FString& ClipNameOrPath);
@@ -267,6 +274,8 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable) void MulticastPlay(FName Power, AActor* TargetActor, FVector_NetQuantize Location, uint8 Hits);
 	UFUNCTION(NetMulticast, Unreliable) void MulticastText(const FString& Text, FLinearColor Colour);
+	/** Everyone: play a hit reaction on this character. */
+	UFUNCTION(NetMulticast, Unreliable) void MulticastHurt(float Amount);
 
 private:
 	void Execute(const FCoHPowerDef& P, AActor* TargetActor, FVector Location);
@@ -286,4 +295,9 @@ private:
 	float NextToggleTick = 0;
 	float BusyUntil = 0;
 	float LastHurt = -100;
+	// auto-attack lock (owning client)
+	void TickAutoAttack();
+	void LocalText(const FString& Text) const;
+	TWeakObjectPtr<AActor> AutoTarget;
+	float NextAutoTry = 0;
 };

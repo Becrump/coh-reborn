@@ -449,8 +449,7 @@ void ARebornMonorail::HideMenu()
 	Menu.Reset();
 	if (MenuPlayer.IsValid())
 	{
-		MenuPlayer->SetInputMode(FInputModeGameOnly());
-		MenuPlayer->bShowMouseCursor = false;
+		ACoHHeroCharacter::RestoreGameInput(MenuPlayer.Get());
 	}
 }
 

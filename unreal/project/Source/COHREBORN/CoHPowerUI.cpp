@@ -171,7 +171,8 @@ TSharedRef<SWidget> SCoHHud::MakeSlot(int32 Index)
 	auto PowerAt = [this, Index] { const UCoHPowerComponent* C = Me(); return C && C->Tray.IsValidIndex(Index) ? C->Tray[Index] : NAME_None; };
 	return SNew(SBox).WidthOverride(52.f).HeightOverride(52.f)
 	[
-		SNew(SButton).ButtonStyle(FCoreStyle::Get(), "NoBorder").ContentPadding(0)
+		// not focusable: a focused slot would fire again on Space or Enter
+		SNew(SButton).ButtonStyle(FCoreStyle::Get(), "NoBorder").ContentPadding(0).IsFocusable(false)
 		.OnClicked_Lambda([this, Index]
 		{
 			if (IsBrowserOpen() || (Bench.IsValid() && Bench->GetVisibility() == EVisibility::Visible)) { SelectedSlot = Index; return FReply::Handled(); }
@@ -180,7 +181,8 @@ TSharedRef<SWidget> SCoHHud::MakeSlot(int32 Index)
 		})
 		[
 			SNew(SOverlay)
-			// frame: gold when chosen for the browser, green when a toggle is on
+			// frame: gold when chosen for the browser, green when a toggle is on,
+			// a pulsing orange glow on the auto-attack lock (Ctrl + number)
 			+ SOverlay::Slot()
 			[
 				SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).Padding(2.f)
@@ -189,6 +191,11 @@ TSharedRef<SWidget> SCoHHud::MakeSlot(int32 Index)
 					const UCoHPowerComponent* C = Me();
 					if (IsBrowserOpen() && SelectedSlot == Index) return FSlateColor(Gold);
 					if (C && C->IsToggleOn(PowerAt())) return FSlateColor(FLinearColor(0.2f, 1.f, 0.3f));
+					if (C && !C->AutoPower.IsNone() && C->AutoPower == PowerAt())
+					{
+						const float Pulse = 0.65f + 0.35f * FMath::Sin(FPlatformTime::Seconds() * 6.0);
+						return FSlateColor(FLinearColor(1.f, 0.55f, 0.1f) * Pulse + FLinearColor(0, 0, 0, 1.f - Pulse));
+					}
 					return FSlateColor(FLinearColor(0.15f, 0.2f, 0.3f, 1.f));
 				})
 				[
@@ -370,7 +377,7 @@ void SCoHHud::SetCursor(bool bOn)
 		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PC->SetInputMode(Mode);
 	}
-	else PC->SetInputMode(FInputModeGameOnly());
+	else ACoHHeroCharacter::RestoreGameInput(PC);
 }
 
 void SCoHHud::OnText(AActor* Who, const FString& Text, FLinearColor Colour)

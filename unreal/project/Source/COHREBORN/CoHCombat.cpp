@@ -132,6 +132,9 @@ void ACoHCombatEnemy::OnHurt(AActor* Causer,float Damage)
  if(bRagdoll || IsDead()) return;
  GetWorldTimerManager().ClearTimer(AttackTimer);GetWorldTimerManager().ClearTimer(ReactionTimer);
  if(auto* AI=Cast<AAIController>(GetController()))AI->StopMovement();
+ // every hit flinches: SetState skips an unchanged state, so a second hit
+ // during the first flinch restarts the clip here
+ if(State==ECoHEnemyState::Hit && HitClip) GetMesh()->PlayAnimation(HitClip,false);
  SetState(ECoHEnemyState::Hit);
  GetWorldTimerManager().SetTimer(ReactionTimer,this,&ACoHCombatEnemy::FinishReaction,HitClip ? FMath::Max(.2f,HitClip->GetPlayLength()) : .35f,false);
 }

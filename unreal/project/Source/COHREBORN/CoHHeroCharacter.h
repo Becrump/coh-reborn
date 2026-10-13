@@ -67,7 +67,7 @@ public:
  UFUNCTION(BlueprintCallable, Category="CoH|Travel")
  void SetSuperSpeedEnabled(bool bEnabled);
 
-	/** Brawl combo (left mouse): animations played in order. */
+	/** Melee power animations (and the scripted brawl combo), in turn. */
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Brawl")
 	TArray<FSoftObjectPath> PunchAnims;
 
@@ -115,8 +115,20 @@ public:
 	TArray<FSoftObjectPath> RangedAnims;
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
 	TArray<FSoftObjectPath> AreaAnims;
+	/** Targeted area powers (Fire Ball, Rain of Fire): a throw. */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	TArray<FSoftObjectPath> ThrowAnims;
+	/** Self and ally powers (buffs, heals, toggles); empty = no body animation. */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Powers")
+	TArray<FSoftObjectPath> SelfAnims;
+	/** Flinch when hurt: the first clip is the heavy one (a big hit). */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Combat")
+	TArray<FSoftObjectPath> HitReactAnims;
+	/** Everyone: flinch (skipped while a power animation, climb or flight runs). */
+	void PlayHitReaction(float Amount);
 
-	/** Plays the animation for a power: Kind 0 melee, 1 ranged, 2 area. */
+	/** Plays the animation for a power: Kind 0 melee, 1 ranged, 2 area
+	 *  around the hero, 3 thrown area, 4 self or ally. */
 	void PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip = FSoftObjectPath());
 	/** Animation test bench: play any clip on the hero now. */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Animation") bool PreviewAnimation(const FString& ClipNameOrPath);
@@ -125,10 +137,16 @@ public:
 	static float ReleaseTime(const class UAnimSequenceBase* Clip, bool* bFromNotify = nullptr);
 	void ToggleAnimBench();
 	/** Editor tool: add (or move) a socket on a skeleton. Bone-space offset. */
+	/** Normal play input, as in the original game: the mouse cursor shows,
+	 *  left click selects, hold the right button to turn the camera. */
+	static void RestoreGameInput(APlayerController* PC);
 	UFUNCTION(BlueprintCallable, Category = "CoH|Animation") static bool AddSkeletonSocket(class USkeleton* Skeleton, FName Socket, FName Bone, FVector Location);
 	/** Health reached zero: back to the start point, healed. */
 	void OnDefeated();
+	/** Tab: the nearest foe in view first, then the next nearest. */
 	void CycleTarget();
+	/** Left mouse: target whoever is under the cursor / crosshair. */
+	void SelectTarget(const FInputActionValue& Value);
 
 	/** Monorail: a rider picked a destination in the train's menu. */
 	UFUNCTION(Server, Reliable)
@@ -141,6 +159,9 @@ protected:
 private:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void CameraDragOn(const FInputActionValue& Value);
+	void CameraDragOff(const FInputActionValue& Value);
+	bool bCameraDrag = false;
 	void SprintOn(const FInputActionValue& Value);
 	void SprintOff(const FInputActionValue& Value);
 	void ToggleSuperJump(const FInputActionValue& Value);
@@ -219,9 +240,11 @@ private:
 	TObjectPtr<UInputAction> LetGoAction;
 
 	UPROPERTY(Transient)
-	TObjectPtr<UInputAction> PunchAction;
- UPROPERTY(Transient)
- TObjectPtr<UInputAction> UppercutAction;
+	TObjectPtr<UInputAction> SelectAction;
+	UPROPERTY(Transient)
+	TObjectPtr<UInputAction> CameraDragAction;
+	double LastTabTime = -100.0;
+	double NextHitReact = 0.0;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputAction> ZoomAction;
