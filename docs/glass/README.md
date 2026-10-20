@@ -26,9 +26,31 @@ no mesh assets or original CoH materials edited.
   and `Nanite_tile_3_3_Solid_00` (the three towers in the reference view).
 
 ## Screenshots (1920x1080)
-`01..04` wide (before, A, B, C-first-try), `05..08` close-up (before, A, B, C-first-try),
-`09..10` furnished interior C (handover view, close-up). Night shots, perf numbers and the exposure
-fix are still to come.
+- `01..04` wide (before, A, B, C first try), `05..08` close-up (before, A, B, C first try).
+- `09..10` furnished interior C (handover view, close-up).
+- `11` before (wide, after restart), `12..14` C with the closed-window mix (about 50% covered by day:
+  blinds full/half, curtains, frosted, plain mirror glass; open rooms in clusters).
+
+## Night lights
+- Clock: `/Game/GlassUpgrade/MPC_GlassTime.Hour`, keyed linearly by one extra track in
+  `/Game/CoH/DayNight_AtlasPark_DressingStudy` (`add_hour_clock.py`; midnight = frame 26775).
+- Lit share per room follows the clock (`LightsDimHours`, `LightsShare`): offices dim 18:00-22:00,
+  homes 22:00-01:00, down to 25% lit late at night; each room has its own switch-off time; lights
+  come back 05:00-08:00. Emissive is gated by `MPC_CoH.Night`.
+
+## Still open
+- Night screenshots: scrubbing the day/night sequence in the editor (Sequencer) changes the MPCs but
+  the scene still renders as day in HighResShot, so the 19:00 / 02:00 shots came out in daylight and
+  were not kept. Needs a PIE/Simulate capture or checking how the sequence drives the lights.
+- Perf numbers (stat unit GPU ms, stat RHI VRAM with C on vs off) and the Lumen
+  `r.EyeAdaptation.CachedLightingPreExposure` warning fix (current value 4.0 gives the safe range
+  [-8, 12]; day exposure is ~12.3, so a value around 2^7 = 128 would cover the PPV clamp of 2..16 EV).
+- Option C is applied on the two test tiles in memory only; the map is not saved.
+
+## Incidents
+- 2026-10-20 01:31 UTC crash: monorail glass mesh render resource (another session), not this work.
+- 2026-10-20 10:24 UTC crash: a long RecompileMaterial of this master on the editor thread hit the
+  Windows 10,000 USER-object limit. Scripts now recompile once per batch and reuse instances.
 
 ## Scripts (`unreal/scripts/glass/`)
 - `build_glass_material.py` builds the master + instances; `interior_room.hlsl` is the interior node.

@@ -180,7 +180,7 @@ to_ts = node(unreal.MaterialExpressionTransform, -2000, 800,
 link(camv, "", to_ts, "")
 ARR = "/Game/CitySampleBuildings/Material/Window/Texture/RoomInteriors/Arrays/"  # same arrays M_Window uses
 HLSL = open(os.path.join(HERE, "interior_room.hlsl")).read()
-room = custom(HLSL, F4, ["UV", "V", "Panes", "WMin", "WMax", "RoomH", "Depth", "Theme", "Seed", "Hour", "S1", "S2",
+room = custom(HLSL, F4, ["UV", "V", "Panes", "WMin", "WMax", "RoomH", "Depth", "Theme", "Seed", "Hour", "S1", "S1A", "S2", "S2A",
                          "EmptyFrac", "ReflOnlyFrac", "ClosedFrac", "BlindsColor", "Bright", "Yaw", "MipDist", "PixelDepth", "Steps",
                          "Rooms1", "Rooms2", "FG1C", "FG1D", "FG2C", "FG2D"], -1500, 800, "InteriorRoom")
 link(uvs, "", room, "UV")
@@ -202,8 +202,12 @@ link(theme, "", room, "Theme")
 link(cpd_seed, "", room, "Seed")
 link(node(unreal.MaterialExpressionCollectionParameter, -2300, 1260,
           collection=unreal.load_asset(FOLDER + "/MPC_GlassTime"), parameter_name="Hour"), "", room, "Hour")
-link(vector("LightsDimHours", (18, 22, 22, 25), -2000, 1260, "Night"), "", room, "S1")  # office 18-22, home 22-01
-link(vector("LightsShare", (5, 8, 0.8, 0.25), -2000, 1320, "Night"), "", room, "S2")  # morning 5-8, 80% -> 25%
+s1 = vector("LightsDimHours", (18, 22, 22, 25), -2000, 1260, "Night")  # office 18-22, home 22-01
+s2 = vector("LightsShare", (5, 8, 0.8, 0.25), -2000, 1320, "Night")  # morning 5-8, 80% -> 25% lit
+link(s1, "", room, "S1")
+link(s1, "A", room, "S1A")  # a vector parameter reaches a Custom node as float3, alpha goes separately
+link(s2, "", room, "S2")
+link(s2, "A", room, "S2A")
 link(scalar("EmptyFloorFraction", 0.15, -2000, 1320, "Interior"), "", room, "EmptyFrac")
 link(scalar("ReflectiveOnlyFraction", 0.15, -2300, 1380, "Interior"), "", room, "ReflOnlyFrac")
 link(scalar("ClosedFraction", 0.45, -2000, 1380, "Interior"), "", room, "ClosedFrac")

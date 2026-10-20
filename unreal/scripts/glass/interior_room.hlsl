@@ -68,13 +68,14 @@ if (emptyRow < 0.5) {
 }
 
 // ---- lights: share of lit rooms follows the clock; each room has its own switch-off time (h.y) ----
-// S1 = (office dim start, office dim end, home dim start, home dim end) in hours, end may pass 24
-// S2 = (morning on start, morning on end, lit share early evening, lit share late night)
+// s1 = (office dim start, office dim end, home dim start, home dim end) in hours, end may pass 24
+// s2 = (morning on start, morning on end, lit share early evening, lit share late night)
+float4 s1 = float4(S1.xyz, S1A), s2 = float4(S2.xyz, S2A);
 float H = fmod(fmod(Hour, 24.0) + 24.0, 24.0);
 float Hn = H < 12.0 ? H + 24.0 : H;                 // the evening runs on past midnight
-float2 dim = (t == 1) ? S1.zw : S1.xy;              // residential stays lit longer
-float share = lerp(S2.z, S2.w, smoothstep(dim.x, dim.y, Hn));
-if (H < 12.0) share = lerp(share, S2.z, smoothstep(S2.x, S2.y, H));  // lights come back toward morning
+float2 dim = (t == 1) ? s1.zw : s1.xy;              // residential stays lit longer
+float share = lerp(s2.z, s2.w, smoothstep(dim.x, dim.y, Hn));
+if (H < 12.0) share = lerp(share, s2.z, smoothstep(s2.x, s2.y, H));  // lights come back toward morning
 float lit = (emptyRow < 0.5 && h.y < share) ? 1.0 : 0.0;
 float3 c = room * Bright;
 c = c / (1 + c);                                    // HDR capture -> base colour range
