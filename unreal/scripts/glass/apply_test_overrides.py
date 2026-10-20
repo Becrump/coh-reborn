@@ -14,6 +14,10 @@ import os
 import unreal
 
 OPTION = os.environ.get("GLASS_OPTION", "none")
+# Existing per-texture children are reused as-is; GLASS_REFRESH=1 re-applies their parameters.
+# (Every update/save of a material instance costs editor-thread work; an earlier version redid
+# all of them on each run and a long recompile session ended in a Windows USER-object crash.)
+REFRESH = os.environ.get("GLASS_REFRESH") == "1"
 FOLDER = "/Game/GlassUpgrade"
 HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else \
     r"C:\Users\rtcru\ClaudeProjects\coh-reborn-dm8n7k\unreal\scripts\glass"
@@ -45,8 +49,10 @@ def params(mi):
 
 def child_for(option, orig):
     key, panes = WINDOWS[orig.get_name()]
-    name = "MI_Glass_%s_%s" % (option, key.replace("_b", ""))
+    name = "MI_Glass_%s_%s" % (option, key[:-2] if key.endswith("_b") else key)
     path = "%s/PerTexture/%s" % (FOLDER, name)
+    if EAL.does_asset_exist(path) and not REFRESH:
+        return unreal.load_asset(path)  # already set up: no update, no save, no shader work
     mi = unreal.load_asset(path) if EAL.does_asset_exist(path) else tools.create_asset(
         name, FOLDER + "/PerTexture", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
     MEL.set_material_instance_parent(mi, unreal.load_asset("%s/MI_Glass_%s" % (FOLDER, option)))

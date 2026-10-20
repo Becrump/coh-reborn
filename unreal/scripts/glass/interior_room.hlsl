@@ -3,7 +3,8 @@
 //   Rooms1/FG1C/FG1D = TCA_1x1x1_Rooms + T2A_1x1x1_CaptureFG/DepthFG (15 slices, one-pane rooms)
 //   Rooms2/FG2C/FG2D = TCA_2x2x1_Rooms + T2A_2x2x1_CaptureFG/DepthFG (11 slices, wide rooms)
 // One room spans RoomWidth panes x RoomHeight panes (one floor); width is re-rolled per floor.
-// Returns rgb = room colour (tonemapped for base colour), a = 1 when this room's lights are on at night.
+// Returns rgb = room colour (tonemapped for base colour), a = 1 when this room's lights are on at night,
+// a = -1 when the room shows plain reflective glass instead (ReflOnlyFrac).
 
 float2 g = UV * Panes;                              // pane grid: x across, y down the facade
 float rh = max(RoomH, 1.0);
@@ -66,18 +67,48 @@ if (emptyRow < 0.5) {
     room = lerp(room, fg, a);
 }
 
-float lit = (emptyRow < 0.5 && h.y < LitFrac) ? 1.0 : 0.0;
+// ---- lights: share of lit rooms follows the clock; each room has its own switch-off time (h.y) ----
+// S1 = (office dim start, office dim end, home dim start, home dim end) in hours, end may pass 24
+// S2 = (morning on start, morning on end, lit share early evening, lit share late night)
+float H = fmod(fmod(Hour, 24.0) + 24.0, 24.0);
+float Hn = H < 12.0 ? H + 24.0 : H;                 // the evening runs on past midnight
+float2 dim = (t == 1) ? S1.zw : S1.xy;              // residential stays lit longer
+float share = lerp(S2.z, S2.w, smoothstep(dim.x, dim.y, Hn));
+if (H < 12.0) share = lerp(share, S2.z, smoothstep(S2.x, S2.y, H));  // lights come back toward morning
+float lit = (emptyRow < 0.5 && h.y < share) ? 1.0 : 0.0;
 float3 c = room * Bright;
 c = c / (1 + c);                                    // HDR capture -> base colour range
 c *= lerp(0.55, 1.0, lit);                          // unlit rooms read darker by day too
 
-// ---- blinds / curtains just behind the glass ----
-if (frac(h.w * 7.31) < BlindsFrac) {
-    float drop = lerp(0.15, 0.95, frac(h.w * 17.3));
-    if (lp.y < drop) {
-        float slat = 0.78 + 0.22 * sin(lp.y * rh * 6.2832 * 18);
-        c = BlindsColor * slat;
+// ---- what covers this room's windows (same for every pane of the room) ----
+// u mixes a per-room roll with a coarse 3-room x 2-floor cluster roll, so open rooms come in clusters.
+float hc = frac(sin(floor(col / 3) * 41.17 + floor(row / 2) * 289.3 + Seed * 5.77) * 43758.5453);
+float u = saturate(0.55 * hc + 0.45 * frac(h.w * 7.31));
+float kind = frac(h.w * 17.3);                       // which covering
+float3 tone = lerp(BlindsColor, lerp(float3(0.62, 0.55, 0.42), float3(0.18, 0.19, 0.21), step(0.6, frac(h.w * 29.1))),
+                   step(0.45, frac(h.w * 29.1)));   // off-white, beige or dark shades
+float reflectOnly = 0;
+if (u < ReflOnlyFrac) {
+    reflectOnly = 1;                                 // plain mirror glass, no room (option A look)
+    lit = 0;
+} else if (u < ReflOnlyFrac + ClosedFrac) {
+    if (kind < 0.30) {                               // venetian blinds fully down
+        c = tone * (0.78 + 0.22 * sin(lp.y * rh * 6.2832 * 18));
         lit *= 0.35;
+    } else if (kind < 0.50) {                        // blinds half / two-thirds down
+        float drop = lerp(0.35, 0.7, frac(h.w * 53.9));
+        if (lp.y < drop) c = tone * (0.78 + 0.22 * sin(lp.y * rh * 6.2832 * 18));
+        lit *= 0.6;
+    } else if (kind < 0.80) {                        // curtains drawn: soft vertical folds, darker at the hem
+        float folds = 0.75 + 0.25 * sin(lp.x * w * 6.2832 * 3.5 + sin(lp.y * 3) * 0.6);
+        c = tone * folds * lerp(1.0, 0.85, lp.y);
+        lit *= 0.45;
+    } else {                                         // frosted privacy glass: blurred room, milky
+        float3 blur = wide ? Rooms2.SampleLevel(cs, float4(dir, idx), 6).rgb : Rooms1.SampleLevel(cs, float4(dir, idx), 6).rgb;
+        blur = blur * Bright / (1 + blur * Bright);
+        c = lerp(blur, float3(0.72, 0.75, 0.78), 0.65);
+        lit *= 0.7;
     }
 }
-return float4(c, lit);
+// a < 0 tells the glass layer to show plain reflective glass; otherwise a = lights on at night
+return float4(c, reflectOnly > 0.5 ? -1.0 : lit);

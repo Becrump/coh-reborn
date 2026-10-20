@@ -2,6 +2,9 @@
 
 Run inside the open editor:  python unreal/scripts/ue_exec.py - < unreal/scripts/glass/build_glass_material.py
 Re-running rebuilds the master graph in place (instances keep their paths).
+Cost: ONE RecompileMaterial of the master per run (plus the 3 option instances), which rebuilds every
+shader permutation on the editor thread (~5-8 min with the interior on). Batch all graph edits into one
+run and only run it while nobody is using the editor; tune instances by parameter instead (no recompile).
 
 Opaque, default-lit master (Nanite and Lumen friendly, no translucency):
   - WindowTexture: the original CoH window texture; frames/mullions stay as they were,
@@ -177,8 +180,8 @@ to_ts = node(unreal.MaterialExpressionTransform, -2000, 800,
 link(camv, "", to_ts, "")
 ARR = "/Game/CitySampleBuildings/Material/Window/Texture/RoomInteriors/Arrays/"  # same arrays M_Window uses
 HLSL = open(os.path.join(HERE, "interior_room.hlsl")).read()
-room = custom(HLSL, F4, ["UV", "V", "Panes", "WMin", "WMax", "RoomH", "Depth", "Theme", "Seed", "LitFrac",
-                         "EmptyFrac", "BlindsFrac", "BlindsColor", "Bright", "Yaw", "MipDist", "PixelDepth", "Steps",
+room = custom(HLSL, F4, ["UV", "V", "Panes", "WMin", "WMax", "RoomH", "Depth", "Theme", "Seed", "Hour", "S1", "S2",
+                         "EmptyFrac", "ReflOnlyFrac", "ClosedFrac", "BlindsColor", "Bright", "Yaw", "MipDist", "PixelDepth", "Steps",
                          "Rooms1", "Rooms2", "FG1C", "FG1D", "FG2C", "FG2D"], -1500, 800, "InteriorRoom")
 link(uvs, "", room, "UV")
 link(to_ts, "", room, "V")
@@ -197,9 +200,13 @@ link(scalar("ThemeOverride", -1.0, -2300, 1080, "Interior"), "", theme, "Overrid
 link(cpd_theme, "", theme, "CPD")
 link(theme, "", room, "Theme")
 link(cpd_seed, "", room, "Seed")
-link(scalar("LitFraction", 0.6, -2000, 1260, "Interior"), "", room, "LitFrac")
+link(node(unreal.MaterialExpressionCollectionParameter, -2300, 1260,
+          collection=unreal.load_asset(FOLDER + "/MPC_GlassTime"), parameter_name="Hour"), "", room, "Hour")
+link(vector("LightsDimHours", (18, 22, 22, 25), -2000, 1260, "Night"), "", room, "S1")  # office 18-22, home 22-01
+link(vector("LightsShare", (5, 8, 0.8, 0.25), -2000, 1320, "Night"), "", room, "S2")  # morning 5-8, 80% -> 25%
 link(scalar("EmptyFloorFraction", 0.15, -2000, 1320, "Interior"), "", room, "EmptyFrac")
-link(scalar("BlindsFraction", 0.3, -2000, 1380, "Interior"), "", room, "BlindsFrac")
+link(scalar("ReflectiveOnlyFraction", 0.15, -2300, 1380, "Interior"), "", room, "ReflOnlyFrac")
+link(scalar("ClosedFraction", 0.45, -2000, 1380, "Interior"), "", room, "ClosedFrac")
 link(vector("BlindsColor", (0.55, 0.52, 0.47, 1), -2000, 1440, "Interior"), "", room, "BlindsColor")
 link(scalar("InteriorBrightness", 0.6, -2000, 1500, "Interior"), "", room, "Bright")
 link(scalar("CubeYaw", 0.0, -2000, 1560, "Interior"), "", room, "Yaw")
@@ -217,14 +224,22 @@ room_lit = node(unreal.MaterialExpressionComponentMask, -1200, 900, r=False, g=F
 link(room, "", room_lit, "")
 night = node(unreal.MaterialExpressionCollectionParameter, -1400, 1050, collection=unreal.load_asset(MPC),
              parameter_name="Night")
-int_mix = custom("float top = saturate(Base + F * R);\n"
-                 "return lerp(Room, Glass, top);", F3, ["Room", "Glass", "F", "R", "Base"], -1000, 800,
+# by day the room sits behind more reflection and reads darker; at night the glass clears up
+int_mix = custom("float n = saturate(Night);\n"
+                 "if (Lit < -0.5) return Glass;  // reflective-only room\n"
+                 "float top = saturate(lerp(DayBase, Base, n) + F * R);\n"
+                 "return lerp(Room * lerp(DayDim, 1, n), Glass, top);", F3,
+                 ["Room", "Lit", "Glass", "F", "R", "Base", "DayBase", "DayDim", "Night"], -1000, 800,
                  "InteriorUnderGlass")
 link(room_rgb, "", int_mix, "Room")
+link(room_lit, "", int_mix, "Lit")
 link(glass_col, "", int_mix, "Glass")
 link(fres, "", int_mix, "F")
 link(refl, "", int_mix, "R")
-link(scalar("ReflectBase", 0.25, -1400, 1110, "Interior"), "", int_mix, "Base")
+link(scalar("ReflectBase", 0.15, -1400, 1110, "Interior"), "", int_mix, "Base")
+link(scalar("DayReflectBase", 0.4, -1400, 1170, "Interior"), "", int_mix, "DayBase")
+link(scalar("DayInteriorDim", 0.6, -1400, 1230, "Interior"), "", int_mix, "DayDim")
+link(night, "", int_mix, "Night")
 pane_col = switch("UseInterior", False, int_mix, "", glass_col, "", -800, -300)
 
 # ---- emissive: interior lights and original glow map at night ------------------
@@ -233,7 +248,7 @@ link(vector("GlowUVScale", (1, 1, 0, 0), -2300, 1250, "Night"), "", glow_scale, 
 glow_uv = mul(tc, "", glow_scale, "", -2000, 1250)
 glow_tex = tex("GlowTexture", DEF_GLOW, -1800, 1250, group="Night")
 link(glow_uv, "", glow_tex, "UVs")
-emis_int = custom("return Room * Lit * Strength;", F3, ["Room", "Lit", "Strength"], -1000, 1050,
+emis_int = custom("return Room * max(Lit, 0) * Strength;", F3, ["Room", "Lit", "Strength"], -1000, 1050,
                   "InteriorLights")
 link(room_rgb, "", emis_int, "Room")
 link(room_lit, "", emis_int, "Lit")
@@ -297,7 +312,8 @@ OPTIONS = {
         switches={"UseGrime": True, "UseInterior": False}),
     "MI_Glass_Interior": dict(
         scalars={"Roughness": 0.05, "ReflectStrength": 0.8, "Metallic": 0.05, "Specular": 1.0, "GrimeAmount": 0.2,
-                 "EdgeDirt": 0.4, "InteriorDepth": 1.0, "InteriorBrightness": 0.25, "ReflectBase": 0.15,
+                 "EdgeDirt": 0.4, "InteriorDepth": 1.0, "InteriorBrightness": 0.12, "ReflectBase": 0.15,
+                 "ClosedFraction": 0.38, "ReflectiveOnlyFraction": 0.12, "DayReflectBase": 0.4, "DayInteriorDim": 0.6,
                  "InteriorEmissive": 4.0},
         vectors={"TintColor": (0.6, 0.7, 0.8, 1)},
         switches={"UseGrime": True, "UseInterior": True}),
