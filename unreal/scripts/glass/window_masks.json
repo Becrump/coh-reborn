@@ -1,0 +1,58 @@
+{
+ "deco_skyscraper_02_window_01_b": {
+  "key": "luma",
+  "MaskWeights": [
+   0.3,
+   0.59,
+   0.11,
+   0
+  ],
+  "MaskThreshold": 0.04,
+  "MaskSoftness": 0.02,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.85,
+  "manual": true
+ },
+ "deco_building_03_window_01_b": {
+  "key": "luma",
+  "MaskWeights": [
+   0.3,
+   0.59,
+   0.11,
+   0
+  ],
+  "MaskThreshold": 0.21,
+  "MaskSoftness": 0.02,
+  "MaskInvert": 1.0,
+  "pane_frac": 0.92,
+  "manual": true
+ },
+ "deco_building_03_window_03_b": {
+  "key": "blue",
+  "MaskWeights": [
+   -1.0,
+   0.0,
+   1.0,
+   0
+  ],
+  "MaskThreshold": 0.0514,
+  "MaskSoftness": 0.0154,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.63,
+  "speckle": 0.0179
+ },
+ "deco_building_08_window_01_b": {
+  "key": "blue",
+  "MaskWeights": [
+   -1.0,
+   0.0,
+   1.0,
+   0
+  ],
+  "MaskThreshold": 0.0164,
+  "MaskSoftness": 0.0049,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.24,
+  "speckle": 0.0163
+ }
+}
