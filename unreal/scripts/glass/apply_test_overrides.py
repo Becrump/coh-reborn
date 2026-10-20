@@ -23,8 +23,8 @@ MASKS = json.load(open(os.path.join(HERE, "window_masks.json")))
 # so the smallest unit we can override without touching meshes is a tile actor.
 TEST_ACTORS = ["Nanite_tile_2_3_Solid_01", "Nanite_tile_3_3_Solid_00"]
 # Interior theme per actor -> Custom Primitive Data[0] (0 office, 1 residential, 2 retail), [1] = random seed.
-# Both test tiles hold blue-grid office towers.
-THEMES = {"Nanite_tile_2_3_Solid_01": 0.0, "Nanite_tile_3_3_Solid_00": 0.0}
+# Tile 3_3 (centre + right towers) office; tile 2_3 (tall left tower) residential as a comparison demo.
+THEMES = {"Nanite_tile_2_3_Solid_01": 1.0, "Nanite_tile_3_3_Solid_00": 0.0}
 # original window MI -> (base colour texture key in window_masks.json, panes per texture tile)
 WINDOWS = {
     "x_deco_skyscraper_02_window_01": ("deco_skyscraper_02_window_01_b", 2),
