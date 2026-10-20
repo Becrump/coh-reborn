@@ -99,6 +99,7 @@ def floor_point(s):
 
 
 spots = json.load(open(os.path.join(here, "coh_cars_in_map.json")))
+DIRTY_BEFORE = set(p.get_name() for p in unreal.EditorLoadingAndSavingUtils.get_dirty_map_packages())
 report = dict(render=[], collision=[], skipped=[], reverted=[], spots_blocked=[], floor_changed=[])
 hide = hidden_material()
 
@@ -123,8 +124,9 @@ for a in actors.get_all_level_actors():
     slots = [i for i, m in enumerate(mats) if m and CAR.match(m.get_name())]
     if not slots:
         continue
-    if label in SKIP or "/Monorail/" in mesh.get_path_name():
-        report["skipped"].append(dict(label=label, mesh=mesh.get_path_name()))
+    # leave tiles another job has unsaved edits on (saving them would save its work too)
+    if label in SKIP or a.get_package().get_name() in DIRTY_BEFORE:
+        report["skipped"].append(dict(label=label, mesh=mesh.get_path_name(), why="skip list or unsaved edits"))
         continue
     if c.is_visible():
         for i in slots:
@@ -177,6 +179,7 @@ log("spots", len(spots), "cleared", cleared, "still blocked", len(report["spots_
     "floor changed", len(report["floor_changed"]), "render tiles", len(report["render"]),
     "collision tiles", len(report["collision"]), "reverted", len(report["reverted"]), "skipped", len(report["skipped"]))
 if SAVE:
+    eas.save_asset(HIDDEN, False)
     for e in report["collision"]:
         eas.save_asset(e["copy"], False)
     pkgs = [unreal.find_object(None, e["actor"]).get_package() for e in report["render"] + report["collision"]]

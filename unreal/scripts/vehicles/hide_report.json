@@ -1,0 +1,3854 @@
+{
+ "render": [
+  {
+   "label": "Nanite_tile_-3_-2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1629855499",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    27,
+    28,
+    41
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-4_0_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1890795617",
+   "slots": [
+    3
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-4_0_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1890753616",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    34,
+    35
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1258620930",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    11,
+    12,
+    15,
+    16,
+    17,
+    18,
+    57,
+    58
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_-3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1258662931",
+   "slots": [
+    23
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_4_-3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1246257928",
+   "slots": [
+    15
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_-3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1844954598",
+   "slots": [
+    32
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1680678517",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    34,
+    35,
+    39
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Atlas25_Infrastructure_tile_2_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1980083102",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    25
+   ],
+   "was": [
+    "/Game/AtlasExpansionTest/Block/expansion/Materials/Car_tire_ruin_tga.Car_tire_ruin_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/AtlasExpansionTest/Block/expansion/Materials/Compact_frnt_rear_dam_tga.Compact_frnt_rear_dam_tga",
+    "/Game/AtlasExpansionTest/Block/expansion/Materials/Compact_side_dam_tga.Compact_side_dam_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1844909597",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14,
+    15,
+    48,
+    49
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_Atlas25_Infrastructure_tile_1_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1730417545",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    16
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_-1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1998427658",
+   "slots": [
+    56
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_-1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1998383657",
+   "slots": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    16,
+    17,
+    19,
+    20,
+    21,
+    25,
+    26,
+    28,
+    29,
+    30,
+    31
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_4_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1246226927",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    50,
+    51
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_-1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1321933943",
+   "slots": [
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_0_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1359973953",
+   "slots": [
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_-2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2071908679",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    11,
+    12,
+    15,
+    16
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_-1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1321974944",
+   "slots": [
+    48
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_0_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1360014954",
+   "slots": [
+    38
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_-2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2071950680",
+   "slots": [
+    26
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "tile_4_-2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812730777",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    20,
+    21,
+    23
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_-3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1910095625",
+   "slots": [
+    2
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_-2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2034776667",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    10,
+    11,
+    12,
+    13,
+    14,
+    21,
+    22,
+    55,
+    56
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1885835613",
+   "slots": [
+    2,
+    3,
+    5,
+    6,
+    7
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_-3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1910066624",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    7,
+    8,
+    9,
+    10,
+    11,
+    14,
+    15
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_-3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1885881614",
+   "slots": [
+    6
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_0_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1958352642",
+   "slots": [
+    27
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_0_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1958308641",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    16,
+    17,
+    18,
+    19
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_-1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1975799650",
+   "slots": [
+    0,
+    40
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_-2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1151086899",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    11,
+    12,
+    13,
+    14,
+    15,
+    20,
+    21,
+    22,
+    23
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_-2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2034819668",
+   "slots": [
+    19
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_0_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1964213643",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    10,
+    11,
+    12,
+    13,
+    14,
+    19,
+    20,
+    22,
+    23,
+    24,
+    25,
+    55,
+    56
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_-2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1151129900",
+   "slots": [
+    7,
+    8,
+    35
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_-1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1991593655",
+   "slots": [
+    17
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_-1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1991552654",
+   "slots": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    53,
+    54
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_-1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1975755649",
+   "slots": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    13,
+    14,
+    15,
+    16,
+    17,
+    20,
+    21,
+    24,
+    25,
+    26,
+    27,
+    62
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_0_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1964256644",
+   "slots": [
+    32
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-5_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2050552673",
+   "slots": [
+    9
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-5_0_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1332642945",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    34,
+    35,
+    54
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-3_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1138584896",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    21,
+    22,
+    57
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-5_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1742278551",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    17
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-3_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1138626897",
+   "slots": [
+    0,
+    20
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-5_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2050521672",
+   "slots": [
+    6,
+    7,
+    12,
+    13
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-1_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1387572962",
+   "slots": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    24,
+    25,
+    26,
+    27,
+    28,
+    30,
+    31,
+    41,
+    42,
+    43,
+    44
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1222089921",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    34,
+    35,
+    36,
+    37
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-3_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1086607881",
+   "slots": [
+    5,
+    6,
+    44,
+    45
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-2_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1076496877",
+   "slots": [
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    23,
+    24,
+    27,
+    28,
+    29,
+    35,
+    36,
+    39,
+    40,
+    41,
+    42
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-2_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1076539878",
+   "slots": [
+    23,
+    24,
+    58
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-3_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1086654882",
+   "slots": [
+    9
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-4_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1806912583",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    13,
+    14,
+    17,
+    18
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-4_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1806954584",
+   "slots": [
+    12
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-2_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1983480652",
+   "slots": [
+    2,
+    3,
+    4,
+    7,
+    8,
+    35,
+    36
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-4_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1915530627",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    16,
+    17,
+    50,
+    51
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-3_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1834525593",
+   "slots": [
+    2,
+    3,
+    4,
+    5
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-4_4_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1915571628",
+   "slots": [
+    15
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-2_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1983528653",
+   "slots": [
+    27
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-3_4_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1834567594",
+   "slots": [
+    7
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-1_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1387600963",
+   "slots": [
+    55,
+    56
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-1_2_Solid_04",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1387689966",
+   "slots": [
+    47
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1222119922",
+   "slots": [
+    24,
+    25
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_2_Solid_02",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1222147923",
+   "slots": [
+    28
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-1_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1101702888",
+   "slots": [
+    9
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1093910884",
+   "slots": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    18,
+    21,
+    22,
+    57,
+    58
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1093948885",
+   "slots": [
+    46
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_-1_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1101660887",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14,
+    15
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_5_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2120193693",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    61,
+    62
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_5_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2120235694",
+   "slots": [
+    22
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1118763892",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    56
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1943044635",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    15,
+    16,
+    17,
+    18,
+    43,
+    44
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1118809893",
+   "slots": [
+    0,
+    31
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2096236685",
+   "slots": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    18,
+    20,
+    21
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_3_Solid_02",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2096324687",
+   "slots": [
+    23
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1850591600",
+   "slots": [
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    19,
+    20
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2096281686",
+   "slots": [
+    10,
+    11
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_4_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1110430890",
+   "slots": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    16,
+    17
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_4_4_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1110475891",
+   "slots": [
+    5,
+    6,
+    33
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_4_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1839187596",
+   "slots": [
+    33
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_3_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1839144595",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    15,
+    16,
+    17,
+    18
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_0_6_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1767012563",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    24
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_5_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1877629612",
+   "slots": [
+    27
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_5_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2015123662",
+   "slots": [
+    41
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_2_5_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1877586611",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    11,
+    12,
+    13,
+    22,
+    23,
+    56,
+    57
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_5_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2015075661",
+   "slots": [
+    2,
+    3,
+    5,
+    6
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_7_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1787726575",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    13
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1899699620",
+   "slots": [
+    16
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1899656619",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    17,
+    18,
+    19,
+    20
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_4_Solid_02",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1179846910",
+   "slots": [
+    18
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_7_1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1779247571",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    11
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_1_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1295080937",
+   "slots": [
+    1,
+    2,
+    3,
+    6,
+    7,
+    8,
+    58,
+    59
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2087254682",
+   "slots": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    18,
+    19,
+    20,
+    21,
+    60
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_2_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2024730664",
+   "slots": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    20,
+    21
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2087296683",
+   "slots": [
+    0,
+    48
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2024773665",
+   "slots": [
+    12,
+    13,
+    62
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_1_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1295116938",
+   "slots": [
+    46
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_4_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1179802909",
+   "slots": [
+    28,
+    29
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2105476690",
+   "slots": [
+    3
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_3_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2140840700",
+   "slots": [
+    13
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE230C03_1179760908",
+   "slots": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    20,
+    21,
+    25,
+    26,
+    27,
+    28
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2007909659",
+   "slots": [
+    1,
+    2,
+    5,
+    6,
+    7
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2140797699",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    15,
+    16,
+    17,
+    18,
+    38,
+    39
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_3_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2105431689",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    48,
+    49
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_4_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2007962660",
+   "slots": [
+    15
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_5_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1934032633",
+   "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    18,
+    19,
+    20,
+    21,
+    56,
+    57
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_5_5_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1934076634",
+   "slots": [
+    39
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_5_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2130574697",
+   "slots": [
+    13,
+    14,
+    63
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_5_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_2130534696",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    19,
+    20,
+    23,
+    24,
+    25,
+    26
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_6_6_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1814894587",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    19
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire6_tga.Car_tire6_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Cubevan_box_TGA.Cubevan_box_TGA",
+    "/Game/atlas_park/Materials/Cubevan_frnt_tga.Cubevan_frnt_tga",
+    "/Game/atlas_park/Materials/Cubevan_side_tga.Cubevan_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_Atlas25_Infrastructure_tile_1_-4_Solid_00",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1688920521",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    15
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Atlas25_Infrastructure_tile_3_-4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1980011098",
+   "slots": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/Car_tire1_tga.Car_tire1_tga",
+    "/Game/atlas_park/Materials/Car_tire2_tga.Car_tire2_tga",
+    "/Game/atlas_park/Materials/Car_tire3_tga.Car_tire3_tga",
+    "/Game/atlas_park/Materials/Car_tire4_tga.Car_tire4_tga",
+    "/Game/atlas_park/Materials/Car_tire5_tga.Car_tire5_tga",
+    "/Game/atlas_park/Materials/Car_tire_tread_tga.Car_tire_tread_tga",
+    "/Game/atlas_park/Materials/Compact_frnt_rear_tga.Compact_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Compact_side_tga.Compact_side_tga",
+    "/Game/atlas_park/Materials/Lux2_frnt_rear_tga.Lux2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Lux2_side_tga.Lux2_side_tga",
+    "/Game/atlas_park/Materials/Sport1_frnt_rear_tga.Sport1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport1_side_tga.Sport1_side_tga",
+    "/Game/atlas_park/Materials/Sport2_frnt_rear_tga.Sport2_frnt_rear_tga",
+    "/Game/atlas_park/Materials/Sport2_side_tga.Sport2_side_tga",
+    "/Game/atlas_park/Materials/lux1_frnt_rear_tga.lux1_frnt_rear_tga",
+    "/Game/atlas_park/Materials/lux1_side_tga.lux1_side_tga",
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  },
+  {
+   "label": "Nanite_tile_1_2_Solid_01",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE220C03_1943090636",
+   "slots": [
+    0
+   ],
+   "was": [
+    "/Game/atlas_park/Materials/underside_longrust01_tga.underside_longrust01_tga"
+   ]
+  }
+ ],
+ "collision": [
+  {
+   "label": "tile_-5_0",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1809387688",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_-5_0",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-5_0_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    34,
+    35,
+    55
+   ]
+  },
+  {
+   "label": "tile_-3_-2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812052728",
+   "src": "/Game/AtlasNanite/Collision/tile_-3_-2_8f8326ab61_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-3_-2_8f8326ab61_DryCollision_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    30,
+    31,
+    44
+   ]
+  },
+  {
+   "label": "tile_-4_0",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1811714710",
+   "src": "/Game/AtlasDressingStudy/CoreTiles/tile_-4_0",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-4_0_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    37,
+    38,
+    69
+   ]
+  },
+  {
+   "label": "tile_3_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813052798",
+   "src": "/Game/AtlasNanite/Collision/tile_3_-3_e72e6ee4a6_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_3_-3_e72e6ee4a6_DryCollision_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    11,
+    12,
+    15,
+    16,
+    17,
+    18,
+    59,
+    60,
+    87
+   ]
+  },
+  {
+   "label": "tile_4_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813059803",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_4_-3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_4_-3_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    52,
+    53,
+    80
+   ]
+  },
+  {
+   "label": "Atlas25_Infrastructure_tile_1_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1980026099",
+   "src": "/Game/AtlasRebuiltStudy/Infrastructure/rebuilt/StaticMeshes/tile_1_-3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_-3_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17
+   ]
+  },
+  {
+   "label": "tile_1_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812394754",
+   "src": "/Game/AtlasNanite/Collision/tile_1_-3_5d209aac31_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_-3_5d209aac31_DryCollision_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    36,
+    37,
+    42
+   ]
+  },
+  {
+   "label": "tile_2_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812744787",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_2_-3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_2_-3_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14,
+    15,
+    50,
+    51,
+    98
+   ]
+  },
+  {
+   "label": "Atlas25_Infrastructure_tile_2_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1980083102",
+   "src": "/Game/AtlasRebuiltStudy/Infrastructure/rebuilt/StaticMeshes/tile_2_-3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_2_-3_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14,
+    15,
+    25,
+    50,
+    51,
+    98
+   ]
+  },
+  {
+   "label": "tile_2_-1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812745788",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_2_-1",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_2_-1_NoCars",
+   "sections_off": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    16,
+    17,
+    19,
+    20,
+    21,
+    25,
+    26,
+    28,
+    29,
+    30,
+    31,
+    120
+   ]
+  },
+  {
+   "label": "tile_3_-1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813057801",
+   "src": "/Game/AtlasNanite/Monorail/tile_3_-1_d45e254eb1_DryCollision_Mono",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_3_-1_d45e254eb1_DryCollision_Mono_NoCars",
+   "sections_off": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    112
+   ]
+  },
+  {
+   "label": "tile_3_0",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813058802",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_3_0",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_3_0_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    104
+   ]
+  },
+  {
+   "label": "tile_3_-2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813056800",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_3_-2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_3_-2_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    11,
+    12,
+    15,
+    16,
+    90
+   ]
+  },
+  {
+   "label": "tile_4_-2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812730777",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_4_-2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_4_-2_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    20,
+    21,
+    23
+   ]
+  },
+  {
+   "label": "tile_5_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813065806",
+   "src": "/Game/atlas_park/atlas_park/StaticMeshes/tile_5_-3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_-3_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    7,
+    8,
+    9,
+    10,
+    11,
+    14,
+    15,
+    67
+   ]
+  },
+  {
+   "label": "tile_6_-2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813390823",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_6_-2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_-2_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    10,
+    11,
+    12,
+    13,
+    14,
+    21,
+    22,
+    57,
+    58,
+    83
+   ]
+  },
+  {
+   "label": "tile_6_-3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813388822",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_6_-3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_-3_NoCars",
+   "sections_off": [
+    2,
+    3,
+    5,
+    6,
+    7,
+    71
+   ]
+  },
+  {
+   "label": "tile_5_0",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813072812",
+   "src": "/Game/AtlasNanite/Collision/tile_5_0_0e6dfed694_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_0_0e6dfed694_DryCollision_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    16,
+    17,
+    18,
+    19,
+    91
+   ]
+  },
+  {
+   "label": "tile_6_0",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813387821",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_6_0",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_0_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    10,
+    11,
+    12,
+    13,
+    14,
+    19,
+    20,
+    22,
+    23,
+    24,
+    25,
+    59,
+    60,
+    96
+   ]
+  },
+  {
+   "label": "tile_5_-1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813070810",
+   "src": "/Game/AtlasNanite/Collision/tile_5_-1_a7a867a0a6_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_-1_a7a867a0a6_DryCollision_NoCars",
+   "sections_off": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    13,
+    14,
+    15,
+    16,
+    17,
+    20,
+    21,
+    24,
+    25,
+    26,
+    27,
+    63,
+    64,
+    104
+   ]
+  },
+  {
+   "label": "tile_5_-2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813068808",
+   "src": "/Game/atlas_park/atlas_park/StaticMeshes/tile_5_-2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_-2_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    11,
+    12,
+    13,
+    14,
+    15,
+    20,
+    21,
+    22,
+    23,
+    71,
+    72,
+    101
+   ]
+  },
+  {
+   "label": "tile_6_-1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813391824",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_6_-1",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_-1_NoCars",
+   "sections_off": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    54,
+    55,
+    83
+   ]
+  },
+  {
+   "label": "tile_-5_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1809403702",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_-5_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-5_3_NoCars",
+   "sections_off": [
+    6,
+    7,
+    12,
+    13,
+    74
+   ]
+  },
+  {
+   "label": "tile_-5_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1809404703",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_-5_4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-5_4_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    19
+   ]
+  },
+  {
+   "label": "tile_-3_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1811731721",
+   "src": "/Game/AtlasNanite/Collision/tile_-3_3_52d40387c9_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-3_3_52d40387c9_DryCollision_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    21,
+    22,
+    64,
+    65,
+    85
+   ]
+  },
+  {
+   "label": "tile_0_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812415768",
+   "src": "/Game/AtlasNanite/Collision/tile_0_2_146915862c_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_0_2_146915862c_DryCollision_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    34,
+    35,
+    36,
+    37,
+    89,
+    90,
+    160
+   ]
+  },
+  {
+   "label": "tile_-1_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812398757",
+   "src": "/Game/AtlasNanite/Collision/tile_-1_2_41ae89c691_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-1_2_41ae89c691_DryCollision_NoCars",
+   "sections_off": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    24,
+    25,
+    26,
+    27,
+    28,
+    30,
+    31,
+    41,
+    42,
+    43,
+    44,
+    120,
+    121,
+    306
+   ]
+  },
+  {
+   "label": "tile_-3_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812057731",
+   "src": "/Game/AtlasNanite/Collision/tile_-3_2_c167710201_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-3_2_c167710201_DryCollision_NoCars",
+   "sections_off": [
+    5,
+    6,
+    47,
+    48,
+    74
+   ]
+  },
+  {
+   "label": "tile_-2_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812074742",
+   "src": "/Game/AtlasNanite/Collision/tile_-2_2_c1963df414_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-2_2_c1963df414_DryCollision_NoCars",
+   "sections_off": [
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    23,
+    24,
+    27,
+    28,
+    29,
+    35,
+    36,
+    39,
+    40,
+    41,
+    42,
+    88,
+    89,
+    125
+   ]
+  },
+  {
+   "label": "tile_-4_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1811722716",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_-4_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-4_3_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    13,
+    14,
+    17,
+    18,
+    76
+   ]
+  },
+  {
+   "label": "tile_-2_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812077744",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_-2_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-2_3_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    7,
+    8,
+    37,
+    38,
+    91
+   ]
+  },
+  {
+   "label": "tile_-4_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1811728720",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_-4_4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-4_4_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    16,
+    17,
+    51,
+    52,
+    79
+   ]
+  },
+  {
+   "label": "tile_-3_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812066737",
+   "src": "/Game/AtlasNanite/Collision/tile_-3_4_100bd2a752_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-3_4_100bd2a752_DryCollision_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    71
+   ]
+  },
+  {
+   "label": "tile_-1_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812388750",
+   "src": "/Game/AtlasDressingStudy/CoreTiles/tile_-1_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_-1_3_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14,
+    15,
+    76
+   ]
+  },
+  {
+   "label": "tile_0_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812419771",
+   "src": "/Game/AtlasDressingStudy/CoreTiles/tile_0_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_0_3_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    18,
+    21,
+    22,
+    61,
+    62,
+    115
+   ]
+  },
+  {
+   "label": "tile_0_5",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812727775",
+   "src": "/Game/AtlasDressingStudy/CoreTiles/tile_0_5",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_0_5_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    62,
+    63,
+    89
+   ]
+  },
+  {
+   "label": "tile_0_6",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1811721715",
+   "src": "/Game/AtlasDressingStudy/CoreTiles/tile_0_6",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_0_6_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    27
+   ]
+  },
+  {
+   "label": "tile_2_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812752794",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_2_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_2_3_NoCars",
+   "sections_off": [
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    19,
+    20,
+    66,
+    67,
+    95
+   ]
+  },
+  {
+   "label": "tile_1_1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812731778",
+   "src": "/Game/AtlasNanite/Collision/tile_1_1_fbe9ec14ab_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_1_fbe9ec14ab_DryCollision_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    64,
+    65,
+    97
+   ]
+  },
+  {
+   "label": "tile_1_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812732779",
+   "src": "/Game/AtlasNanite/Collision/tile_1_2_ec2924b603_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_2_ec2924b603_DryCollision_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    15,
+    16,
+    17,
+    18,
+    49,
+    50,
+    65
+   ]
+  },
+  {
+   "label": "tile_1_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812734780",
+   "src": "/Game/AtlasNanite/Monorail/tile_1_3_54f43f1af3_DryCollision_Mono",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_3_54f43f1af3_DryCollision_Mono_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    18,
+    20,
+    21,
+    75,
+    76,
+    155
+   ]
+  },
+  {
+   "label": "tile_3_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813055799",
+   "src": "/Game/AtlasNanite/Collision/tile_3_4_d1e9b8be73_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_3_4_d1e9b8be73_DryCollision_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    15,
+    16,
+    17,
+    18,
+    97
+   ]
+  },
+  {
+   "label": "tile_4_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813051797",
+   "src": "/Game/atlas_park/atlas_park/StaticMeshes/tile_4_4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_4_4_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    16,
+    17,
+    69,
+    70,
+    97
+   ]
+  },
+  {
+   "label": "tile_2_5",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813048795",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_2_5",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_2_5_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    11,
+    12,
+    13,
+    22,
+    23,
+    59,
+    60,
+    91
+   ]
+  },
+  {
+   "label": "tile_1_5",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1812741785",
+   "src": "/Game/AtlasNanite/Collision/tile_1_5_92c5251ebf_DryCollision",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_5_92c5251ebf_DryCollision_NoCars",
+   "sections_off": [
+    2,
+    3,
+    5,
+    6,
+    109
+   ]
+  },
+  {
+   "label": "tile_5_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813385820",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_5_4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_4_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    20,
+    21,
+    25,
+    26,
+    27,
+    28,
+    92,
+    93,
+    146
+   ]
+  },
+  {
+   "label": "tile_6_1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813392825",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_6_1",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_1_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    17,
+    18,
+    19,
+    20,
+    80
+   ]
+  },
+  {
+   "label": "tile_7_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813077815",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_7_2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_7_2_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    14
+   ]
+  },
+  {
+   "label": "tile_7_1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813076814",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_7_1",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_7_1_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    12
+   ]
+  },
+  {
+   "label": "tile_5_1",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813075813",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_5_1",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_1_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    6,
+    7,
+    8,
+    58,
+    59,
+    110
+   ]
+  },
+  {
+   "label": "tile_6_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813393826",
+   "src": "/Game/atlas_park/atlas_park/StaticMeshes/tile_6_2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_2_NoCars",
+   "sections_off": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    18,
+    19,
+    20,
+    21,
+    63,
+    64,
+    112
+   ]
+  },
+  {
+   "label": "tile_5_2",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813079816",
+   "src": "/Game/atlas_park/atlas_park/StaticMeshes/tile_5_2",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_2_NoCars",
+   "sections_off": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    20,
+    21,
+    76,
+    77,
+    126
+   ]
+  },
+  {
+   "label": "tile_5_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813080817",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_5_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_3_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    50,
+    51,
+    67
+   ]
+  },
+  {
+   "label": "tile_6_3",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813395827",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_6_3",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_3_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    15,
+    16,
+    17,
+    18,
+    39,
+    40,
+    77
+   ]
+  },
+  {
+   "label": "tile_6_4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813398829",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_6_4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_4_NoCars",
+   "sections_off": [
+    1,
+    2,
+    5,
+    6,
+    7,
+    79
+   ]
+  },
+  {
+   "label": "tile_5_5",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813071811",
+   "src": "/Game/AtlasUpgraded/Geometry/atlas_upgraded/StaticMeshes/tile_5_5",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_5_5_NoCars",
+   "sections_off": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    18,
+    19,
+    20,
+    21,
+    57,
+    58,
+    103
+   ]
+  },
+  {
+   "label": "tile_6_6",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813397828",
+   "src": "/Game/AtlasSecondPass/Geometry/atlas_secondpass/StaticMeshes/tile_6_6",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_6_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    20
+   ]
+  },
+  {
+   "label": "tile_6_5",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.atlas_park_node_UAID_18C04D0EBBBE9C0703_1813402833",
+   "src": "/Game/atlas_park/atlas_park/StaticMeshes/tile_6_5",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_6_5_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    19,
+    20,
+    23,
+    24,
+    25,
+    26,
+    77,
+    78,
+    127
+   ]
+  },
+  {
+   "label": "Atlas25_Infrastructure_tile_1_-4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1979993097",
+   "src": "/Game/AtlasRebuiltStudy/Infrastructure/rebuilt/StaticMeshes/tile_1_-4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_1_-4_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    16
+   ]
+  },
+  {
+   "label": "Atlas25_Infrastructure_tile_3_-4",
+   "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1980011098",
+   "src": "/Game/AtlasRebuiltStudy/Infrastructure/rebuilt/StaticMeshes/tile_3_-4",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_3_-4_NoCars",
+   "sections_off": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17
+   ]
+  }
+ ],
+ "skipped": [
+  {
+   "label": "Nanite_tile_2_3_Solid_01",
+   "mesh": "/Game/AtlasNanite/Geometry/tile_2_3_8d2367db20_Solid_01.tile_2_3_8d2367db20_Solid_01",
+   "why": "skip list or unsaved edits"
+  }
+ ],
+ "reverted": [],
+ "spots_blocked": [
+  {
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "c": [
+    83533,
+    34717
+   ],
+   "before": [
+    339.0191650390625,
+    "tile_6_2"
+   ],
+   "after": [
+    153.3302001953125,
+    "tile_6_2"
+   ]
+  },
+  {
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "c": [
+    83120,
+    34679
+   ],
+   "before": [
+    339.0191650390625,
+    "tile_6_2"
+   ],
+   "after": [
+    153.3302001953125,
+    "tile_6_2"
+   ]
+  }
+ ],
+ "floor_changed": [],
+ "cars": 455,
+ "car_spots_cleared": 452
+}
