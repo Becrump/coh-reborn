@@ -207,3 +207,12 @@ python -m coh2unreal.character --data <i24/data> --piggs <piggs> --out <out>/cha
   - FX attached to costume parts.
   - Weapons.
   - Importing into Unreal.
+
+## 2026-10-19 City Sample cars for AtlasPark_DressingStudy_Nanite (in progress)
+
+- Inventory: 455 parked CoH cars, baked into the tile meshes (Truck_1 93, Lux1 90, Compact1 83, Sport2 69, Sport1 65, Lux2 55; car materials belong only to these 6 models), the PPD squad car prop, and the CoHLifeManager traffic (instanced Vehicle Variety Pack meshes; collision already on in the project source). No Mass/ZoneGraph traffic.
+- City Sample vehicles are already in the project (/Game/CitySampleVehicles, 13 Chaos BPs). No migration.
+- Backup: C:\Users\rtcru\COHReborn_Backups\2026-10-19_pre_citysample_cars.zip (23 MB).
+- Scripts in unreal/scripts/vehicles: cs_coh_cars.py (offline: CoH car centres and footprints, front = -Y, so City Sample yaw = CoH yaw - 90), cs_build_kit.py (merged Nanite car meshes with box collision + paint MIs), cs_hide_coh_cars.py (invisible material on the render tiles' car slots, car-free collision copies, trace checks).
+- CoHPowers.cpp: PushProps(): damaging and knockback powers push simulating physics bodies near the impact.
+- Not done yet: build kit, hide pass, place the 455 cars, LifeManager CarMeshes swap, Live Coding compile, PIE checks. The editor crashed at 01:31 UTC (another job's mesh rebuild) before the kit build ran.

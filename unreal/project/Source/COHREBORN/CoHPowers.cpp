@@ -10,6 +10,7 @@
 #include "ImageUtils.h"
 #include "Animation/AnimSequence.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Volume.h"
@@ -786,6 +787,40 @@ TArray<UCoHPowerComponent*> UCoHPowerComponent::Gather(const FCoHPowerDef& P, AA
 	return Out;
 }
 
+static void PushProps(const UActorComponent* Self, const FCoHPowerDef& P, AActor* TargetActor, FVector Center)
+{
+	// attacks shove the physics props around the impact (parked City Sample
+	// cars): a hit rocks them, a knockback or a blast throws them
+	bool bHurts = false, bKnocks = false;
+	ECoHDamage Type;
+	for (const FCoHMod& M : P.Mods)
+	{
+		if (M.Target == TEXT("kSelf")) continue;
+		bHurts |= ParseDamage(M.Attrib, Type);
+		bKnocks |= M.Attrib == TEXT("kKnockback") || M.Attrib == TEXT("kKnockup");
+	}
+	AActor* Owner = Self->GetOwner();
+	UWorld* W = Self->GetWorld();
+	if ((!bHurts && !bKnocks) || !Owner || !W) return;
+	const bool bArea = P.Area != TEXT("kCharacter") && P.Area != TEXT("kCone");
+	if (TargetActor && !bArea) Center = TargetActor->GetActorLocation();
+	else if (P.Range <= 0.f && P.Target != TEXT("kLocation")) Center = Owner->GetActorLocation();
+	const float Radius = bArea && P.Radius > 0.f ? P.Radius * FeetToCm + 50.f : 300.f;
+	const float Strength = bKnocks ? 900.f : 250.f;   // cm/s velocity change at the centre
+	TArray<FOverlapResult> Hits;
+	FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPowerPush), false, Owner);
+	W->OverlapMultiByObjectType(Hits, Center, FQuat::Identity, FCollisionObjectQueryParams(ECC_PhysicsBody), FCollisionShape::MakeSphere(Radius), Q);
+	TSet<UPrimitiveComponent*> Done;
+	for (const FOverlapResult& H : Hits)
+	{
+		UPrimitiveComponent* C = H.GetComponent();
+		if (!C || !C->IsSimulatingPhysics() || Done.Contains(C)) continue;
+		Done.Add(C);
+		// from slightly below so props lift as well as slide
+		C->AddRadialImpulse(Center - FVector(0, 0, 80.f), Radius, Strength, ERadialImpulseFalloff::RIF_Linear, true);
+	}
+}
+
 void UCoHPowerComponent::Execute(const FCoHPowerDef& P, AActor* TargetActor, FVector Location)
 {
 	const FCoHClassDef* C = Class();
@@ -809,6 +844,7 @@ void UCoHPowerComponent::Execute(const FCoHPowerDef& P, AActor* TargetActor, FVe
 	// mods that always target the caster (self buffs on attacks)
 	for (const FCoHMod& M : P.Mods)
 		if (M.Target == TEXT("kSelf") && M.Aspect != TEXT("kStr") && P.Target != TEXT("kCaster")) ApplyMod(P, M, this, -1.f);
+	PushProps(this, P, TargetActor, Location);
 }
 
 void UCoHPowerComponent::ApplyMods(const FCoHPowerDef& P, UCoHPowerComponent* Victim, bool bSelf, float DurationOverride)
