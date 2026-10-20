@@ -90,3 +90,14 @@ near (38, 10, 203) in glTF meters.
   player skeletons, and the player animation library.
 
 See `docs/powers-and-player-models.md`.
+
+## Power effects
+
+- `python -m coh2unreal.fx`: exports the original effects of player powers
+  (`.fx` timelines, `.part` particle systems, `.bhvr` behaviors), their
+  textures, sounds, pivot and mesh models, as `fx_library.json` and
+  `power_fx.json`.
+- `python -m coh2unreal.fxsim`: previews them with a port of the game's
+  particle update, from the side, as a contact sheet.
+
+See `docs/power-effects.md`.
