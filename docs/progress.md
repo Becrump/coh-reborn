@@ -208,6 +208,27 @@ python -m coh2unreal.character --data <i24/data> --piggs <piggs> --out <out>/cha
   - Weapons.
   - Importing into Unreal.
 
+## 2026-10-19: monorail ported into the Nanite dressing map (in progress)
+
+Atlas Park's one working map is now `/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite` (EditorStartupMap and GameDefaultMap point at it).
+
+- **Backup first:** `C:\Users\rtcru\COHReborn_Backups\2026-10-19_pre_monorail.zip`.
+- **`tools/reborn/ue/port_monorail_nanite.py`:** places the track spline, the `ARebornMonorail` train, the Atlas Park stop, the destinations (round trip goes back to this map), the ride map `L_MonorailRide` and the MonorailArrival PlayerStarts.
+  - The track follows the original CoH route, corner-rounded. That sits on the original beam 84% of the way; Reborn's spline managed 43%.
+  - Both ends are trimmed short of the War Wall.
+  - The CoHLife decorative train is switched off.
+- **`tools/reborn/ue/nanite_daynight.py`:** the copied DayNightCycle was bound to the dressing study's actors, so nothing moved. It now uses its own copy, `/Game/CoH/DayNight_AtlasPark_Nanite`, with all 744 root bindings pointing at this map. Sun, moon and sky now move.
+- **`tools/reborn/ue/nanite_monorail_clearance.py`:** removes the original tiles' collision triangles that sit inside the train's space (station end-wall lintels, a shop facade, glass) on copies under `/Game/AtlasNanite/Monorail`.
+  - Copies need `allow_cpu_access` before `build_from_static_mesh_descriptions`, or they lose all collision.
+- **Tested in PIE (the editor must be in the foreground; in the background it runs at 3 fps):**
+  - The train arrives, dwells and departs.
+  - A rider rides through the station and about 400 m of track.
+  - The destination menu shows.
+- **Not yet verified:**
+  - Choosing the destination with a scripted click did not register (dest stayed -1).
+  - The full ride-level round trip.
+  - The last clearance pass (tile_3_-1_glass, tile_-2_6) was still running.
+
 ## 2026-10-19 City Sample cars for AtlasPark_DressingStudy_Nanite (in progress)
 
 - Inventory: 455 parked CoH cars, baked into the tile meshes (Truck_1 93, Lux1 90, Compact1 83, Sport2 69, Sport1 65, Lux2 55; car materials belong only to these 6 models), the PPD squad car prop, and the CoHLifeManager traffic (instanced Vehicle Variety Pack meshes; collision already on in the project source). No Mass/ZoneGraph traffic.
