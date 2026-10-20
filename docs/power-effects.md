@@ -37,9 +37,7 @@ Units in the JSON are the game's:
 ## Results
 
 - **Fire Blast:** 9 powers, 83 effects (default and themed), 183 particle systems, 24 behaviors, 43 textures, 16 sounds. One file the powers name, `powers/firecontrol/physics_sparks.fx`, isn't in the game data.
-- **All player powers (`--all`):** all 3,105 powers convert. See the counts and the `missing` list in `fx_library.json`. The gaps are:
-  - A few dozen effect, part and behavior files the data names but doesn't ship.
-  - About 130 layered textures (`X_...`, defined in `data/tricks`) used by effect meshes outside Fire Blast. These resolve through `materials` where they are defined.
+- **All player powers (`--all`):** all 3,105 powers convert. That is 4,033 effects, 11,803 particle systems, 1,322 behaviors, 1,123 textures, 1,095 sounds, 1,410 pivot and mesh models (1,292 with a visible mesh) and 131 layered materials. 36 references are missing from the game data itself (26 effect, part or behavior files, 6 textures, 4 models), and 8 sounds that are damaged in the archives. They are listed under `missing`. The full set is about 620 MB, mostly sound.
 
 ![Fire Blast, original colors](power_fx_fire_blast.jpg)
 
