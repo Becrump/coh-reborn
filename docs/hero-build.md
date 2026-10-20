@@ -102,4 +102,4 @@ python tools/rules/coh_build.py <i24>/data/defs selftest
 
 ## Next
 
-Step 4 is leveling. It covers XP from defeats (the villain's level and rank against the hero's level, from `experience.def` and the reward tables), level-ups that open the next pick, the defeat debt (`DefeatPenalty`), and inspiration drops and the tray.
+Step 4, leveling, is in [leveling.md](leveling.md).
