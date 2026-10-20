@@ -31,6 +31,8 @@ CAR = re.compile(r"(?i)^(car_tire|compact_|lux1_|lux2_|sport1_|sport2_|cubevan_|
 here = os.path.dirname(os.path.abspath(__file__))
 SAVE = os.environ.get("CSHIDE_SAVE") == "1"
 SKIP = set(x for x in os.environ.get("CSHIDE_SKIP", "").split(",") if x)
+# render actors whose label contains one of these keep their materials (another job's overrides)
+SKIP_RENDER = [x for x in os.environ.get("CSHIDE_SKIP_RENDER", "").split(",") if x]
 
 eas = unreal.get_editor_subsystem(unreal.EditorAssetSubsystem)
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -128,7 +130,9 @@ for a in actors.get_all_level_actors():
     if label in SKIP or a.get_package().get_name() in DIRTY_BEFORE:
         report["skipped"].append(dict(label=label, mesh=mesh.get_path_name(), why="skip list or unsaved edits"))
         continue
-    if c.is_visible():
+    if c.is_visible() and any(k in label for k in SKIP_RENDER):
+        report["skipped"].append(dict(label=label, mesh=mesh.get_path_name(), why="render overrides of another job"))
+    elif c.is_visible():
         for i in slots:
             c.set_material(i, hide)
         report["render"].append(dict(label=label, actor=a.get_path_name(), slots=slots,

@@ -87,9 +87,17 @@ def obb_overlap(A, B):
 
 
 def blocked_static(cx, cy, z, yaw, hl, hw, h):
-    hits = unreal.SystemLibrary.box_overlap_actors(world, unreal.Vector(cx, cy, z + 40 + (h - 40) / 2),
-                                                   unreal.Vector(hl - 5, hw - 5, (h - 40) / 2), WS, None, [])
-    return [a.get_actor_label() for a in hits if not a.get_actor_label().startswith("CSCar_")]
+    # zero-length rotated box sweep = overlap test with the car's own heading
+    p = unreal.Vector(cx, cy, z + 40 + (h - 40) / 2)
+    hits = unreal.SystemLibrary.box_trace_multi_for_objects(world, p, p, unreal.Vector(hl - 5, hw - 5, (h - 40) / 2),
+                                                            unreal.Rotator(0, 0, yaw), WS, False, [],
+                                                            unreal.DrawDebugTrace.NONE, True) or []
+    names = []
+    for hit in hits:
+        a = hit.to_tuple()[9]
+        if a and not a.get_actor_label().startswith("CSCar_"):
+            names.append(a.get_actor_label())
+    return names
 
 
 def lane_points():
@@ -149,11 +157,12 @@ def spawn(v, colour, loc, yaw, label, mass):
     c.set_simulate_physics(True)
     if colour and KIT[v]["colours"].get(colour) and KIT[v]["paint_slot"] >= 0:
         c.set_material(KIT[v]["paint_slot"], eas.load_asset(KIT[v]["colours"][colour]))
-    a.set_editor_property("replicates", True)
+    a.set_replicates(True)
+    a.set_replicate_movement(True)
     try:
         a.set_editor_property("static_mesh_replicate_movement", True)
     except Exception:
-        a.set_editor_property("replicate_movement", True)
+        pass
     a.tags = [unreal.Name("CitySampleCar")]
     return a
 
@@ -166,6 +175,11 @@ for a in actors.get_all_level_actors():
 rng = random.Random(1959)
 placed, report = [], dict(cars=[], moved=[], swapped_model=[], unresolved=[])
 for i, car in enumerate(CARS):
+    g0 = ground(car["c"][0], car["c"][1], car["l"][2])
+    if g0 is not None and g0 > car["l"][2] + 60:
+        # the CoH car was sunk into something solid (e.g. a loading platform): no spot here
+        report.setdefault("dropped", []).append(dict(i=i, kind=car["kind"], at=[round(car["c"][0]), round(car["c"][1])], ground=round(g0)))
+        continue
     choices = list(CHOICES[car["kind"]])
     first = rng.choice(choices)
     order = [first] + sorted((v for v in choices if v != first), key=lambda v: size(v)[0][0])
