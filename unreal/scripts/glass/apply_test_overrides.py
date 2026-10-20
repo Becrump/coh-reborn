@@ -29,6 +29,9 @@ TEST_ACTORS = ["Nanite_tile_2_3_Solid_01", "Nanite_tile_3_3_Solid_00"]
 # Interior theme per actor -> Custom Primitive Data[0] (0 office, 1 residential, 2 retail), [1] = random seed.
 # Tile 3_3 (centre + right towers) office; tile 2_3 (tall left tower) residential as a comparison demo.
 THEMES = {"Nanite_tile_2_3_Solid_01": 1.0, "Nanite_tile_3_3_Solid_00": 0.0}
+# GLASS_SCOPE=skyscrapers: every original Nanite tile actor that carries one of the WINDOWS materials
+# (approved map-wide 2026-10-20; all are tall towers, so office theme unless listed in THEMES).
+SCOPE = os.environ.get("GLASS_SCOPE", "test")
 # original window MI -> (base colour texture key in window_masks.json, panes per texture tile)
 WINDOWS = {
     "x_deco_skyscraper_02_window_01": ("deco_skyscraper_02_window_01_b", 2),
@@ -79,10 +82,21 @@ def child_for(option, orig):
 if unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world() is None:
     raise RuntimeError("no editor world (map loading or saving?)")
 done = []
+touched = []
 for a in unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors():
-    if a.get_actor_label() not in TEST_ACTORS:
+    lab = a.get_actor_label()
+    if SCOPE == "skyscrapers":
+        if not lab.startswith("Nanite_tile_"):
+            continue
+    elif lab not in TEST_ACTORS:
         continue
     comp = a.get_component_by_class(unreal.StaticMeshComponent)
+    if SCOPE == "skyscrapers" and not any(
+            (comp.get_material(i) and (comp.get_material(i).get_name() in WINDOWS or
+                                       comp.get_material(i).get_name().startswith("MI_Glass_")))
+            for i in range(comp.get_num_materials())):
+        continue
+    touched.append(a)
     comp.modify()
     comp.set_editor_property("override_materials", [])  # back to the mesh's own materials
     comp.set_editor_property("custom_primitive_data", unreal.CustomPrimitiveData())
@@ -95,6 +109,10 @@ for a in unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_
             if orig and orig.get_name() in WINDOWS:
                 comp.set_material(i, child_for(OPTION, orig))
                 done.append("%s[%d] %s" % (a.get_actor_label(), i, orig.get_name()))
-print("option", OPTION, "overrides:", done)
+print("option", OPTION, "actors", len(touched), "slots", len(done))
+print("overrides:", done)
+if os.environ.get("GLASS_SAVE") == "1":  # save only the touched actors' external packages
+    pk = [a.get_package() for a in touched]
+    print("saved", unreal.EditorLoadingAndSavingUtils.save_packages(pk, True), [p.get_name() for p in pk])
 if OPTION != "none" and not done:
     raise RuntimeError("test actors or window slots not found")
