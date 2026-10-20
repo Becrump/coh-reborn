@@ -112,6 +112,7 @@ before_floor = [trace(f[0], f[1], s["l"][2]) if f else (None, "") for s, f in zi
 
 # 2) hide render sections, swap collision tiles
 swapped = {}   # actor label -> (actor, original mesh, copy path)
+COPY_SRC = {}  # copy path -> the mesh it was made from
 for a in actors.get_all_level_actors():
     if a.get_class().get_name() != "StaticMeshActor":
         continue
@@ -141,6 +142,10 @@ for a in actors.get_all_level_actors():
         continue
     src = mesh.get_path_name().split(".")[0]
     dst = ROOT + "/Tiles/" + src.rsplit("/", 1)[1] + "_NoCars"
+    # different study folders reuse tile names (two tile_2_-3): never share a copy
+    if COPY_SRC.get(dst, src) != src:
+        dst = ROOT + "/Tiles/" + label + "_NoCars"
+    COPY_SRC[dst] = src
     copy = eas.load_asset(dst) if eas.does_asset_exist(dst) else eas.duplicate_asset(src, dst)
     if not copy:
         report["reverted"].append(dict(label=label, why="duplicate failed", src=src))

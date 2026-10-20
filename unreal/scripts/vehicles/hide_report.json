@@ -2955,26 +2955,15 @@
    "label": "Atlas25_Infrastructure_tile_2_-3",
    "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBE6A0903_1980083102",
    "src": "/Game/AtlasRebuiltStudy/Infrastructure/rebuilt/StaticMeshes/tile_2_-3",
-   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/tile_2_-3_NoCars",
+   "copy": "/Game/AtlasPark4/CitySampleCars/Tiles/Atlas25_Infrastructure_tile_2_-3_NoCars",
    "sections_off": [
     0,
     1,
     2,
     3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    14,
-    15,
-    25,
-    50,
-    51,
-    98
-   ]
+    25
+   ],
+   "note": "fixed 2026-10-20: had been pointed at the SecondPass tile_2_-3 copy (same name)"
   },
   {
    "label": "tile_-5_4",
