@@ -22,6 +22,9 @@ MASKS = json.load(open(os.path.join(HERE, "window_masks.json")))
 # The CoH towers are baked per map tile: one Nanite actor holds every building of a tile,
 # so the smallest unit we can override without touching meshes is a tile actor.
 TEST_ACTORS = ["Nanite_tile_2_3_Solid_01", "Nanite_tile_3_3_Solid_00"]
+# Interior theme per actor -> Custom Primitive Data[0] (0 office, 1 residential, 2 retail), [1] = random seed.
+# Both test tiles hold blue-grid office towers.
+THEMES = {"Nanite_tile_2_3_Solid_01": 0.0, "Nanite_tile_3_3_Solid_00": 0.0}
 # original window MI -> (base colour texture key in window_masks.json, panes per texture tile)
 WINDOWS = {
     "x_deco_skyscraper_02_window_01": ("deco_skyscraper_02_window_01_b", 2),
@@ -76,6 +79,10 @@ for a in unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_
     comp = a.get_component_by_class(unreal.StaticMeshComponent)
     comp.modify()
     comp.set_editor_property("override_materials", [])  # back to the mesh's own materials
+    comp.set_editor_property("custom_primitive_data", unreal.CustomPrimitiveData())
+    if OPTION == "Interior":
+        comp.set_custom_primitive_data_float(0, THEMES.get(a.get_actor_label(), 0.0))
+        comp.set_custom_primitive_data_float(1, float(sum(map(ord, a.get_actor_label())) % 97))
     if OPTION != "none":
         for i in range(comp.get_num_materials()):
             orig = comp.get_material(i)

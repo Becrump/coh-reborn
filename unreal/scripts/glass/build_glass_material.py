@@ -188,8 +188,10 @@ link(scalar("RoomWidthMax", 4.0, -2000, 960, "Interior"), "", room, "WMax")
 link(scalar("RoomHeight", 1.0, -2000, 1020, "Interior"), "", room, "RoomH")
 link(scalar("InteriorDepth", 1.0, -2000, 1080, "Interior"), "", room, "Depth")
 # Theme: per-actor Custom Primitive Data [0] (0 office, 1 residential, 2 retail) unless ThemeOverride >= 0
-cpd_theme = node(unreal.MaterialExpressionCustomPrimitiveData, -2300, 1140, primitive_data_index=0)
-cpd_seed = node(unreal.MaterialExpressionCustomPrimitiveData, -2300, 1200, primitive_data_index=1)
+cpd_theme = node(unreal.MaterialExpressionScalarParameter, -2300, 1140, parameter_name="ThemeCPD", default_value=0.0,
+                 group="Interior", use_custom_primitive_data=True, primitive_data_index=0)
+cpd_seed = node(unreal.MaterialExpressionScalarParameter, -2300, 1200, parameter_name="SeedCPD", default_value=0.0,
+                group="Interior", use_custom_primitive_data=True, primitive_data_index=1)
 theme = custom("return Override >= 0 ? Override : CPD;", F1, ["Override", "CPD"], -2000, 1140, "Theme")
 link(scalar("ThemeOverride", -1.0, -2300, 1080, "Interior"), "", theme, "Override")
 link(cpd_theme, "", theme, "CPD")
