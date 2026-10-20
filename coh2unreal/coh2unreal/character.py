@@ -449,6 +449,54 @@ class Builder:
         return len(self.gltf["nodes"]) - 1
 
 
+def add_clip(b, sk, joint_index, gd, clip_name, tr, first, last, extras):
+    """Samples frames first..last (0 = the track's end) of an .anim track
+    onto the skeleton's joints as a glTF animation."""
+    abase = gd.anim(tr.base_name) if tr.base_name else None
+    if not last:
+        last = int(tr.length)
+    frames = list(range(first, last + 1))
+    times = [(f - first) / FPS for f in frames]
+    tacc = b.accessor(times, 1, 5126, minmax=True)
+    channels, samplers = [], []
+    for bid in sk.order:
+        bt = tr.tracks.get(bid)
+        if bt is None and abase is not None:
+            bt = abase.tracks.get(bid)
+        if bt is None:
+            continue
+        # animDelta: animPos - (animBasePos - basePos)
+        ab = bt.poss[0]
+        bp = sk.local[bid]
+        delta = (ab[0] - bp[0], ab[1] - bp[1], ab[2] - bp[2])
+        R, Pp = [], []
+        prev = None
+        for f in frames:
+            r, p = A.sample(bt, f)
+            q = quat(r)
+            if prev is not None and sum(x * y for x, y in
+                                        zip(q, prev)) < 0:
+                q = tuple(-x for x in q)
+            prev = q
+            R.extend(q)
+            Pp.extend(pos3((p[0] - delta[0], p[1] - delta[1],
+                            p[2] - delta[2])))
+        si = len(samplers)
+        samplers.append({"input": tacc,
+                         "output": b.accessor(R, 4, 5126),
+                         "interpolation": "LINEAR"})
+        channels.append({"sampler": si, "target": {
+            "node": joint_index[bid], "path": "rotation"}})
+        samplers.append({"input": tacc,
+                         "output": b.accessor(Pp, 3, 5126),
+                         "interpolation": "LINEAR"})
+        channels.append({"sampler": si + 1, "target": {
+            "node": joint_index[bid], "path": "translation"}})
+    extras = dict(extras, frames=[first, last])
+    b.gltf["animations"].append({"name": clip_name, "channels": channels,
+                                 "samplers": samplers, "extras": extras})
+
+
 def export_npc(gd, npc_name, out_dir, name=None, moves=DEFAULT_MOVES,
                log=print):
     npc = gd.npcs().get(npc_name.lower())
@@ -658,51 +706,8 @@ def export_npc(gd, npc_name, out_dir, name=None, moves=DEFAULT_MOVES,
         if tr is None:
             log("  move %s: %s.anim missing" % (move, anim_name))
             continue
-        abase = gd.anim(tr.base_name) if tr.base_name else None
-        if not last:
-            last = int(tr.length)
-        frames = list(range(first, last + 1))
-        times = [(f - first) / FPS for f in frames]
-        tacc = b.accessor(times, 1, 5126, minmax=True)
-        channels, samplers = [], []
-        for bid in sk.order:
-            bt = tr.tracks.get(bid)
-            if bt is None and abase is not None:
-                bt = abase.tracks.get(bid)
-            if bt is None:
-                continue
-            # animDelta: animPos - (animBasePos - basePos)
-            ab = bt.poss[0]
-            bp = sk.local[bid]
-            delta = (ab[0] - bp[0], ab[1] - bp[1], ab[2] - bp[2])
-            R, Pp = [], []
-            prev = None
-            for f in frames:
-                r, p = A.sample(bt, f)
-                q = quat(r)
-                if prev is not None and sum(x * y for x, y in
-                                            zip(q, prev)) < 0:
-                    q = tuple(-x for x in q)
-                prev = q
-                R.extend(q)
-                Pp.extend(pos3((p[0] - delta[0], p[1] - delta[1],
-                                p[2] - delta[2])))
-            si = len(samplers)
-            samplers.append({"input": tacc,
-                             "output": b.accessor(R, 4, 5126),
-                             "interpolation": "LINEAR"})
-            channels.append({"sampler": si, "target": {
-                "node": joint_index[bid], "path": "rotation"}})
-            samplers.append({"input": tacc,
-                             "output": b.accessor(Pp, 3, 5126),
-                             "interpolation": "LINEAR"})
-            channels.append({"sampler": si + 1, "target": {
-                "node": joint_index[bid], "path": "translation"}})
-        g["animations"].append({"name": clip_name, "channels": channels,
-                                "samplers": samplers,
-                                "extras": {"cohMove": move,
-                                           "cohAnim": anim_name,
-                                           "frames": [first, last]}})
+        add_clip(b, sk, joint_index, gd, clip_name, tr, first, last,
+                 {"cohMove": move, "cohAnim": anim_name})
         clips.append(clip_name)
     log("  clips: %s" % ", ".join(clips))
 

@@ -81,3 +81,12 @@ near (38, 10, 203) in glTF meters.
   game data marks them; anything unmarked is exported.
 - Only the Geometry layer is exported by default. Other layers (event
   decorations, doors, NPC spawns) can be passed with `--map`.
+
+## Player models and power animations
+
+- `python -m coh2unreal.powanim`: matches every player power to its original
+  sequencer moves (per male / fem / huge body) and lists the anims it needs.
+- `python -m coh2unreal.player`: exports hero presets or costume files on the
+  player skeletons, and the player animation library.
+
+See `docs/powers-and-player-models.md`.
