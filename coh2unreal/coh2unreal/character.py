@@ -455,6 +455,9 @@ def add_clip(b, sk, joint_index, gd, clip_name, tr, first, last, extras):
     abase = gd.anim(tr.base_name) if tr.base_name else None
     if not last:
         last = int(tr.length)
+    # some moves start past their track's end (CrateReady at 45 of 44):
+    # the game clamps the frame, so hold the last one
+    first = min(first, last)
     frames = list(range(first, last + 1))
     times = [(f - first) / FPS for f in frames]
     tacc = b.accessor(times, 1, 5126, minmax=True)
@@ -538,7 +541,9 @@ def export_npc(gd, npc_name, out_dir, name=None, moves=DEFAULT_MOVES,
                     part.native_texture_group = texture
                     parts.append(part)
     seq_file = (et.get("sequencer") or ["player.txt"])[0]
-    seq_type = (et.get("sequencertype") or [ent_name])[0]
+    # no SequencerType: the sequencer's file name (seqtype.c)
+    seq_type = (et.get("sequencertype") or
+                [os.path.splitext(os.path.basename(seq_file))[0]])[0]
     seq = gd.sequencer(seq_file)
     base_name = seq.base_skeleton(seq_type) or "male/skel_ready2"
     base = gd.anim(base_name)

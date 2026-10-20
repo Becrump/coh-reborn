@@ -777,6 +777,12 @@ def power_fx(power):
                 out[k] = norm_path(v)
             elif isinstance(v, list):
                 out[k] = [norm_path(x) for x in v if isinstance(x, str)]
+    if "theme" not in power:
+        # the game's defaults (powers_load.c power_FixupForBinFX)
+        out.setdefault("FramesBeforeHit", 15)
+        out.setdefault("InitialFramesBeforeHit", out["FramesBeforeHit"])
+        if out.get("DelayedHit") and not out.get("ProjectileSpeed"):
+            out["ProjectileSpeed"] = 60.0
     if power.get("themes"):
         out["themes"] = []
         for th in power["themes"]:

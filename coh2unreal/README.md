@@ -101,3 +101,14 @@ See `docs/powers-and-player-models.md`.
   particle update, from the side, as a contact sheet.
 
 See `docs/power-effects.md`.
+
+## Enemies
+
+- `python tools/ai/coh_encounters.py`: Atlas Park's original spawn
+  definitions, group makeups and villain rolls (`encounters.json`,
+  `roster.json`).
+- `python -m coh2unreal.enemies`: each villain's model, its powers on its own
+  sequencer, idle anim lists and clips (`kit.json`, `models/`). Its effects
+  export with `coh2unreal.fx --powers-json enemy_power_anims.json`.
+
+See `docs/enemy-setup.md`.
