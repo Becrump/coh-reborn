@@ -1156,10 +1156,14 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  // spawn definitions of the group / kind at this level, weighted by the
  // number of spots in the zone's layers that use them (mission and named
  // spawns are left to their own systems)
+ // Paragon Police and Freedom Corps are on the heroes' side in Atlas Park:
+ // they are not spawned as foes (as allies fighting villains: later)
+ static const TArray<FString> Friendly={TEXT("ParagonPolice"),TEXT("FreedomCorps"),TEXT("Objects"),TEXT("PraetorianAngryCitizens")};
  TArray<const FCoHEncounter*> Pool; int32 Total=0;
  for(const FCoHEncounter& E:GR->Encounters)
  {
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
+  if(Group.IsEmpty() && !E.Groups().ContainsByPredicate([&](const FString& G){ return !Friendly.Contains(G); })) continue;
   if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
   if(Level<E.MinLevel-1 || Level>E.MaxLevel+1) continue;
   Pool.Add(&E); Total+=E.Spots;
@@ -1189,7 +1193,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  int32 Slot=0;
  for(const FCoHEncounterActor& A:Enc->Actors)
  {
-  if(Team<A.MinHeroes || Team>A.MaxHeroes) continue;
+  if(Team<A.MinHeroes || Team>A.MaxHeroes || Friendly.Contains(A.Group)) continue;
   for(int32 n=0;n<A.Count;++n,++Slot)
   {
    FString Who=A.Villain;
