@@ -175,7 +175,7 @@ def main(argv=None):
             seqs[seq_file.lower()] = P.load_sequencer(paths, seq_file)
         seq = seqs[seq_file.lower()]
         readies = readies_of(seq)
-        entry = {k: r.get(k) for k in ("group", "rank", "class", "ai_config",
+        entry = {k: r.get(k) for k in ("group", "rank", "class", "ai_config", "ally",
                                         "def_levels", "spawn_levels",
                                         "weight", "encounters")}
         entry.update({"costumes": costumes, "ent_type": ent_name,
