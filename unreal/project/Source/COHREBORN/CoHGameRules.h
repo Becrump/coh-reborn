@@ -105,6 +105,9 @@ struct FCoHKitPower
 struct FCoHKitVillain
 {
 	FString Name, Group, Rank, Class, AIConfig, SeqType;
+	/** VillainDef Ally: Hero (Paragon Police, Freedom Corps) or Monster (foes). */
+	FString Ally = TEXT("Monster");
+	bool IsFoe() const { return !Ally.Equals(TEXT("Hero"), ESearchCase::IgnoreCase); }
 	TArray<FString> Costumes;
 	TArray<FString> Models;                       // costumes with an exported model
 	TArray<FCoHKitPower> Powers;

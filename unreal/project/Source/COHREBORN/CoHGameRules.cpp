@@ -825,6 +825,7 @@ void UCoHGameRules::LoadEnemies(const FString& Dir)
 			V.Name = KV.Key;
 			V.Group = S(O, TEXT("group")); V.Rank = S(O, TEXT("rank")); V.Class = S(O, TEXT("class"));
 			V.AIConfig = S(O, TEXT("ai_config")); V.SeqType = S(O, TEXT("sequencer_type"));
+			if (!S(O, TEXT("ally")).IsEmpty()) V.Ally = S(O, TEXT("ally"));
 			V.Costumes = L(O, TEXT("costumes"));
 			for (const FString& M : L(O, TEXT("models"))) V.Models.Add(FPaths::GetBaseFilename(M));
 			const TSharedPtr<FJsonObject>* Pw;

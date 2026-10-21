@@ -360,6 +360,7 @@ void ACoHHeroCharacter::Punch(const FInputActionValue&)
 	{
 		return;
 	}
+	if (!CoHBodyType.IsEmpty()) { if (PunchTimeLeft <= 0.f) PlayPowerAnimation(0, 0.8f, -1); return; }
 	if (PunchTimeLeft > 0.f)
 	{
 		bQueuedPunch = true;     // chain into the next punch when this one lands
@@ -748,6 +749,18 @@ void ACoHHeroCharacter::OnDefeated()
 void ACoHHeroCharacter::PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip)
 {
  if (bClimbing) return;
+ if (!CoHBodyType.IsEmpty())
+ {
+  // a CoH body with no original moves for the power (inherents such as Brawl
+  // are not in power_anims.json): the preset's attack clip, never a clip of
+  // another skeleton (that shows the reference T-pose)
+  const UCoHGameRules* R = UCoHGameRules::Get(this);
+  FCoHAnimSegment Seg;
+  Seg.Clip = R ? R->ClipIn(R->PresetRoot / CoHBodyType / BodyPreset, TEXT("attack")) : nullptr;
+  if (Seg.Clip) { Seg.End = Seg.Clip->GetPlayLength(); PlayMoves({ Seg }, FMath::Max(0.4f, Duration)); }
+  else UE_LOG(LogTemp, Warning, TEXT("CoH hero: no moves and no attack clip for %s"), *BodyPreset);
+  return;
+ }
  const TArray<FSoftObjectPath>& Set =
   Kind == 4 ? SelfAnims :
   Kind == 3 ? (ThrowAnims.Num() ? ThrowAnims : RangedAnims) :

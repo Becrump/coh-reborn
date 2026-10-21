@@ -264,6 +264,8 @@ void ACoHCombatEnemy::SetState(ECoHEnemyState Next)
 {
  if(State==Next) return;
  State=Next;
+ // a chase at the original base run speed (about 21 ft/s); strolls set their own
+ if(Next==ECoHEnemyState::Chase) GetCharacterMovement()->MaxWalkSpeed=640.f;
  UAnimSequence* Clip=Next==ECoHEnemyState::Chase || Next==ECoHEnemyState::ReturnHome ? RunClip : Next==ECoHEnemyState::Attack ? AttackClip : Next==ECoHEnemyState::Hit ? HitClip : Next==ECoHEnemyState::Dead ? DeathClip : IdleClip;
  if(!Clip) Clip=IdleClip;
  if(UCoHBodyAnim* BA=BodyAnim())
@@ -1156,14 +1158,20 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  // spawn definitions of the group / kind at this level, weighted by the
  // number of spots in the zone's layers that use them (mission and named
  // spawns are left to their own systems)
- // Paragon Police and Freedom Corps are on the heroes' side in Atlas Park:
- // they are not spawned as foes (as allies fighting villains: later)
- static const TArray<FString> Friendly={TEXT("ParagonPolice"),TEXT("FreedomCorps"),TEXT("Objects"),TEXT("PraetorianAngryCitizens")};
+ // who is a foe comes from each villain's def (Ally Hero: Paragon Police,
+ // Freedom Corps, on the heroes' side; as allies fighting villains: later)
+ auto IsFoe=[&](const FString& V){ const FCoHKitVillain* K=GR->Kit(V); return !K || K->IsFoe(); };
+ auto ActorFoe=[&](const FCoHEncounterActor& A)
+ {
+  if(!A.Villain.IsEmpty()) return IsFoe(A.Villain);
+  for(const auto& KV:A.Rolls) for(const FString& V:KV.Value) if(IsFoe(V)) return true;
+  return false;
+ };
  TArray<const FCoHEncounter*> Pool; int32 Total=0;
  for(const FCoHEncounter& E:GR->Encounters)
  {
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
-  if(Group.IsEmpty() && !E.Groups().ContainsByPredicate([&](const FString& G){ return !Friendly.Contains(G); })) continue;
+  if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
   if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
   if(Level<E.MinLevel-1 || Level>E.MaxLevel+1) continue;
   Pool.Add(&E); Total+=E.Spots;
@@ -1193,7 +1201,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  int32 Slot=0;
  for(const FCoHEncounterActor& A:Enc->Actors)
  {
-  if(Team<A.MinHeroes || Team>A.MaxHeroes || Friendly.Contains(A.Group)) continue;
+  if(Team<A.MinHeroes || Team>A.MaxHeroes || !ActorFoe(A)) continue;
   for(int32 n=0;n<A.Count;++n,++Slot)
   {
    FString Who=A.Villain;
@@ -1205,6 +1213,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
     if(!Rolls) continue;
     Who=(*Rolls)[FMath::RandRange(0,Rolls->Num()-1)];
    }
+   if(!IsFoe(Who)) continue;
    // a loose circle facing its middle, as the original spot layouts do
    const float Ang=Slot*2.1f;
    FVector At; if(!OpenGround(W,Center+FVector(FMath::Cos(Ang),FMath::Sin(Ang),0)*FMath::FRandRange(150.f,320.f),At)) At=Center;

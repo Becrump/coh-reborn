@@ -257,11 +257,12 @@ def main(argv=None):
         need([[m] for m in core])
         entry["clips"] = moves_needed
         entry["models"] = []
-        if not args.no_models:
-            for c in (costumes if args.all_costumes else costumes[:1]):
-                if os.path.exists(os.path.join(model_dir, c + ".gltf")):
-                    entry["models"].append("models/%s.gltf" % c)
-                    continue
+        for c in (costumes if args.all_costumes else costumes[:1]):
+            # models already exported stay listed (also with --no-models)
+            if os.path.exists(os.path.join(model_dir, c + ".gltf")):
+                entry["models"].append("models/%s.gltf" % c)
+                continue
+            if not args.no_models:
                 try:
                     res = export_npc(gd, c, model_dir, name=c,
                                      moves=DEFAULT_MOVES +
