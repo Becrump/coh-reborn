@@ -1,5 +1,8 @@
 #include "CoHHeroCharacter.h"
 #include "CoHPowers.h"
+#include "CoHBodyAnim.h"
+#include "CoHGameRules.h"
+#include "CoHHeroProgress.h"
 #include "CoHPowerUI.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/Skeleton.h"
@@ -64,6 +67,7 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 
 	Powers = CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
 	Powers->bPlayerSide = true;
+	Progress = CreateDefaultSubobject<UCoHHeroProgress>(TEXT("Progress"));
 }
 
 void ACoHHeroCharacter::BeginPlay()
@@ -78,7 +82,17 @@ void ACoHHeroCharacter::BeginPlay()
 			LocomotionAnimClass = Anim;
 		}
 	}
-	if (HasAuthority())
+	bool bBuilt = false;
+	if (HasAuthority() && !HeroFile.IsEmpty())
+	{
+		// a hero built by the original rules; the save continues it
+		const UCoHGameRules* R = UCoHGameRules::Get(this);
+		const FString Save = FPaths::GetBaseFilename(HeroFile) + TEXT("_save.json");
+		bBuilt = R && R->HasHeroRules() && ((bResumeSave && FPaths::FileExists(R->HeroesDir / Save) && Progress->LoadHeroFile(Save)) || Progress->LoadHeroFile(HeroFile));
+		if (bBuilt) Progress->SaveFile = Save;
+	}
+	if (bBuilt) ApplyCoHBody();
+	else if (HasAuthority())
 	{
 		Powers->ClassName = TestArchetype;
 		Powers->Level = FMath::Clamp(TestLevel, 1, 50);
@@ -126,7 +140,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 		KB.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i]
 		{
 			const APlayerController* PC = Cast<APlayerController>(GetController());
-			if (!Powers || (PC && (PC->IsInputKeyDown(EKeys::LeftControl) || PC->IsInputKeyDown(EKeys::RightControl)))) return;
+			if (!Powers || (PC && (PC->IsInputKeyDown(EKeys::LeftControl) || PC->IsInputKeyDown(EKeys::RightControl)
+				|| PC->IsInputKeyDown(EKeys::LeftAlt) || PC->IsInputKeyDown(EKeys::RightAlt)))) return;
 			UE_LOG(LogTemp, Log, TEXT("CoH key: %d -> fire slot %d once%s"), (i + 1) % 10, i + 1,
 				PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)) ? TEXT(" (Shift held: no effect)") : TEXT(""));
 			Powers->ActivateSlot(i);
@@ -139,10 +154,20 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 			if (Powers) Powers->ToggleAutoSlot(i);
 		});
 		Input->KeyBindings.Add(Lock);
+		// Alt + number: use that inspiration
+		FInputKeyBinding Insp(FInputChord(SlotKeys[i], false, false, true, false), IE_Pressed);
+		Insp.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i] { if (Progress) Progress->UseInspiration(i); });
+		Input->KeyBindings.Add(Insp);
 	}
 	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
 	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
 	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
+	// L: train to the next level (the original trainer step)
+	{
+		FInputKeyBinding Train(FInputChord(EKeys::L), IE_Pressed);
+		Train.KeyDelegate.GetDelegateForManualSet().BindLambda([this] { if (Progress) Progress->Train(); });
+		Input->KeyBindings.Add(Train);
+	}
 
 	// input assets built here so the project needs none
 	Mapping = NewObject<UInputMappingContext>(this);
@@ -387,9 +412,91 @@ void ACoHHeroCharacter::RestoreLocomotion()
 	GetMesh()->SetPlayRate(1.f);
 	if (LocomotionAnimClass)
 	{
+		// a CoH body keeps its anim instance: moves end back in locomotion by themselves
+		if (BodyAnim()) return;
 		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 		GetMesh()->SetAnimInstanceClass(LocomotionAnimClass);
+		SetupBodyAnim();
 	}
+}
+
+UCoHBodyAnim* ACoHHeroCharacter::BodyAnim() const
+{
+	return GetMesh()->GetAnimationMode() == EAnimationMode::AnimationBlueprint ? Cast<UCoHBodyAnim>(GetMesh()->GetAnimInstance()) : nullptr;
+}
+
+void ACoHHeroCharacter::ApplyCoHBody()
+{
+	// the preset the hero file names: an original player body on its skeleton
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!bCoHBody || !R || !Progress || !Progress->bHasRecord || bBodyApplied) return;
+	FString Body;
+	const FString Preset = Progress->Hero.Preset.IsEmpty() ? TEXT("Model_Positron") : Progress->Hero.Preset;
+	USkeletalMesh* BodyMesh = R->PresetMesh(Preset, Body);
+	bBodyApplied = true;
+	if (!BodyMesh) { UE_LOG(LogTemp, Warning, TEXT("CoH hero: preset %s is not imported (/Game/CoH/Player/Presets)"), *Preset); return; }
+	BodyPreset = Preset;
+	CoHBodyType = Body;
+	Powers->Body = Body;
+	GetMesh()->SetSkeletalMeshAsset(BodyMesh);
+	GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
+	LocomotionAnimClass = UCoHBodyAnim::StaticClass();
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	GetMesh()->SetAnimInstanceClass(LocomotionAnimClass);
+	SetupBodyAnim();
+	UE_LOG(LogTemp, Log, TEXT("CoH hero: body %s (%s)"), *Preset, *Body);
+}
+
+void ACoHHeroCharacter::SetupBodyAnim()
+{
+	UCoHBodyAnim* A = BodyAnim();
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!A || !R || CoHBodyType.IsEmpty()) return;
+	const FString Folder = R->PresetRoot / CoHBodyType / BodyPreset;
+	A->Idle = R->ClipIn(Folder, TEXT("idle"));
+	A->CombatIdle = R->ClipIn(Folder, TEXT("combat_idle"));
+	A->Run = R->ClipIn(Folder, TEXT("run"));
+	A->RunCycleSpeed = RunSpeed;
+	A->bAutoLocomotion = true;
+}
+
+bool ACoHHeroCharacter::PlayMoves(const TArray<FCoHAnimSegment>& Segments, float Lock)
+{
+	if (bClimbing || Segments.Num() == 0) return false;
+	if (!BodyAnim() && LocomotionAnimClass == UCoHBodyAnim::StaticClass())
+	{
+		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		GetMesh()->SetAnimInstanceClass(LocomotionAnimClass);
+		SetupBodyAnim();
+	}
+	UCoHBodyAnim* A = BodyAnim();
+	if (!A) return false;
+	A->PlaySegments(Segments);
+	A->MarkCombat();
+	if (Lock > 0.f)
+	{
+		// rooted while the power activates (TimeToActivate, the server rule)
+		PunchTimeLeft = Lock;
+		bPunchLanded = true; bQueuedPunch = false;
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+	}
+	return true;
+}
+
+bool ACoHHeroCharacter::PlayPowerMoves(FName Power, bool bActivation)
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	const FCoHPowerAnim* PA = R ? R->PowerAnim(Power) : nullptr;
+	if (!PA || CoHBodyType.IsEmpty()) return false;
+	TArray<FCoHAnimSegment> Segs;
+	const TCHAR* First = bActivation ? TEXT("ActivationBits") : TEXT("AttackBits");
+	const TCHAR* Second = bActivation ? TEXT("AttackBits") : TEXT("ActivationBits");
+	if (!R->Segments(*PA, CoHBodyType, First, Segs) && !R->Segments(*PA, CoHBodyType, Second, Segs)) return false;
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* Def = DB ? DB->FindPower(Power) : nullptr;
+	const bool bToggle = Def && Def->Type == TEXT("kToggle");
+	return PlayMoves(Segs, bToggle ? 0.f : FMath::Max(0.3f, Def ? Def->Activate : 1.f));
 }
 
 void ACoHHeroCharacter::UpdateClimbAnim()
@@ -502,6 +609,7 @@ void ACoHHeroCharacter::StopClimb()
 void ACoHHeroCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
 	ComboWindow = FMath::Max(0.f, ComboWindow - DeltaSeconds);
 	UpdateCamera(DeltaSeconds);
@@ -621,6 +729,7 @@ void ACoHHeroCharacter::OnDefeated()
  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
  SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
  Powers->Reset();
+ if (Progress) Progress->OnDefeatedByVillains();
  Health=Powers->Health; RestoreLocomotion();
  if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 3.f, FColor::Cyan, TEXT("Defeated: back at the start point, fully healed"));
 }
@@ -782,9 +891,19 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
 void ACoHHeroCharacter::PlayHitReaction(float Amount)
 {
  // never cut a power animation, a climb or flight; at most every 0.6 s
- if (bClimbing || bFlight || PunchTimeLeft > 0.f || HitReactAnims.Num() == 0) return;
+ if (bClimbing || bFlight || PunchTimeLeft > 0.f) return;
  const double Now = GetWorld()->GetTimeSeconds();
  if (Now < NextHitReact) return;
+ if (!CoHBodyType.IsEmpty())
+ {
+  // C_HitQuick on the original body
+  const UCoHGameRules* R = UCoHGameRules::Get(this);
+  FCoHAnimSegment Hit;
+  Hit.Clip = R ? R->ClipIn(R->PresetRoot / CoHBodyType / BodyPreset, TEXT("hit")) : nullptr;
+  if (Hit.Clip) { NextHitReact = Now + 0.6; Hit.End = Hit.Clip->GetPlayLength(); PlayMoves({ Hit }, 0.f); }
+  return;
+ }
+ if (HitReactAnims.Num() == 0) return;
  NextHitReact = Now + 0.6;
  const bool bHeavy = Powers && Amount > Powers->MaxHealth * 0.12f;
  const int32 Pick = bHeavy || HitReactAnims.Num() == 1 ? 0 : FMath::RandRange(1, HitReactAnims.Num() - 1);

@@ -204,6 +204,18 @@ public:
 	/** Tray slots (power ids; None = empty). Owner only. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") TArray<FName> Tray;
 	UPROPERTY(Replicated) TArray<FCoHRecharge> Recharges;
+	/** Powers the character owns (a built hero: picks and auto powers). Auto
+	 *  powers here run all the time, on the tray or not. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") TArray<FName> Owned;
+	/** Body for the original moves: male, fem, huge, or a villain's sequencer type. Empty: no original moves. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") FString Body;
+	/** Damage taken from each attacker, for the defeat rewards (server). */
+	TMap<TWeakObjectPtr<AActor>, float> DamageBy;
+	/** Server: a power used outside the tray and its timers (inspirations). */
+	void UseFreePower(FName Power);
+	/** Seconds from the start of a power to its hit on a target this far away
+	 *  (the original FramesBeforeHit, plus the projectile's flight). */
+	float HitDelay(FName Power, float DistanceCm) const;
 	UPROPERTY(Replicated) TArray<FName> ActiveToggles;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Powers") TMap<FName, FCoHPowerStyle> Styles;
 

@@ -1,5 +1,9 @@
 #include "CoHCombat.h"
 #include "CoHPowers.h"
+#include "CoHBodyAnim.h"
+#include "CoHGameRules.h"
+#include "CoHHeroProgress.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "CoHLifeManager.h"
 #include "GameFramework/PlayerController.h"
 #include "AIController.h"
@@ -134,13 +138,15 @@ void ACoHCombatEnemy::OnHurt(AActor* Causer,float Damage)
  if(auto* AI=Cast<AAIController>(GetController()))AI->StopMovement();
  // every hit flinches: SetState skips an unchanged state, so a second hit
  // during the first flinch restarts the clip here
- if(State==ECoHEnemyState::Hit && HitClip) GetMesh()->PlayAnimation(HitClip,false);
+ if(State==ECoHEnemyState::Hit && HitClip) PlayClip(HitClip,false);
+ if(UCoHBodyAnim* BA=BodyAnim()) BA->StopSegments();
  SetState(ECoHEnemyState::Hit);
  GetWorldTimerManager().SetTimer(ReactionTimer,this,&ACoHCombatEnemy::FinishReaction,HitClip ? FMath::Max(.2f,HitClip->GetPlayLength()) : .35f,false);
 }
 void ACoHCombatEnemy::OnDefeated(AActor* Causer)
 {
  if(IsDead()) return;
+ UCoHHeroProgress::RewardDefeat(Powers,Rank.IsEmpty()?TEXT("Minion"):Rank,Faction);
  GetWorldTimerManager().ClearTimer(AttackTimer);GetWorldTimerManager().ClearTimer(ReactionTimer);
  if(auto* AI=Cast<AAIController>(GetController()))AI->StopMovement();
  SetState(ECoHEnemyState::Dead);GetCharacterMovement()->DisableMovement();GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);SetLifeSpan(10.f);
@@ -155,7 +161,76 @@ void ACoHCombatEnemy::OnMezzed(float Seconds)
  if(!bRagdoll && !IsDead()) SetState(ECoHEnemyState::Idle);
 }
 void ACoHCombatEnemy::Aggro(APawn* Who){ if(Who) Target=Who; }
-void ACoHCombatEnemy::PlayAttackAnimation(){ if(AttackClip && !bRagdoll && !IsDead()) GetMesh()->PlayAnimation(AttackClip,false); }
+void ACoHCombatEnemy::PlayAttackAnimation(){ if(AttackClip && !bRagdoll && !IsDead()) PlayClip(AttackClip,false); }
+UCoHBodyAnim* ACoHCombatEnemy::BodyAnim() const
+{
+ return GetMesh()->GetAnimationMode()==EAnimationMode::AnimationBlueprint ? Cast<UCoHBodyAnim>(GetMesh()->GetAnimInstance()) : nullptr;
+}
+void ACoHCombatEnemy::PlayClip(UAnimSequence* Clip,bool bLoop,float Rate)
+{
+ if(!Clip) return;
+ if(UCoHBodyAnim* BA=BodyAnim()){ BA->SetBase(Clip,bLoop,Rate); return; }
+ GetMesh()->PlayAnimation(Clip,bLoop);
+ GetMesh()->SetPlayRate(Rate);
+}
+bool ACoHCombatEnemy::InitializeFromKit(const FString& VillainName,int32 InLevel)
+{
+ const UCoHGameRules* R=UCoHGameRules::Get(this);
+ const FCoHKitVillain* K=R?R->Kit(VillainName):nullptr;
+ if(!K) return false;
+ // the villain's own model (the first costume exported), clips named after moves
+ USkeletalMesh* Body=nullptr; FString Model;
+ IAssetRegistry& AR=FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+ TArray<FString> Order=K->Models;
+ for(int32 i=Order.Num()-1;i>0;--i) Order.Swap(i,FMath::RandRange(0,i));      // a random costume of the villain
+ for(const FString& M:Order)
+ {
+  TArray<FAssetData> Found; AR.GetAssetsByPath(FName(*(R->EnemyRoot/M)),Found,true);
+  for(const FAssetData& D:Found) if(D.IsInstanceOf(USkeletalMesh::StaticClass())){ Body=Cast<USkeletalMesh>(D.GetAsset()); break; }
+  if(Body){ Model=M; break; }
+ }
+ if(!Body) return false;
+ Home=GetActorLocation();
+ KitModel=Model;
+ GetMesh()->SetSkeletalMeshAsset(Body);
+ // the same facing as the earlier villain exports (they face +Y in motion)
+ MeshYaw=-90.f;
+ GetMesh()->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
+ const FString Folder=R->EnemyRoot/Model;
+ auto Load=[&](const TCHAR* Name){ return Cast<UAnimSequence>(R->ClipIn(Folder,Name)); };
+ IdleClip=Load(TEXT("idle"));RunClip=Load(TEXT("run"));AttackClip=Load(TEXT("attack"));HitClip=Load(TEXT("hit"));DeathClip=Load(TEXT("death"));
+ GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+ GetMesh()->SetAnimInstanceClass(UCoHBodyAnim::StaticClass());
+ if(UCoHBodyAnim* BA=BodyAnim()){ BA->bAutoLocomotion=false; BA->SetBase(IdleClip,true); }
+ GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+ Faction=K->Group;
+ Powers->Body=K->SeqType;
+ ApplyVillain(VillainName,InLevel);
+ if(Villain.IsEmpty())
+ {
+  // not in villains.json: numbers from the critter class
+  Villain=VillainName; Rank=K->Rank; Powers->SetClassAndLevel(K->Class,InLevel); Powers->DisplayName=VillainName.Replace(TEXT("_"),TEXT(" "));
+ }
+ SpawnDefaultController();
+ return true;
+}
+bool ACoHCombatEnemy::PlayPowerMoves(FName Power)
+{
+ const UCoHGameRules* R=UCoHGameRules::Get(this);
+ const FCoHKitVillain* K=R?R->Kit(Villain):nullptr;
+ UCoHBodyAnim* BA=BodyAnim();
+ if(!K || !BA || KitModel.IsEmpty() || bRagdoll || IsDead()) return false;
+ const FCoHPowerAnim* A=R->VillainPowerAnim(Villain,Power);
+ TArray<FCoHAnimSegment> Segs;
+ if(!A || (!R->VillainSegments(*K,KitModel,*A,TEXT("AttackBits"),Segs) && !R->VillainSegments(*K,KitModel,*A,TEXT("ActivationBits"),Segs))) return false;
+ BA->PlaySegments(Segs);
+ return true;
+}
+void ACoHCombatEnemy::SetEncounterIdle(const FString& Behavior)
+{
+ EncounterIdle=Behavior;
+ ProtectUntil=0;
+}
 void ACoHCombatEnemy::InitializeFromPreview(AActor* Preview,const TMap<FString,FString>& Clips)
 {
  Home=GetActorLocation();
@@ -191,13 +266,19 @@ void ACoHCombatEnemy::SetState(ECoHEnemyState Next)
  State=Next;
  UAnimSequence* Clip=Next==ECoHEnemyState::Chase || Next==ECoHEnemyState::ReturnHome ? RunClip : Next==ECoHEnemyState::Attack ? AttackClip : Next==ECoHEnemyState::Hit ? HitClip : Next==ECoHEnemyState::Dead ? DeathClip : IdleClip;
  if(!Clip) Clip=IdleClip;
- if(Clip) GetMesh()->PlayAnimation(Clip,Next==ECoHEnemyState::Idle || Next==ECoHEnemyState::Chase || Next==ECoHEnemyState::ReturnHome);
+ if(UCoHBodyAnim* BA=BodyAnim())
+ {
+  // a power's moves run over the attack state; a hit or defeat cuts them
+  if(Next==ECoHEnemyState::Hit || Next==ECoHEnemyState::Dead) BA->StopSegments();
+  if(Next==ECoHEnemyState::Attack) return;
+ }
+ if(Clip) PlayClip(Clip,Next==ECoHEnemyState::Idle || Next==ECoHEnemyState::Chase || Next==ECoHEnemyState::ReturnHome);
 }
 void ACoHCombatEnemy::Tick(float Delta)
 {
  Super::Tick(Delta);
  if((State==ECoHEnemyState::Chase || State==ECoHEnemyState::ReturnHome) && !bRagdoll && RunClip)
-  GetMesh()->SetPlayRate(FMath::Clamp(GetVelocity().Size2D()/380.f,0.35f,1.4f));
+  { const float Rate=FMath::Clamp(GetVelocity().Size2D()/380.f,0.35f,1.4f); if(UCoHBodyAnim* BA=BodyAnim()) BA->SetBase(RunClip,true,Rate); else GetMesh()->SetPlayRate(Rate); }
  if(bRagdoll || State==ECoHEnemyState::Dead || State==ECoHEnemyState::Hit || State==ECoHEnemyState::Attack) return;
  auto* AI=Cast<AAIController>(GetController()); if(!AI) return;
  if(Powers && Powers->IsMezzed()){AI->StopMovement();return;}
@@ -342,8 +423,11 @@ void ACoHCombatEnemy::BeginPlay()
  Super::BeginPlay();
  Home=GetActorLocation();
  SpawnDefaultController();
- GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
- if (IdleClip) GetMesh()->PlayAnimation(IdleClip,true);
+ if(!BodyAnim())
+ {
+  GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+  if (IdleClip) GetMesh()->PlayAnimation(IdleClip,true);
+ }
 }
 
 void ACoHCombatEnemy::LaunchRagdoll(FVector LaunchVelocity)
@@ -701,6 +785,22 @@ void ACoHCombatEnemy::Idle(AAIController* AI,double Now)
   if(Now>NextPathTime){GoTo(Home,80);NextPathTime=Now+.6;}
   return;
  }
+ if(!EncounterIdle.IsEmpty() && FromHome<=R.Radius*30.48f+400.f)
+ {
+  // the original encounter idle (AI_InActive): stay and play its moves
+  Thought=FString::Printf(TEXT("idle: %s"),*EncounterIdle);
+  if(State!=ECoHEnemyState::Idle){AI->StopMovement();SetState(ECoHEnemyState::Idle);}
+  UCoHBodyAnim* BA=BodyAnim();
+  const UCoHGameRules* GR=UCoHGameRules::Get(this);
+  const FCoHKitVillain* K=GR?GR->Kit(Villain):nullptr;
+  const TArray<FString>* Moves=K?K->IdleMoves(EncounterIdle):nullptr;
+  if(BA && Moves && !BA->IsPlayingSegments())
+  {
+   TArray<FCoHAnimSegment> Segs;
+   if(GR->MoveSegments(KitModel,*Moves,Segs)) BA->PlaySegments(Segs);
+  }
+  return;
+ }
  if(Now<ProtectUntil){ Thought=TEXT("guarding its spot"); if(State!=ECoHEnemyState::Idle){AI->StopMovement();SetState(ECoHEnemyState::Idle);} return; }
  if(Now<IdleUntil)
  {
@@ -751,9 +851,13 @@ bool ACoHCombatEnemy::Harass(AAIController* AI,double Now)
   // reach (grab) or played slowly on a loop (threaten). State stays Idle so
   // the brain keeps looking around while posing.
   bHarassPosed=true; State=ECoHEnemyState::Idle;
-  GetMesh()->PlayAnimation(AttackClip,HarassRole==2);
-  if(HarassRole==1){ GetMesh()->SetPosition(AttackClip->GetPlayLength()*0.4f); GetMesh()->SetPlayRate(0.f); }
-  else GetMesh()->SetPlayRate(0.35f);
+  if(BodyAnim()) PlayClip(AttackClip,true,HarassRole==1?0.f:0.35f);
+  else
+  {
+   GetMesh()->PlayAnimation(AttackClip,HarassRole==2);
+   if(HarassRole==1){ GetMesh()->SetPosition(AttackClip->GetPlayLength()*0.4f); GetMesh()->SetPlayRate(0.f); }
+   else GetMesh()->SetPlayRate(0.35f);
+  }
  }
  Thought=HarassRole==1?TEXT("holding a civilian"):TEXT("threatening a civilian");
  return true;
@@ -945,7 +1049,7 @@ void ACoHEnemySpawner::Tick(float Delta)
    for(auto& E:G.Members) if(E.IsValid()) E->Destroy();
    Groups.RemoveAt(g); continue;
   }
-  if(Now>G.NextWander)
+  if(Now>G.NextWander && (bWanderingGangs || !G.bEncounter))
   {
    FVector To; const FVector Dir=FVector(FMath::FRandRange(-1.f,1.f),FMath::FRandRange(-1.f,1.f),0).GetSafeNormal();
    if(OpenGround(W,G.Center+Dir*FMath::FRandRange(800.f,2500.f),To))
@@ -962,9 +1066,18 @@ void ACoHEnemySpawner::Tick(float Delta)
  // wandering gangs: a server setting (on by default), capped by the player
  // count so 7 players do not fill the zone
  const int32 Cap=FMath::Min(MaxGroups,FMath::Max(1,Players.Num())*GroupsPerPlayer);
- if(bSpawning && bWanderingGangs && Groups.Num()<Cap && Now>=NextSpawn)
+ const UCoHGameRules* GR=UCoHGameRules::Get(this);
+ const bool bEnc=bOriginalEncounters && GR && GR->Encounters.Num()>0;
+ if(bSpawning && (bWanderingGangs || bEnc) && Groups.Num()<Cap && Now>=NextSpawn)
  {
-  SpawnGroup(Players[FMath::RandRange(0,Players.Num()-1)]);
+  APawn* Near=Players[FMath::RandRange(0,Players.Num()-1)];
+  if(bEnc)
+  {
+   // a zone spawn: a group and kind picked by how many original spots use them
+   const UCoHPowerComponent* PC=UCoHPowerComponent::Of(Near);
+   SpawnEncounter(Near,FString(),FString(),PC?PC->Level:1,FMath::FRandRange(MinDistance,MaxDistance));
+  }
+  else SpawnGroup(Near);
   NextSpawn=Now+2.0;
  }
 }
@@ -1003,4 +1116,95 @@ ACoHCombatEnemy* ACoHEnemySpawner::SpawnVillainNear(const FString& VillainName,i
  auto* Inv=NewObject<UNavigationInvokerComponent>(E); Inv->SetGenerationRadii(2500.f,3500.f); Inv->RegisterComponent();
  FGroup G; G.Faction=V->Group; G.Center=At; G.Members.Add(E); G.NextWander=GetWorld()->GetTimeSeconds()+1e6; Groups.Add(MoveTemp(G));
  return E;
+}
+
+bool ACoHEnemySpawner::SpawnTestGroup(APawn* Near,const FString& Faction,int32 Level,float Distance,const FString& Kind)
+{
+ const UCoHGameRules* GR=UCoHGameRules::Get(this);
+ if(bOriginalEncounters && GR && GR->Encounters.Num() && SpawnEncounter(Near,Faction,Kind,Level,Distance)) return true;
+ return SpawnGroup(Near,Faction,Level,Distance);
+}
+ACoHCombatEnemy* ACoHEnemySpawner::SpawnKitVillain(const FString& VillainName,int32 Level,const FVector& At,const FRotator& Rot)
+{
+ FActorSpawnParameters P;P.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+ auto* E=GetWorld()->SpawnActor<ACoHCombatEnemy>(At+FVector(0,0,95),Rot,P);
+ if(!E) return nullptr;
+ if(E->InitializeFromKit(VillainName,Level)) return E;
+ // model not imported: the earlier catalog mesh with the same rules
+ const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
+ const FCoHVillainDef* V=DB?DB->Villains.Find(VillainName):nullptr;
+ const auto* Members=V?Catalog.Find(V->Group):nullptr;
+ if(!V || !Members || Members->Num()==0){ E->Destroy(); return nullptr; }
+ E->InitializeFromCatalog(BodyFor(V,Level,*Members),V->Group,V->Class,Level);
+ E->ApplyVillain(VillainName,Level);
+ return E;
+}
+bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FString& Kind,int32 Level,float Distance)
+{
+ const UCoHGameRules* GR=UCoHGameRules::Get(this);
+ UWorld* W=GetWorld();
+ if(!GR || !Near || !W) return false;
+ // spawn definitions of the group / kind at this level, weighted by the
+ // number of spots in the zone's layers that use them (mission and named
+ // spawns are left to their own systems)
+ TArray<const FCoHEncounter*> Pool; int32 Total=0;
+ for(const FCoHEncounter& E:GR->Encounters)
+ {
+  if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
+  if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
+  if(Level<E.MinLevel-1 || Level>E.MaxLevel+1) continue;
+  Pool.Add(&E); Total+=E.Spots;
+ }
+ if(Pool.Num()==0){ UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for %s %s at level %d"),*Group,*Kind,Level); return false; }
+ int32 Roll=FMath::RandRange(0,Total-1); const FCoHEncounter* Enc=Pool.Last();
+ for(const FCoHEncounter* E:Pool){ if((Roll-=E->Spots)<0){ Enc=E; break; } }
+ // a spot: open ground at the distance asked (the new map's layout differs
+ // from the original, so spots are placed around the players)
+ FVector Center; bool bFound=false;
+ for(int32 Try=0;Try<16 && !bFound;++Try)
+ {
+  const FVector Dir=Try==0?Near->GetActorForwardVector():FVector(FMath::FRandRange(-1.f,1.f),FMath::FRandRange(-1.f,1.f),0).GetSafeNormal();
+  bFound=OpenGround(W,Near->GetActorLocation()+Dir*Distance,Center);
+ }
+ if(!bFound) return false;
+ // team size: the heroes near the spot, within the definition's range
+ int32 Heroes=0;
+ for(FConstPlayerControllerIterator It=W->GetPlayerControllerIterator();It;++It)
+  if(It->Get() && It->Get()->GetPawn() && FVector::Dist(It->Get()->GetPawn()->GetActorLocation(),Center)<6000.f) ++Heroes;
+ const int32 Team=FMath::Clamp(FMath::Max(1,Heroes),Enc->MinTeam,Enc->MaxTeam);
+ const int32 Lvl=FMath::Clamp(Level,Enc->MinLevel,Enc->MaxLevel);
+ FGroup G; G.Faction=Group.IsEmpty()?(Enc->Groups().Num()?Enc->Groups()[0]:FString()):Group; G.Center=Center; G.bEncounter=true;
+ G.NextWander=W->GetTimeSeconds()+FMath::FRandRange(25.f,45.f);
+ int32 Slot=0;
+ for(const FCoHEncounterActor& A:Enc->Actors)
+ {
+  if(Team<A.MinHeroes || Team>A.MaxHeroes) continue;
+  for(int32 n=0;n<A.Count;++n,++Slot)
+  {
+   FString Who=A.Villain;
+   if(Who.IsEmpty())
+   {
+    // the slot's roll at this level (the nearest level listed)
+    const TArray<FString>* Rolls=nullptr; int32 BestD=MAX_int32;
+    for(const auto& KV:A.Rolls) if(KV.Value.Num() && FMath::Abs(KV.Key-Lvl)<BestD){ BestD=FMath::Abs(KV.Key-Lvl); Rolls=&KV.Value; }
+    if(!Rolls) continue;
+    Who=(*Rolls)[FMath::RandRange(0,Rolls->Num()-1)];
+   }
+   // a loose circle facing its middle, as the original spot layouts do
+   const float Ang=Slot*2.1f;
+   FVector At; if(!OpenGround(W,Center+FVector(FMath::Cos(Ang),FMath::Sin(Ang),0)*FMath::FRandRange(150.f,320.f),At)) At=Center;
+   ACoHCombatEnemy* E=SpawnKitVillain(Who,Lvl,At,(Center-At).GetSafeNormal2D().Rotation());
+   if(!E) continue;
+   E->SetHome(At);
+   E->SetEncounterIdle(A.AIInactive);
+   if(G.Members.Num()==0){ auto* Inv=NewObject<UNavigationInvokerComponent>(E); Inv->SetGenerationRadii(2500.f,3500.f); Inv->RegisterComponent(); }
+   E->GroupId=NextGroupId;
+   G.Members.Add(E);
+  }
+ }
+ if(G.Members.Num()==0) return false;
+ UE_LOG(LogTemp,Log,TEXT("CoH encounter %s (%s) level %d team %d: %d villains"),*Enc->Name,*Enc->Kind,Lvl,Team,G.Members.Num());
+ G.Id=NextGroupId++; G.NextHarass=W->GetTimeSeconds()+1e9;
+ Groups.Add(MoveTemp(G));
+ return true;
 }

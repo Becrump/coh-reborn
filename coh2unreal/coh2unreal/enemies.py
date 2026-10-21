@@ -19,7 +19,8 @@ own robot sequencer). Idle behaviors from the encounters (AI_InActive
 Writes:
   kit.json                 villain -> group, rank, class, AI config, levels,
                            costumes and model files, sequencer, powers (timing,
-                           effects, move segments), idle anim lists, core clips
+                           effects, move segments), idle anim lists (and which
+                           lists each idle behavior plays), core clips
   enemy_power_anims.json   the villains' powers in power_anims.json form,
                            for coh2unreal.fx
   models/<costume>.gltf    rigged models; each clip is named after its move
@@ -52,6 +53,27 @@ def load_anim_lists(data):
                 m = re.match(r"\s*AnimList:\s*(\w+)\s*,\s*(.*)", line)
                 if m:
                     out[m.group(1).lower()] = m.group(2).upper().split()
+    return out
+
+
+def load_priority_anims(data):
+    """PriorityList blocks (aiscript/priorities/*.pri) whose first action is
+    actionDoAnim: the spawn sheets name these as idles (<<PL_SprayPaint>>),
+    so they count as anim lists of their AnimBits."""
+    out = {}
+    for path in glob.glob(os.path.join(data, "aiscript", "priorities", "*.pri")):
+        with open(path, encoding="latin-1") as f:
+            text = re.sub(r"//[^\n]*", "", f.read())
+        for m in re.finditer(r"PriorityList\s+(\w+)\s*\{(.*?)\n\}", text, re.S):
+            body = m.group(2)
+            if not re.search(r"Type:\s*actionDoAnim", body, re.I):
+                continue
+            bits = re.search(r"AnimBits:\s*([^\n]*)", body)
+            if bits:
+                # encounter actors play these with the ENCOUNTER bit set, as
+                # the .al anim lists spell out (SprayPaint: ENCOUNTER SPRAYCAN)
+                out.setdefault(m.group(1).lower(), ["ENCOUNTER"] +
+                               re.findall(r'"?(\w+)"?', bits.group(1).upper()))
     return out
 
 
@@ -140,6 +162,8 @@ def main(argv=None):
     paths = P.PathIndex(args.data)
     powers = P.load_powers(paths, args.data)
     anim_lists = load_anim_lists(args.data)
+    for k, v in load_priority_anims(args.data).items():
+        anim_lists.setdefault(k, v)
     aliases = load_aliases(args.data)
     seqs = {}
 
@@ -220,6 +244,11 @@ def main(argv=None):
                 entry["anim_lists"][al] = {"bits": bits, "segments": segs}
                 need(segs)
         entry["behaviors"] = sorted(behaviors.get(name, ()))
+        # each idle behavior -> the anim lists it plays (behavior aliases resolved)
+        entry["behavior_lists"] = {
+            beh: [al for al in anim_lists_of(beh, aliases, anim_lists=anim_lists)
+                  if al in entry["anim_lists"]]
+            for beh in entry["behaviors"]}
         core = []
         for mname in CORE_MOVES:
             m = seq.moves.get(mname.lower())

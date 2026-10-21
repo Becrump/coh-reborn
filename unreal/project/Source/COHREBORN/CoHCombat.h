@@ -38,6 +38,20 @@ public:
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TObjectPtr<UCoHPowerComponent> Powers;
  /** Set up from the enemy catalog (mesh + idle/run/attack/hit/death clips). */
  void InitializeFromCatalog(const TMap<FString,FString>& Entry, const FString& Faction, const FString& RankClass, int32 InLevel);
+ /** Set up from the original enemy kit (kit.json): the villain's model from
+  *  /Game/CoH/Enemies/<costume> with a clip per move, its powers' own move
+  *  chains and its idle behavior. False: the model is not imported. */
+ bool InitializeFromKit(const FString& VillainName, int32 InLevel);
+ /** Plays a power's original moves (kit villains); false: none. */
+ bool PlayPowerMoves(FName Power);
+ /** Plays a looping (or held) clip: through the CoH body anim, else single node. */
+ void PlayClip(UAnimSequence* Clip, bool bLoop, float Rate = 1.f);
+ class UCoHBodyAnim* BodyAnim() const;
+ /** The encounter's idle behavior (AI_InActive, e.g. <<PL_SprayPaint>>): its
+  *  moves loop while the villain is idle, and it holds its spot. */
+ void SetEncounterIdle(const FString& Behavior);
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString KitModel;
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString EncounterIdle;
  /** Use a villain definition from the rules (class, rank, powers). Auto
   *  powers (inherent resistances...) run all the time; click powers are its attacks. */
  void ApplyVillain(const FString& VillainName, int32 InLevel);
@@ -187,7 +201,15 @@ public:
  /** Tests: stop spawning groups (and clear the ones alive). */
  UFUNCTION(BlueprintCallable, Category="CoH|Spawning") void SetSpawning(bool bOn);
  /** Tests: spawn one group of a faction at a level, Distance cm from Near. */
- UFUNCTION(BlueprintCallable, Category="CoH|Spawning") bool SpawnTestGroup(APawn* Near, const FString& Faction, int32 Level, float Distance = 2000.f) { return SpawnGroup(Near, Faction, Level, Distance); }
+ UFUNCTION(BlueprintCallable, Category="CoH|Spawning") bool SpawnTestGroup(APawn* Near, const FString& Faction, int32 Level, float Distance = 2000.f, const FString& Kind = TEXT(""));
+ /** Server setting: groups as the original zone filled them (encounters.json:
+  *  spawn definitions, team sizes, villain rolls, idle behaviors). Faithful
+  *  mode, on by default; bWanderingGangs makes these groups wander too. */
+ UPROPERTY(EditAnywhere, Config, Category="CoH|Spawning") bool bOriginalEncounters = true;
+ /** Spawns one original encounter of a group (and kind: spraypaint, patrol...) at a level. */
+ UFUNCTION(BlueprintCallable, Category="CoH|Spawning") bool SpawnEncounter(APawn* Near, const FString& Group, const FString& Kind, int32 Level, float Distance = 2000.f);
+ /** One villain from the kit (falls back to the old catalog meshes). */
+ ACoHCombatEnemy* SpawnKitVillain(const FString& VillainName, int32 Level, const FVector& At, const FRotator& Rot);
  UPROPERTY(EditAnywhere, Category="CoH|Spawning") bool bSpawning = true;
 private:
  struct FGroup
@@ -197,6 +219,7 @@ private:
   int32 Victim = INDEX_NONE;    // civilian held (life manager index)
   double HarassUntil = 0, NextHarass = 0;
   bool bHolding = false;
+  bool bEncounter = false;       // an original encounter: holds its spots unless gangs wander
  };
  TArray<FGroup> Groups;
  TMap<FString,TArray<TMap<FString,FString>>> Catalog;

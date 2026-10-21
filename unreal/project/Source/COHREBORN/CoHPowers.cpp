@@ -3,6 +3,8 @@
 #include "CoHHeroCharacter.h"
 #include "CoHLifeManager.h"
 #include "CoHPowerFX.h"
+#include "CoHEffects.h"
+#include "CoHGameRules.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/GameInstance.h"
@@ -10,6 +12,7 @@
 #include "ImageUtils.h"
 #include "Animation/AnimSequence.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Volume.h"
@@ -379,6 +382,27 @@ void UCoHPowerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME_CONDITION(UCoHPowerComponent, Recharges, COND_OwnerOnly);
 	DOREPLIFETIME(UCoHPowerComponent, ActiveToggles);
 	DOREPLIFETIME(UCoHPowerComponent, Reputation);
+	DOREPLIFETIME_CONDITION(UCoHPowerComponent, Owned, COND_OwnerOnly);
+	DOREPLIFETIME(UCoHPowerComponent, Body);
+}
+
+float UCoHPowerComponent::HitDelay(FName Power, float DistanceCm) const
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	const FCoHPowerAnim* A = R ? R->PowerAnim(Power) : nullptr;
+	if (!A && R)
+		if (const ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(GetOwner())) A = R->VillainPowerAnim(E->Villain, Power);
+	return A ? A->HitDelay(DistanceCm) : -1.f;
+}
+
+void UCoHPowerComponent::UseFreePower(FName Power)
+{
+	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
+	AActor* Owner = GetOwner();
+	if (!P || !Owner || IsDefeated() || GetOwnerRole() != ROLE_Authority) return;
+	MulticastPlay(Power, Owner, Owner->GetActorLocation(), 0);
+	Execute(*P, Owner, Owner->GetActorLocation());
 }
 
 FSoftObjectPath UCoHPowerComponent::FindClip(const FString& NameOrPath)
@@ -462,6 +486,7 @@ void UCoHPowerComponent::Reset()
 	Buffs.Reset();
 	MezUntil = 0;
 	ActiveToggles.Reset();
+	DamageBy.Reset();
 }
 
 float UCoHPowerComponent::BuffSum(const FString& Attrib, const FString& Aspect) const
@@ -725,8 +750,12 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 	}
 	MulticastPlay(Power, TargetActor, Location, 0);
 	if (P->Type == TEXT("kToggle") || P->Type == TEXT("kAuto")) return;
-	// effects land at the release point of the animation (about half way)
-	const float ReleaseAt = FMath::Max(0.15f, P->Activate * (P->IsMelee() ? 0.45f : 0.55f));
+	// effects land at the original hit time (FramesBeforeHit, plus the
+	// projectile's flight at ProjectileSpeed for DelayedHit powers); powers
+	// with no original timing at the release point of the animation
+	const float Dist = TargetActor && TargetActor != Owner ? FVector::Dist(Owner->GetActorLocation(), TargetActor->GetActorLocation()) : 0.f;
+	const float Original = HitDelay(Power, Dist);
+	const float ReleaseAt = Original >= 0.f ? FMath::Max(0.05f, Original) : FMath::Max(0.15f, P->Activate * (P->IsMelee() ? 0.45f : 0.55f));
 	FTimerHandle H;
 	W->GetTimerManager().SetTimer(H, FTimerDelegate::CreateUObject(this, &UCoHPowerComponent::Release, Power, TWeakObjectPtr<AActor>(TargetActor), FVector(Location)), ReleaseAt, false);
 	// a fight breaks out: civilians nearby run, traffic stops
@@ -786,6 +815,40 @@ TArray<UCoHPowerComponent*> UCoHPowerComponent::Gather(const FCoHPowerDef& P, AA
 	return Out;
 }
 
+static void PushProps(const UActorComponent* Self, const FCoHPowerDef& P, AActor* TargetActor, FVector Center)
+{
+	// attacks shove the physics props around the impact (parked City Sample
+	// cars): a hit rocks them, a knockback or a blast throws them
+	bool bHurts = false, bKnocks = false;
+	ECoHDamage Type;
+	for (const FCoHMod& M : P.Mods)
+	{
+		if (M.Target == TEXT("kSelf")) continue;
+		bHurts |= ParseDamage(M.Attrib, Type);
+		bKnocks |= M.Attrib == TEXT("kKnockback") || M.Attrib == TEXT("kKnockup");
+	}
+	AActor* Owner = Self->GetOwner();
+	UWorld* W = Self->GetWorld();
+	if ((!bHurts && !bKnocks) || !Owner || !W) return;
+	const bool bArea = P.Area != TEXT("kCharacter") && P.Area != TEXT("kCone");
+	if (TargetActor && !bArea) Center = TargetActor->GetActorLocation();
+	else if (P.Range <= 0.f && P.Target != TEXT("kLocation")) Center = Owner->GetActorLocation();
+	const float Radius = bArea && P.Radius > 0.f ? P.Radius * FeetToCm + 50.f : 300.f;
+	const float Strength = bKnocks ? 900.f : 250.f;   // cm/s velocity change at the centre
+	TArray<FOverlapResult> Hits;
+	FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPowerPush), false, Owner);
+	W->OverlapMultiByObjectType(Hits, Center, FQuat::Identity, FCollisionObjectQueryParams(ECC_PhysicsBody), FCollisionShape::MakeSphere(Radius), Q);
+	TSet<UPrimitiveComponent*> Done;
+	for (const FOverlapResult& H : Hits)
+	{
+		UPrimitiveComponent* C = H.GetComponent();
+		if (!C || !C->IsSimulatingPhysics() || Done.Contains(C)) continue;
+		Done.Add(C);
+		// from slightly below so props lift as well as slide
+		C->AddRadialImpulse(Center - FVector(0, 0, 80.f), Radius, Strength, ERadialImpulseFalloff::RIF_Linear, true);
+	}
+}
+
 void UCoHPowerComponent::Execute(const FCoHPowerDef& P, AActor* TargetActor, FVector Location)
 {
 	const FCoHClassDef* C = Class();
@@ -809,6 +872,7 @@ void UCoHPowerComponent::Execute(const FCoHPowerDef& P, AActor* TargetActor, FVe
 	// mods that always target the caster (self buffs on attacks)
 	for (const FCoHMod& M : P.Mods)
 		if (M.Target == TEXT("kSelf") && M.Aspect != TEXT("kStr") && P.Target != TEXT("kCaster")) ApplyMod(P, M, this, -1.f);
+	PushProps(this, P, TargetActor, Location);
 }
 
 void UCoHPowerComponent::ApplyMods(const FCoHPowerDef& P, UCoHPowerComponent* Victim, bool bSelf, float DurationOverride)
@@ -949,6 +1013,7 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 {
 	if (IsDefeated() || Amount <= 0.f || GetOwnerRole() != ROLE_Authority) return 0.f;
 	const float Final = Amount * (1.f - Resistance(Type));
+	if (Causer) DamageBy.FindOrAdd(Causer) += FMath::Min(Final, Health);
 	Health = FMath::Max(0.f, Health - Final);
 	LastHurt = GetWorld()->GetTimeSeconds();
 	MulticastText(Final < 1.f ? FString::Printf(TEXT("%.1f"), Final) : FString::Printf(TEXT("%.0f"), Final), DamageColour(Type));
@@ -992,9 +1057,11 @@ void UCoHPowerComponent::TickComponent(float Dt, ELevelTick TickType, FActorComp
 		if (!DB) return;
 		for (const FName& Id : TArray<FName>(ActiveToggles))
 			if (const FCoHPowerDef* P = DB->FindPower(Id)) ToggleTick(*P);
-		// auto powers in the tray are always on
+		// auto powers in the tray, and the ones a built hero owns, are always on
 		for (const FName& Id : Tray)
 			if (const FCoHPowerDef* P = DB->FindPower(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
+		for (const FName& Id : Owned)
+			if (!Tray.Contains(Id)) if (const FCoHPowerDef* P = DB->FindPower(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
 	}
 }
 
@@ -1035,8 +1102,19 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	const bool bSelfOrAlly = P.Target == TEXT("kCaster") && !bArea || P.Target == TEXT("kFriend") || P.Type == TEXT("kToggle") || P.Type == TEXT("kAuto");
 	const bool bAroundMe = P.Area == TEXT("kSphere") && P.Range <= 0.f && P.Target != TEXT("kLocation");   // Foot Stomp
 	const int32 Kind = bSelfOrAlly && !P.IsHostile() ? 4 : bAroundMe ? 2 : bMelee ? 0 : P.Area == TEXT("kCone") ? 1 : bArea ? 3 : 1;
-	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(Owner)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
-	else if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Owner)) E->PlayAttackAnimation();
+	// the original moves of the power on CoH bodies, else the clip by kind
+	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(Owner))
+	{
+		if (S.Clip.IsValid() || !H->PlayPowerMoves(P.Id, P.Type == TEXT("kToggle") || bSelfOrAlly)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
+	}
+	else if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Owner))
+	{
+		if (!E->PlayPowerMoves(P.Id)) E->PlayAttackAnimation();
+	}
+	// the original effects (fx_library.json) when the power has them
+	const float Dist = TargetActor && TargetActor != Owner ? FVector::Dist(Owner->GetActorLocation(), TargetActor->GetActorLocation()) : 0.f;
+	const float Hit = HitDelay(P.Id, Dist);
+	if (S.Tint.A <= 0.f && UCoHFxLibrary::PlayPower(Owner, P.Id, TargetActor, Hit >= 0.f ? Hit : Release)) return;
 	if (P.Type == TEXT("kToggle") || P.Type == TEXT("kAuto"))
 	{
 		ACoHPowerFX::Burst(Owner, Owner->GetActorLocation(), 150.f, Colour, 0.6f, 0.f);
