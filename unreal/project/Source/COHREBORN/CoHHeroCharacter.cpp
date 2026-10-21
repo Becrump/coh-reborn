@@ -662,6 +662,17 @@ ACoHGameMode::ACoHGameMode()
 	bUseSeamlessTravel = true;
 }
 
+void ACoHGameMode::StartPlay()
+{
+	Super::StartPlay();
+	UWorld* W = GetWorld();
+	if (W && !TActorIterator<ACoHEnemySpawner>(W))
+	{
+		W->SpawnActor<ACoHEnemySpawner>(ACoHEnemySpawner::StaticClass(), FTransform::Identity);
+		UE_LOG(LogTemp, Log, TEXT("CoH: no enemy spawner on the map, added one"));
+	}
+}
+
 AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
 	if (UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail"))

@@ -293,4 +293,7 @@ public:
 	/** Players arriving by monorail (URL option Arrive=Monorail) start at
 	 *  the PlayerStarts tagged MonorailArrival, inside the waiting train. */
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	/** Maps with no enemy spawner placed (or not in the loaded cells) get one,
+	 *  so the original encounters and wandering gangs run everywhere. */
+	virtual void StartPlay() override;
 };

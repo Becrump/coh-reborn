@@ -92,7 +92,8 @@ public:
 
 private:
 	TMap<FString, TSharedPtr<FJsonObject>> FxTable, PartJson, BhvrJson, Geoms, Textures, Sounds, PowerTable;
-	TMap<FString, FCoHPart> PartCache;
+	/** Parts by path; heap-held so the pointers systems keep stay valid as the cache grows. */
+	TMap<FString, TUniquePtr<FCoHPart>> PartCache;
 	UPROPERTY() TMap<FString, TObjectPtr<UMaterialInstanceDynamic>> MatCache;
 	UPROPERTY() TMap<FString, TObjectPtr<UMaterialInterface>> Masters;
 	UPROPERTY() TMap<FString, TObjectPtr<USoundBase>> SoundCache;

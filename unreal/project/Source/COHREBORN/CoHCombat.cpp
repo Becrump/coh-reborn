@@ -952,11 +952,20 @@ void ACoHEnemySpawner::BeginPlay()
    }
  UE_LOG(LogTemp,Log,TEXT("CoH enemy spawner: %d factions in the catalog"),Catalog.Num());
 }
+static float GOpenGroundRefZ=TNumericLimits<float>::Max();
 static bool OpenGround(UWorld* W,FVector XY,FVector& Out)
 {
  // a spot on the landscape or a street, not a roof or inside a building
  FHitResult Hit;FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHSpawnGround),false);
  for(const FVector& Z:ACoHEnemySpawner::NoSpawn) if(FVector::Dist2D(XY,FVector(Z.X,Z.Y,0))<Z.Z) return false;
+ if(GOpenGroundRefZ<TNumericLimits<float>::Max())
+ {
+  // maps built from the original tiles have no landscape: the ground near
+  // the player's street level (a short trace, so roofs above are skipped)
+  if(!W->LineTraceSingleByChannel(Hit,FVector(XY.X,XY.Y,GOpenGroundRefZ+400.f),FVector(XY.X,XY.Y,GOpenGroundRefZ-1200.f),ECC_Visibility,Q)) return false;
+  if(Hit.bStartPenetrating || Hit.ImpactNormal.Z<0.85f || Cast<APawn>(Hit.GetActor())) return false;
+  Out=Hit.ImpactPoint;return true;
+ }
  if(!W->LineTraceSingleByChannel(Hit,FVector(XY.X,XY.Y,30000.f),FVector(XY.X,XY.Y,-5000.f),ECC_Visibility,Q)) return false;
  const AActor* A=Hit.GetActor();
  if(!A || !A->GetClass()->GetName().Contains(TEXT("Landscape"))) return false;
@@ -1161,6 +1170,8 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  // a spot: open ground at the distance asked (the new map's layout differs
  // from the original, so spots are placed around the players)
  FVector Center; bool bFound=false;
+ struct FRef{ FRef(UWorld* W,const APawn* N){ bool bLand=false; for(TActorIterator<AActor> It(W);It && !bLand;++It) bLand=It->GetClass()->GetName().Contains(TEXT("Landscape"));
+  GOpenGroundRefZ=bLand?TNumericLimits<float>::Max():N->GetActorLocation().Z-90.f; } ~FRef(){ GOpenGroundRefZ=TNumericLimits<float>::Max(); } } Ref(W,Near);
  for(int32 Try=0;Try<16 && !bFound;++Try)
  {
   const FVector Dir=Try==0?Near->GetActorForwardVector():FVector(FMath::FRandRange(-1.f,1.f),FMath::FRandRange(-1.f,1.f),0).GetSafeNormal();

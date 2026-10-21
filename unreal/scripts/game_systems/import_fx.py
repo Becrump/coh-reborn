@@ -128,7 +128,21 @@ def wanted():
 
 
 def checked_png(path):
-    from PIL import Image
+    try:
+        from PIL import Image
+    except ImportError:
+        # the editor's Python has no PIL: read the PNG header (IHDR) instead
+        import struct
+        with open(path, "rb") as f:
+            head = f.read(33)
+        if len(head) < 33 or head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
+            return None, "not a PNG"
+        w, h, depth, ctype = struct.unpack(">IIBB", head[16:26])
+        if w <= 0 or h <= 0:
+            return None, "empty"
+        if depth != 8 or ctype not in (2, 6):
+            return None, "depth %d colour type %d (convert first)" % (depth, ctype)
+        return path, None
     try:
         im = Image.open(path)
         im.load()

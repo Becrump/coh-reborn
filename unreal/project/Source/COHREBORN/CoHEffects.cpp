@@ -144,7 +144,7 @@ static TArray<FVector3f> ColorPath(const TArray<TSharedPtr<FJsonValue>>& Nav)
 const FCoHPart* UCoHFxLibrary::Part(const FString& Path)
 {
 	const FString Key = Path.ToLower();
-	if (const FCoHPart* C = PartCache.Find(Key)) return C;
+	if (const TUniquePtr<FCoHPart>* C = PartCache.Find(Key)) return C->Get();
 	const TSharedPtr<FJsonObject>* J = PartJson.Find(Key);
 	if (!J) return nullptr;
 	const TSharedPtr<FJsonObject>& O = *J;
@@ -170,7 +170,7 @@ const FCoHPart* UCoHFxLibrary::Part(const FString& Path)
 	if (O->TryGetArrayField(TEXT("Flags"), Flags)) for (const auto& F : *Flags) P.bFadeImmediately |= F->AsString() == TEXT("FadeImmediatelyOnDeath");
 	const TArray<TSharedPtr<FJsonValue>>* Nav;
 	if (O->TryGetArrayField(TEXT("ColorNav"), Nav)) P.ColorPath = ColorPath(*Nav); else P.ColorPath.Add(FVector3f(255));
-	return &PartCache.Add(Key, MoveTemp(P));
+	return PartCache.Add(Key, MakeUnique<FCoHPart>(MoveTemp(P))).Get();
 }
 
 FCoHBhvr UCoHFxLibrary::Behavior(const FString& Path, const TSharedPtr<FJsonObject>& Override) const
