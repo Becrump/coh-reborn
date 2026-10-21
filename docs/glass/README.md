@@ -48,6 +48,12 @@ no mesh assets or original CoH materials edited.
 - Option C is applied on the two test tiles in memory only; the map is not saved.
 
 ## Incidents
+- 2026-10-21 00:44-00:46 UTC, three crashes (plus the one at ~00:42): `Assertion failed: SupportsTexture(Texture)`
+  (EditorFactories.cpp:4698) from this work's Python `Exporter.run_asset_export_task` on City Sample's
+  `T_BlindsAtlas_Col` (TextureExporterPNG). The `uex.sh` wrapper took the lost connection for "editor busy" and
+  re-sent the export after each restart. Rules now: never export textures from the editor (reference
+  them as material parameters, read pixel data only from source files on disk); `uex.sh` only retries
+  when the editor could not be reached before sending, never after a command may have run.
 - 2026-10-20 01:31 UTC crash: monorail glass mesh render resource (another session), not this work.
 - 2026-10-20 10:24 UTC crash: a long RecompileMaterial of this master on the editor thread hit the
   Windows 10,000 USER-object limit. Scripts now recompile once per batch and reuse instances.
