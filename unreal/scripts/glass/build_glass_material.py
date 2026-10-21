@@ -124,23 +124,60 @@ F4 = unreal.CustomMaterialOutputType.CMOT_FLOAT4
 tc = node(unreal.MaterialExpressionTextureCoordinate, -2200, 0)
 uv_scale = scalar("UVScale", 1.0, -2200, 100, "UV")
 uvs = mul(tc, "", uv_scale, "", -2000, 50)
-win = tex("WindowTexture", DEF_WINDOW, -1800, -200)
+win_obj = node(unreal.MaterialExpressionTextureObjectParameter, -2000, -200, parameter_name="WindowTexture",
+               texture=unreal.load_asset(DEF_WINDOW), group="Textures")
+win = node(unreal.MaterialExpressionTextureSample, -1800, -200)
+link(win_obj, "", win, "Tex")
 link(uvs, "", win, "UVs")
+mask_obj = node(unreal.MaterialExpressionTextureObjectParameter, -2000, -600, parameter_name="PaneMaskTexture",
+                texture=unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture"), group="Mask")
 nrm = tex("NormalTexture", DEF_NORMAL, -1800, 600, unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
 link(uvs, "", nrm, "UVs")
 
 # ---- pane mask from a per-texture colour key ------------------------------------
-mask = custom("float l = dot(C, W.rgb);  // luma (0.3,0.59,0.11) or blue key (-1,0,1)\n"
-              "float k = saturate((l - Thr) / max(Soft, 1e-4));\n"
-              "return lerp(k, 1 - k, Inv);", F1, ["C", "W", "Thr", "Soft", "Inv"], -1500, -300, "PaneMask")
-link(win, "RGB", mask, "C")
-link(vector("MaskWeights", (0.3, 0.59, 0.11, 0), -1800, -480, "Mask"), "", mask, "W")
-link(scalar("MaskThreshold", 0.15, -1800, -420, "Mask"), "", mask, "Thr")
-link(scalar("MaskSoftness", 0.08, -1800, -360, "Mask"), "", mask, "Soft")
-link(scalar("MaskInvert", 0.0, -1800, -300, "Mask"), "", mask, "Inv")
+# mask + fake recess (pane_mask.hlsl): x = pane, y = reveal (side wall of the opening), z = sill shadow
+camv = node(unreal.MaterialExpressionCameraVectorWS, -2200, 800)
+to_ts = node(unreal.MaterialExpressionTransform, -2000, 800,
+             transform_source_type=unreal.MaterialVectorCoordTransformSource.TRANSFORMSOURCE_WORLD,
+             transform_type=unreal.MaterialVectorCoordTransform.TRANSFORM_TANGENT)
+link(camv, "", to_ts, "")
+pixel_depth = node(unreal.MaterialExpressionPixelDepth, -2000, 1680)
+mrec = custom(open(os.path.join(HERE, "pane_mask.hlsl")).read(), F4,
+              ["UV", "V", "WinTex", "MaskTex", "UseTex", "W", "Thr", "Soft", "Inv", "RecessDepth", "ShadowLen",
+               "FlipY", "PixelDepth", "MipDist", "MipBias"], -1500, -400, "PaneMaskRecess")
+link(uvs, "", mrec, "UV")
+link(to_ts, "", mrec, "V")
+link(win_obj, "", mrec, "WinTex")
+link(mask_obj, "", mrec, "MaskTex")
+link(scalar("UseMaskTexture", 0.0, -1800, -540, "Mask"), "", mrec, "UseTex")
+link(vector("MaskWeights", (0.3, 0.59, 0.11, 0), -1800, -480, "Mask"), "", mrec, "W")
+link(scalar("MaskThreshold", 0.15, -1800, -420, "Mask"), "", mrec, "Thr")
+link(scalar("MaskSoftness", 0.08, -1800, -360, "Mask"), "", mrec, "Soft")
+link(scalar("MaskInvert", 0.0, -1800, -300, "Mask"), "", mrec, "Inv")
+link(scalar("RecessDepth", 0.012, -1800, -240, "Recess"), "", mrec, "RecessDepth")
+link(scalar("SillShadowLength", 0.02, -1800, -180, "Recess"), "", mrec, "ShadowLen")
+link(scalar("RecessFlipY", 1.0, -1800, -120, "Recess"), "", mrec, "FlipY")
+link(pixel_depth, "", mrec, "PixelDepth")
+link(scalar("MaskMipDistance", 3000.0, -1800, -60, "Recess"), "", mrec, "MipDist")
+link(scalar("MaskMipBias", 0.0, -1800, 0, "Recess"), "", mrec, "MipBias")
+mask_raw = node(unreal.MaterialExpressionComponentMask, -1300, -400, r=True, g=False, b=False, a=False)
+link(mrec, "", mask_raw, "")
+reveal = node(unreal.MaterialExpressionComponentMask, -1300, -340, r=False, g=True, b=False, a=False)
+link(mrec, "", reveal, "")
+shadow = node(unreal.MaterialExpressionComponentMask, -1300, -280, r=False, g=False, b=True, a=False)
+link(mrec, "", shadow, "")
+# glass properties only where the view really reaches glass (not on the revealed side wall)
+mask = custom("return M * (1 - R);", F1, ["M", "R"], -1100, -400, "GlassMask")
+link(mask_raw, "", mask, "M")
+link(reveal, "", mask, "R")
 
 # ---- grime (option B) ----------------------------------------------------------
-rooms = scalar("PanesPerTile", 2.0, -2200, 300, "UV")
+# pane grid per texture tile: PanesPerTile across, PanesPerTileY down (0 = same as across)
+rooms_x = scalar("PanesPerTile", 2.0, -2400, 300, "UV")
+rooms = custom("return float2(X, Y > 0 ? Y : X);", unreal.CustomMaterialOutputType.CMOT_FLOAT2, ["X", "Y"],
+               -2200, 300, "PaneGrid")
+link(rooms_x, "", rooms, "X")
+link(scalar("PanesPerTileY", 0.0, -2400, 360, "UV"), "", rooms, "Y")
 edge = custom("float2 f = frac(UV * Rooms);\n"
               "float e = min(min(f.x, 1 - f.x), min(f.y, 1 - f.y));\n"
               "return 1 - saturate(e / max(W, 1e-3));", F1, ["UV", "Rooms", "W"], -1500, 250, "PaneEdge")
@@ -173,11 +210,6 @@ link(fres, "", glass_col, "F")
 link(refl, "", glass_col, "R")
 
 # ---- interior (option C) -------------------------------------------------------
-camv = node(unreal.MaterialExpressionCameraVectorWS, -2200, 800)
-to_ts = node(unreal.MaterialExpressionTransform, -2000, 800,
-             transform_source_type=unreal.MaterialVectorCoordTransformSource.TRANSFORMSOURCE_WORLD,
-             transform_type=unreal.MaterialVectorCoordTransform.TRANSFORM_TANGENT)
-link(camv, "", to_ts, "")
 ARR = "/Game/CitySampleBuildings/Material/Window/Texture/RoomInteriors/Arrays/"  # same arrays M_Window uses
 HLSL = open(os.path.join(HERE, "interior_room.hlsl")).read()
 room = custom(HLSL, F4, ["UV", "V", "Panes", "WMin", "WMax", "RoomH", "Depth", "Theme", "Seed", "Hour", "S1", "S1A", "S2", "S2A",
@@ -215,7 +247,7 @@ link(vector("BlindsColor", (0.55, 0.52, 0.47, 1), -2000, 1440, "Interior"), "", 
 link(scalar("InteriorBrightness", 0.6, -2000, 1500, "Interior"), "", room, "Bright")
 link(scalar("CubeYaw", 0.0, -2000, 1560, "Interior"), "", room, "Yaw")
 link(scalar("InteriorMipDistance", 1500.0, -2000, 1620, "Interior"), "", room, "MipDist")
-link(node(unreal.MaterialExpressionPixelDepth, -2000, 1680), "", room, "PixelDepth")
+link(pixel_depth, "", room, "PixelDepth")
 link(scalar("ForegroundSteps", 8.0, -2000, 1740, "Interior"), "", room, "Steps")
 for i, (inp, asset) in enumerate([("Rooms1", "TCA_1x1x1_Rooms"), ("Rooms2", "TCA_2x2x1_Rooms"),
                                   ("FG1C", "T2A_1x1x1_CaptureFG"), ("FG1D", "T2A_1x1x1_DepthFG"),
@@ -268,7 +300,19 @@ link(glow_tex, "RGB", emissive, "Glow")
 link(scalar("GlowStrength", 0.0, -800, 1250, "Night"), "", emissive, "GlowStrength")
 
 # ---- final PBR outputs ---------------------------------------------------------
-base = lerp(win, "RGB", pane_col, "", mask, "", -400, -300)
+# fake recess: revealed side wall of the opening = darkened frame colour; sill shadow on the glass top
+base = custom("float3 pane = Pane * (1 - Shadow * ShadowDark);\n"
+              "float3 wall = Frame * RevealDark;\n"
+              "float3 glassOrWall = lerp(pane, wall, Reveal);\n"
+              "return lerp(Frame, glassOrWall, M);", F3,
+              ["Frame", "Pane", "M", "Reveal", "Shadow", "RevealDark", "ShadowDark"], -400, -300, "BaseColour")
+link(win, "RGB", base, "Frame")
+link(pane_col, "", base, "Pane")
+link(mask_raw, "", base, "M")
+link(reveal, "", base, "Reveal")
+link(shadow, "", base, "Shadow")
+link(scalar("RevealDarkness", 0.35, -800, -200, "Recess"), "", base, "RevealDark")
+link(scalar("SillShadowDarkness", 0.55, -800, -140, "Recess"), "", base, "ShadowDark")
 rough = custom("float g = saturate(Rough + Grime * 0.45);\n"
                "return lerp(FrameRough, g, Mask);", F1, ["Rough", "Grime", "FrameRough", "Mask"], -400, 0,
                "Roughness")
@@ -298,6 +342,8 @@ MEL.connect_material_property(metal, "", P.MP_METALLIC)
 MEL.connect_material_property(spec, "", P.MP_SPECULAR)
 MEL.connect_material_property(normal, "", P.MP_NORMAL)
 MEL.connect_material_property(emissive, "", P.MP_EMISSIVE_COLOR)
+# only used by instances that override the blend mode to Masked (originals that were alpha-cut)
+MEL.connect_material_property(win, "A", P.MP_OPACITY_MASK)
 MEL.layout_material_expressions(m)
 MEL.recompile_material(m)
 EAL.save_loaded_asset(m)

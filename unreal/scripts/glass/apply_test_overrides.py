@@ -29,16 +29,33 @@ TEST_ACTORS = ["Nanite_tile_2_3_Solid_01", "Nanite_tile_3_3_Solid_00"]
 # Interior theme per actor -> Custom Primitive Data[0] (0 office, 1 residential, 2 retail), [1] = random seed.
 # Tile 3_3 (centre + right towers) office; tile 2_3 (tall left tower) residential as a comparison demo.
 THEMES = {"Nanite_tile_2_3_Solid_01": 1.0, "Nanite_tile_3_3_Solid_00": 0.0}
-# GLASS_SCOPE=skyscrapers: every original Nanite tile actor that carries one of the WINDOWS materials
-# (approved map-wide 2026-10-20; all are tall towers, so office theme unless listed in THEMES).
+# GLASS_SCOPE=skyscrapers: every original Nanite tile actor with a skyscraper window (approved 2026-10-20)
+# GLASS_SCOPE=all: every original Nanite tile actor with any WINDOWS material (approved 2026-10-21)
 SCOPE = os.environ.get("GLASS_SCOPE", "test")
-# original window MI -> (base colour texture key in window_masks.json, panes per texture tile)
+# original window MI -> (texture key in window_masks.json, panes across, panes down (0 = same), theme, extra)
+# theme: -1 = per-actor Custom Primitive Data (THEMES), 0 office, 1 residential, 2 retail.
+# extra: "masked" = original was alpha-cut (instance overrides blend mode to Masked), "mirror" = no rooms.
 WINDOWS = {
-    "x_deco_skyscraper_02_window_01": ("deco_skyscraper_02_window_01_b", 2),
-    "x_deco_skyscraper_03_window_01": ("deco_building_03_window_01_b", 2),
-    "x_deco_skyscraper_03_window_03": ("deco_building_03_window_03_b", 3),
-    "x_deco_skyscraper_08_window_01": ("deco_building_08_window_01_b", 1),
+    "x_deco_skyscraper_02_window_01": ("deco_skyscraper_02_window_01_b", 2, 0, -1, ""),
+    "x_deco_skyscraper_03_window_01": ("deco_building_03_window_01_b", 2, 0, -1, ""),
+    "x_deco_skyscraper_03_window_03": ("deco_building_03_window_03_b", 3, 0, -1, ""),
+    "x_deco_skyscraper_08_window_01": ("deco_building_08_window_01_b", 1, 0, -1, ""),
+    # low-rise and storefront windows (GLASS_SCOPE=all); skipped as not windows: ArchEnt lounge logo wall,
+    # Storefront_Window_Metal (64 px noise), ofc1_windowframe (32 px noise), Auction House green glass
+    "Store_Front_Window_2_tga": ("Store_Front_Window_2", 8, 2, 2, ""),
+    "Store_Front_Window_3_tga": ("Store_Front_Window_3", 8, 2, 2, ""),
+    "Store_Front_Window_4_tga": ("Store_Front_Window_4", 8, 2, 2, ""),
+    "Store_Front_Stucco_1d_Window_1_tga": ("Store_Front_Stucco_1d_Window_1", 4, 2, 2, "masked"),
+    "BrickBuild_Window_02_tga": ("BrickBuild_Window_02", 4, 2, 1, "masked"),
+    "BrickBuild_Window_04_tga": ("BrickBuild_Window_04", 2, 2, 1, "masked"),
+    "X_Praet_BrickC_Window1_LOD1": ("P_BrickC_Window_d", 2, 1, 1, ""),
+    "X_Praet_BrickA_StoneWindow": ("P_BrickA_StoneWindow_d", 2, 2, 1, ""),
+    "X_FW_BrickC_RndWin": ("Bld_SkyB_Base01_d", 2, 3, 0, ""),
+    "X_ArchEnt_Window_01": ("Arch_Ent_Window_GlassWall_01", 4, 1, 0, ""),
+    "X_ArchEnt_Window_02": ("Arch_Ent_Window_GlassCube_01", 2, 2, 0, ""),
+    "x_p_warehouse_shipwindow01": ("p_warehouse_shipwindow01_b", 6, 6, 0, "mirror"),
 }
+SKYSCRAPERS = {k for k, v in WINDOWS.items() if v[3] == -1}
 MEL = unreal.MaterialEditingLibrary
 EAL = unreal.EditorAssetLibrary
 tools = unreal.AssetToolsHelpers.get_asset_tools()
@@ -51,7 +68,7 @@ def params(mi):
 
 
 def child_for(option, orig):
-    key, panes = WINDOWS[orig.get_name()]
+    key, panes, panes_y, theme, extra = WINDOWS[orig.get_name()]
     name = "MI_Glass_%s_%s" % (option, key[:-2] if key.endswith("_b") else key)
     path = "%s/PerTexture/%s" % (FOLDER, name)
     if EAL.does_asset_exist(path) and not REFRESH:
@@ -70,10 +87,26 @@ def child_for(option, orig):
             MEL.set_material_instance_vector_parameter_value(mi, "GlowUVScale", unreal.LinearColor(gs.r, gs.g, 0, 0))
         MEL.set_material_instance_scalar_parameter_value(mi, "GlowStrength", 1.5 if option != "Interior" else 0.5)
     m = MASKS[key]
-    MEL.set_material_instance_vector_parameter_value(mi, "MaskWeights", unreal.LinearColor(*m["MaskWeights"]))
-    for k in ("MaskThreshold", "MaskSoftness", "MaskInvert"):
-        MEL.set_material_instance_scalar_parameter_value(mi, k, float(m[k]))
+    if m.get("key") == "texture":  # hand-painted mask (make_rect_masks.py, imported by import_masks.py)
+        MEL.set_material_instance_scalar_parameter_value(mi, "UseMaskTexture", 1.0)
+        MEL.set_material_instance_texture_parameter_value(mi, "PaneMaskTexture", unreal.load_asset(m["mask_texture"]))
+    else:
+        MEL.set_material_instance_vector_parameter_value(mi, "MaskWeights", unreal.LinearColor(*m["MaskWeights"]))
+        for k in ("MaskThreshold", "MaskSoftness", "MaskInvert"):
+            MEL.set_material_instance_scalar_parameter_value(mi, k, float(m[k]))
     MEL.set_material_instance_scalar_parameter_value(mi, "PanesPerTile", float(panes))
+    MEL.set_material_instance_scalar_parameter_value(mi, "PanesPerTileY", float(panes_y))
+    MEL.set_material_instance_scalar_parameter_value(mi, "ThemeOverride", float(theme))
+    if extra == "mirror":
+        MEL.set_material_instance_scalar_parameter_value(mi, "ReflectiveOnlyFraction", 1.0)
+    if extra == "masked":  # keep the original alpha cut-outs
+        o = mi.get_editor_property("base_property_overrides")
+        o.set_editor_property("override_blend_mode", True)
+        o.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+        cut = {str(p.parameter_info.name): p.parameter_value for p in orig.get_editor_property("scalar_parameter_values")}
+        o.set_editor_property("override_opacity_mask_clip_value", True)
+        o.set_editor_property("opacity_mask_clip_value", float(cut.get("AlphaCutoff", 0.3)))
+        mi.set_editor_property("base_property_overrides", o)
     MEL.update_material_instance(mi)
     EAL.save_loaded_asset(mi)
     return mi
@@ -85,14 +118,15 @@ done = []
 touched = []
 for a in unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors():
     lab = a.get_actor_label()
-    if SCOPE == "skyscrapers":
+    if SCOPE in ("skyscrapers", "all"):
         if not lab.startswith("Nanite_tile_"):
             continue
     elif lab not in TEST_ACTORS:
         continue
     comp = a.get_component_by_class(unreal.StaticMeshComponent)
-    if SCOPE == "skyscrapers" and not any(
-            (comp.get_material(i) and (comp.get_material(i).get_name() in WINDOWS or
+    wanted = SKYSCRAPERS if SCOPE == "skyscrapers" else set(WINDOWS)
+    if SCOPE != "test" and not any(
+            (comp.get_material(i) and (comp.get_material(i).get_name() in wanted or
                                        comp.get_material(i).get_name().startswith("MI_Glass_")))
             for i in range(comp.get_num_materials())):
         continue
@@ -106,7 +140,7 @@ for a in unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_
     if OPTION != "none":
         for i in range(comp.get_num_materials()):
             orig = comp.get_material(i)
-            if orig and orig.get_name() in WINDOWS:
+            if orig and orig.get_name() in (SKYSCRAPERS if SCOPE == "skyscrapers" else WINDOWS):
                 comp.set_material(i, child_for(OPTION, orig))
                 done.append("%s[%d] %s" % (a.get_actor_label(), i, orig.get_name()))
 print("option", OPTION, "actors", len(touched), "slots", len(done))

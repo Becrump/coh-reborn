@@ -54,5 +54,93 @@
   "MaskInvert": 0.0,
   "pane_frac": 0.24,
   "speckle": 0.0163
+ },
+ "BrickBuild_Window_02": {
+  "key": "blue",
+  "MaskWeights": [
+   -1.0,
+   0.0,
+   1.0,
+   0
+  ],
+  "MaskThreshold": 0.0103,
+  "MaskSoftness": 0.0031,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.14,
+  "speckle": 0.0256
+ },
+ "BrickBuild_Window_04": {
+  "key": "blue",
+  "MaskWeights": [
+   -1.0,
+   0.0,
+   1.0,
+   0
+  ],
+  "MaskThreshold": 0.0205,
+  "MaskSoftness": 0.0061,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.06,
+  "speckle": 0.0065
+ },
+ "Arch_Ent_Window_GlassWall_01": {
+  "key": "blue",
+  "MaskWeights": [
+   -1.0,
+   0.0,
+   1.0,
+   0
+  ],
+  "MaskThreshold": 0.0266,
+  "MaskSoftness": 0.008,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.75,
+  "speckle": 0.02
+ },
+ "Arch_Ent_Window_GlassCube_01": {
+  "key": "luma",
+  "MaskWeights": [
+   0.3,
+   0.59,
+   0.11,
+   0
+  ],
+  "MaskThreshold": 0.1612,
+  "MaskSoftness": 0.0483,
+  "MaskInvert": 0.0,
+  "pane_frac": 0.79,
+  "speckle": 0.0279
+ },
+ "Bld_SkyB_Base01_d": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Bld_SkyB_Base01_d"
+ },
+ "P_BrickA_StoneWindow_d": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_P_BrickA_StoneWindow_d"
+ },
+ "P_BrickC_Window_d": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_P_BrickC_Window_d"
+ },
+ "p_warehouse_shipwindow01_b": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_p_warehouse_shipwindow01_b"
+ },
+ "Store_Front_Stucco_1d_Window_1": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Store_Front_Stucco_1d_Window_1"
+ },
+ "Store_Front_Window_2": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Store_Front_Window_2"
+ },
+ "Store_Front_Window_3": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Store_Front_Window_3"
+ },
+ "Store_Front_Window_4": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Store_Front_Window_4"
  }
 }

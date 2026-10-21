@@ -53,4 +53,7 @@ for n in NAMES:
     print(n, best)
     if os.environ.get("MASK_PREVIEW"):
         Image.fromarray((m * 255).astype(np.uint8)).save(os.path.join(os.environ["MASK_PREVIEW"], n + "_mask.png"))
-json.dump(out, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "window_masks.json"), "w"), indent=1)
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "window_masks.json")
+merged = json.load(open(path)) if os.path.exists(path) else {}
+merged.update(out)  # keep entries for textures not passed on this run
+json.dump(merged, open(path, "w"), indent=1)
