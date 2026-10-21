@@ -232,6 +232,9 @@ def build(data):
         v = villains.get(n, {})
         out_roster[n] = {"group": v.get("VillainGroup"), "rank": v.get("Rank"),
                          "class": v.get("Class"), "ai_config": v.get("AIConfig"),
+                         # VillainCreate: Hero = on the heroes' side
+                         # (police, Freedom Corps); default Monster
+                         "ally": v.get("Ally") or "Monster",
                          "powers": [".".join(p) for p in v.get("powers", [])],
                          "def_levels": sorted(v.get("levels", {})),
                          "costumes": _costumes(v),
