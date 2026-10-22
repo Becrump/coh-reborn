@@ -844,35 +844,32 @@ void ACoHHeroCharacter::ToggleAnimBench()
 void ACoHHeroCharacter::CycleTarget()
 {
  if (!Powers) return;
- // foes in view (buildings block, people don't) within 50 m, nearest first;
- // the ones behind the camera count as a little further away
+ // as in the original: the first Tab takes the nearest foe, each further Tab
+ // the next nearest, wrapping round; Shift+Tab goes back. Every living foe
+ // within 200 ft counts, in view or not (allies and the defeated never do).
  TArray<TPair<float, AActor*>> Foes;
- const FVector Eye = GetActorLocation() + FVector(0, 0, 60);
- const FVector Look = Controller ? Controller->GetControlRotation().Vector() : GetActorForwardVector();
  for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
  {
   const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
-  if (!C || C->bPlayerSide || C->IsDefeated()) continue;
-  const FVector To = It->GetActorLocation() - Eye;
-  const float D = To.Size();
-  if (D > 5000.f) continue;
-  FHitResult Block;
-  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHTab), false, this); Q.AddIgnoredActor(*It);
-  if (GetWorld()->LineTraceSingleByObjectType(Block, Eye, It->GetActorLocation(), FCollisionObjectQueryParams(ECC_WorldStatic), Q) && !Cast<AVolume>(Block.GetActor())) continue;
-  const float Front = FVector::DotProduct(To.GetSafeNormal2D(), Look.GetSafeNormal2D());
-  Foes.Add({ D * (Front < 0.f ? 1.6f : 1.f), *It });
+  if (!C || C->bPlayerSide == Powers->bPlayerSide || C->IsDefeated()) continue;
+  const float D = FVector::Dist(GetActorLocation(), It->GetActorLocation());
+  if (D > 200.f * 30.48f) continue;
+  Foes.Add({ D, *It });
  }
  Foes.Sort([](const TPair<float, AActor*>& A, const TPair<float, AActor*>& B) { return A.Key < B.Key; });
  const double Now = GetWorld()->GetTimeSeconds();
- const bool bCycling = Now - LastTabTime < 2.0;     // a fresh press starts at the nearest
+ const APlayerController* PC = Cast<APlayerController>(GetController());
+ const bool bBack = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+ // a fresh press (2 s since the last) or a lost target starts at the nearest
+ int32 Current = INDEX_NONE;
+ for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Current = i; break; }
+ const bool bCycling = Now - LastTabTime < 2.0 && Current != INDEX_NONE;
  LastTabTime = Now;
- if (Foes.Num() == 0) { Powers->Target = nullptr; UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> no foe in view")); return; }
- int32 Next = 0;
- if (bCycling)
-  for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Next = (i + 1) % Foes.Num(); break; }
+ if (Foes.Num() == 0) { Powers->Target = nullptr; UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> no foe within 200 ft")); return; }
+ const int32 Next = bCycling ? (Current + (bBack ? Foes.Num() - 1 : 1)) % Foes.Num() : 0;
  Powers->Target = Foes[Next].Value;
- UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> target %s at %.0f m (%d of %d)"), *GetNameSafe(Foes[Next].Value),
-  FVector::Dist(GetActorLocation(), Foes[Next].Value->GetActorLocation()) / 100.f, Next + 1, Foes.Num());
+ UE_LOG(LogTemp, Log, TEXT("CoH key: %sTab -> target %s at %.0f m (%d of %d)"), bBack ? TEXT("Shift+") : TEXT(""), *GetNameSafe(Foes[Next].Value),
+  Foes[Next].Key / 100.f, Next + 1, Foes.Num());
 }
 
 void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
