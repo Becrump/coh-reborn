@@ -337,8 +337,18 @@ bool UCoHFxLibrary::PlayPower(AActor* Owner, FName Power, AActor* Target, float 
 	const TSharedPtr<FJsonObject> P = Lib ? Lib->PowerFx(Power) : nullptr;
 	if (!P.IsValid()) return false;
 	bool bAny = false;
+	// the start effects last for the attack: the game ends them with the
+	// power's move chain (sequencer bits we do not run yet), so they stop a
+	// moment after the hit; their own Destroy / LifeSpan may end them sooner
+	TArray<TWeakObjectPtr<ACoHFxRunner>> Started;
 	for (const TCHAR* K : { TEXT("WindUpFX"), TEXT("ActivationFX"), TEXT("AttackFX"), TEXT("InitialAttackFX") })
-		if (Play(Owner, Str(P, K), Target)) bAny = true;
+		if (ACoHFxRunner* R = Play(Owner, Str(P, K), Target)) { bAny = true; Started.Add(R); }
+	if (Started.Num() && Owner->GetWorld())
+	{
+		FTimerHandle H;
+		Owner->GetWorld()->GetTimerManager().SetTimer(H, FTimerDelegate::CreateLambda([Started]() { for (const auto& R : Started) if (R.IsValid()) R->Stop(); }),
+			FMath::Max(0.f, HitDelay) + 1.5f, false);
+	}
 	const FString Hit = Str(P, TEXT("HitFX"));
 	if (!Hit.IsEmpty() && Target && Target != Owner)
 	{
@@ -579,7 +589,10 @@ void ACoHFxRunner::Step()
 		G->Pos += G->Offset;
 		G->Vel = G->Rot.L(FVector(G->B.InitialVelocity.X + G->B.InitialVelocityJitter.X * Rnd(), G->B.InitialVelocity.Y + G->B.InitialVelocityJitter.Y * Rnd(),
 			G->B.InitialVelocity.Z + G->B.InitialVelocityJitter.Z * Rnd())) * Ft;
-		G->bMoving = Type == TEXT("start") || Type == TEXT("startpositonly") || !BhvrPath.IsEmpty();
+		// only Start events travel by their behavior; a Local / Create node with
+		// a behavior (a fade, a flicker) still rides its bone, like Fire Sword's
+		// blade in the hand
+		G->bMoving = Type == TEXT("start") || Type == TEXT("startpositonly") || (!BhvrPath.IsEmpty() && Type != TEXT("local") && Type != TEXT("create"));
 		// Create / Local stay on their bone; Posit only places the node
 		G->bFollowBone = !G->Follow.IsValid() && !G->bMoving && (Type == TEXT("create") || Type == TEXT("local"));
 		G->Magnet = Str(Ev, TEXT("magnet")).ToLower();
