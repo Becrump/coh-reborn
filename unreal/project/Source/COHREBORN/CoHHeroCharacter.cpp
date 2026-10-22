@@ -482,11 +482,16 @@ bool ACoHHeroCharacter::PlayMoves(const TArray<FCoHAnimSegment>& Segments, float
 	A->MarkCombat();
 	if (Lock > 0.f)
 	{
-		// rooted while the power activates (TimeToActivate, the server rule)
+		// rooted while the power activates (TimeToActivate, the server rule);
+		// in the air the hero keeps the jump arc, as in the original
 		PunchTimeLeft = Lock;
 		bPunchLanded = true; bQueuedPunch = false;
-		GetCharacterMovement()->StopMovementImmediately();
-		GetCharacterMovement()->DisableMovement();
+		UCharacterMovementComponent* CM = GetCharacterMovement();
+		if (!CM->IsFalling() && !CM->IsFlying())
+		{
+			CM->StopMovementImmediately();
+			CM->DisableMovement();
+		}
 	}
 	return true;
 }

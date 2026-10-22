@@ -197,8 +197,98 @@ def import_files(items, dest, kind):
     return done
 
 
+def make_geom_material():
+    """M_CoHGeom: lit, opaque, texture parameter "Tex", for effect models
+    (weapons in hand, beams)."""
+    name = "M_CoHGeom"
+    if el.does_asset_exist(MAT + "/" + name) or unreal.load_asset(MAT + "/" + name + "." + name):
+        print("have", name)
+        return
+    mel = unreal.MaterialEditingLibrary
+    m = unreal.AssetToolsHelpers.get_asset_tools().create_asset(name, MAT, unreal.Material, unreal.MaterialFactoryNew())
+    m.set_editor_property("two_sided", True)
+    tex = mel.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -500, 0)
+    tex.set_editor_property("parameter_name", "Tex")
+    tex.set_editor_property("texture", unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture"))
+    mel.connect_material_property(tex, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+    rough = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -500, 250)
+    rough.set_editor_property("r", 0.55)
+    mel.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.recompile_material(m)
+    el.save_loaded_asset(m, False)
+    print("MATERIAL", name)
+
+
+def import_geoms():
+    """Visible effect models the chosen powers use (weapons first), as static
+    meshes in /Game/CoH/FX/Geoms, and their textures."""
+    prefixes = globals().get("GS_POWERS")
+    mgr = unreal.InterchangeManager.get_interchange_manager_scripted()
+    tex = {}
+    done = 0
+    for lib_dir in LIBS:
+        lib = json.load(open(os.path.join(lib_dir, "fx_library.json")))
+        pfx = json.load(open(os.path.join(lib_dir, "power_fx.json")))
+        todo, seen, models = [], set(), set()
+        for pname, p in pfx.items():
+            if prefixes and not any(pname.startswith(x) for x in prefixes):
+                continue
+            todo += [v.lower() for k, v in p.items() if k.endswith("FX") and isinstance(v, str)]
+        while todo:
+            f = todo.pop()
+            if f in seen or f not in lib["fx"]:
+                continue
+            seen.add(f)
+            for c in lib["fx"][f]["conditions"]:
+                for ev in c["events"]:
+                    if ev.get("childfx"):
+                        todo.append(ev["childfx"].lower())
+                    for g in ev.get("geoms", []):
+                        info = lib["geoms"].get(g.lower())
+                        if info and info.get("mesh"):
+                            models.add(g.lower())
+        for g in sorted(models):
+            info = lib["geoms"][g]
+            n = asset_name(info["mesh"])
+            for t in info.get("textures", []):
+                ti = lib["textures"].get(t.lower()) or lib["textures"].get(t.lower() + ".tga")
+                if ti:
+                    tex[asset_name(ti["png"])] = os.path.join(lib_dir, ti["png"])
+            if el.does_asset_exist(GEO + "/" + n):
+                continue
+            pipe = unreal.InterchangeGenericAssetsPipeline()
+            pipe.set_editor_property("scene_name_sub_folder", False)
+            pipe.set_editor_property("asset_type_sub_folders", False)
+            mesh = pipe.get_editor_property("mesh_pipeline")
+            mesh.set_editor_property("import_skeletal_meshes", False)
+            mesh.set_editor_property("import_static_meshes", True)
+            params = unreal.ImportAssetParameters()
+            params.set_editor_property("is_automated", True)
+            params.set_editor_property("replace_existing", False)
+            params.set_editor_property("override_pipelines", [unreal.SoftObjectPath(pipe.get_path_name())])
+            # the asset takes the file's name, which is already the asset name
+            try:
+                mgr.import_asset(GEO, unreal.InterchangeManager.create_source_data(os.path.join(lib_dir, info["mesh"])), params)
+            except Exception as e:
+                print("  warn", n, str(e)[:160])
+            if el.does_asset_exist(GEO + "/" + n):
+                el.save_asset(GEO + "/" + n, False)
+                done += 1
+            else:
+                print("  missing after import", n)
+    for d in ("/_import", "/_test"):
+        if el.does_directory_exist(GEO + d):
+            el.delete_directory(GEO + d)
+    print("GEOMS imported", done)
+    print("GEOM TEXTURES", import_files(tex, TEX, "texture"))
+
+
+GEO = "/Game/CoH/FX/Geoms"
 if step == "materials":
     make_materials()
+elif step == "geoms":
+    make_geom_material()
+    import_geoms()
 else:
     tex, snd = wanted()
     print("FX ASSETS wanted: %d textures, %d sounds" % (len(tex), len(snd)))

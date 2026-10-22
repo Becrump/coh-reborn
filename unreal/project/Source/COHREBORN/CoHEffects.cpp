@@ -12,6 +12,9 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "ProceduralMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "HAL/IConsoleManager.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Sound/SoundAttenuation.h"
@@ -21,6 +24,15 @@
 static constexpr float Ft = 30.48f;          // feet -> cm
 static constexpr float TickSeconds = 1.f / 30.f;
 static float Rnd() { return FMath::FRandRange(-1.f, 1.f); }
+// effect models in hand (weapons): their turn relative to the hand bone, and
+// for free nodes relative to the node's facing, as "pitch,yaw,roll" (tuning)
+static TAutoConsoleVariable<FString> CVarGeomBoneRot(TEXT("coh.GeomBoneRot"), TEXT("0,0,0"), TEXT("CoH effect models on a bone: relative rotation pitch,yaw,roll"));
+static TAutoConsoleVariable<FString> CVarGeomNodeRot(TEXT("coh.GeomNodeRot"), TEXT("0,0,0"), TEXT("CoH effect models on a free node: relative rotation pitch,yaw,roll"));
+static FRotator CVarRot(const TAutoConsoleVariable<FString>& V)
+{
+	TArray<FString> P; V.GetValueOnGameThread().ParseIntoArray(P, TEXT(","));
+	return P.Num() >= 3 ? FRotator(FCString::Atof(*P[0]), FCString::Atof(*P[1]), FCString::Atof(*P[2])) : FRotator::ZeroRotator;
+}
 /** Game world axes (x, y up, z) -> Unreal (x forward, y right, z up). */
 static FVector W(const FVector& G) { return FVector(G.Z, -G.X, G.Y); }
 static FVector JitW(const FVector& J) { return W(FVector(J.X * Rnd(), J.Y * Rnd(), J.Z * Rnd())) * Ft; }
@@ -224,6 +236,53 @@ UMaterialInterface* UCoHFxLibrary::Material(const FString& Texture, const FStrin
 	return M;
 }
 
+UStaticMesh* UCoHFxLibrary::GeomMesh(const FString& Geom)
+{
+	const FString Key = Geom.ToLower();
+	if (const TObjectPtr<UStaticMesh>* C = GeomCache.Find(Key)) return C->Get();
+	UStaticMesh* M = nullptr;
+	if (const TSharedPtr<FJsonObject>* G = Geoms.Find(Key))
+	{
+		const FString File = Str(*G, TEXT("mesh"));
+		if (!File.IsEmpty())
+		{
+			const FString A = AssetName(File);
+			M = LoadObject<UStaticMesh>(nullptr, *(GeomRoot / A + TEXT(".") + A));
+			if (!M) UE_LOG(LogTemp, Warning, TEXT("CoH fx: effect model %s not imported (%s)"), *Geom, *(GeomRoot / A));
+		}
+	}
+	GeomCache.Add(Key, M);
+	return M;
+}
+
+UMaterialInterface* UCoHFxLibrary::GeomMaterial(const FString& Geom)
+{
+	const FString Key = Geom.ToLower();
+	if (const TObjectPtr<UMaterialInterface>* C = GeomMatCache.Find(Key)) return C->Get();
+	UMaterialInterface* Out = nullptr;
+	const TSharedPtr<FJsonObject>* G = Geoms.Find(Key);
+	const TArray<TSharedPtr<FJsonValue>>* Texs;
+	UMaterialInterface* Master = LoadObject<UMaterialInterface>(nullptr, *(MaterialRoot / TEXT("M_CoHGeom.M_CoHGeom")));
+	if (G && Master && (*G)->TryGetArrayField(TEXT("textures"), Texs) && Texs->Num())
+	{
+		FString T = (*Texs)[0]->AsString().ToLower();
+		const TSharedPtr<FJsonObject>* TI = Textures.Find(T);
+		if (!TI) TI = Textures.Find(T + TEXT(".tga"));
+		if (TI)
+		{
+			const FString A = AssetName(Str(*TI, TEXT("png")));
+			if (UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *(TextureRoot / A + TEXT(".") + A)))
+			{
+				UMaterialInstanceDynamic* M = UMaterialInstanceDynamic::Create(Master, this);
+				M->SetTextureParameterValue(TEXT("Tex"), Tex);
+				Out = M;
+			}
+		}
+	}
+	GeomMatCache.Add(Key, Out);
+	return Out;
+}
+
 USoundBase* UCoHFxLibrary::Sound(const FString& Name)
 {
 	const FString Key = Name.ToLower();
@@ -310,6 +369,8 @@ struct ACoHFxRunner::FGeo
 	FString Geom;
 	FCoHBhvr B;
 	TArray<TSharedPtr<FSystem>> Systems;
+	UStaticMeshComponent* Visual = nullptr;   // a visible effect model (weapon in hand, beam)
+	bool bVisualOnBone = false;
 };
 
 struct ACoHFxRunner::FSystem
@@ -528,6 +589,31 @@ void ACoHFxRunner::Step()
 		if (Life > 0) Life += Rnd() * Num(Ev, TEXT("lifespanjitter"));
 		G->Life = Life;
 		if (!Name.IsEmpty()) R.Geos.Add(Name, G);
+		// a visible model: on the hand (or other) bone when the node sits on
+		// one, else carried along with the node
+		if (!G->Geom.IsEmpty())
+			if (UStaticMesh* SM = Lib->GeomMesh(G->Geom))
+			{
+				UStaticMeshComponent* C = NewObject<UStaticMeshComponent>(this);
+				C->SetStaticMesh(SM);
+				C->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				if (UMaterialInterface* M = Lib->GeomMaterial(G->Geom)) for (int32 i = 0; i < C->GetNumMaterials(); ++i) C->SetMaterial(i, M);
+				C->SetupAttachment(GetRootComponent());
+				C->RegisterComponent();
+				const AActor* On = G->At.StartsWith(TEXT("t_")) && R.Target.IsValid() ? R.Target.Get() : R.Entity.Get();
+				const ACharacter* Ch = Cast<ACharacter>(On);
+				USkeletalMeshComponent* SK = Ch && G->bFollowBone ? Ch->GetMesh() : nullptr;
+				const FString BoneName = G->At.StartsWith(TEXT("t_")) ? G->At.Mid(2) : G->At;
+				FName HandBone;
+				if (SK) for (int32 i = 0; i < SK->GetNumBones(); ++i) if (SK->GetBoneName(i).ToString().Equals(BoneName, ESearchCase::IgnoreCase)) { HandBone = SK->GetBoneName(i); break; }
+				if (SK && !HandBone.IsNone())
+				{
+					C->AttachToComponent(SK, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HandBone);
+					C->SetRelativeRotation(CVarRot(CVarGeomBoneRot));
+					G->bVisualOnBone = true;
+				}
+				G->Visual = C;
+			}
 		R.All.Add(G);
 		const TArray<TSharedPtr<FJsonValue>>* Parts;
 		if (Ev->TryGetArrayField(TEXT("parts"), Parts))
@@ -728,6 +814,20 @@ void ACoHFxRunner::Step()
 
 void ACoHFxRunner::Draw()
 {
+	// effect models: free ones follow their node; dead nodes drop theirs
+	TFunction<void(FRun&)> Models = [&](FRun& R)
+	{
+		for (const TSharedPtr<FGeo>& G : R.All)
+		{
+			if (!G->Visual) continue;
+			if (!G->bAlive) { G->Visual->DestroyComponent(); G->Visual = nullptr; continue; }
+			if (G->bVisualOnBone) continue;
+			const FMatrix M(G->Rot.Z, -G->Rot.X, G->Rot.Y, FVector::ZeroVector);   // forward, right, up
+			G->Visual->SetWorldLocationAndRotation(G->Pos, (CVarRot(CVarGeomNodeRot).Quaternion() * M.ToQuat()).Rotator());
+		}
+		for (const TSharedPtr<FRun>& C : R.Children) Models(*C);
+	};
+	for (const TSharedPtr<FRun>& R : Runs) Models(*R);
 	const UWorld* Wd = GetWorld();
 	const APlayerController* PC = Wd ? Wd->GetFirstPlayerController() : nullptr;
 	if (!PC || !PC->PlayerCameraManager) return;

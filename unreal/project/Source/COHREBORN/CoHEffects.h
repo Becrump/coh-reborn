@@ -72,6 +72,7 @@ public:
 	UPROPERTY(Config) FString TextureRoot = TEXT("/Game/CoH/FX/Textures");
 	UPROPERTY(Config) FString SoundRoot = TEXT("/Game/CoH/FX/Sounds");
 	UPROPERTY(Config) FString MaterialRoot = TEXT("/Game/CoH/FX/Particle");
+	UPROPERTY(Config) FString GeomRoot = TEXT("/Game/CoH/FX/Geoms");
 
 	TSharedPtr<FJsonObject> Fx(const FString& Path) const;
 	const FCoHPart* Part(const FString& Path);
@@ -81,6 +82,10 @@ public:
 	/** The effects of a power (power_fx.json): ActivationFX, AttackFX, HitFX ... */
 	TSharedPtr<FJsonObject> PowerFx(FName Power) const;
 	UMaterialInterface* Material(const FString& Texture, const FString& Blend);
+	/** A visible effect model (weapons, beams): /Game/CoH/FX/Geoms/<name>, or null. */
+	class UStaticMesh* GeomMesh(const FString& Geom);
+	/** Its material: M_CoHGeom with the model's first texture. */
+	UMaterialInterface* GeomMaterial(const FString& Geom);
 	USoundBase* Sound(const FString& Name);
 	USoundAttenuation* Attenuation(float RadiusFeet);
 	bool IsLoaded() const { return FxTable.Num() > 0; }
@@ -98,6 +103,8 @@ private:
 	UPROPERTY() TMap<FString, TObjectPtr<UMaterialInterface>> Masters;
 	UPROPERTY() TMap<FString, TObjectPtr<USoundBase>> SoundCache;
 	UPROPERTY() TMap<int32, TObjectPtr<USoundAttenuation>> AttenCache;
+	UPROPERTY() TMap<FString, TObjectPtr<class UStaticMesh>> GeomCache;
+	UPROPERTY() TMap<FString, TObjectPtr<UMaterialInterface>> GeomMatCache;
 };
 
 UCLASS(NotPlaceable, Transient)
