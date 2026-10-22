@@ -182,7 +182,7 @@ bool UCoHGameRules::Segments(const FCoHPowerAnim& A, const FString& Body, const 
 		FCoHAnimSegment Seg;
 		Seg.Move = FName(*E.Get<0>());
 		Seg.Clip = PlayerClip(Body, E.Get<1>());
-		if (!Seg.Clip) { UE_LOG(LogTemp, Verbose, TEXT("CoH anim: no clip %s for %s"), *E.Get<1>(), *Body); continue; }
+		if (!Seg.Clip) { UE_LOG(LogTemp, Warning, TEXT("CoH anim: no clip %s for %s (the pose stays as it is)"), *E.Get<1>(), *Body); continue; }
 		// frames at 30 fps; 0 = the end of the track. The game clamps a move
 		// that starts past the end, so a start past the end holds the last frame.
 		const float Len = Seg.Clip->GetPlayLength();
