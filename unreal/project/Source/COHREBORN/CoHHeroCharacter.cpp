@@ -457,6 +457,12 @@ void ACoHHeroCharacter::SetupBodyAnim()
 	A->Idle = R->ClipIn(Folder, TEXT("idle"));
 	A->CombatIdle = R->ClipIn(Folder, TEXT("combat_idle"));
 	A->Run = R->ClipIn(Folder, TEXT("run"));
+	// jumps: the player sequencer's jumpPre / jumpUp / jumpApex / jumpFall all
+	// play one track, <body>/superjump (frames 3-93, then the fall holds), so
+	// one clip carries the whole jump; landing blends back to ready or run
+	A->JumpUp = R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__superjump"));
+	A->Fall = A->JumpUp;
+	if (!A->JumpUp) UE_LOG(LogTemp, Warning, TEXT("CoH hero: no %s__superjump clip for jumps"), *CoHBodyType);
 	A->RunCycleSpeed = RunSpeed;
 	A->bAutoLocomotion = true;
 }

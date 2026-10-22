@@ -4,6 +4,7 @@
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Animation/SkeletalMeshActor.h"
 #include "CoHLifeManager.h"
 #include "GameFramework/PlayerController.h"
 #include "AIController.h"
@@ -932,6 +933,7 @@ void ACoHEnemySpawner::TickHarassment(double Now)
 }
 
 bool ACoHEnemySpawner::bMoraleOn=true;
+static double NextPreviewSweep=0;
 
 ACoHEnemySpawner::ACoHEnemySpawner()
 {
@@ -1073,6 +1075,25 @@ void ACoHEnemySpawner::Tick(float Delta)
  }
  AliveGroups=Groups.Num();
  bMoraleOn=bMorale;
+ // the map's original encounter figures (layout previews, placed from the
+ // original spawn spots) are not fighters: with the original-encounters mode
+ // on, live groups take their place, so the previews are hidden as their
+ // cells stream in (they were the "enemies" that could not be targeted)
+ if(bOriginalEncounters && (Now>=NextPreviewSweep || NextPreviewSweep-Now>5.0))      // a new play session restarts the clock
+ {
+  NextPreviewSweep=Now+3.0;
+  int32 Hidden=0;
+  for(TActorIterator<ASkeletalMeshActor> It(W);It;++It)
+  {
+   if(It->IsHidden()) continue;
+   const USkeletalMesh* M=It->GetSkeletalMeshComponent()?It->GetSkeletalMeshComponent()->GetSkeletalMeshAsset():nullptr;
+   if(!M || !M->GetPathName().StartsWith(TEXT("/Game/Characters/OriginalEnemies/"))) continue;
+   It->SetActorHiddenInGame(true); It->SetActorEnableCollision(false);
+   if(USkeletalMeshComponent* C=It->GetSkeletalMeshComponent()) C->SetComponentTickEnabled(false);
+   ++Hidden;
+  }
+  if(Hidden) UE_LOG(LogTemp,Log,TEXT("CoH spawner: hid %d original encounter preview figures"),Hidden);
+ }
  TickHarassment(Now);
  // wandering gangs: a server setting (on by default), capped by the player
  // count so 7 players do not fill the zone
