@@ -631,20 +631,16 @@ void UCoHPowerComponent::TickAutoAttack()
 	const float Now = Now0(GetWorld());
 	if (AutoPower.IsNone() || Now < NextAutoTry) return;
 	NextAutoTry = Now + 0.2f;
-	if (IsDefeated()) { StopAuto(TEXT("off (defeated)")); return; }
+	// as in the original, an auto power stays on until it is toggled off
+	// (Ctrl + its number again): it waits while the hero is down, has no
+	// target or is out of range, and fires as soon as it can
+	if (IsDefeated()) return;
 	if (!Tray.Contains(AutoPower)) { StopAuto(TEXT("off (left the tray)")); return; }
 	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
 	const FCoHPowerDef* P = DB ? DB->FindPower(AutoPower) : nullptr;
 	if (!P) { StopAuto(TEXT("off")); return; }
 	const AActor* Owner = GetOwner();
 	const float Reach = P->Range * FeetToCm + 120.f;
-	// the locked target: defeated or gone -> the lock ends
-	if (AutoTarget.IsValid() || !AutoTarget.IsExplicitlyNull())
-	{
-		const UCoHPowerComponent* LC = Of(AutoTarget.Get());
-		if (!LC || LC->IsDefeated()) { StopAuto(TEXT("off (target defeated)")); return; }
-		if (FVector::Dist(Owner->GetActorLocation(), AutoTarget->GetActorLocation()) > Reach * 1.5f + 300.f) { StopAuto(TEXT("off (target out of range)")); return; }
-	}
 	// fire only at a valid target the power can take
 	AActor* T = Target.Get();
 	const UCoHPowerComponent* TC = Of(T);
