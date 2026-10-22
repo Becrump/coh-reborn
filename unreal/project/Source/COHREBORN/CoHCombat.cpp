@@ -256,7 +256,7 @@ void ACoHCombatEnemy::InitializeFromPreview(AActor* Preview,const TMap<FString,F
 bool ACoHCombatEnemy::CanSee(APawn* Pawn) const
 {
  if(!Pawn) return false;
- FHitResult Hit;FCollisionQueryParams Params(SCENE_QUERY_STAT(CoHEnemySight),false,this);
+ FHitResult Hit;FCollisionQueryParams Params(SCENE_QUERY_STAT(CoHEnemySight),true,this);   // complex: the tiles' simple boxes fill the air
  const FVector Eye=GetActorLocation()+FVector(0,0,55);
  return !GetWorld()->LineTraceSingleByChannel(Hit,Eye,Pawn->GetActorLocation(),ECC_Visibility,Params) || Hit.GetActor()==Pawn;
 }

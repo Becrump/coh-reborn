@@ -886,7 +886,11 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   bRay = PC->DeprojectScreenPositionToWorld(W * 0.5f, H * 0.5f, Origin, Dir);
  }
  if (!bRay) return;
- // whoever is closest to the ray (looser further out) and in view
+ // whoever the ray passes closest to: the whole body counts (feet to head,
+ // a generous capsule, looser further out), and only real geometry in front
+ // of them blocks the pick (complex collision: the original tiles' simple
+ // collision boxes take in the air above the streets)
+ const FVector RayEnd = Origin + Dir * 10000.f;
  AActor* Best = nullptr; float BestScore = TNumericLimits<float>::Max();
  for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
  {
@@ -894,19 +898,24 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
   if (!C || C->IsDefeated()) continue;
   const FVector P = It->GetActorLocation();
-  const float Along = FVector::DotProduct(P - Origin, Dir);
-  if (Along < 0.f || Along > 10000.f) continue;
-  const float Off = FVector::Dist(P, Origin + Dir * Along);
-  const float Tol = 80.f + Along * 0.03f;
+  const float Half = It->GetCapsuleComponent() ? It->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 90.f;
+  FVector OnRay, OnBody;
+  FMath::SegmentDistToSegmentSafe(Origin, RayEnd, P - FVector(0, 0, Half), P + FVector(0, 0, Half), OnRay, OnBody);
+  const float Along = FVector::DotProduct(OnRay - Origin, Dir);
+  if (Along < 0.f) continue;
+  const float Off = FVector::Dist(OnRay, OnBody);
+  const float Tol = 70.f + Along * 0.02f;
   if (Off > Tol) continue;
   FHitResult Block;
-  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPick), false, this); Q.AddIgnoredActor(*It);
-  if (GetWorld()->LineTraceSingleByObjectType(Block, Origin, P, FCollisionObjectQueryParams(ECC_WorldStatic), Q) && !Cast<AVolume>(Block.GetActor())) continue;
+  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPick), true, this); Q.AddIgnoredActor(*It);
+  if (GetWorld()->LineTraceSingleByObjectType(Block, Origin, OnBody, FCollisionObjectQueryParams(ECC_WorldStatic), Q)
+   && !Cast<AVolume>(Block.GetActor()) && Block.Distance < FVector::Dist(Origin, OnBody) - 60.f) continue;
   const float Score = Off / Tol + Along / 10000.f;
   if (Score < BestScore) { BestScore = Score; Best = *It; }
  }
- UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> select %s"), Best ? *GetNameSafe(Best) : TEXT("nothing (target kept)"));
- if (Best) Powers->Target = Best;
+ // a click on empty ground clears the target, as in the original
+ UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> select %s"), Best ? *GetNameSafe(Best) : TEXT("nothing (target cleared)"));
+ Powers->Target = Best;
 }
 
 void ACoHHeroCharacter::PlayHitReaction(float Amount)

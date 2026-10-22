@@ -712,7 +712,7 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 		// only buildings and terrain block line of sight, not other people
 		// (volumes such as the PCG generators are invisible: skip them)
 		TArray<FHitResult> Blocks;
-		FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPowerLOS), false, Owner);
+		FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPowerLOS), true, Owner);     // complex: the tiles' simple boxes fill the air
 		Q.AddIgnoredActor(TargetActor);
 		W->LineTraceMultiByObjectType(Blocks, Owner->GetActorLocation() + FVector(0, 0, 60), TargetActor->GetActorLocation() + FVector(0, 0, 40),
 			FCollisionObjectQueryParams(ECC_WorldStatic), Q);
