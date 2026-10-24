@@ -55,6 +55,14 @@ struct FCoHMover
 	int32 HeldBy = 0;            // gang id holding them (0 = free)
 };
 
+/** A walk link that crosses a road at a signalled junction. */
+struct FCoHCrossing
+{
+	TArray<int32> Signals;   // indices into the signal list that stop the crossed traffic
+	float TIn = 0.f;         // link parameter (lower node -> higher node) at the first lane line
+	float TOut = 0.f;        // ... and at the last one
+};
+
 UCLASS()
 class COHREBORN_API ACoHLifeManager : public AActor
 {
@@ -250,6 +258,39 @@ private:
 	void BuildCircuits();
 	bool WalkPath(int32 From, int32 To, TArray<int32>& Out) const;
 	bool RouteSpotNear(const FVector& Center, float MinDist, float MaxDist, int32& OutRoute, int32& OutStep) const;
+
+	// --- crowd spread and road crossings ---
+	/** Walk links that cross a road are kept only at signalled junctions, and civilians
+	 *  wait at the kerb for a red light. Off: the old free crossing everywhere. */
+	UPROPERTY(EditAnywhere, Category = "CoH|Crowds")
+	bool bSignalCrossings = true;
+
+	/** A signal controls a crossing if its stop line is this far ahead of it (cm) ... */
+	UPROPERTY(EditAnywhere, Category = "CoH|Crowds")
+	float CrossingSignalRange = 3000.f;
+
+	/** ... and no further than this to the side of the lane (cm). */
+	UPROPERTY(EditAnywhere, Category = "CoH|Crowds")
+	float CrossingSignalLateral = 900.f;
+
+	/** Walk nodes are thinned where they bunch: density is counted within this radius (cm). */
+	UPROPERTY(EditAnywhere, Category = "CoH|Crowds")
+	float DensityRadius = 3000.f;
+
+	/** Draw crossings (green: safe now, red: wait) and log the busiest 100 m cells. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Crowds")
+	bool bDebugCrowds = false;
+
+	TMap<uint64, FCoHCrossing> Crossings;
+	TArray<float> WalkWeight;            // per walk node: chance to accept it as a spot, evens out density
+	float DebugClock = 0.f;
+	static uint64 LinkKey(int32 A, int32 B) { return (uint64(FMath::Min(A, B)) << 32) | uint32(FMath::Max(A, B)); }
+	void BuildCrossings();
+	void BuildWalkWeights();
+	bool WalkAccept(int32 Node) const;
+	const FCoHCrossing* FindCrossing(int32 A, int32 B, float& OutTIn, float& OutTOut) const;
+	bool CrossingIsSafe(const FCoHCrossing& C, float SpanSeconds) const;
+	void DebugCrowds(float Dt);
 
 	// --- traffic signals ---
 	/** Writes SignalClock (server seconds) here each frame; the signal-head
