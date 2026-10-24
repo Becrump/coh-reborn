@@ -268,9 +268,16 @@ def import_geoms():
             info = lib["geoms"][g]
             n = asset_name(info["mesh"])
             for t in info.get("textures", []):
-                ti = lib["textures"].get(t.lower()) or lib["textures"].get(t.lower() + ".tga")
-                if ti:
-                    tex[asset_name(ti["png"])] = os.path.join(lib_dir, ti["png"])
+                # a model names a texture, or a layered X_ material whose
+                # layers (base, multiply, bumpmap ...) name the textures
+                layers = lib["materials"].get(t.lower())
+                names = [t]
+                if layers:
+                    names = [x for layer in layers.values() if isinstance(layer, dict) for x in layer.get("texture", [])]
+                for n_ in names:
+                    ti = lib["textures"].get(n_.lower()) or lib["textures"].get(n_.lower() + ".tga")
+                    if ti:
+                        tex[asset_name(ti["png"])] = os.path.join(lib_dir, ti["png"])
             if el.does_asset_exist(GEO + "/" + n):
                 continue
             pipe = unreal.InterchangeGenericAssetsPipeline()
