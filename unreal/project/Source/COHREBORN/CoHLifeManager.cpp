@@ -17,6 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Serialization/JsonReader.h"
@@ -640,6 +641,17 @@ void ACoHLifeManager::BeginPlay()
 		Ism->SetupAttachment(RootComponent);
 		Ism->RegisterComponent();
 		CarISMs.Add(Ism);
+		// the lamp lens material (one shared instance) gets a dynamic copy so its glow follows the night
+		for (int32 Slot = 0; Slot < Ism->GetNumMaterials(); ++Slot)
+		{
+			if (UMaterialInterface* Mat = Ism->GetMaterial(Slot))
+			{
+				if (Mat->GetName().Contains(TEXT("MI_Veh_Light")))
+				{
+					HeadlightMats.Add(Ism->CreateDynamicMaterialInstance(Slot, Mat));
+				}
+			}
+		}
 	}
 	auto MakeMesh = [this](UStaticMesh* Mesh) -> UStaticMeshComponent*
 	{
@@ -1431,6 +1443,9 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 	TArray<APawn*> Players;
 	for (TActorIterator<APawn> It(GetWorld()); It; ++It)
 		if (It->IsPlayerControlled()) Players.Add(*It);
+	FVector CamForward = FVector::ForwardVector;
+	if (const APlayerCameraManager* PCM = UGameplayStatics::GetPlayerCameraManager(this, 0))
+		CamForward = PCM->GetCameraRotation().Vector().GetSafeNormal2D();
 	// is a lane node already occupied by a car (spawn / respawn check)
 	auto IsLaneNodeTaken = [this, &Players](int32 Node)
 	{
@@ -1505,24 +1520,47 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 	for (int32 i = 0; i < Cars.Num(); ++i)
 	{
 		FCoHMover& M = Cars[i];
+		auto Hide = [&]()
+		{
+			CarISMs[M.Kind]->UpdateInstanceTransform(M.Instance,
+				FTransform(FQuat::Identity, FVector::ZeroVector, FVector::ZeroVector), true, false, true);
+			M.Speed = 0.f;
+			M.bHidden = true;
+		};
 		if (i >= ActiveCars)
 		{
 			// off the road for the night: hide (scale 0) without reordering
-			CarISMs[M.Kind]->UpdateInstanceTransform(M.Instance,
-				FTransform(FQuat::Identity, FVector::ZeroVector, FVector::ZeroVector), true, false, true);
+			if (!M.bHidden) Hide();
+			M.To = INDEX_NONE;      // comes back through the respawn below, out of sight
 			continue;
 		}
-		const bool bFar = FVector::Dist2D(Positions[i], Cam) > ActiveRadius * 1.1f;
-		if (M.To == INDEX_NONE || bFar)
+		// Cars exist only near a player: farther than the active radius from every player
+		// (and the camera) they are hidden, and come back at a lane point nobody can see.
+		float Nearest = FVector::Dist2D(Positions[i], Cam);
+		for (const APawn* Pl : Players) Nearest = FMath::Min(Nearest, FVector::Dist2D(Positions[i], Pl->GetActorLocation()));
+		const bool bFar = Nearest > ActiveRadius * 1.1f;
+		if (M.To == INDEX_NONE || bFar || M.bHidden)
 		{
-			const int32 N = RandomNodeNear(Lanes, Cam, ActiveRadius * 0.5f, ActiveRadius);
-			if (N != INDEX_NONE && !IsLaneNodeTaken(N))
+			if (!M.bHidden && (bFar || M.To == INDEX_NONE) && Nearest > ActiveRadius * 1.1f) Hide();
+			else if (!M.bHidden && M.To == INDEX_NONE) Hide();
+			for (int32 Try = 0; Try < 12; ++Try)
 			{
+				const int32 N = RandomNodeNear(Lanes, Cam, ActiveRadius * 0.35f, ActiveRadius);
+				if (N == INDEX_NONE) break;
+				bool bSeen = false;
+				const FVector NP = Lanes.P[N];
+				for (const APawn* Pl : Players)
+					if (FVector::Dist2D(NP, Pl->GetActorLocation()) < ActiveRadius * .75f) bSeen = true;
+				if (FVector::Dist2D(NP, Cam) < ActiveRadius * .75f && FVector::DotProduct(CamForward, (NP - Cam).GetSafeNormal2D()) > -.1f) bSeen = true;
+				if (bSeen || IsLaneNodeTaken(N)) continue;
 				M.From = N;
 				M.Prev = INDEX_NONE;
+				M.bHidden = false;
 				PickNext(Lanes, M);
+				M.T = 0.f;
+				break;
 			}
-			continue;
+			if (M.bHidden || M.To == INDEX_NONE) continue;
 		}
 		// slow down behind the car ahead; stop near trouble
 		float Target = CarSpeed;
@@ -1707,6 +1745,11 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 void ACoHLifeManager::UpdateHeadlights(const TArray<FVector>& Positions, const TArray<FVector>& Headings,
 	int32 ActiveCars, const FVector& Cam)
 {
+	const float LampGlow = FMath::Clamp((Night - 0.2f) / 0.3f, 0.f, 1.f);
+	for (UMaterialInstanceDynamic* Lamp : HeadlightMats)
+	{
+		if (Lamp) Lamp->SetScalarParameterValue(TEXT("Headlight Amt LE"), LampGlow);
+	}
 	if (Headlights.Num() == 0)
 	{
 		for (int32 k = 0; k < HeadlightCars * 2; ++k)
