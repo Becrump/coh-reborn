@@ -284,6 +284,7 @@ private:
 	TMap<uint64, FCoHCrossing> Crossings;
 	TArray<float> WalkWeight;            // per walk node: chance to accept it as a spot, evens out density
 	float DebugClock = 0.f;
+	float RecycleClock = 0.f;
 	static uint64 LinkKey(int32 A, int32 B) { return (uint64(FMath::Min(A, B)) << 32) | uint32(FMath::Max(A, B)); }
 	void BuildCrossings();
 	void BuildWalkWeights();

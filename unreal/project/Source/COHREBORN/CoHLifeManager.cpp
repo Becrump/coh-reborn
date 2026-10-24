@@ -12,6 +12,7 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/Pawn.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -598,7 +599,12 @@ void ACoHLifeManager::BeginPlay()
 		UInstancedStaticMeshComponent* Ism = NewObject<UInstancedStaticMeshComponent>(this);
 		Ism->SetStaticMesh(Mesh);
 		Ism->SetMobility(EComponentMobility::Movable);
-		Ism->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// Both traffic and parked cars use this pool. Keep their authored
+		// convex hulls as kinematic blockers; lane simulation drives them.
+		Ism->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+		Ism->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Ism->SetGenerateOverlapEvents(false);
+		Ism->SetCanEverAffectNavigation(false);
 		Ism->SetupAttachment(RootComponent);
 		Ism->RegisterComponent();
 		CarISMs.Add(Ism);
@@ -725,6 +731,16 @@ void ACoHLifeManager::TickParked(float Dt, const FVector& Cam)
 				const int32 S = FMath::RandRange(0, ParkingSpots.Num() - 1);
 				if (FVector::Dist2D(ParkingSpots[S].GetLocation(), Cam) < ActiveRadius)
 				{
+					const FVector Spot = ParkingSpots[S].GetLocation();
+					bool bOccupied = false;
+					for (const FCoHMover& Other : Parked)
+						if (&Other != &M && Other.From != INDEX_NONE
+							&& FVector::Dist2D(ParkingSpots[Other.From].GetLocation(), Spot) < 2.f * CarBodyRadius
+							&& FMath::Abs(ParkingSpots[Other.From].GetLocation().Z - Spot.Z) < 180.f) { bOccupied = true; break; }
+					for (TActorIterator<APawn> It(GetWorld()); It && !bOccupied; ++It)
+						if (It->IsPlayerControlled() && FVector::Dist2D(It->GetActorLocation(), Spot) < CarBodyRadius + 100.f
+							&& FMath::Abs(It->GetActorLocation().Z - Spot.Z) < 180.f) bOccupied = true;
+					if (bOccupied) continue;
 					M.From = S;
 					break;
 				}
@@ -1147,7 +1163,7 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
         FCoHMover Best;
         FVector BestPos;
         FRotator BestRot;
-        float BestGap = 0.f;
+        float BestGap = 0.f, BestScore = -FLT_MAX;
         for (int32 Try = 0; Try < 48; ++Try)
         {
             FCoHMover Candidate;
@@ -1174,14 +1190,21 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
             P.Z = GroundZ(P);
             if (FVector::Dist2D(P, Cam) > ActiveRadius || !Clear(P, P)) continue;
             float Gap = ActiveRadius;
+            int32 Neighbours = 0;
             for (const FCoHMover& Other : Walkers)
             {
                 if (Other.Comp && Other.Comp != M.Comp && Other.Comp->IsVisible())
-                    Gap = FMath::Min(Gap, FVector::Dist2D(P, Other.Comp->GetComponentLocation()));
+                {
+                    const float D = FVector::Dist2D(P, Other.Comp->GetComponentLocation());
+                    Gap = FMath::Min(Gap, D);
+                    if (D < DensityRadius) ++Neighbours;
+                }
             }
-            if (Gap > BestGap)
+            // Prefer empty ground: each person already within DensityRadius costs as much as 60 cm of free space.
+            const float Score = FMath::Min(Gap, 600.f) - 60.f * Neighbours;
+            if (Gap >= 220.f && Score > BestScore)
             {
-                Best = Candidate; BestPos = P; BestRot = Rot; BestGap = Gap;
+                Best = Candidate; BestPos = P; BestRot = Rot; BestGap = Gap; BestScore = Score;
             }
         }
         if (BestGap < 220.f) return false; // postpone spawning rather than stack bodies
@@ -1215,6 +1238,33 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
     for (const FCoHMover& M : Walkers)
     {
         Positions.Add(M.Comp->GetComponentLocation()); Velocities.Add(M.Velocity);
+    }
+    // Random walks drift into the densest knot of the graph, so once a second the walker in the
+    // most crowded spot (and out of the player's sight) is moved to empty ground instead.
+    RecycleClock += Dt;
+    if (RecycleClock >= 1.f && Active > 8)
+    {
+        RecycleClock = 0.f;
+        const float Mean = Active * FMath::Square(DensityRadius / ActiveRadius);
+        const int32 Cap = FMath::Max(6, FMath::CeilToInt(Mean * 3.f));
+        int32 Worst = INDEX_NONE, WorstCount = Cap;
+        for (int32 I = 0; I < Walkers.Num(); ++I)
+        {
+            const FCoHMover& M = Walkers[I];
+            if (I >= Active || M.Fear > 0.f || M.HeldBy != 0 || !M.Comp->IsVisible()
+                || FVector::Dist2D(Positions[I], Cam) < 3500.f) continue;
+            int32 Count = 0;
+            for (int32 J = 0; J < Walkers.Num(); ++J)
+            {
+                if (J != I && J < Active && FVector::Dist2D(Positions[I], Positions[J]) < DensityRadius) ++Count;
+            }
+            if (Count > WorstCount) { Worst = I; WorstCount = Count; }
+        }
+        if (Worst != INDEX_NONE && Place(Walkers[Worst], ActiveRadius * .4f))
+        {
+            Positions[Worst] = Walkers[Worst].Comp->GetComponentLocation();
+            Velocities[Worst] = FVector::ZeroVector;
+        }
     }
     for (int32 I = 0; I < Walkers.Num(); ++I)
     {
@@ -1346,9 +1396,15 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 	{
 		return;
 	}
+	TArray<APawn*> Players;
+	for (TActorIterator<APawn> It(GetWorld()); It; ++It)
+		if (It->IsPlayerControlled()) Players.Add(*It);
 	// is a lane node already occupied by a car (spawn / respawn check)
-	auto IsLaneNodeTaken = [this](int32 Node)
+	auto IsLaneNodeTaken = [this, &Players](int32 Node)
 	{
+		for (const APawn* Player : Players)
+			if (FVector::Dist2D(Player->GetActorLocation(), Lanes.P[Node]) < CarBodyRadius + 100.f
+				&& FMath::Abs(Player->GetActorLocation().Z - Lanes.P[Node].Z) < 180.f) return true;
 		for (const FCoHMover& C : Cars)
 		{
 			FVector P;
@@ -1382,6 +1438,14 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 		}
 		PickNext(Lanes, M);
 		M.T = FMath::FRand();
+		if (M.To == INDEX_NONE) break;
+		FVector SpawnPosition;
+		FRotator SpawnRotation;
+		Lanes.Eval(M.From, M.To, M.T, SpawnPosition, SpawnRotation);
+		if (Players.ContainsByPredicate([&](const APawn* Player) {
+			return FVector::Dist2D(Player->GetActorLocation(), SpawnPosition) < CarBodyRadius + 100.f
+				&& FMath::Abs(Player->GetActorLocation().Z - SpawnPosition.Z) < 180.f;
+		})) break;
 		M.Speed = CarSpeed;
 		M.Kind = FMath::RandRange(0, CarISMs.Num() - 1);
 		M.Instance = CarISMs[M.Kind]->AddInstance(FTransform(Lanes.P[M.From]), true);
@@ -1487,20 +1551,22 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
         // Pedestrians have priority. Look ahead by braking distance and predict
         // crossing movement; parked sidewalk pedestrians do not stop road traffic.
         const float Look = CarBodyRadius + 120.f + M.Speed * .8f + M.Speed * M.Speed / 1200.f;
-        for (const FCoHMover& W : Walkers)
+        auto YieldToPedestrian = [&](const FVector& Ped, const FVector& Velocity)
         {
-            if (!W.Comp || !W.Comp->IsVisible()) continue;
-            const FVector Ped = W.Comp->GetComponentLocation();
-            if (FMath::Abs(Ped.Z - Positions[i].Z) > 180.f) continue;
+            if (FMath::Abs(Ped.Z - Positions[i].Z) > 180.f) return;
             for (float Horizon : {0.f, .5f, 1.f})
             {
-                const FVector Delta = Ped + W.Velocity * Horizon - Positions[i];
+                const FVector Delta = Ped + Velocity * Horizon - Positions[i];
                 const float Ahead = FVector::DotProduct(Delta, Headings[i]);
                 const float Side = FMath::Abs(FVector::CrossProduct(Headings[i], Delta).Z);
                 if (Ahead > -CarBodyRadius && Ahead < Look && Side < 165.f)
                     Target = FMath::Min(Target, FMath::Sqrt(1200.f * FMath::Max(0.f, Ahead - CarBodyRadius - 140.f)));
             }
-        }
+        };
+        for (const FCoHMover& W : Walkers)
+            if (W.Comp && W.Comp->IsVisible()) YieldToPedestrian(W.Comp->GetComponentLocation(), W.Velocity);
+        for (const APawn* Player : Players)
+            YieldToPedestrian(Player->GetActorLocation(), Player->GetVelocity());
 		M.Speed = FMath::FInterpTo(M.Speed, Target, Dt, Target < M.Speed ? 6.f : 1.5f);
 		const float PrevT = M.T;
 		M.T += M.Speed * Dt / FMath::Max(Lanes.SegLength(M.From, M.To), 1.f);
@@ -1537,6 +1603,18 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
                 && FVector::DistSquared2D(Ped, CandidatePosition) < FVector::DistSquared2D(Ped, Positions[i]))
             { M.T = PrevT; M.Speed = 0.f; break; }
         }
+        // Last-step guard: instance transforms do not sweep, so never
+        // teleport a collidable vehicle into a player while braking.
+        for (const APawn* Player : Players)
+        {
+            const FVector Ped = Player->GetActorLocation();
+            const FVector Delta = Ped - CandidatePosition;
+            if (FMath::Abs(Delta.Z) < 180.f
+                && FMath::Abs(FVector::DotProduct(Delta, CandidateRotation.Vector())) < CarBodyRadius + 65.f
+                && FMath::Abs(FVector::CrossProduct(CandidateRotation.Vector(), Delta).Z) < 165.f
+                && FVector::DistSquared2D(Ped, CandidatePosition) < FVector::DistSquared2D(Ped, Positions[i]))
+            { M.T = PrevT; M.Speed = 0.f; break; }
+        }
 		if (M.T >= 1.f)
 		{
 			M.Prev = M.From;
@@ -1551,6 +1629,40 @@ void ACoHLifeManager::TickCars(float Dt, const FVector& Cam)
 		FRotator R;
 		Lanes.Eval(M.From, M.To, M.T, P, R);
 		Positions[i] = P;
+		// Lane arrows sit below kerbs and medians, so ride on the highest static surface under the
+		// car (centre, nose, tail) and pitch with it instead of sinking into it.
+		{
+			const FVector Fwd = R.Vector();
+			auto StaticTop = [&](const FVector& Q, float& OutZ)
+			{
+				TArray<FHitResult> Hits;
+				FCollisionQueryParams Q2(SCENE_QUERY_STAT(CoHCarGround), false, this);
+				GetWorld()->LineTraceMultiByChannel(Hits, Q + FVector(0, 0, 110.f), Q - FVector(0, 0, 60.f), ECC_Visibility, Q2);
+				bool bFound = false;
+				for (const FHitResult& H : Hits)
+				{
+					const UPrimitiveComponent* C = H.GetComponent();
+					if (C && C->Mobility == EComponentMobility::Static && (!bFound || H.ImpactPoint.Z > OutZ))
+					{
+						OutZ = H.ImpactPoint.Z;
+						bFound = true;
+					}
+				}
+				return bFound;
+			};
+			float ZC = P.Z, ZF = P.Z, ZR = P.Z;
+			const bool bC = StaticTop(P, ZC), bF = StaticTop(P + Fwd * 220.f, ZF), bR = StaticTop(P - Fwd * 220.f, ZR);
+			if (bC || bF || bR)
+			{
+				const float Top = FMath::Max3(bC ? ZC : P.Z, bF ? ZF : P.Z, bR ? ZR : P.Z);
+				P.Z = FMath::Max(P.Z, FMath::Min(Top, P.Z + 60.f));
+				if (bF && bR)
+				{
+					R.Pitch = FMath::Clamp(FMath::RadiansToDegrees(FMath::Atan2(ZF - ZR, 440.f)), -12.f, 12.f);
+				}
+			}
+		}
+		Positions[i].Z = P.Z;
 		CarISMs[M.Kind]->UpdateInstanceTransform(M.Instance, FTransform(R, P, FVector(CarScale)), true, false, true);
 	}
 	for (UInstancedStaticMeshComponent* Ism : CarISMs)
@@ -1605,7 +1717,16 @@ void ACoHLifeManager::UpdateHeadlights(const TArray<FVector>& Positions, const T
 		const FVector F = Headings[i].GetSafeNormal2D();
 		const FVector R(-F.Y, F.X, 0.f);
 		const float Side = (k % 2 == 0) ? -70.f : 70.f;
-		const FVector P = Positions[i] + F * 215.f + R * Side + FVector(0.f, 0.f, 70.f);
+		// lamps sit at the nose of this car's mesh (bounds are in mesh space, origin at the car's middle)
+		float Nose = 215.f, Width = 70.f, Height = 70.f;
+		if (Cars.IsValidIndex(i) && CarMeshes.IsValidIndex(Cars[i].Kind) && CarMeshes[Cars[i].Kind])
+		{
+			const FBoxSphereBounds B = CarMeshes[Cars[i].Kind]->GetBounds();
+			Nose = (B.Origin.X + B.BoxExtent.X - 15.f) * CarScale;
+			Width = B.BoxExtent.Y * .62f * CarScale;
+			Height = (B.Origin.Z - B.BoxExtent.Z + B.BoxExtent.Z * 2.f * .38f) * CarScale;
+		}
+		const FVector P = Positions[i] + F * Nose + R * (Side < 0.f ? -Width : Width) + FVector(0.f, 0.f, Height);
 		L->SetWorldLocationAndRotation(P, (F + FVector(0.f, 0.f, -0.12f)).Rotation());
 		L->SetVisibility(true);
 	}
