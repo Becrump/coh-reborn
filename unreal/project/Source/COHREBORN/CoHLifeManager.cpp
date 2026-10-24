@@ -224,6 +224,9 @@ void ACoHLifeManager::BuildWalkGraph()
 		Grid.FindOrAdd(FIntPoint(FMath::FloorToInt(Walk.P[i].X / Radius), FMath::FloorToInt(Walk.P[i].Y / Radius))).Add(i);
 	}
 	Walk.Next.SetNum(Walk.Num());
+	int32 LinksTested = 0, LinksRejected = 0;
+	TMap<FString, int32> Blockers;
+	TArray<FString> BlockerSamples;
 	for (int32 i = 0; i < Walk.Num(); ++i)
 	{
 		const FIntPoint C(FMath::FloorToInt(Walk.P[i].X / Radius), FMath::FloorToInt(Walk.P[i].Y / Radius));
@@ -252,8 +255,21 @@ void ACoHLifeManager::BuildWalkGraph()
 			FHitResult Hit;
 			// chest height: benches, planters and low walls don't cut a path
 			const FVector Up(0, 0, 85.f);
+			++LinksTested;
 			if (World && World->SweepSingleByChannel(Hit, Walk.P[i] + Up, Walk.P[j] + Up, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeCapsule(35.f, 75.f), Params))
 			{
+				++LinksRejected;
+				const UPrimitiveComponent* BC = Hit.GetComponent();
+				const FString Key = BC ? FString::Printf(TEXT("%s | %s | %s"), *BC->GetClass()->GetName(),
+					*BC->GetName().Left(24), BC->IsA<UStaticMeshComponent>() && Cast<UStaticMeshComponent>(BC)->GetStaticMesh() ? *Cast<UStaticMeshComponent>(BC)->GetStaticMesh()->GetName().Left(32) : TEXT("-")) : FString(TEXT("none"));
+				++Blockers.FindOrAdd(Key);
+				if (LinksRejected % 60 == 1 && BlockerSamples.Num() < 200)
+				{
+					const FBoxSphereBounds BB = BC ? BC->Bounds : FBoxSphereBounds();
+					BlockerSamples.Add(FString::Printf(TEXT("link %d-%d len %.0f at (%.0f,%.0f,%.0f) hit %s owner %s ext (%.0f,%.0f,%.0f) startPenetrating %d"),
+						i, j, FVector::Dist(Walk.P[i], Walk.P[j]), Hit.ImpactPoint.X, Hit.ImpactPoint.Y, Hit.ImpactPoint.Z, *Key,
+						BC && BC->GetOwner() ? *BC->GetOwner()->GetName().Left(40) : TEXT("-"), BB.BoxExtent.X, BB.BoxExtent.Y, BB.BoxExtent.Z, Hit.bStartPenetrating ? 1 : 0));
+				}
 				continue;
 			}
 			Walk.Next[i].AddUnique(j);
@@ -307,6 +323,22 @@ void ACoHLifeManager::BuildWalkGraph()
 	}
 	UE_LOG(LogTemp, Log, TEXT("CoHLife walk graph: %d nodes, %d areas, %d nodes on small islands dropped"),
 		Walk.Num(), Size.Num(), Dropped);
+	{
+		int32 Largest = 0, Links = 0, InSmall = 0;
+		for (int32 Sz : Size) Largest = FMath::Max(Largest, Sz);
+		for (int32 i = 0; i < Walk.Num(); ++i) Links += Walk.Next[i].Num();
+		for (int32 Sz : Size) if (Sz < MinWalkArea) InSmall += Sz;
+		UE_LOG(LogCoHLife, Log, TEXT("CoHLife walk stats: %d links (directed), largest area %d, %d nodes in areas < %d; sweep tested %d links, rejected %d"),
+			Links, Largest, InSmall, MinWalkArea, LinksTested, LinksRejected);
+		Blockers.ValueSort([](int32 A, int32 B) { return A > B; });
+		int32 N = 0;
+		for (const TPair<FString, int32>& B : Blockers)
+		{
+			if (N++ >= 15) break;
+			UE_LOG(LogCoHLife, Log, TEXT("CoHLife blocker x%d: %s"), B.Value, *B.Key);
+		}
+		for (const FString& L : BlockerSamples) UE_LOG(LogCoHLife, Log, TEXT("CoHLife blocked sample: %s"), *L);
+	}
 	BuildWalkWeights();
 }
 
