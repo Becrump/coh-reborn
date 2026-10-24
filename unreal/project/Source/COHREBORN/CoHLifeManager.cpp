@@ -6,6 +6,7 @@
 #include "Components/SpotLightComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Dom/JsonObject.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
@@ -265,6 +266,7 @@ void ACoHLifeManager::BuildWalkGraph()
 			Walk.Next[j].AddUnique(i);
 		}
 	}
+	BuildCrossings();
 	// walkable areas: drop small islands (door spawn knots, rooftops) so
 	// nobody spawns where they can only shuffle on the spot
 	TArray<int32> Comp;
@@ -304,6 +306,282 @@ void ACoHLifeManager::BuildWalkGraph()
 	}
 	UE_LOG(LogTemp, Log, TEXT("CoHLife walk graph: %d nodes, %d areas, %d nodes on small islands dropped"),
 		Walk.Num(), Size.Num(), Dropped);
+	BuildWalkWeights();
+}
+
+// Walk links that cross a lane line are road crossings. A crossing is kept only when
+// signal stop lines for that traffic (all one group) are near it; every other link
+// across a road is cut, so nobody steps into traffic at a random spot.
+void ACoHLifeManager::BuildCrossings()
+{
+	Crossings.Reset();
+	if (!bSignalCrossings || Lanes.Num() == 0 || Signals.Num() == 0)
+	{
+		return;
+	}
+	const float Cell = 2000.f;
+	auto CellOf = [Cell](const FVector& P) { return FIntPoint(FMath::FloorToInt(P.X / Cell), FMath::FloorToInt(P.Y / Cell)); };
+	TMap<FIntPoint, TArray<FIntPoint>> LaneGrid;   // lane segments (from, to) near each cell
+	for (int32 a = 0; a < Lanes.Num(); ++a)
+	{
+		for (int32 b : Lanes.Next[a])
+		{
+			const int32 Steps = FMath::Max(1, FMath::CeilToInt(FVector::Dist2D(Lanes.P[a], Lanes.P[b]) / (Cell * .5f)));
+			for (int32 s = 0; s <= Steps; ++s)
+			{
+				LaneGrid.FindOrAdd(CellOf(FMath::Lerp(Lanes.P[a], Lanes.P[b], float(s) / Steps))).AddUnique(FIntPoint(a, b));
+			}
+		}
+	}
+	int32 Roads = 0;
+	TArray<TPair<int32, int32>> Cut;
+	for (int32 i = 0; i < Walk.Num(); ++i)
+	{
+		for (int32 j : Walk.Next[i])
+		{
+			if (j < i)
+			{
+				continue;
+			}
+			const FVector P1 = Walk.P[i], P2 = Walk.P[j];
+			const FVector2D R(P2.X - P1.X, P2.Y - P1.Y);
+			TSet<uint64> Seen;
+			TSet<int32> Sigs;
+			bool bGroup[2] = {false, false};
+			float TMin = 2.f, TMax = -1.f;
+			int32 Hits = 0;
+			const int32 Steps = FMath::Max(1, FMath::CeilToInt(FVector::Dist2D(P1, P2) / (Cell * .5f)));
+			for (int32 s = 0; s <= Steps; ++s)
+			{
+				const FIntPoint C0 = CellOf(FMath::Lerp(P1, P2, float(s) / Steps));
+				for (int32 dx = -1; dx <= 1; ++dx)
+				{
+					for (int32 dy = -1; dy <= 1; ++dy)
+					{
+						const TArray<FIntPoint>* Segs = LaneGrid.Find(FIntPoint(C0.X + dx, C0.Y + dy));
+						if (!Segs)
+						{
+							continue;
+						}
+						for (const FIntPoint& L : *Segs)
+						{
+							bool bAlready = false;
+							Seen.Add((uint64(L.X) << 32) | uint32(L.Y), &bAlready);
+							if (bAlready)
+							{
+								continue;
+							}
+							const FVector A = Lanes.P[L.X], B = Lanes.P[L.Y];
+							const FVector2D Sg(B.X - A.X, B.Y - A.Y);
+							const float Den = R.X * Sg.Y - R.Y * Sg.X;
+							if (FMath::Abs(Den) < 1e-3f)
+							{
+								continue;
+							}
+							const FVector2D QP(A.X - P1.X, A.Y - P1.Y);
+							const float T = (QP.X * Sg.Y - QP.Y * Sg.X) / Den;
+							const float U = (QP.X * R.Y - QP.Y * R.X) / Den;
+							if (T < 0.f || T > 1.f || U < 0.f || U > 1.f
+								|| FMath::Abs(FMath::Lerp(P1.Z, P2.Z, T) - FMath::Lerp(A.Z, B.Z, U)) > 300.f)
+							{
+								continue;
+							}
+							++Hits;
+							TMin = FMath::Min(TMin, T);
+							TMax = FMath::Max(TMax, T);
+							const FVector X = P1 + (P2 - P1) * T;
+							const FVector2D Dir = Sg.GetSafeNormal();
+							for (int32 k = 0; k < Signals.Num(); ++k)
+							{
+								const FCoHSignal& S = Signals[k];
+								const FVector Delta = S.P - X;
+								const float Ahead = Dir.X * Delta.X + Dir.Y * Delta.Y;
+								const float Lateral = FMath::Abs(Dir.X * Delta.Y - Dir.Y * Delta.X);
+								// same road: the stop line's heading is along the lane (either way round)
+								if (FMath::Abs(Dir.X * S.D.X + Dir.Y * S.D.Y) > .6f && Ahead > -300.f
+									&& Ahead < CrossingSignalRange && Lateral < CrossingSignalLateral)
+								{
+									Sigs.Add(k);
+									bGroup[S.Group ? 1 : 0] = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			if (Hits == 0)
+			{
+				continue;
+			}
+			++Roads;
+			if (Sigs.Num() == 0 || (bGroup[0] && bGroup[1]))
+			{
+				Cut.Emplace(i, j);
+			}
+			else
+			{
+				FCoHCrossing& X = Crossings.Add(LinkKey(i, j));
+				X.Signals = Sigs.Array();
+				X.TIn = TMin;
+				X.TOut = TMax;
+			}
+		}
+	}
+	for (const TPair<int32, int32>& L : Cut)
+	{
+		Walk.Next[L.Key].Remove(L.Value);
+		Walk.Next[L.Value].Remove(L.Key);
+	}
+	UE_LOG(LogCoHLife, Log, TEXT("CoHLife crossings: %d links cross a road, %d kept at signals, %d cut"),
+		Roads, Crossings.Num(), Cut.Num());
+}
+
+// Nodes are not spread evenly (the plaza has far more than a side street), so picking a
+// node at random packs the crowd where nodes cluster. Each node gets a chance to be
+// accepted that falls with its local node count, which evens out people per area.
+void ACoHLifeManager::BuildWalkWeights()
+{
+	WalkWeight.Init(1.f, Walk.Num());
+	const float R = FMath::Max(500.f, DensityRadius);
+	TMap<FIntPoint, TArray<int32>> Grid;
+	for (int32 i = 0; i < Walk.Num(); ++i)
+	{
+		if (Walk.Next[i].Num() > 0)
+		{
+			Grid.FindOrAdd(FIntPoint(FMath::FloorToInt(Walk.P[i].X / R), FMath::FloorToInt(Walk.P[i].Y / R))).Add(i);
+		}
+	}
+	TArray<int32> Count;
+	Count.Init(0, Walk.Num());
+	double Sum = 0;
+	int32 Live = 0, Peak = 0;
+	for (int32 i = 0; i < Walk.Num(); ++i)
+	{
+		if (Walk.Next[i].Num() == 0)
+		{
+			continue;
+		}
+		const FIntPoint C(FMath::FloorToInt(Walk.P[i].X / R), FMath::FloorToInt(Walk.P[i].Y / R));
+		for (int32 dx = -1; dx <= 1; ++dx)
+		{
+			for (int32 dy = -1; dy <= 1; ++dy)
+			{
+				if (const TArray<int32>* B = Grid.Find(FIntPoint(C.X + dx, C.Y + dy)))
+				{
+					for (int32 j : *B)
+					{
+						if (FVector::Dist2D(Walk.P[i], Walk.P[j]) < R)
+						{
+							++Count[i];
+						}
+					}
+				}
+			}
+		}
+		Sum += Count[i];
+		Peak = FMath::Max(Peak, Count[i]);
+		++Live;
+	}
+	if (Live == 0)
+	{
+		return;
+	}
+	const float Mean = float(Sum / Live);
+	for (int32 i = 0; i < Walk.Num(); ++i)
+	{
+		if (Count[i] > 0)
+		{
+			WalkWeight[i] = FMath::Clamp(Mean / Count[i], .08f, 1.f);
+		}
+	}
+	UE_LOG(LogCoHLife, Log, TEXT("CoHLife walk density: %.0f nodes per %.0f m radius on average, up to %d"), Mean, R / 100.f, Peak);
+}
+
+bool ACoHLifeManager::WalkAccept(int32 Node) const
+{
+	return !WalkWeight.IsValidIndex(Node) || FMath::FRand() < WalkWeight[Node];
+}
+
+const FCoHCrossing* ACoHLifeManager::FindCrossing(int32 A, int32 B, float& OutTIn, float& OutTOut) const
+{
+	const FCoHCrossing* C = Crossings.Find(LinkKey(A, B));
+	if (!C)
+	{
+		return nullptr;
+	}
+	if (A < B)
+	{
+		OutTIn = C->TIn;
+		OutTOut = C->TOut;
+	}
+	else
+	{
+		OutTIn = 1.f - C->TOut;
+		OutTOut = 1.f - C->TIn;
+	}
+	return C;
+}
+
+// Safe to start across: every controlling signal has been red long enough for the
+// junction to clear, and stays red long enough to get over.
+bool ACoHLifeManager::CrossingIsSafe(const FCoHCrossing& C, float SpanSeconds) const
+{
+	const float Half = SignalCycle * 0.5f;
+	for (int32 K : C.Signals)
+	{
+		const FCoHSignal& S = Signals[K];
+		float T = FMath::Fmod(float(FMath::Fmod(SignalTime, 3600.0)) + S.Offset + (S.Group ? Half : 0.f), SignalCycle);
+		if (T < 0.f)
+		{
+			T += SignalCycle;
+		}
+		if (T < Half || T - Half < 1.5f || SignalCycle - T < SpanSeconds + 1.f)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void ACoHLifeManager::DebugCrowds(float Dt)
+{
+	UWorld* World = GetWorld();
+	const FVector Up(0, 0, 60.f);
+	for (const TPair<uint64, FCoHCrossing>& It : Crossings)
+	{
+		const int32 A = int32(It.Key >> 32), B = int32(It.Key & 0xffffffffu);
+		const bool bSafe = CrossingIsSafe(It.Value, 8.f);
+		DrawDebugLine(World, Walk.P[A] + Up, Walk.P[B] + Up, bSafe ? FColor::Green : FColor::Red, false, 0.f, 0, 6.f);
+	}
+	DebugClock += Dt;
+	if (DebugClock < 5.f)
+	{
+		return;
+	}
+	DebugClock = 0.f;
+	TMap<FIntPoint, int32> Cells;
+	int32 Shown = 0;
+	for (const FCoHMover& M : Walkers)
+	{
+		if (M.Comp && M.Comp->IsVisible())
+		{
+			const FVector P = M.Comp->GetComponentLocation();
+			++Cells.FindOrAdd(FIntPoint(FMath::FloorToInt(P.X / 10000.f), FMath::FloorToInt(P.Y / 10000.f)));
+			++Shown;
+		}
+	}
+	Cells.ValueSort([](int32 A, int32 B) { return A > B; });
+	FString Busiest;
+	int32 N = 0;
+	for (const TPair<FIntPoint, int32>& C : Cells)
+	{
+		if (N++ >= 5)
+		{
+			break;
+		}
+		Busiest += FString::Printf(TEXT(" (%d,%d)=%d"), C.Key.X, C.Key.Y, C.Value);
+	}
+	UE_LOG(LogCoHLife, Log, TEXT("CoHLife crowd: %d shown, %d cells of 100 m used, busiest:%s"), Shown, Cells.Num(), *Busiest);
 }
 
 void ACoHLifeManager::BeginPlay()
@@ -475,11 +753,12 @@ FVector ACoHLifeManager::CameraLocation() const
 
 int32 ACoHLifeManager::RandomNodeNear(const FCoHGraph& G, const FVector& Center, float MinDist, float MaxDist) const
 {
-	for (int32 Try = 0; Try < 40; ++Try)
+	const bool bWalk = &G == &Walk;
+	for (int32 Try = 0; Try < (bWalk ? 120 : 40); ++Try)
 	{
 		const int32 i = FMath::RandRange(0, G.Num() - 1);
 		const float Dist = FVector::Dist2D(G.P[i], Center);
-		if (Dist >= MinDist && Dist <= MaxDist && G.Next[i].Num() > 0)
+		if (Dist >= MinDist && Dist <= MaxDist && G.Next[i].Num() > 0 && (!bWalk || WalkAccept(i)))
 		{
 			return i;
 		}
@@ -701,7 +980,12 @@ void ACoHLifeManager::BuildCircuits()
 	for (int32 c = 0; c < NumCircuits * 3 && Circuits.Num() < NumCircuits; ++c)
 	{
 		// 4-6 waypoints far apart, joined by shortest paths, closed into a loop
-		TArray<int32> Way = {Live[FMath::RandRange(0, Live.Num() - 1)]};
+		int32 First = Live[FMath::RandRange(0, Live.Num() - 1)];
+		for (int32 Try = 0; Try < 20 && !WalkAccept(First); ++Try)
+		{
+			First = Live[FMath::RandRange(0, Live.Num() - 1)];
+		}
+		TArray<int32> Way = {First};
 		const int32 Want = FMath::RandRange(4, 6);
 		for (int32 w = 1; w < Want; ++w)
 		{
@@ -710,6 +994,10 @@ void ACoHLifeManager::BuildCircuits()
 			for (int32 Try = 0; Try < 25; ++Try)
 			{
 				const int32 Cand = Live[FMath::RandRange(0, Live.Num() - 1)];
+				if (!WalkAccept(Cand))
+				{
+					continue;
+				}
 				const float FromLast = FVector::Dist2D(Walk.P[Cand], Walk.P[Way.Last()]);
 				if (FromLast < 8000.f || FromLast > 30000.f)
 				{
@@ -763,7 +1051,7 @@ bool ACoHLifeManager::RouteSpotNear(const FVector& Center, float MinDist, float 
 		const int32 R = FMath::RandRange(0, Circuits.Num() - 1);
 		const int32 S = FMath::RandRange(0, Circuits[R].Num() - 1);
 		const float D = FVector::Dist2D(Walk.P[Circuits[R][S]], Center);
-		if (D >= MinDist && D <= MaxDist)
+		if (D >= MinDist && D <= MaxDist && WalkAccept(Circuits[R][S]))
 		{
 			OutRoute = R;
 			OutStep = S;
@@ -819,6 +1107,10 @@ void ACoHLifeManager::Tick(float DeltaSeconds)
 	}
 	const FVector Cam = CameraLocation();
 	TickWalkers(DeltaSeconds, Cam);
+	if (bDebugCrowds)
+	{
+		DebugCrowds(DeltaSeconds);
+	}
 	TickCars(DeltaSeconds, Cam);
 	TickParked(DeltaSeconds, Cam);
 	if (Train.Comp)
@@ -843,6 +1135,11 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
         FHitResult Hit;
         return !GetWorld()->SweepSingleByChannel(Hit, A + BodyUp, B + BodyUp,
             FQuat::Identity, ECC_Visibility, Body, Query);
+    };
+    // Never appear in the middle of a road crossing.
+    auto InCrossing = [&](int32 A, int32 B, float T) {
+        float TIn, TOut;
+        return FindCrossing(A, B, TIn, TOut) && T > TIn - 0.03f && T < TOut + 0.03f;
     };
     // Sample positions along routes, rather than packing people at marker nodes.
     // Every candidate, including circuit commuters, uses the same clearance score.
@@ -870,6 +1167,7 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
             }
             if (Candidate.To == INDEX_NONE) continue;
             Candidate.T = FMath::FRand();
+            if (InCrossing(Candidate.From, Candidate.To, Candidate.T)) continue;
             FVector P;
             FRotator Rot;
             Walk.Eval(Candidate.From, Candidate.To, Candidate.T, P, Rot);
@@ -954,6 +1252,23 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
         FRotator Heading;
         Walk.Eval(M.From, M.To, FMath::Min(1.f, M.T + 120.f / FMath::Max(1.f, Walk.SegLength(M.From, M.To))), Target, Heading);
         FVector Wanted = (Target - Old).GetSafeNormal2D() * Speed;
+        // Kerb: stop just before a road crossing until its signals are red long enough to get over.
+        bool bWaiting = false;
+        if (!Fleeing && Crossings.Num())
+        {
+            float TIn, TOut;
+            if (const FCoHCrossing* Cross = FindCrossing(M.From, M.To, TIn, TOut))
+            {
+                const float Len = FMath::Max(1.f, Walk.SegLength(M.From, M.To));
+                const float TWait = FMath::Max(0.f, TIn - 350.f / Len);
+                if (M.T >= TWait && M.T <= TWait + 120.f / Len
+                    && !CrossingIsSafe(*Cross, ((TOut - TIn) * Len + 700.f) / FMath::Max(1.f, Speed)))
+                {
+                    bWaiting = true;
+                    Wanted = FVector::ZeroVector;
+                }
+            }
+        }
         for (int32 J = 0; J < Walkers.Num(); ++J)
         {
             if (J == I || !Walkers[J].Comp->IsVisible() || FMath::Abs(Positions[J].Z - Old.Z) > 160.f) continue;
@@ -988,7 +1303,7 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
         }
         M.Velocity = (Next - Old) / Dt;
         const float ActualSpeed = M.Velocity.Size2D();
-        M.BlockedSeconds = ActualSpeed < 5.f ? M.BlockedSeconds + Dt : 0.f;
+        M.BlockedSeconds = (ActualSpeed < 5.f && !bWaiting) ? M.BlockedSeconds + Dt : 0.f;
         if (M.BlockedSeconds > 3.f)
         {
             // Reverse onto a known corridor instead of teleporting a visible person.
