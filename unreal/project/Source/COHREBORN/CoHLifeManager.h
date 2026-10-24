@@ -278,7 +278,7 @@ private:
 	float DensityRadius = 3000.f;
 
 	/** Draw crossings (green: safe now, red: wait) and log the busiest 100 m cells. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Crowds")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Crowds", meta = (AllowPrivateAccess = "true"))
 	bool bDebugCrowds = false;
 
 	TMap<uint64, FCoHCrossing> Crossings;
