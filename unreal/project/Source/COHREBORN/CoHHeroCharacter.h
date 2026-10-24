@@ -98,6 +98,33 @@ public:
 	UPROPERTY(Transient)
 	TObjectPtr<class UCoHGraphicsMenu> GraphicsMenu;
 
+	/** The hero built by the original rules: archetype, picks, XP, debt. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
+	TObjectPtr<class UCoHHeroProgress> Progress;
+
+	/** Play as an original player body (a preset from the hero file) with
+	 *  the original power moves; false: the mesh above and its anim blueprint. */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
+	bool bCoHBody = true;
+	/** Hero file (format 2) in the rules' HeroesDir, e.g. Class_Blaster.json. Empty: the test hero. */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
+	FString HeroFile;
+	/** Continue from <hero>_save.json when it exists. */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
+	bool bResumeSave = true;
+	/** Mesh turn for the CoH bodies. */
+	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
+	float CoHMeshYaw = -90.f;
+	/** Body of the preset in use: male, fem, huge (empty: not a CoH body). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
+	FString CoHBodyType;
+	/** Plays a power's original moves (AttackBits, or ActivationBits for
+	 *  toggles and self powers) on a CoH body. False: no moves for it. */
+	bool PlayPowerMoves(FName Power, bool bActivation);
+	/** Plays a list of moves (victim hit reactions...). */
+	bool PlayMoves(const TArray<struct FCoHAnimSegment>& Segments, float Lock);
+	class UCoHBodyAnim* BodyAnim() const;
+
 	/** Powers: health, endurance, tray and the original power data. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Powers")
 	TObjectPtr<UCoHPowerComponent> Powers;
@@ -182,6 +209,10 @@ private:
  float PunchHitTimeLeft = 0.f;
  bool bPunchLanded = false;
 	void RestoreLocomotion();
+	void ApplyCoHBody();
+	void SetupBodyAnim();
+	bool bBodyApplied = false;
+	FString BodyPreset;
 	void UpdateClimbAnim();
 	void ApplyMovementMode();
 	bool TraceWall(FHitResult& Hit, float Height, float Reach) const;
@@ -262,4 +293,7 @@ public:
 	/** Players arriving by monorail (URL option Arrive=Monorail) start at
 	 *  the PlayerStarts tagged MonorailArrival, inside the waiting train. */
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	/** Maps with no enemy spawner placed (or not in the loaded cells) get one,
+	 *  so the original encounters and wandering gangs run everywhere. */
+	virtual void StartPlay() override;
 };

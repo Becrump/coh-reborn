@@ -2,6 +2,7 @@
 #include "CoHPowers.h"
 #include "CoHHeroCharacter.h"
 #include "CoHPowerFX.h"
+#include "CoHHeroProgress.h"
 #include "Animation/AnimSequence.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/SkeletalMesh.h"
@@ -63,6 +64,46 @@ void SCoHHud::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 0)
 					[ MakeBar([this] { const UCoHPowerComponent* C = Me(); return C && C->MaxEndurance > 0 ? C->Endurance / C->MaxEndurance : 0.f; }, FLinearColor(0.2f, 0.45f, 1.f),
 						[this] { const UCoHPowerComponent* C = Me(); return C ? FText::FromString(FString::Printf(TEXT("END  %.0f / %.0f"), C->Endurance, C->MaxEndurance)) : FText(); }) ]
+						// XP (debt in purple, as in the original), influence, training and inspirations
+						+ SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 0)
+						[
+							SNew(SBox).Visibility_Lambda([this] { const UCoHHeroProgress* H = Progress(); return H && H->bHasRecord ? EVisibility::Visible : EVisibility::Collapsed; })
+							[ MakeBar([this] { const UCoHHeroProgress* H = Progress(); int32 Into = 0, Span = 1; if (H) H->XPBar(Into, Span); return FMath::Clamp((float)Into / Span, 0.f, 1.f); },
+								FLinearColor(0.85f, 0.7f, 0.1f),
+								[this] { const UCoHHeroProgress* H = Progress(); int32 Into = 0, Span = 1; if (H) H->XPBar(Into, Span);
+									return H ? FText::FromString(FString::Printf(TEXT("XP  %d / %d%s"), Into, Span, H->Hero.Debt > 0 ? *FString::Printf(TEXT("   debt %d"), H->Hero.Debt) : TEXT(""))) : FText(); }) ]
+						]
+						+ SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 0)
+						[
+							SNew(STextBlock).Font(Font(10, "Bold")).ShadowOffset(FVector2D(1, 1))
+							.ColorAndOpacity_Lambda([this] { const UCoHHeroProgress* H = Progress(); return FSlateColor(H && (H->CanTrain() || H->PicksOpen() > 0) ? Gold : FLinearColor(0.75f, 0.8f, 1.f)); })
+							.Text_Lambda([this]
+							{
+								const UCoHHeroProgress* H = Progress();
+								if (!H || !H->bHasRecord) return FText();
+								FString T = FString::Printf(TEXT("Influence %d"), H->Hero.Influence);
+								if (H->Hero.Debt > 0) T += FString::Printf(TEXT("   Debt %d"), H->Hero.Debt);
+								if (H->CanTrain()) T += TEXT("   LEVEL UP: press L to train");
+								else if (H->PicksOpen() > 0) T += TEXT("   New power: press P");
+								return FText::FromString(T);
+							})
+						]
+						+ SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 0)
+						[
+							SNew(STextBlock).Font(Font(9)).ColorAndOpacity(FLinearColor(0.9f, 0.6f, 1.f))
+							.Text_Lambda([this]
+							{
+								const UCoHHeroProgress* H = Progress();
+								if (!H || H->Hero.Inspirations.Num() == 0) return FText();
+								FString T = TEXT("Inspirations (Alt+1..):");
+								for (int32 i = 0; i < H->Hero.Inspirations.Num(); ++i)
+								{
+									FString N = H->Hero.Inspirations[i].ToString(); int32 Dot; if (N.FindLastChar(TEXT('.'), Dot)) N = N.Mid(Dot + 1);
+									T += FString::Printf(TEXT("  %d %s"), i + 1, *N.Replace(TEXT("_"), TEXT(" ")));
+								}
+								return FText::FromString(T);
+							})
+						]
 				]
 			]
 		]
@@ -123,6 +164,12 @@ UCoHPowerComponent* SCoHHud::Me() const
 {
 	const APlayerController* PC = Player.Get();
 	return PC ? UCoHPowerComponent::Of(PC->GetPawn()) : nullptr;
+}
+
+UCoHHeroProgress* SCoHHud::Progress() const
+{
+	const APlayerController* PC = Player.Get();
+	return PC ? UCoHHeroProgress::Of(PC->GetPawn()) : nullptr;
 }
 
 UCoHPowerComponent* SCoHHud::TargetComp() const
@@ -232,6 +279,13 @@ TSharedRef<SWidget> SCoHHud::MakeBrowser()
 	TSharedRef<SScrollBox> Cats = SNew(SScrollBox);
 	if (UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(Player.Get()))
 	{
+		// a built hero: the open level-up pick first
+		Cats->AddSlot()
+		[
+			SNew(SButton).OnClicked_Lambda([this] { ShowPicks(); return FReply::Handled(); })
+			.Visibility_Lambda([this] { const UCoHHeroProgress* P = Progress(); return P && P->bHasRecord ? EVisibility::Visible : EVisibility::Collapsed; })
+			[ SNew(STextBlock).Font(Font(10, "Bold")).ColorAndOpacity(Gold).Text(LOCTEXT("Picks", "Level-up power pick")) ]
+		];
 		TArray<FString> Seen;
 		for (const FCoHHeroSet& H : DB->HeroSets)
 		{
@@ -346,6 +400,39 @@ void SCoHHud::ShowPowers(const FString& SetId)
 					+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(11, "Bold")).Text(FText::FromString(P->Display)) ]
 					+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(9)).ColorAndOpacity(FLinearColor(1, 1, 1, 0.75f)).Text(FText::FromString(P->Short)) ]
 					+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(8)).ColorAndOpacity(FLinearColor(0.6f, 0.75f, 1.f)).Text(FText::FromString(Info)) ]
+				]
+			]
+		];
+	}
+}
+
+void SCoHHud::ShowPicks()
+{
+	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(Player.Get());
+	UCoHHeroProgress* H = Progress();
+	if (!DB || !H || !PowerList) return;
+	SetList->ClearChildren();
+	PowerList->ClearChildren();
+	const TArray<FName> Options = H->Options();
+	BrowserTitle->SetText(FText::FromString(Options.Num() ? FString::Printf(TEXT("Level %d: choose a power (%d allowed)"), H->Hero.Level, Options.Num())
+		: (H->CanTrain() ? TEXT("Train first (L) to open the next pick") : TEXT("No power pick open at this level"))));
+	for (const FName& Id : Options)
+	{
+		const FCoHPowerDef* P = DB->FindPower(Id);
+		if (!P) continue;
+		const FString SetName = P->SetId.Mid(P->SetId.Find(TEXT(".")) + 1).Replace(TEXT("_"), TEXT(" "));
+		PowerList->AddSlot().Padding(0, 1)
+		[
+			SNew(SButton).ToolTipText(FText::FromString(P->Help))
+			.OnClicked_Lambda([this, Id] { if (UCoHHeroProgress* Hp = Progress()) Hp->Pick(Id); ToggleBrowser(); return FReply::Handled(); })
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().AutoWidth()[ SNew(SBox).WidthOverride(36).HeightOverride(36)[ SNew(SImage).Image(IconByName(P->Icon)) ] ]
+				+ SHorizontalBox::Slot().FillWidth(1.f).Padding(8, 0)
+				[
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(11, "Bold")).Text(FText::FromString(P->Display + TEXT("   (") + SetName + TEXT(")"))) ]
+					+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(9)).ColorAndOpacity(FLinearColor(1, 1, 1, 0.75f)).Text(FText::FromString(P->Short)) ]
 				]
 			]
 		];

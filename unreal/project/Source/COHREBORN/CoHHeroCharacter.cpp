@@ -1,5 +1,8 @@
 #include "CoHHeroCharacter.h"
 #include "CoHPowers.h"
+#include "CoHBodyAnim.h"
+#include "CoHGameRules.h"
+#include "CoHHeroProgress.h"
 #include "CoHPowerUI.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/Skeleton.h"
@@ -64,6 +67,7 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 
 	Powers = CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
 	Powers->bPlayerSide = true;
+	Progress = CreateDefaultSubobject<UCoHHeroProgress>(TEXT("Progress"));
 }
 
 void ACoHHeroCharacter::BeginPlay()
@@ -78,7 +82,17 @@ void ACoHHeroCharacter::BeginPlay()
 			LocomotionAnimClass = Anim;
 		}
 	}
-	if (HasAuthority())
+	bool bBuilt = false;
+	if (HasAuthority() && !HeroFile.IsEmpty())
+	{
+		// a hero built by the original rules; the save continues it
+		const UCoHGameRules* R = UCoHGameRules::Get(this);
+		const FString Save = FPaths::GetBaseFilename(HeroFile) + TEXT("_save.json");
+		bBuilt = R && R->HasHeroRules() && ((bResumeSave && FPaths::FileExists(R->HeroesDir / Save) && Progress->LoadHeroFile(Save)) || Progress->LoadHeroFile(HeroFile));
+		if (bBuilt) Progress->SaveFile = Save;
+	}
+	if (bBuilt) ApplyCoHBody();
+	else if (HasAuthority())
 	{
 		Powers->ClassName = TestArchetype;
 		Powers->Level = FMath::Clamp(TestLevel, 1, 50);
@@ -126,7 +140,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 		KB.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i]
 		{
 			const APlayerController* PC = Cast<APlayerController>(GetController());
-			if (!Powers || (PC && (PC->IsInputKeyDown(EKeys::LeftControl) || PC->IsInputKeyDown(EKeys::RightControl)))) return;
+			if (!Powers || (PC && (PC->IsInputKeyDown(EKeys::LeftControl) || PC->IsInputKeyDown(EKeys::RightControl)
+				|| PC->IsInputKeyDown(EKeys::LeftAlt) || PC->IsInputKeyDown(EKeys::RightAlt)))) return;
 			UE_LOG(LogTemp, Log, TEXT("CoH key: %d -> fire slot %d once%s"), (i + 1) % 10, i + 1,
 				PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)) ? TEXT(" (Shift held: no effect)") : TEXT(""));
 			Powers->ActivateSlot(i);
@@ -139,10 +154,20 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 			if (Powers) Powers->ToggleAutoSlot(i);
 		});
 		Input->KeyBindings.Add(Lock);
+		// Alt + number: use that inspiration
+		FInputKeyBinding Insp(FInputChord(SlotKeys[i], false, false, true, false), IE_Pressed);
+		Insp.KeyDelegate.GetDelegateForManualSet().BindLambda([this, i] { if (Progress) Progress->UseInspiration(i); });
+		Input->KeyBindings.Add(Insp);
 	}
 	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
 	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
 	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
+	// L: train to the next level (the original trainer step)
+	{
+		FInputKeyBinding Train(FInputChord(EKeys::L), IE_Pressed);
+		Train.KeyDelegate.GetDelegateForManualSet().BindLambda([this] { if (Progress) Progress->Train(); });
+		Input->KeyBindings.Add(Train);
+	}
 
 	// input assets built here so the project needs none
 	Mapping = NewObject<UInputMappingContext>(this);
@@ -335,6 +360,7 @@ void ACoHHeroCharacter::Punch(const FInputActionValue&)
 	{
 		return;
 	}
+	if (!CoHBodyType.IsEmpty()) { if (PunchTimeLeft <= 0.f) PlayPowerAnimation(0, 0.8f, -1); return; }
 	if (PunchTimeLeft > 0.f)
 	{
 		bQueuedPunch = true;     // chain into the next punch when this one lands
@@ -387,9 +413,102 @@ void ACoHHeroCharacter::RestoreLocomotion()
 	GetMesh()->SetPlayRate(1.f);
 	if (LocomotionAnimClass)
 	{
+		// a CoH body keeps its anim instance: moves end back in locomotion by themselves
+		if (BodyAnim()) return;
 		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 		GetMesh()->SetAnimInstanceClass(LocomotionAnimClass);
+		SetupBodyAnim();
 	}
+}
+
+UCoHBodyAnim* ACoHHeroCharacter::BodyAnim() const
+{
+	return GetMesh()->GetAnimationMode() == EAnimationMode::AnimationBlueprint ? Cast<UCoHBodyAnim>(GetMesh()->GetAnimInstance()) : nullptr;
+}
+
+void ACoHHeroCharacter::ApplyCoHBody()
+{
+	// the preset the hero file names: an original player body on its skeleton
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!bCoHBody || !R || !Progress || !Progress->bHasRecord || bBodyApplied) return;
+	FString Body;
+	const FString Preset = Progress->Hero.Preset.IsEmpty() ? TEXT("Model_Positron") : Progress->Hero.Preset;
+	USkeletalMesh* BodyMesh = R->PresetMesh(Preset, Body);
+	bBodyApplied = true;
+	if (!BodyMesh) { UE_LOG(LogTemp, Warning, TEXT("CoH hero: preset %s is not imported (/Game/CoH/Player/Presets)"), *Preset); return; }
+	BodyPreset = Preset;
+	CoHBodyType = Body;
+	Powers->Body = Body;
+	GetMesh()->SetSkeletalMeshAsset(BodyMesh);
+	GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
+	LocomotionAnimClass = UCoHBodyAnim::StaticClass();
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	GetMesh()->SetAnimInstanceClass(LocomotionAnimClass);
+	SetupBodyAnim();
+	UE_LOG(LogTemp, Log, TEXT("CoH hero: body %s (%s)"), *Preset, *Body);
+}
+
+void ACoHHeroCharacter::SetupBodyAnim()
+{
+	UCoHBodyAnim* A = BodyAnim();
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!A || !R || CoHBodyType.IsEmpty()) return;
+	const FString Folder = R->PresetRoot / CoHBodyType / BodyPreset;
+	A->Idle = R->ClipIn(Folder, TEXT("idle"));
+	A->CombatIdle = R->ClipIn(Folder, TEXT("combat_idle"));
+	A->Run = R->ClipIn(Folder, TEXT("run"));
+	// jumps: the player sequencer's jumpPre / jumpUp / jumpApex / jumpFall all
+	// play one track, <body>/superjump (frames 3-93, then the fall holds), so
+	// one clip carries the whole jump; landing blends back to ready or run
+	A->JumpUp = R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__superjump"));
+	A->Fall = A->JumpUp;
+	if (!A->JumpUp) UE_LOG(LogTemp, Warning, TEXT("CoH hero: no %s__superjump clip for jumps"), *CoHBodyType);
+	A->RunCycleSpeed = RunSpeed;
+	A->bAutoLocomotion = true;
+}
+
+bool ACoHHeroCharacter::PlayMoves(const TArray<FCoHAnimSegment>& Segments, float Lock)
+{
+	if (bClimbing || Segments.Num() == 0) return false;
+	if (!BodyAnim() && LocomotionAnimClass == UCoHBodyAnim::StaticClass())
+	{
+		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		GetMesh()->SetAnimInstanceClass(LocomotionAnimClass);
+		SetupBodyAnim();
+	}
+	UCoHBodyAnim* A = BodyAnim();
+	if (!A) return false;
+	A->PlaySegments(Segments);
+	A->MarkCombat();
+	if (Lock > 0.f)
+	{
+		// rooted while the power activates (TimeToActivate, the server rule);
+		// in the air the hero keeps the jump arc, as in the original
+		PunchTimeLeft = Lock;
+		bPunchLanded = true; bQueuedPunch = false;
+		UCharacterMovementComponent* CM = GetCharacterMovement();
+		if (!CM->IsFalling() && !CM->IsFlying())
+		{
+			CM->StopMovementImmediately();
+			CM->DisableMovement();
+		}
+	}
+	return true;
+}
+
+bool ACoHHeroCharacter::PlayPowerMoves(FName Power, bool bActivation)
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	const FCoHPowerAnim* PA = R ? R->PowerAnim(Power) : nullptr;
+	if (!PA || CoHBodyType.IsEmpty()) return false;
+	TArray<FCoHAnimSegment> Segs;
+	const TCHAR* First = bActivation ? TEXT("ActivationBits") : TEXT("AttackBits");
+	const TCHAR* Second = bActivation ? TEXT("AttackBits") : TEXT("ActivationBits");
+	if (!R->Segments(*PA, CoHBodyType, First, Segs) && !R->Segments(*PA, CoHBodyType, Second, Segs)) return false;
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* Def = DB ? DB->FindPower(Power) : nullptr;
+	const bool bToggle = Def && Def->Type == TEXT("kToggle");
+	return PlayMoves(Segs, bToggle ? 0.f : FMath::Max(0.3f, Def ? Def->Activate : 1.f));
 }
 
 void ACoHHeroCharacter::UpdateClimbAnim()
@@ -502,6 +621,7 @@ void ACoHHeroCharacter::StopClimb()
 void ACoHHeroCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
 	ComboWindow = FMath::Max(0.f, ComboWindow - DeltaSeconds);
 	UpdateCamera(DeltaSeconds);
@@ -552,6 +672,17 @@ ACoHGameMode::ACoHGameMode()
 	// zone-to-zone monorail: keep player controllers and ride through the
 	// transition level (L_MonorailRide) while the next zone loads
 	bUseSeamlessTravel = true;
+}
+
+void ACoHGameMode::StartPlay()
+{
+	Super::StartPlay();
+	UWorld* W = GetWorld();
+	if (W && !TActorIterator<ACoHEnemySpawner>(W))
+	{
+		W->SpawnActor<ACoHEnemySpawner>(ACoHEnemySpawner::StaticClass(), FTransform::Identity);
+		UE_LOG(LogTemp, Log, TEXT("CoH: no enemy spawner on the map, added one"));
+	}
 }
 
 AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
@@ -621,6 +752,7 @@ void ACoHHeroCharacter::OnDefeated()
  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
  SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
  Powers->Reset();
+ if (Progress) Progress->OnDefeatedByVillains();
  Health=Powers->Health; RestoreLocomotion();
  if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 3.f, FColor::Cyan, TEXT("Defeated: back at the start point, fully healed"));
 }
@@ -628,6 +760,18 @@ void ACoHHeroCharacter::OnDefeated()
 void ACoHHeroCharacter::PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip)
 {
  if (bClimbing) return;
+ if (!CoHBodyType.IsEmpty())
+ {
+  // a CoH body with no original moves for the power (inherents such as Brawl
+  // are not in power_anims.json): the preset's attack clip, never a clip of
+  // another skeleton (that shows the reference T-pose)
+  const UCoHGameRules* R = UCoHGameRules::Get(this);
+  FCoHAnimSegment Seg;
+  Seg.Clip = R ? R->ClipIn(R->PresetRoot / CoHBodyType / BodyPreset, TEXT("attack")) : nullptr;
+  if (Seg.Clip) { Seg.End = Seg.Clip->GetPlayLength(); PlayMoves({ Seg }, FMath::Max(0.4f, Duration)); }
+  else UE_LOG(LogTemp, Warning, TEXT("CoH hero: no moves and no attack clip for %s"), *BodyPreset);
+  return;
+ }
  const TArray<FSoftObjectPath>& Set =
   Kind == 4 ? SelfAnims :
   Kind == 3 ? (ThrowAnims.Num() ? ThrowAnims : RangedAnims) :
@@ -711,35 +855,32 @@ void ACoHHeroCharacter::ToggleAnimBench()
 void ACoHHeroCharacter::CycleTarget()
 {
  if (!Powers) return;
- // foes in view (buildings block, people don't) within 50 m, nearest first;
- // the ones behind the camera count as a little further away
+ // as in the original: the first Tab takes the nearest foe, each further Tab
+ // the next nearest, wrapping round; Shift+Tab goes back. Every living foe
+ // within 200 ft counts, in view or not (allies and the defeated never do).
  TArray<TPair<float, AActor*>> Foes;
- const FVector Eye = GetActorLocation() + FVector(0, 0, 60);
- const FVector Look = Controller ? Controller->GetControlRotation().Vector() : GetActorForwardVector();
  for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
  {
   const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
-  if (!C || C->bPlayerSide || C->IsDefeated()) continue;
-  const FVector To = It->GetActorLocation() - Eye;
-  const float D = To.Size();
-  if (D > 5000.f) continue;
-  FHitResult Block;
-  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHTab), false, this); Q.AddIgnoredActor(*It);
-  if (GetWorld()->LineTraceSingleByObjectType(Block, Eye, It->GetActorLocation(), FCollisionObjectQueryParams(ECC_WorldStatic), Q) && !Cast<AVolume>(Block.GetActor())) continue;
-  const float Front = FVector::DotProduct(To.GetSafeNormal2D(), Look.GetSafeNormal2D());
-  Foes.Add({ D * (Front < 0.f ? 1.6f : 1.f), *It });
+  if (!C || C->bPlayerSide == Powers->bPlayerSide || C->IsDefeated()) continue;
+  const float D = FVector::Dist(GetActorLocation(), It->GetActorLocation());
+  if (D > 200.f * 30.48f) continue;
+  Foes.Add({ D, *It });
  }
  Foes.Sort([](const TPair<float, AActor*>& A, const TPair<float, AActor*>& B) { return A.Key < B.Key; });
  const double Now = GetWorld()->GetTimeSeconds();
- const bool bCycling = Now - LastTabTime < 2.0;     // a fresh press starts at the nearest
+ const APlayerController* PC = Cast<APlayerController>(GetController());
+ const bool bBack = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+ // a fresh press (2 s since the last) or a lost target starts at the nearest
+ int32 Current = INDEX_NONE;
+ for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Current = i; break; }
+ const bool bCycling = Now - LastTabTime < 2.0 && Current != INDEX_NONE;
  LastTabTime = Now;
- if (Foes.Num() == 0) { Powers->Target = nullptr; UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> no foe in view")); return; }
- int32 Next = 0;
- if (bCycling)
-  for (int32 i = 0; i < Foes.Num(); ++i) if (Foes[i].Value == Powers->Target.Get()) { Next = (i + 1) % Foes.Num(); break; }
+ if (Foes.Num() == 0) { Powers->Target = nullptr; UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> no foe within 200 ft")); return; }
+ const int32 Next = bCycling ? (Current + (bBack ? Foes.Num() - 1 : 1)) % Foes.Num() : 0;
  Powers->Target = Foes[Next].Value;
- UE_LOG(LogTemp, Log, TEXT("CoH key: Tab -> target %s at %.0f m (%d of %d)"), *GetNameSafe(Foes[Next].Value),
-  FVector::Dist(GetActorLocation(), Foes[Next].Value->GetActorLocation()) / 100.f, Next + 1, Foes.Num());
+ UE_LOG(LogTemp, Log, TEXT("CoH key: %sTab -> target %s at %.0f m (%d of %d)"), bBack ? TEXT("Shift+") : TEXT(""), *GetNameSafe(Foes[Next].Value),
+  Foes[Next].Key / 100.f, Next + 1, Foes.Num());
 }
 
 void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
@@ -756,7 +897,11 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   bRay = PC->DeprojectScreenPositionToWorld(W * 0.5f, H * 0.5f, Origin, Dir);
  }
  if (!bRay) return;
- // whoever is closest to the ray (looser further out) and in view
+ // whoever the ray passes closest to: the whole body counts (feet to head,
+ // a generous capsule, looser further out), and only real geometry in front
+ // of them blocks the pick (complex collision: the original tiles' simple
+ // collision boxes take in the air above the streets)
+ const FVector RayEnd = Origin + Dir * 10000.f;
  AActor* Best = nullptr; float BestScore = TNumericLimits<float>::Max();
  for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
  {
@@ -764,27 +909,42 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
   if (!C || C->IsDefeated()) continue;
   const FVector P = It->GetActorLocation();
-  const float Along = FVector::DotProduct(P - Origin, Dir);
-  if (Along < 0.f || Along > 10000.f) continue;
-  const float Off = FVector::Dist(P, Origin + Dir * Along);
-  const float Tol = 80.f + Along * 0.03f;
+  const float Half = It->GetCapsuleComponent() ? It->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 90.f;
+  FVector OnRay, OnBody;
+  FMath::SegmentDistToSegmentSafe(Origin, RayEnd, P - FVector(0, 0, Half), P + FVector(0, 0, Half), OnRay, OnBody);
+  const float Along = FVector::DotProduct(OnRay - Origin, Dir);
+  if (Along < 0.f) continue;
+  const float Off = FVector::Dist(OnRay, OnBody);
+  const float Tol = 70.f + Along * 0.02f;
   if (Off > Tol) continue;
   FHitResult Block;
-  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPick), false, this); Q.AddIgnoredActor(*It);
-  if (GetWorld()->LineTraceSingleByObjectType(Block, Origin, P, FCollisionObjectQueryParams(ECC_WorldStatic), Q) && !Cast<AVolume>(Block.GetActor())) continue;
+  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPick), true, this); Q.AddIgnoredActor(*It);
+  if (GetWorld()->LineTraceSingleByObjectType(Block, Origin, OnBody, FCollisionObjectQueryParams(ECC_WorldStatic), Q)
+   && !Cast<AVolume>(Block.GetActor()) && Block.Distance < FVector::Dist(Origin, OnBody) - 60.f) continue;
   const float Score = Off / Tol + Along / 10000.f;
   if (Score < BestScore) { BestScore = Score; Best = *It; }
  }
- UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> select %s"), Best ? *GetNameSafe(Best) : TEXT("nothing (target kept)"));
- if (Best) Powers->Target = Best;
+ // a click on empty ground clears the target, as in the original
+ UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> select %s"), Best ? *GetNameSafe(Best) : TEXT("nothing (target cleared)"));
+ Powers->Target = Best;
 }
 
 void ACoHHeroCharacter::PlayHitReaction(float Amount)
 {
  // never cut a power animation, a climb or flight; at most every 0.6 s
- if (bClimbing || bFlight || PunchTimeLeft > 0.f || HitReactAnims.Num() == 0) return;
+ if (bClimbing || bFlight || PunchTimeLeft > 0.f) return;
  const double Now = GetWorld()->GetTimeSeconds();
  if (Now < NextHitReact) return;
+ if (!CoHBodyType.IsEmpty())
+ {
+  // C_HitQuick on the original body
+  const UCoHGameRules* R = UCoHGameRules::Get(this);
+  FCoHAnimSegment Hit;
+  Hit.Clip = R ? R->ClipIn(R->PresetRoot / CoHBodyType / BodyPreset, TEXT("hit")) : nullptr;
+  if (Hit.Clip) { NextHitReact = Now + 0.6; Hit.End = Hit.Clip->GetPlayLength(); PlayMoves({ Hit }, 0.f); }
+  return;
+ }
+ if (HitReactAnims.Num() == 0) return;
  NextHitReact = Now + 0.6;
  const bool bHeavy = Powers && Amount > Powers->MaxHealth * 0.12f;
  const int32 Pick = bHeavy || HitReactAnims.Num() == 1 ? 0 : FMath::RandRange(1, HitReactAnims.Num() - 1);

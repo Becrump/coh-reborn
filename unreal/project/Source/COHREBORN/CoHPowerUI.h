@@ -44,6 +44,9 @@ private:
 	TSharedRef<SWidget> MakeBrowser();
 	void ShowSets(const FString& Category);
 	void ShowPowers(const FString& SetId);
+	/** The open level-up pick: only what the original rules allow. */
+	void ShowPicks();
+	class UCoHHeroProgress* Progress() const;
 	void OnText(AActor* Who, const FString& Text, FLinearColor Colour);
 	void SetCursor(bool bOn);
 	TSharedRef<SWidget> MakeBench();
