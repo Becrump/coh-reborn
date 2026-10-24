@@ -81,3 +81,34 @@ near (38, 10, 203) in glTF meters.
   game data marks them; anything unmarked is exported.
 - Only the Geometry layer is exported by default. Other layers (event
   decorations, doors, NPC spawns) can be passed with `--map`.
+
+## Player models and power animations
+
+- `python -m coh2unreal.powanim`: matches every player power to its original
+  sequencer moves (per male / fem / huge body) and lists the anims it needs.
+- `python -m coh2unreal.player`: exports hero presets or costume files on the
+  player skeletons, and the player animation library.
+
+See `docs/powers-and-player-models.md`.
+
+## Power effects
+
+- `python -m coh2unreal.fx`: exports the original effects of player powers
+  (`.fx` timelines, `.part` particle systems, `.bhvr` behaviors), their
+  textures, sounds, pivot and mesh models, as `fx_library.json` and
+  `power_fx.json`.
+- `python -m coh2unreal.fxsim`: previews them with a port of the game's
+  particle update, from the side, as a contact sheet.
+
+See `docs/power-effects.md`.
+
+## Enemies
+
+- `python tools/ai/coh_encounters.py`: Atlas Park's original spawn
+  definitions, group makeups and villain rolls (`encounters.json`,
+  `roster.json`).
+- `python -m coh2unreal.enemies`: each villain's model, its powers on its own
+  sequencer, idle anim lists and clips (`kit.json`, `models/`). Its effects
+  export with `coh2unreal.fx --powers-json enemy_power_anims.json`.
+
+See `docs/enemy-setup.md`.

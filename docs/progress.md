@@ -228,3 +228,45 @@ Atlas Park's one working map is now `/Game/AtlasPark4/AtlasPark_DressingStudy_Na
   - Choosing the destination with a scripted click did not register (dest stayed -1).
   - The full ride-level round trip.
   - The last clearance pass (tile_3_-1_glass, tile_-2_6) was still running.
+
+## 2026-10-20/21: game systems set up in Unreal (PR #8 steps 1-6)
+
+Branch `claude/unreal-game-systems`. Every converter ran on the PC from the local data (outputs in `C:\Users\rtcru\CoHReborn\out`, not in git). The hero-build selftest passes 26/26 and the leveling selftest 15/15.
+
+- **Player bodies and clips** (`unreal/scripts/game_systems/import_player.py`):
+  - Positron (male), Ms Liberty (fem) and Back Alley Brawler (huge), each on its own skeleton, under `/Game/CoH/Player/Presets/<body>/<preset>`.
+  - The animation library: 372 male, 385 fem and 388 huge clips, named after the anim (`male__energy_rapid`), under `/Game/CoH/Player/Anims/<body>`.
+  - Each glTF's scene root is renamed after the body before import. Interchange adds a proxy root joint named after that root, so every file of a body has to use the same name.
+- **`CoHBodyAnim`:** a native anim instance (no anim blueprint) that plays the original move chains from `power_anims.json` with crossfades. Heroes get locomotion from the preset clips; villains use a base clip.
+- **`CoHGameRules`:** loads `power_anims`, `hero_rules`, `rewards`, `kit` and `encounters` once. `requires`, `can_pick`, `options`, `auto_powers`, `defeat`, `give_xp` and `defeated` are ported from `coh_build.py` and `coh_rewards.py`.
+- **`CoHHeroProgress`:** loads the format 2 hero file (`HeroFile=Class_Blaster.json`: the Fire/Fire Blaster as Positron) and saves to `<hero>_save.json`.
+  - XP, influence and debt, with debt shown in the XP bar.
+  - Training with L, the level-up pick in the P browser, inspirations on Alt+number.
+  - On a defeat, rewards go by damage share and the top damage dealer rolls the drop.
+- **`CoHEffects`:** a C++ port of fxsim that draws camera-facing quads with `/Game/CoH/FX/Particle/M_CoHParticle_*`. Event sounds play.
+  - Textures are imported to `/Game/CoH/FX/Textures` and sounds to `/Game/CoH/FX/Sounds` (`import_fx.py`).
+  - So far 55 textures and 134 sounds: those of the test powers and of every enemy power.
+- **Powers:** damage lands at the original hit time (`FramesBeforeHit`, plus the flight at `ProjectileSpeed` for `DelayedHit` powers). The original moves and effects play whenever the power has them.
+- **Enemies:**
+  - 35 kit models under `/Game/CoH/Enemies/<costume>`, each clip named after its move (`import_enemies.py`).
+  - Villains play their own move chains and encounter idles: `<<PL_SprayPaint>>` plays Spray_A, `<<PL_ArmsCrossed>>` plays Cross_Arms.
+  - `bOriginalEncounters` (on by default) spawns the original spawn definitions: team size, actor slots and level rolls. `bWanderingGangs` still switches wandering on or off.
+  - Each villain's `Ally` field decides who is a foe. Paragon Police and Freedom Corps are on the heroes' side and are not spawned as foes.
+- **`coh2unreal.enemies`:**
+  - Idle behaviors from `aiscript/priorities` (the `PL_*` lists) resolve with the ENCOUNTER bit.
+  - Each villain gets `behavior_lists`.
+  - `--no-models` keeps the model lists.
+- **Fixes found while playtesting:**
+  - The effect cache moved as it grew, so drawing read freed memory and crashed.
+  - The Nanite map has no landscape, so the spawner never found ground. It now uses ground near street level.
+  - The game mode now adds a spawner when the map has none.
+  - Police were attacking the hero.
+  - Brawl put the body in a T-pose: powers with no moves now play the preset's attack clip.
+  - Villains chased at walking speed; they now chase at 640 cm/s.
+- **Not yet:**
+  - Placing spots by kind (street corners, ledges).
+  - Allies that fight villains.
+  - Power colour themes, effect meshes (geoms), and Cycle / TriggerBits conditions.
+  - Jump and fall clips for the CoH bodies.
+  - Textures and sounds for the other player powers (`import_fx.py` with `GS_POWERS=None`).
+- **Editor note:** the editor crashed three times on a texture export run by an orphaned glass helper process, which re-ran it every time the editor started. The process is now stopped.

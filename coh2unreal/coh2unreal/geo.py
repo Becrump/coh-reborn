@@ -21,6 +21,7 @@ class GeoModel:
         self.max = (0, 0, 0)
         self.packs = {}        # field -> (packsize, unpacksize, offset)
         self.has_bones = False
+        self.api = 0           # AltPivotInfo offset in the data section
 
 
 class Geo:
@@ -89,7 +90,7 @@ class Geo:
             (_flags, m.radius, _vbo, tex_count, _id, _bm, _ls, boneinfo,
              _trick, m.vert_count, m.tri_count, tex_idx) = \
                 struct.unpack_from("<IfIihBBIIiiI", h, p)
-            name_off = struct.unpack_from("<I", h, p + 80)[0]
+            name_off, m.api = struct.unpack_from("<II", h, p + 80)
             m.min = struct.unpack_from("<3f", h, p + 104)
             m.max = struct.unpack_from("<3f", h, p + 116)
             pk = p + 132
@@ -105,7 +106,7 @@ class Geo:
             (tex_idx,) = struct.unpack_from("<I", h, q)
             q += 4
             q += 32  # PolyGrid
-            (name_off,) = struct.unpack_from("<I", h, q)
+            name_off, m.api = struct.unpack_from("<II", h, q)
             q += 8   # name, api
             q += 12  # scale
             m.min = struct.unpack_from("<3f", h, q)
@@ -148,6 +149,21 @@ class Geo:
             t += cnt
         return {"positions": pos, "normals": nrm, "uvs": uv,
                 "groups": groups}
+
+    def alt_pivots(self, m):
+        """The model's alternate pivots (effects attach to them with
+        AltPiv N): a list of Mat4 as [x axis, y axis, z axis, position].
+        AltPivotInfo (anim.h) is i32 count then 15 Mat4 of 12 floats."""
+        if not m.api:
+            return []
+        base = self.data_offset + m.api
+        (count,) = struct.unpack_from("<i", self.data, base)
+        out = []
+        for i in range(max(0, min(count, 15))):
+            f = struct.unpack_from("<12f", self.data, base + 4 + i * 48)
+            out.append([list(f[0:3]), list(f[3:6]), list(f[6:9]),
+                        list(f[9:12])])
+        return out
 
     def skin(self, m):
         """Per-vertex skinning for a boned model, or None.
