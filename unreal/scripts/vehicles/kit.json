@@ -1,0 +1,242 @@
+{
+ "vehicle02_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle02_Car.SM_CSCar_vehicle02_Car",
+  "paint_slot": 1,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_White.MI_CSCar_vehicle02_Car_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Black.MI_CSCar_vehicle02_Car_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Silver.MI_CSCar_vehicle02_Car_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Red.MI_CSCar_vehicle02_Car_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Navy.MI_CSCar_vehicle02_Car_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Green.MI_CSCar_vehicle02_Car_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Yellow.MI_CSCar_vehicle02_Car_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Maroon.MI_CSCar_vehicle02_Car_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle02_Car_Blue.MI_CSCar_vehicle02_Car_Blue"
+  },
+  "min": [
+   -241.99734497070312,
+   -105.83159637451172,
+   0.01595759391784668
+  ],
+  "max": [
+   236.828857421875,
+   105.56271362304688,
+   175.8894805908203
+  ]
+ },
+ "vehicle01_Van": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle01_Van.SM_CSCar_vehicle01_Van",
+  "paint_slot": 4,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_White.MI_CSCar_vehicle01_Van_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Black.MI_CSCar_vehicle01_Van_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Silver.MI_CSCar_vehicle01_Van_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Red.MI_CSCar_vehicle01_Van_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Navy.MI_CSCar_vehicle01_Van_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Green.MI_CSCar_vehicle01_Van_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Yellow.MI_CSCar_vehicle01_Van_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Maroon.MI_CSCar_vehicle01_Van_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle01_Van_Blue.MI_CSCar_vehicle01_Van_Blue"
+  },
+  "min": [
+   -242.3076934814453,
+   -111.24005126953125,
+   0.4754534065723419
+  ],
+  "max": [
+   237.15869140625,
+   112.07360076904297,
+   185.91676330566406
+  ]
+ },
+ "vehicle03_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle03_Car.SM_CSCar_vehicle03_Car",
+  "paint_slot": 3,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_White.MI_CSCar_vehicle03_Car_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Black.MI_CSCar_vehicle03_Car_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Silver.MI_CSCar_vehicle03_Car_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Red.MI_CSCar_vehicle03_Car_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Navy.MI_CSCar_vehicle03_Car_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Green.MI_CSCar_vehicle03_Car_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Yellow.MI_CSCar_vehicle03_Car_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Maroon.MI_CSCar_vehicle03_Car_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle03_Car_Blue.MI_CSCar_vehicle03_Car_Blue"
+  },
+  "min": [
+   -284.81982421875,
+   -109.58563232421875,
+   -1.9495594501495361
+  ],
+  "max": [
+   256.177001953125,
+   109.64903259277344,
+   152.53836059570312
+  ]
+ },
+ "vehicle04_Truck": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle04_Truck.SM_CSCar_vehicle04_Truck",
+  "paint_slot": 1,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_White.MI_CSCar_vehicle04_Truck_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Black.MI_CSCar_vehicle04_Truck_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Silver.MI_CSCar_vehicle04_Truck_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Red.MI_CSCar_vehicle04_Truck_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Navy.MI_CSCar_vehicle04_Truck_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Green.MI_CSCar_vehicle04_Truck_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Yellow.MI_CSCar_vehicle04_Truck_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Maroon.MI_CSCar_vehicle04_Truck_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle04_Truck_Blue.MI_CSCar_vehicle04_Truck_Blue"
+  },
+  "min": [
+   -300.3670959472656,
+   -120.02272033691406,
+   0.18388086557388306
+  ],
+  "max": [
+   255.54005432128906,
+   120.035888671875,
+   184.2051544189453
+  ]
+ },
+ "vehicle05_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle05_Car.SM_CSCar_vehicle05_Car",
+  "paint_slot": 2,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_White.MI_CSCar_vehicle05_Car_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Black.MI_CSCar_vehicle05_Car_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Silver.MI_CSCar_vehicle05_Car_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Red.MI_CSCar_vehicle05_Car_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Navy.MI_CSCar_vehicle05_Car_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Green.MI_CSCar_vehicle05_Car_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Yellow.MI_CSCar_vehicle05_Car_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Maroon.MI_CSCar_vehicle05_Car_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle05_Car_Blue.MI_CSCar_vehicle05_Car_Blue"
+  },
+  "min": [
+   -222.3010711669922,
+   -102.1224365234375,
+   0.1642415076494217
+  ],
+  "max": [
+   230.7773895263672,
+   101.44727325439453,
+   170.48451232910156
+  ]
+ },
+ "vehicle06_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle06_Car.SM_CSCar_vehicle06_Car",
+  "paint_slot": 1,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_White.MI_CSCar_vehicle06_Car_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Black.MI_CSCar_vehicle06_Car_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Silver.MI_CSCar_vehicle06_Car_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Red.MI_CSCar_vehicle06_Car_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Navy.MI_CSCar_vehicle06_Car_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Green.MI_CSCar_vehicle06_Car_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Yellow.MI_CSCar_vehicle06_Car_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Maroon.MI_CSCar_vehicle06_Car_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle06_Car_Blue.MI_CSCar_vehicle06_Car_Blue"
+  },
+  "min": [
+   -215.6941375732422,
+   -94.08136749267578,
+   -0.037517473101615906
+  ],
+  "max": [
+   220.57919311523438,
+   94.4141845703125,
+   137.53143310546875
+  ]
+ },
+ "vehicle07_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle07_Car.SM_CSCar_vehicle07_Car",
+  "paint_slot": 5,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_White.MI_CSCar_vehicle07_Car_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Black.MI_CSCar_vehicle07_Car_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Silver.MI_CSCar_vehicle07_Car_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Red.MI_CSCar_vehicle07_Car_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Navy.MI_CSCar_vehicle07_Car_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Green.MI_CSCar_vehicle07_Car_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Yellow.MI_CSCar_vehicle07_Car_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Maroon.MI_CSCar_vehicle07_Car_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle07_Car_Blue.MI_CSCar_vehicle07_Car_Blue"
+  },
+  "min": [
+   -228.6518096923828,
+   -103.0180435180664,
+   0.05563664436340332
+  ],
+  "max": [
+   212.30630493164062,
+   103.62842559814453,
+   143.55064392089844
+  ]
+ },
+ "vehicle09_Van": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle09_Van.SM_CSCar_vehicle09_Van",
+  "paint_slot": 3,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_White.MI_CSCar_vehicle09_Van_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Black.MI_CSCar_vehicle09_Van_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Silver.MI_CSCar_vehicle09_Van_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Red.MI_CSCar_vehicle09_Van_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Navy.MI_CSCar_vehicle09_Van_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Green.MI_CSCar_vehicle09_Van_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Yellow.MI_CSCar_vehicle09_Van_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Maroon.MI_CSCar_vehicle09_Van_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle09_Van_Blue.MI_CSCar_vehicle09_Van_Blue"
+  },
+  "min": [
+   -319.541748046875,
+   -126.81446838378906,
+   0.11687611043453217
+  ],
+  "max": [
+   319.46392822265625,
+   126.99695587158203,
+   254.70640563964844
+  ]
+ },
+ "vehicle12_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle12_Car.SM_CSCar_vehicle12_Car",
+  "paint_slot": 2,
+  "colours": {
+   "White": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_White.MI_CSCar_vehicle12_Car_White",
+   "Black": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Black.MI_CSCar_vehicle12_Car_Black",
+   "Silver": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Silver.MI_CSCar_vehicle12_Car_Silver",
+   "Red": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Red.MI_CSCar_vehicle12_Car_Red",
+   "Navy": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Navy.MI_CSCar_vehicle12_Car_Navy",
+   "Green": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Green.MI_CSCar_vehicle12_Car_Green",
+   "Yellow": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Yellow.MI_CSCar_vehicle12_Car_Yellow",
+   "Maroon": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Maroon.MI_CSCar_vehicle12_Car_Maroon",
+   "Blue": "/Game/AtlasPark4/CitySampleCars/Paint/MI_CSCar_vehicle12_Car_Blue.MI_CSCar_vehicle12_Car_Blue"
+  },
+  "min": [
+   -284.80718994140625,
+   -109.59902954101562,
+   -1.9300081729888916
+  ],
+  "max": [
+   256.3195495605469,
+   109.64756774902344,
+   191.33578491210938
+  ]
+ },
+ "vehicle13_Car": {
+  "mesh": "/Game/AtlasPark4/CitySampleCars/Meshes/SM_CSCar_vehicle13_Car.SM_CSCar_vehicle13_Car",
+  "paint_slot": 2,
+  "colours": {},
+  "min": [
+   -284.7739562988281,
+   -109.60480499267578,
+   -1.7112808227539062
+  ],
+  "max": [
+   267.8340759277344,
+   109.60794830322266,
+   185.58477783203125
+  ]
+ }
+}
