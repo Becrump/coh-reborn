@@ -88,6 +88,25 @@ def make_materials():
     print("MATERIALS", made or "all there")
 
 
+def power_fx_roots(p):
+    """Every effect file a power names: its *FX keys and those of each
+    customizable theme (nested under "themes")."""
+    out = []
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k.endswith("FX") and isinstance(v, str):
+                    out.append(v.lower())
+                elif isinstance(v, (dict, list)):
+                    walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    walk(p)
+    return out
+
+
 def wanted():
     """Textures and sounds the chosen powers' effects use (child effects included)."""
     prefixes = globals().get("GS_POWERS")
@@ -99,9 +118,7 @@ def wanted():
         for pname, p in pfx.items():
             if prefixes and not any(pname.startswith(x) for x in prefixes):
                 continue
-            for k, v in p.items():
-                if k.endswith("FX") and isinstance(v, str):
-                    todo.append(v.lower())
+            todo += power_fx_roots(p)
         seen = set()
         while todo:
             f = todo.pop()
@@ -233,7 +250,7 @@ def import_geoms():
         for pname, p in pfx.items():
             if prefixes and not any(pname.startswith(x) for x in prefixes):
                 continue
-            todo += [v.lower() for k, v in p.items() if k.endswith("FX") and isinstance(v, str)]
+            todo += power_fx_roots(p)
         while todo:
             f = todo.pop()
             if f in seen or f not in lib["fx"]:
