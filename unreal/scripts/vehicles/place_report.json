@@ -1,0 +1,5516 @@
+{
+ "cars": [
+  {
+   "i": 0,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "White",
+   "at": [
+    76874,
+    1821,
+    -971
+   ],
+   "yaw": -75.0
+  },
+  {
+   "i": 1,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Yellow",
+   "at": [
+    81378,
+    1890,
+    -964
+   ],
+   "yaw": 1.0
+  },
+  {
+   "i": 2,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Blue",
+   "at": [
+    64785,
+    -2237,
+    -962
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 3,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Yellow",
+   "at": [
+    64226,
+    -2053,
+    -962
+   ],
+   "yaw": -65.5
+  },
+  {
+   "i": 4,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Red",
+   "at": [
+    66950,
+    -18330,
+    -962
+   ],
+   "yaw": -88.0
+  },
+  {
+   "i": 5,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Red",
+   "at": [
+    66125,
+    -18330,
+    -962
+   ],
+   "yaw": -94.5
+  },
+  {
+   "i": 6,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Red",
+   "at": [
+    65731,
+    -18330,
+    -969
+   ],
+   "yaw": -84.5
+  },
+  {
+   "i": 7,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    65086,
+    -17149,
+    -962
+   ],
+   "yaw": -20.0
+  },
+  {
+   "i": 8,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "White",
+   "at": [
+    68378,
+    3077,
+    -971
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 9,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    70714,
+    -19217,
+    -962
+   ],
+   "yaw": -266.0
+  },
+  {
+   "i": 10,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    76459,
+    -19217,
+    -969
+   ],
+   "yaw": 89.0
+  },
+  {
+   "i": 11,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Navy",
+   "at": [
+    77360,
+    -17337,
+    -962
+   ],
+   "yaw": -173.5
+  },
+  {
+   "i": 12,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    62991,
+    -25771,
+    -967
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 13,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Silver",
+   "at": [
+    74844,
+    -7469,
+    -962
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 14,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Black",
+   "at": [
+    69434,
+    -19098,
+    -969
+   ],
+   "yaw": -263.5
+  },
+  {
+   "i": 15,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Navy",
+   "at": [
+    68813,
+    -12111,
+    -969
+   ],
+   "yaw": -84.0
+  },
+  {
+   "i": 16,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    69188,
+    -10733,
+    -962
+   ],
+   "yaw": 83.5
+  },
+  {
+   "i": 17,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    70454,
+    -7782,
+    -962
+   ],
+   "yaw": -81.5
+  },
+  {
+   "i": 18,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    72343,
+    -198,
+    -962
+   ],
+   "yaw": -174.5
+  },
+  {
+   "i": 19,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    72947,
+    -4110,
+    -962
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 20,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    81452,
+    609,
+    -964
+   ],
+   "yaw": 6.0
+  },
+  {
+   "i": 21,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Silver",
+   "at": [
+    62913,
+    -24933,
+    -962
+   ],
+   "yaw": -200.0
+  },
+  {
+   "i": 22,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Maroon",
+   "at": [
+    63021,
+    -29610,
+    -967
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 23,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Silver",
+   "at": [
+    63021,
+    -28393,
+    -962
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 24,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Navy",
+   "at": [
+    62991,
+    -27965,
+    -962
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 25,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Green",
+   "at": [
+    68050,
+    -31012,
+    -962
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 26,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Blue",
+   "at": [
+    78181,
+    -7558,
+    -962
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 27,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    73623,
+    -9693,
+    -962
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 28,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    70472,
+    -12131,
+    -962
+   ],
+   "yaw": -81.5
+  },
+  {
+   "i": 29,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    68809,
+    -7753,
+    -969
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 30,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Green",
+   "at": [
+    72300,
+    1433,
+    -967
+   ],
+   "yaw": -170.0
+  },
+  {
+   "i": 31,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    74599,
+    -4141,
+    -969
+   ],
+   "yaw": -84.5
+  },
+  {
+   "i": 32,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    81423,
+    -3510,
+    -962
+   ],
+   "yaw": -7.0
+  },
+  {
+   "i": 33,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Black",
+   "at": [
+    77755,
+    -7439,
+    -962
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 34,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Silver",
+   "at": [
+    73505,
+    -8443,
+    -962
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 35,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Yellow",
+   "at": [
+    68626,
+    -19217,
+    -962
+   ],
+   "yaw": -266.0
+  },
+  {
+   "i": 36,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    70883,
+    -12052,
+    -962
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 37,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    69600,
+    -7736,
+    -962
+   ],
+   "yaw": -78.0
+  },
+  {
+   "i": 38,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    72318,
+    -2697,
+    -969
+   ],
+   "yaw": -174.5
+  },
+  {
+   "i": 39,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    81444,
+    -1448,
+    -962
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 40,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    77479,
+    -18146,
+    -969
+   ],
+   "yaw": -176.0
+  },
+  {
+   "i": 41,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Green",
+   "at": [
+    74812,
+    -19178,
+    -962
+   ],
+   "yaw": 77.0
+  },
+  {
+   "i": 42,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Red",
+   "at": [
+    69586,
+    -30187,
+    -971
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 43,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    73583,
+    -8016,
+    -962
+   ],
+   "yaw": -170.0
+  },
+  {
+   "i": 44,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Navy",
+   "at": [
+    67802,
+    -19176,
+    -962
+   ],
+   "yaw": 77.5
+  },
+  {
+   "i": 45,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Maroon",
+   "at": [
+    68334,
+    -10700,
+    -962
+   ],
+   "yaw": 76.0
+  },
+  {
+   "i": 46,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    69616,
+    -6415,
+    -969
+   ],
+   "yaw": 82.5
+  },
+  {
+   "i": 47,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    70028,
+    -7799,
+    -962
+   ],
+   "yaw": -98.5
+  },
+  {
+   "i": 48,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    72350,
+    -641,
+    -962
+   ],
+   "yaw": -188.0
+  },
+  {
+   "i": 49,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "White",
+   "at": [
+    73776,
+    -4235,
+    -969
+   ],
+   "yaw": -79.5
+  },
+  {
+   "i": 50,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Blue",
+   "at": [
+    81502,
+    -3079,
+    -962
+   ],
+   "yaw": 12.0
+  },
+  {
+   "i": 51,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    77501,
+    -13625,
+    -962
+   ],
+   "yaw": -183.0
+  },
+  {
+   "i": 52,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Maroon",
+   "at": [
+    74372,
+    -19098,
+    -962
+   ],
+   "yaw": -263.5
+  },
+  {
+   "i": 53,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    69648,
+    -12102,
+    -969
+   ],
+   "yaw": -95.5
+  },
+  {
+   "i": 54,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    77479,
+    -15250,
+    -967
+   ],
+   "yaw": -181.0
+  },
+  {
+   "i": 55,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Blue",
+   "at": [
+    76826,
+    -19113,
+    -962
+   ],
+   "yaw": -254.5
+  },
+  {
+   "i": 56,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Silver",
+   "at": [
+    81501,
+    -1021,
+    -962
+   ],
+   "yaw": -11.5
+  },
+  {
+   "i": 57,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Black",
+   "at": [
+    84769,
+    -26898,
+    -962
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 58,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    84337,
+    -17499,
+    -971
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 59,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Silver",
+   "at": [
+    74037,
+    -21523,
+    -971
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 60,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Maroon",
+   "at": [
+    78759,
+    -21523,
+    -962
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 61,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "White",
+   "at": [
+    82947,
+    -8524,
+    -962
+   ],
+   "yaw": -250.0
+  },
+  {
+   "i": 62,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    75667,
+    -7573,
+    -968
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 63,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Silver",
+   "at": [
+    75595,
+    -11007,
+    -971
+   ],
+   "yaw": -160.0
+  },
+  {
+   "i": 64,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Blue",
+   "at": [
+    73613,
+    -10500,
+    -969
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 65,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    76506,
+    -7534,
+    -968
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 66,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    73598,
+    -9266,
+    -962
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 67,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    66142,
+    -19082,
+    -967
+   ],
+   "yaw": -263.5
+  },
+  {
+   "i": 68,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    69874,
+    -19178,
+    -969
+   ],
+   "yaw": 77.0
+  },
+  {
+   "i": 69,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    69619,
+    -10781,
+    -962
+   ],
+   "yaw": -256.0
+  },
+  {
+   "i": 70,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    68381,
+    -6422,
+    -962
+   ],
+   "yaw": 78.0
+  },
+  {
+   "i": 71,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    72333,
+    609,
+    -967
+   ],
+   "yaw": -187.0
+  },
+  {
+   "i": 72,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    74158,
+    -4170,
+    -969
+   ],
+   "yaw": -96.0
+  },
+  {
+   "i": 73,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    81444,
+    1448,
+    -962
+   ],
+   "yaw": 6.0
+  },
+  {
+   "i": 74,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    81377,
+    -1886,
+    -962
+   ],
+   "yaw": 5.5
+  },
+  {
+   "i": 75,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Yellow",
+   "at": [
+    77479,
+    -16058,
+    -962
+   ],
+   "yaw": -176.0
+  },
+  {
+   "i": 76,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    75651,
+    -19217,
+    -966
+   ],
+   "yaw": -266.0
+  },
+  {
+   "i": 77,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    76097,
+    -7563,
+    -968
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 78,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    67391,
+    -19217,
+    -962
+   ],
+   "yaw": -267.5
+  },
+  {
+   "i": 79,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Navy",
+   "at": [
+    70409,
+    -10737,
+    -969
+   ],
+   "yaw": -268.0
+  },
+  {
+   "i": 80,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Red",
+   "at": [
+    70452,
+    -6436,
+    -969
+   ],
+   "yaw": -266.0
+  },
+  {
+   "i": 81,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    72328,
+    -1067,
+    -962
+   ],
+   "yaw": -179.0
+  },
+  {
+   "i": 82,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    81408,
+    -609,
+    -962
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 83,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "White",
+   "at": [
+    77375,
+    -14883,
+    -967
+   ],
+   "yaw": -164.5
+  },
+  {
+   "i": 84,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    73563,
+    -19217,
+    -966
+   ],
+   "yaw": -266.0
+  },
+  {
+   "i": 85,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Black",
+   "at": [
+    72224,
+    -1859,
+    -969
+   ],
+   "yaw": -187.0
+  },
+  {
+   "i": 86,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    68764,
+    -10765,
+    -962
+   ],
+   "yaw": -259.5
+  },
+  {
+   "i": 87,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Navy",
+   "at": [
+    68794,
+    -6357,
+    -962
+   ],
+   "yaw": -263.5
+  },
+  {
+   "i": 88,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Blue",
+   "at": [
+    70881,
+    -7862,
+    -962
+   ],
+   "yaw": -106.0
+  },
+  {
+   "i": 89,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    77440,
+    -16897,
+    -962
+   ],
+   "yaw": -193.0
+  },
+  {
+   "i": 90,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    -31513,
+    38841,
+    0
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 91,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Red",
+   "at": [
+    -29465,
+    37545,
+    -7
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 92,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    -30276,
+    38884,
+    -10
+   ],
+   "yaw": -91.0
+  },
+  {
+   "i": 93,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    -29434,
+    36039,
+    -2
+   ],
+   "yaw": -105.0
+  },
+  {
+   "i": 94,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Red",
+   "at": [
+    -29860,
+    38844,
+    -10
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 95,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Yellow",
+   "at": [
+    -28610,
+    38838,
+    -10
+   ],
+   "yaw": -261.0
+  },
+  {
+   "i": 96,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Black",
+   "at": [
+    -29064,
+    38868,
+    -10
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 97,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Silver",
+   "at": [
+    -28244,
+    37562,
+    -7
+   ],
+   "yaw": 86.0
+  },
+  {
+   "i": 98,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Maroon",
+   "at": [
+    -28667,
+    37524,
+    -7
+   ],
+   "yaw": 87.0
+  },
+  {
+   "i": 99,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    -30305,
+    37527,
+    -7
+   ],
+   "yaw": -96.0
+  },
+  {
+   "i": 100,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    -30707,
+    38896,
+    -10
+   ],
+   "yaw": -92.0
+  },
+  {
+   "i": 101,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    -49346,
+    3154,
+    3
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 102,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    -47732,
+    381,
+    7
+   ],
+   "yaw": -75.0
+  },
+  {
+   "i": 103,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    -53064,
+    416,
+    3
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 104,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Maroon",
+   "at": [
+    -54345,
+    351,
+    3
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 105,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    -51419,
+    3179,
+    3
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 106,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    -52668,
+    3154,
+    3
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 107,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Black",
+   "at": [
+    -53064,
+    3212,
+    3
+   ],
+   "yaw": -255.0
+  },
+  {
+   "i": 108,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    -50565,
+    3179,
+    3
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 109,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Blue",
+   "at": [
+    -48950,
+    3177,
+    3
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 110,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    -52668,
+    439,
+    3
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 111,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Red",
+   "at": [
+    -48554,
+    442,
+    7
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 112,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Navy",
+   "at": [
+    -48127,
+    439,
+    7
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 113,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    -50597,
+    414,
+    3
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 114,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    -49376,
+    414,
+    3
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 115,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    -46816,
+    3242,
+    3
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 116,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    73012,
+    62855,
+    13
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 117,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    70068,
+    72073,
+    9
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 118,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    76794,
+    64496,
+    13
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 119,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    80894,
+    64437,
+    16
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 120,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Green",
+   "at": [
+    77191,
+    64576,
+    13
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 121,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    78837,
+    64455,
+    13
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 122,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    78410,
+    64513,
+    13
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 123,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Maroon",
+   "at": [
+    79645,
+    64480,
+    11
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 124,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Red",
+   "at": [
+    77604,
+    64496,
+    13
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 125,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    80022,
+    62733,
+    11
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 126,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    75922,
+    62792,
+    6
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 127,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Black",
+   "at": [
+    79625,
+    62653,
+    11
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 128,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    77979,
+    62774,
+    6
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 129,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    78406,
+    62777,
+    11
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 130,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    77171,
+    62749,
+    6
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 131,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Red",
+   "at": [
+    79213,
+    62733,
+    11
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 132,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    64355,
+    62870,
+    7
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 133,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Navy",
+   "at": [
+    63166,
+    62894,
+    7
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 134,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Yellow",
+   "at": [
+    63973,
+    62805,
+    7
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 135,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    64770,
+    62899,
+    7
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 136,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Blue",
+   "at": [
+    63944,
+    64520,
+    7
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 137,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Navy",
+   "at": [
+    64766,
+    64600,
+    7
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 138,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    65956,
+    67695,
+    7
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 139,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Red",
+   "at": [
+    66075,
+    67238,
+    7
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 140,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    65949,
+    68090,
+    7
+   ],
+   "yaw": 15.0
+  },
+  {
+   "i": 141,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    66044,
+    68502,
+    7
+   ],
+   "yaw": 10.0
+  },
+  {
+   "i": 142,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    65951,
+    69299,
+    9
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 143,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    68043,
+    62879,
+    13
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 144,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Navy",
+   "at": [
+    71746,
+    62868,
+    6
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 145,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    70938,
+    62879,
+    13
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 146,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Navy",
+   "at": [
+    69719,
+    62868,
+    7
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 147,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Navy",
+   "at": [
+    70130,
+    62883,
+    13
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 148,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Navy",
+   "at": [
+    72189,
+    62868,
+    6
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 149,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Yellow",
+   "at": [
+    63104,
+    69783,
+    7
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 150,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "White",
+   "at": [
+    63119,
+    69373,
+    7
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 151,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Navy",
+   "at": [
+    63104,
+    67314,
+    13
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 152,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    63104,
+    67757,
+    13
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 153,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    63114,
+    68564,
+    7
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 154,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Silver",
+   "at": [
+    73864,
+    70694,
+    13
+   ],
+   "yaw": 90.0
+  },
+  {
+   "i": 155,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Red",
+   "at": [
+    74673,
+    70686,
+    13
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 156,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "White",
+   "at": [
+    75068,
+    70686,
+    13
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 157,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Green",
+   "at": [
+    78532,
+    72908,
+    13
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 158,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Silver",
+   "at": [
+    78929,
+    73430,
+    9
+   ],
+   "yaw": -202.5
+  },
+  {
+   "i": 159,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    67726,
+    58133,
+    15
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 160,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    72633,
+    58140,
+    15
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 161,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Black",
+   "at": [
+    75865,
+    56814,
+    15
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 162,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Green",
+   "at": [
+    73090,
+    58126,
+    7
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 163,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Navy",
+   "at": [
+    72267,
+    58077,
+    15
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 164,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    69813,
+    58114,
+    10
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 165,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    71428,
+    58109,
+    7
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 166,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Red",
+   "at": [
+    75132,
+    56753,
+    11
+   ],
+   "yaw": 90.0
+  },
+  {
+   "i": 167,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    81511,
+    45373,
+    7
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 168,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    81498,
+    44550,
+    15
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 169,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Blue",
+   "at": [
+    81500,
+    45783,
+    7
+   ],
+   "yaw": 15.0
+  },
+  {
+   "i": 170,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    81503,
+    46592,
+    8
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 171,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    81503,
+    47475,
+    15
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 172,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    66860,
+    41487,
+    15
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 173,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    66871,
+    41928,
+    15
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 174,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Navy",
+   "at": [
+    66801,
+    42752,
+    11
+   ],
+   "yaw": -170.0
+  },
+  {
+   "i": 175,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    66852,
+    43589,
+    11
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 176,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Green",
+   "at": [
+    66793,
+    44412,
+    15
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 177,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    66886,
+    43986,
+    7
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 178,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    71444,
+    39404,
+    11
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 179,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    72243,
+    39434,
+    11
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 180,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    68656,
+    45586,
+    11
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 181,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Red",
+   "at": [
+    68651,
+    43971,
+    11
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 182,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    68618,
+    43132,
+    15
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 183,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    68681,
+    42766,
+    15
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 184,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Red",
+   "at": [
+    68668,
+    42309,
+    15
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 185,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    68620,
+    41487,
+    7
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 186,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Red",
+   "at": [
+    66886,
+    45662,
+    15
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 187,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Yellow",
+   "at": [
+    64451,
+    49004,
+    15
+   ],
+   "yaw": -75.0
+  },
+  {
+   "i": 188,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Silver",
+   "at": [
+    68364,
+    47159,
+    11
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 189,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Blue",
+   "at": [
+    67558,
+    47220,
+    11
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 190,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "White",
+   "at": [
+    67145,
+    47205,
+    11
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 191,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    81483,
+    48254,
+    15
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 192,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Black",
+   "at": [
+    81483,
+    48663,
+    15
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 193,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Black",
+   "at": [
+    78334,
+    48706,
+    6
+   ],
+   "yaw": 79.0
+  },
+  {
+   "i": 194,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Black",
+   "at": [
+    81498,
+    47017,
+    8
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 195,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Green",
+   "at": [
+    80371,
+    41837,
+    15
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 196,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Navy",
+   "at": [
+    63652,
+    57538,
+    15
+   ],
+   "yaw": 20.0
+  },
+  {
+   "i": 197,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Maroon",
+   "at": [
+    63607,
+    58235,
+    15
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 198,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Silver",
+   "at": [
+    66856,
+    58140,
+    11
+   ],
+   "yaw": 90.0
+  },
+  {
+   "i": 199,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    67299,
+    39433,
+    15
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 200,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    67695,
+    39479,
+    15
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 201,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Navy",
+   "at": [
+    68563,
+    39370,
+    7
+   ],
+   "yaw": -105.0
+  },
+  {
+   "i": 202,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Yellow",
+   "at": [
+    69310,
+    39443,
+    7
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 203,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Maroon",
+   "at": [
+    69738,
+    39420,
+    15
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 204,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    70986,
+    39418,
+    11
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 205,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    69771,
+    36611,
+    2
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 206,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Navy",
+   "at": [
+    69857,
+    37418,
+    11
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 207,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    68520,
+    38486,
+    2
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 208,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    65640,
+    38557,
+    11
+   ],
+   "yaw": 90.0
+  },
+  {
+   "i": 209,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    63567,
+    38482,
+    11
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 210,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    63963,
+    38497,
+    11
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 211,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    69825,
+    36152,
+    2
+   ],
+   "yaw": 10.0
+  },
+  {
+   "i": 212,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    69841,
+    37807,
+    11
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 213,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    68108,
+    38418,
+    11
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 214,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    67300,
+    38512,
+    11
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 215,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Black",
+   "at": [
+    66432,
+    38514,
+    11
+   ],
+   "yaw": 70.0
+  },
+  {
+   "i": 216,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Blue",
+   "at": [
+    66036,
+    38620,
+    11
+   ],
+   "yaw": 90.0
+  },
+  {
+   "i": 217,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Green",
+   "at": [
+    64802,
+    38540,
+    3
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 218,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Red",
+   "at": [
+    69920,
+    35361,
+    2
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 219,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Yellow",
+   "at": [
+    65402,
+    36641,
+    11
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 220,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Maroon",
+   "at": [
+    64523,
+    37007,
+    6
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 221,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Red",
+   "at": [
+    64538,
+    36228,
+    11
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 222,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Blue",
+   "at": [
+    63399,
+    25954,
+    11
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 223,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Black",
+   "at": [
+    72513,
+    19264,
+    1
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 224,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Maroon",
+   "at": [
+    76795,
+    9922,
+    11
+   ],
+   "yaw": 90.0
+  },
+  {
+   "i": 225,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    80590,
+    8184,
+    11
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 226,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Navy",
+   "at": [
+    81366,
+    8194,
+    11
+   ],
+   "yaw": -75.0
+  },
+  {
+   "i": 227,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Navy",
+   "at": [
+    70989,
+    8197,
+    11
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 228,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    73458,
+    8187,
+    11
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 229,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    74361,
+    10597,
+    11
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 230,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    74361,
+    12241,
+    11
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 231,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    79813,
+    34707,
+    6
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 232,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Black",
+   "at": [
+    85425,
+    25728,
+    11
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 233,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    85451,
+    21154,
+    11
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 234,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "White",
+   "at": [
+    85303,
+    8541,
+    11
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 235,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Black",
+   "at": [
+    67710,
+    9144,
+    1
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 236,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    74393,
+    13095,
+    4
+   ],
+   "yaw": -183.0
+  },
+  {
+   "i": 237,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Navy",
+   "at": [
+    74330,
+    13477,
+    4
+   ],
+   "yaw": -171.0
+  },
+  {
+   "i": 238,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "White",
+   "at": [
+    74267,
+    13858,
+    4
+   ],
+   "yaw": -172.5
+  },
+  {
+   "i": 239,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Blue",
+   "at": [
+    74267,
+    10978,
+    2
+   ],
+   "yaw": -176.0
+  },
+  {
+   "i": 240,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    71782,
+    8192,
+    11
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 241,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Blue",
+   "at": [
+    73045,
+    8129,
+    11
+   ],
+   "yaw": -83.0
+  },
+  {
+   "i": 242,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Blue",
+   "at": [
+    81566,
+    10030,
+    11
+   ],
+   "yaw": -255.0
+  },
+  {
+   "i": 243,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    80746,
+    9921,
+    2
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 244,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    78887,
+    9936,
+    11
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 245,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Red",
+   "at": [
+    78457,
+    9965,
+    11
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 246,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    77649,
+    9926,
+    11
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 247,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    79737,
+    8207,
+    11
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 248,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    79329,
+    8238,
+    11
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 249,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Black",
+   "at": [
+    66956,
+    17337,
+    1
+   ],
+   "yaw": -60.0
+  },
+  {
+   "i": 250,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Green",
+   "at": [
+    74376,
+    14712,
+    11
+   ],
+   "yaw": -184.0
+  },
+  {
+   "i": 251,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Silver",
+   "at": [
+    75971,
+    23220,
+    11
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 252,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Silver",
+   "at": [
+    80316,
+    33269,
+    6
+   ],
+   "yaw": 89.0
+  },
+  {
+   "i": 253,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Black",
+   "at": [
+    79094,
+    33284,
+    6
+   ],
+   "yaw": -256.0
+  },
+  {
+   "i": 256,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "White",
+   "at": [
+    80209,
+    34810,
+    6
+   ],
+   "yaw": 81.0
+  },
+  {
+   "i": 257,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Red",
+   "at": [
+    80637,
+    34712,
+    6
+   ],
+   "yaw": -98.0
+  },
+  {
+   "i": 258,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    81459,
+    34691,
+    6
+   ],
+   "yaw": -266.0
+  },
+  {
+   "i": 259,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Red",
+   "at": [
+    81855,
+    34717,
+    4
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 260,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    -17634,
+    25980,
+    73
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 261,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    -21069,
+    25989,
+    73
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 262,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Navy",
+   "at": [
+    -15540,
+    26045,
+    73
+   ],
+   "yaw": -75.0
+  },
+  {
+   "i": 263,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    -16352,
+    26022,
+    73
+   ],
+   "yaw": -91.0
+  },
+  {
+   "i": 264,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    -23534,
+    25958,
+    73
+   ],
+   "yaw": -105.0
+  },
+  {
+   "i": 265,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Yellow",
+   "at": [
+    -17103,
+    27238,
+    73
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 266,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    -15852,
+    27232,
+    73
+   ],
+   "yaw": -261.0
+  },
+  {
+   "i": 267,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Black",
+   "at": [
+    -16307,
+    27262,
+    73
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 268,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Green",
+   "at": [
+    -20687,
+    27346,
+    73
+   ],
+   "yaw": 86.0
+  },
+  {
+   "i": 269,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    -21109,
+    27308,
+    73
+   ],
+   "yaw": 87.0
+  },
+  {
+   "i": 270,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    -22748,
+    27311,
+    73
+   ],
+   "yaw": -96.0
+  },
+  {
+   "i": 271,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Yellow",
+   "at": [
+    -17949,
+    27290,
+    73
+   ],
+   "yaw": -92.0
+  },
+  {
+   "i": 272,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Red",
+   "at": [
+    407,
+    70707,
+    6
+   ],
+   "yaw": -9.0
+  },
+  {
+   "i": 273,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    441,
+    69540,
+    10
+   ],
+   "yaw": -181.0
+  },
+  {
+   "i": 274,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    3519,
+    69037,
+    6
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 275,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Green",
+   "at": [
+    3501,
+    67330,
+    8
+   ],
+   "yaw": -1.0
+  },
+  {
+   "i": 276,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    41236,
+    -23535,
+    4
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 277,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    52315,
+    -25043,
+    4
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 278,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    44500,
+    -26498,
+    4
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 279,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    54982,
+    -25862,
+    4
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 280,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    49585,
+    -25041,
+    12
+   ],
+   "yaw": 15.0
+  },
+  {
+   "i": 281,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    47517,
+    -26259,
+    4
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 282,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    52389,
+    -25893,
+    4
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 283,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    49470,
+    -25466,
+    12
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 284,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    54956,
+    -26259,
+    4
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 285,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    54643,
+    -22621,
+    4
+   ],
+   "yaw": -260.0
+  },
+  {
+   "i": 286,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    40721,
+    -26544,
+    9
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 287,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    46818,
+    -26289,
+    4
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 288,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Silver",
+   "at": [
+    44897,
+    -26622,
+    4
+   ],
+   "yaw": -110.0
+  },
+  {
+   "i": 289,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Navy",
+   "at": [
+    47522,
+    -26654,
+    4
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 290,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Silver",
+   "at": [
+    53370,
+    -22481,
+    4
+   ],
+   "yaw": 75.0
+  },
+  {
+   "i": 291,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Navy",
+   "at": [
+    42032,
+    -23399,
+    8
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 292,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Red",
+   "at": [
+    41574,
+    -26592,
+    4
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 293,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Navy",
+   "at": [
+    50204,
+    -24644,
+    4
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 294,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    49589,
+    -25893,
+    12
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 295,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    50261,
+    -25436,
+    4
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 296,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Green",
+   "at": [
+    47398,
+    -25863,
+    4
+   ],
+   "yaw": -205.0
+  },
+  {
+   "i": 297,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    43618,
+    -26496,
+    4
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 298,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Maroon",
+   "at": [
+    53007,
+    -25861,
+    4
+   ],
+   "yaw": -165.0
+  },
+  {
+   "i": 299,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    46767,
+    -24647,
+    4
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 300,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    46767,
+    -25066,
+    4
+   ],
+   "yaw": 5.0
+  },
+  {
+   "i": 301,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    50206,
+    -25833,
+    12
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 302,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    52980,
+    -26260,
+    4
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 303,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    47492,
+    -25465,
+    4
+   ],
+   "yaw": -170.0
+  },
+  {
+   "i": 304,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    52975,
+    -22544,
+    12
+   ],
+   "yaw": -265.0
+  },
+  {
+   "i": 305,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    41971,
+    -26442,
+    12
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 306,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Black",
+   "at": [
+    47398,
+    -24673,
+    4
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 307,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    50221,
+    -26709,
+    12
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 308,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    52976,
+    -24642,
+    4
+   ],
+   "yaw": -170.0
+  },
+  {
+   "i": 309,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    52548,
+    -22600,
+    12
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 310,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Black",
+   "at": [
+    40783,
+    -23334,
+    4
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 311,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    3514,
+    67803,
+    6
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 312,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    3479,
+    66935,
+    8
+   ],
+   "yaw": -170.0
+  },
+  {
+   "i": 313,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    3521,
+    68595,
+    6
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 314,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Navy",
+   "at": [
+    39365,
+    -4766,
+    10
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 315,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Navy",
+   "at": [
+    39305,
+    3791,
+    10
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 316,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Silver",
+   "at": [
+    39304,
+    4705,
+    10
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 317,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Yellow",
+   "at": [
+    40443,
+    1953,
+    10
+   ],
+   "yaw": 10.0
+  },
+  {
+   "i": 318,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Maroon",
+   "at": [
+    40443,
+    1323,
+    10
+   ],
+   "yaw": -15.0
+  },
+  {
+   "i": 319,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Maroon",
+   "at": [
+    40443,
+    808,
+    10
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 320,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    -47184,
+    45389,
+    13
+   ],
+   "yaw": -83.0
+  },
+  {
+   "i": 321,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    -48829,
+    45419,
+    13
+   ],
+   "yaw": -87.0
+  },
+  {
+   "i": 322,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    -47866,
+    48809,
+    13
+   ],
+   "yaw": 86.0
+  },
+  {
+   "i": 323,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    -47988,
+    45492,
+    13
+   ],
+   "yaw": 76.0
+  },
+  {
+   "i": 324,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Yellow",
+   "at": [
+    24230,
+    -29337,
+    13
+   ],
+   "yaw": -5.5
+  },
+  {
+   "i": 325,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    22241,
+    -28850,
+    13
+   ],
+   "yaw": -186.5
+  },
+  {
+   "i": 326,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Maroon",
+   "at": [
+    26605,
+    -30510,
+    13
+   ],
+   "yaw": 4.0
+  },
+  {
+   "i": 327,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Black",
+   "at": [
+    26621,
+    -29307,
+    13
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 328,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Green",
+   "at": [
+    26621,
+    -30130,
+    13
+   ],
+   "yaw": -4.0
+  },
+  {
+   "i": 329,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Maroon",
+   "at": [
+    24199,
+    -30938,
+    13
+   ],
+   "yaw": 7.5
+  },
+  {
+   "i": 330,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    24794,
+    -30495,
+    13
+   ],
+   "yaw": -180.5
+  },
+  {
+   "i": 331,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Navy",
+   "at": [
+    24126,
+    -30114,
+    13
+   ],
+   "yaw": 6.0
+  },
+  {
+   "i": 332,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    24121,
+    -30525,
+    13
+   ],
+   "yaw": -9.0
+  },
+  {
+   "i": 333,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Yellow",
+   "at": [
+    24721,
+    -28879,
+    13
+   ],
+   "yaw": -169.0
+  },
+  {
+   "i": 334,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    24167,
+    -28484,
+    13
+   ],
+   "yaw": 7.0
+  },
+  {
+   "i": 335,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    24815,
+    -29287,
+    13
+   ],
+   "yaw": -185.5
+  },
+  {
+   "i": 336,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    22285,
+    -29276,
+    13
+   ],
+   "yaw": -178.5
+  },
+  {
+   "i": 337,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Silver",
+   "at": [
+    22176,
+    -30114,
+    9
+   ],
+   "yaw": -194.0
+  },
+  {
+   "i": 338,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    -36630,
+    55017,
+    -1261
+   ],
+   "yaw": -81.0
+  },
+  {
+   "i": 339,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "White",
+   "at": [
+    -36175,
+    54987,
+    -1260
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 340,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    -36176,
+    58079,
+    -1260
+   ],
+   "yaw": 86.0
+  },
+  {
+   "i": 341,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Navy",
+   "at": [
+    -36599,
+    58041,
+    -1261
+   ],
+   "yaw": 87.0
+  },
+  {
+   "i": 342,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    -38237,
+    58044,
+    -1261
+   ],
+   "yaw": -96.0
+  },
+  {
+   "i": 343,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    -37859,
+    55006,
+    -1261
+   ],
+   "yaw": -92.0
+  },
+  {
+   "i": 344,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    27706,
+    -1611,
+    13
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 345,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    28513,
+    -1591,
+    21
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 346,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    26899,
+    -1648,
+    13
+   ],
+   "yaw": 80.0
+  },
+  {
+   "i": 347,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    29322,
+    -1574,
+    13
+   ],
+   "yaw": -270.0
+  },
+  {
+   "i": 348,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Silver",
+   "at": [
+    28927,
+    -1480,
+    13
+   ],
+   "yaw": -250.0
+  },
+  {
+   "i": 349,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    27371,
+    -4751,
+    21
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 350,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Maroon",
+   "at": [
+    27798,
+    -4690,
+    13
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 351,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Black",
+   "at": [
+    28588,
+    -4705,
+    21
+   ],
+   "yaw": -100.0
+  },
+  {
+   "i": 352,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Black",
+   "at": [
+    29017,
+    -4705,
+    21
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 353,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Navy",
+   "at": [
+    -27860,
+    -14566,
+    7
+   ],
+   "yaw": -253.0
+  },
+  {
+   "i": 354,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Blue",
+   "at": [
+    -28273,
+    -14459,
+    8
+   ],
+   "yaw": 74.0
+  },
+  {
+   "i": 355,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    -28684,
+    -14532,
+    8
+   ],
+   "yaw": -264.0
+  },
+  {
+   "i": 356,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    -29492,
+    -14575,
+    8
+   ],
+   "yaw": -90.0
+  },
+  {
+   "i": 357,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    -26575,
+    -14553,
+    8
+   ],
+   "yaw": 82.0
+  },
+  {
+   "i": 358,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    -30361,
+    -14570,
+    8
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 359,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    -30756,
+    -14491,
+    8
+   ],
+   "yaw": -252.0
+  },
+  {
+   "i": 360,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    -31574,
+    -14568,
+    8
+   ],
+   "yaw": 82.0
+  },
+  {
+   "i": 361,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    6946,
+    38504,
+    9
+   ],
+   "yaw": -84.0
+  },
+  {
+   "i": 362,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Silver",
+   "at": [
+    18943,
+    32389,
+    9
+   ],
+   "yaw": -9.0
+  },
+  {
+   "i": 363,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    -11211,
+    30743,
+    9
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 364,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    18978,
+    35717,
+    9
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 365,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    -11202,
+    30338,
+    9
+   ],
+   "yaw": 1.0
+  },
+  {
+   "i": 366,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Red",
+   "at": [
+    -11146,
+    28649,
+    9
+   ],
+   "yaw": -165.0
+  },
+  {
+   "i": 367,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    -11169,
+    29460,
+    9
+   ],
+   "yaw": -181.0
+  },
+  {
+   "i": 368,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    -8205,
+    30960,
+    9
+   ],
+   "yaw": -195.0
+  },
+  {
+   "i": 369,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Green",
+   "at": [
+    -8175,
+    24418,
+    9
+   ],
+   "yaw": -1.0
+  },
+  {
+   "i": 370,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    -4081,
+    35409,
+    9
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 371,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    -37030,
+    55017,
+    -1261
+   ],
+   "yaw": 85.0
+  },
+  {
+   "i": 372,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    -38313,
+    54975,
+    -1261
+   ],
+   "yaw": 89.0
+  },
+  {
+   "i": 373,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    -2281,
+    38537,
+    9
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 374,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    233,
+    38541,
+    9
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 375,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Yellow",
+   "at": [
+    -22371,
+    34670,
+    221
+   ],
+   "yaw": -168.0
+  },
+  {
+   "i": 376,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "White",
+   "at": [
+    -22168,
+    36271,
+    222
+   ],
+   "yaw": -207.0
+  },
+  {
+   "i": 377,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Green",
+   "at": [
+    -19571,
+    38656,
+    222
+   ],
+   "yaw": -91.0
+  },
+  {
+   "i": 378,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    -21650,
+    38528,
+    222
+   ],
+   "yaw": -264.0
+  },
+  {
+   "i": 379,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    23792,
+    41325,
+    1282
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 380,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Maroon",
+   "at": [
+    23742,
+    39658,
+    1282
+   ],
+   "yaw": -175.0
+  },
+  {
+   "i": 381,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Navy",
+   "at": [
+    26884,
+    40967,
+    1283
+   ],
+   "yaw": 6.0
+  },
+  {
+   "i": 382,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Red",
+   "at": [
+    26915,
+    41742,
+    1283
+   ],
+   "yaw": -6.0
+  },
+  {
+   "i": 383,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    23770,
+    40510,
+    1281
+   ],
+   "yaw": -182.0
+  },
+  {
+   "i": 384,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Maroon",
+   "at": [
+    23791,
+    41746,
+    1282
+   ],
+   "yaw": 8.0
+  },
+  {
+   "i": 385,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Blue",
+   "at": [
+    26922,
+    40097,
+    1283
+   ],
+   "yaw": 8.0
+  },
+  {
+   "i": 386,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    23809,
+    44171,
+    1282
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 387,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    23799,
+    44601,
+    1282
+   ],
+   "yaw": 1.0
+  },
+  {
+   "i": 388,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Green",
+   "at": [
+    23762,
+    45411,
+    1282
+   ],
+   "yaw": -5.0
+  },
+  {
+   "i": 389,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    23845,
+    46229,
+    1282
+   ],
+   "yaw": -181.0
+  },
+  {
+   "i": 390,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    26896,
+    45824,
+    1282
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 391,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "White",
+   "at": [
+    26854,
+    44966,
+    1282
+   ],
+   "yaw": -1.0
+  },
+  {
+   "i": 392,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    -4500,
+    35421,
+    9
+   ],
+   "yaw": 88.0
+  },
+  {
+   "i": 393,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    -5334,
+    35435,
+    9
+   ],
+   "yaw": -84.0
+  },
+  {
+   "i": 394,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    9961,
+    35355,
+    9
+   ],
+   "yaw": -93.0
+  },
+  {
+   "i": 395,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    11122,
+    38552,
+    9
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 396,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    10299,
+    38631,
+    9
+   ],
+   "yaw": -81.0
+  },
+  {
+   "i": 397,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Black",
+   "at": [
+    16005,
+    24252,
+    9
+   ],
+   "yaw": -1.0
+  },
+  {
+   "i": 398,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "White",
+   "at": [
+    15993,
+    24679,
+    9
+   ],
+   "yaw": -189.0
+  },
+  {
+   "i": 399,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    18984,
+    24172,
+    9
+   ],
+   "yaw": 7.0
+  },
+  {
+   "i": 400,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Green",
+   "at": [
+    18991,
+    25423,
+    9
+   ],
+   "yaw": -182.0
+  },
+  {
+   "i": 401,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    18965,
+    26667,
+    9
+   ],
+   "yaw": 9.0
+  },
+  {
+   "i": 402,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Maroon",
+   "at": [
+    18951,
+    36975,
+    11
+   ],
+   "yaw": -171.0
+  },
+  {
+   "i": 403,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Green",
+   "at": [
+    -8173,
+    33016,
+    9
+   ],
+   "yaw": 9.0
+  },
+  {
+   "i": 404,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Blue",
+   "at": [
+    -8143,
+    33471,
+    9
+   ],
+   "yaw": -10.0
+  },
+  {
+   "i": 405,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    -11265,
+    34110,
+    9
+   ],
+   "yaw": -184.0
+  },
+  {
+   "i": 406,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Black",
+   "at": [
+    -11227,
+    33687,
+    9
+   ],
+   "yaw": -183.0
+  },
+  {
+   "i": 407,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    -11231,
+    32049,
+    9
+   ],
+   "yaw": -6.0
+  },
+  {
+   "i": 408,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    -8162,
+    31788,
+    9
+   ],
+   "yaw": -2.0
+  },
+  {
+   "i": 409,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Green",
+   "at": [
+    -49545,
+    48842,
+    13
+   ],
+   "yaw": -264.0
+  },
+  {
+   "i": 410,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    16001,
+    31379,
+    9
+   ],
+   "yaw": -171.5
+  },
+  {
+   "i": 411,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    16013,
+    33026,
+    9
+   ],
+   "yaw": 1.0
+  },
+  {
+   "i": 412,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    19006,
+    33204,
+    9
+   ],
+   "yaw": -2.0
+  },
+  {
+   "i": 413,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    19045,
+    34495,
+    9
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 414,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Green",
+   "at": [
+    16090,
+    33436,
+    9
+   ],
+   "yaw": -2.0
+  },
+  {
+   "i": 415,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    11203,
+    35417,
+    9
+   ],
+   "yaw": 88.0
+  },
+  {
+   "i": 416,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "Blue",
+   "at": [
+    8348,
+    35332,
+    11
+   ],
+   "yaw": -83.0
+  },
+  {
+   "i": 417,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Yellow",
+   "at": [
+    7486,
+    35426,
+    11
+   ],
+   "yaw": -91.0
+  },
+  {
+   "i": 418,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Red",
+   "at": [
+    94,
+    35451,
+    9
+   ],
+   "yaw": 84.0
+  },
+  {
+   "i": 419,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle01_Van",
+   "colour": "Navy",
+   "at": [
+    9507,
+    38547,
+    9
+   ],
+   "yaw": -269.0
+  },
+  {
+   "i": 420,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    8656,
+    38588,
+    9
+   ],
+   "yaw": -91.0
+  },
+  {
+   "i": 421,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Yellow",
+   "at": [
+    -3123,
+    38513,
+    9
+   ],
+   "yaw": -89.0
+  },
+  {
+   "i": 422,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Green",
+   "at": [
+    16018,
+    25893,
+    9
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 423,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Red",
+   "at": [
+    15909,
+    26731,
+    9
+   ],
+   "yaw": -4.0
+  },
+  {
+   "i": 424,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Navy",
+   "at": [
+    15997,
+    26290,
+    9
+   ],
+   "yaw": -16.0
+  },
+  {
+   "i": 425,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    16021,
+    32156,
+    9
+   ],
+   "yaw": -183.0
+  },
+  {
+   "i": 426,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    -8180,
+    25195,
+    9
+   ],
+   "yaw": 6.0
+  },
+  {
+   "i": 427,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "White",
+   "at": [
+    -8196,
+    26442,
+    9
+   ],
+   "yaw": -6.0
+  },
+  {
+   "i": 428,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Black",
+   "at": [
+    -8181,
+    26853,
+    9
+   ],
+   "yaw": -182.0
+  },
+  {
+   "i": 429,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Silver",
+   "at": [
+    25806,
+    66720,
+    1
+   ],
+   "yaw": -92.0
+  },
+  {
+   "i": 430,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Silver",
+   "at": [
+    25383,
+    66762,
+    1
+   ],
+   "yaw": -85.0
+  },
+  {
+   "i": 431,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Blue",
+   "at": [
+    24982,
+    69865,
+    1
+   ],
+   "yaw": 84.0
+  },
+  {
+   "i": 432,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    24140,
+    69864,
+    1
+   ],
+   "yaw": 86.0
+  },
+  {
+   "i": 433,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Silver",
+   "at": [
+    26599,
+    69853,
+    1
+   ],
+   "yaw": 89.0
+  },
+  {
+   "i": 434,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    47194,
+    53973,
+    5
+   ],
+   "yaw": -171.0
+  },
+  {
+   "i": 435,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle05_Car",
+   "colour": "Silver",
+   "at": [
+    50402,
+    53132,
+    5
+   ],
+   "yaw": -190.0
+  },
+  {
+   "i": 436,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle06_Car",
+   "colour": "Green",
+   "at": [
+    47167,
+    53117,
+    3
+   ],
+   "yaw": -4.0
+  },
+  {
+   "i": 437,
+   "kind": "_Prkd_Sport1_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Black",
+   "at": [
+    47227,
+    54382,
+    5
+   ],
+   "yaw": -3.0
+  },
+  {
+   "i": 438,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    50207,
+    54396,
+    1
+   ],
+   "yaw": -6.0
+  },
+  {
+   "i": 439,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Blue",
+   "at": [
+    50318,
+    53564,
+    5
+   ],
+   "yaw": -2.0
+  },
+  {
+   "i": 440,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Maroon",
+   "at": [
+    6550,
+    38536,
+    9
+   ],
+   "yaw": -263.0
+  },
+  {
+   "i": 441,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Silver",
+   "at": [
+    1463,
+    38533,
+    9
+   ],
+   "yaw": -264.0
+  },
+  {
+   "i": 442,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "Blue",
+   "at": [
+    2297,
+    38553,
+    9
+   ],
+   "yaw": -95.0
+  },
+  {
+   "i": 443,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Black",
+   "at": [
+    -1142,
+    35412,
+    9
+   ],
+   "yaw": -261.0
+  },
+  {
+   "i": 444,
+   "kind": "_Prkd_Compact1__dmgcarLod1",
+   "vehicle": "vehicle07_Car",
+   "colour": "White",
+   "at": [
+    -211,
+    38576,
+    9
+   ],
+   "yaw": -75.0
+  },
+  {
+   "i": 445,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle12_Car",
+   "colour": "Maroon",
+   "at": [
+    -2394,
+    35439,
+    9
+   ],
+   "yaw": -80.0
+  },
+  {
+   "i": 446,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "Blue",
+   "at": [
+    -46789,
+    45465,
+    13
+   ],
+   "yaw": -99.0
+  },
+  {
+   "i": 447,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "Maroon",
+   "at": [
+    -48706,
+    48825,
+    13
+   ],
+   "yaw": 86.0
+  },
+  {
+   "i": 448,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    426,
+    71994,
+    6
+   ],
+   "yaw": -185.0
+  },
+  {
+   "i": 449,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Black",
+   "at": [
+    468,
+    73210,
+    6
+   ],
+   "yaw": -4.0
+  },
+  {
+   "i": 450,
+   "kind": "_Prkd_Sport2_1__dmgcarLod1",
+   "vehicle": "vehicle02_Car",
+   "colour": "Yellow",
+   "at": [
+    3481,
+    71460,
+    8
+   ],
+   "yaw": -182.0
+  },
+  {
+   "i": 451,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Blue",
+   "at": [
+    3489,
+    72299,
+    6
+   ],
+   "yaw": -180.0
+  },
+  {
+   "i": 452,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle09_Van",
+   "colour": "White",
+   "at": [
+    3456,
+    73517,
+    8
+   ],
+   "yaw": -2.0
+  },
+  {
+   "i": 453,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    69785,
+    33558,
+    1
+   ],
+   "yaw": 0.0
+  },
+  {
+   "i": 454,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle02_Car",
+   "colour": "White",
+   "at": [
+    69860,
+    24261,
+    1
+   ],
+   "yaw": -80.0
+  }
+ ],
+ "moved": [
+  {
+   "i": 0,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "vehicle": "vehicle04_Truck",
+   "colour": "White",
+   "at": [
+    76874,
+    1821,
+    -971
+   ],
+   "yaw": -75.0,
+   "shift_along_cm": 60,
+   "shift_across_cm": 0
+  },
+  {
+   "i": 323,
+   "kind": "_Prkd_Lux2_1__dmgcarLod1",
+   "vehicle": "vehicle03_Car",
+   "colour": "Yellow",
+   "at": [
+    -47988,
+    45492,
+    13
+   ],
+   "yaw": 76.0,
+   "shift_along_cm": 0,
+   "shift_across_cm": -40
+  },
+  {
+   "i": 438,
+   "kind": "_Prkd_Lux1_2__dmgcarLod5",
+   "vehicle": "vehicle12_Car",
+   "colour": "White",
+   "at": [
+    50207,
+    54396,
+    1
+   ],
+   "yaw": -6.0,
+   "shift_along_cm": -120,
+   "shift_across_cm": 0
+  }
+ ],
+ "swapped_model": [],
+ "unresolved": [],
+ "dropped": [
+  {
+   "i": 254,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "at": [
+    83533,
+    34717
+   ],
+   "ground": 153
+  },
+  {
+   "i": 255,
+   "kind": "_Prkd_Truck_1__dmgtruckLod1a",
+   "at": [
+    83120,
+    34679
+   ],
+   "ground": 153
+  }
+ ],
+ "squad_car": {
+  "old": "CoHOriginal_Objects_1e42a35fbfb794_0",
+  "at": [
+   -39456,
+   62691,
+   -1123
+  ],
+  "yaw": -30.0,
+  "actor": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite.AtlasPark_DressingStudy_Nanite:PersistentLevel.StaticMeshActor_UAID_18C04D0EBBBEAA0903_1641346611"
+ }
+}
