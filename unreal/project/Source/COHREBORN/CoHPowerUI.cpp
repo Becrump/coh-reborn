@@ -3,6 +3,8 @@
 #include "CoHHeroCharacter.h"
 #include "CoHPowerFX.h"
 #include "CoHEffects.h"
+#include "DrawDebugHelpers.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "CoHHeroProgress.h"
 #include "Animation/AnimSequence.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -467,9 +469,56 @@ void SCoHHud::OpenCustomize(FName Power, bool bReturnToBrowser)
 	if (UCoHPowerComponent* C = Me()) C->PreviewPower(CustomPower);
 }
 
+/** The ECoHEmitter (pose) for a bone of the original skeleton: arms, head, chest, feet, back. */
+static ECoHEmitter EmitterForBone(const FString& NameIn)
+{
+	const FString N = NameIn.ToUpper();
+	auto Has = [&](std::initializer_list<const TCHAR*> L) { for (const TCHAR* S : L) if (N.Contains(S)) return true; return false; };
+	if (Has({ TEXT("FOOT"), TEXT("TOE"), TEXT("LEG") })) return ECoHEmitter::Feet;
+	if (Has({ TEXT("JAW"), TEXT("CHIN") })) return ECoHEmitter::Mouth;
+	if (Has({ TEXT("HEAD"), TEXT("NECK"), TEXT("FACE"), TEXT("HAIR"), TEXT("EYES"), TEXT("BROW"), TEXT("CHEEKS"), TEXT("NOSE"), TEXT("CRANIUM") }) && !N.Contains(TEXT("NECKLINE"))) return ECoHEmitter::Eyes;
+	if (Has({ TEXT("BACK"), TEXT("WING") })) return ECoHEmitter::Back;
+	if (Has({ TEXT("ARM"), TEXT("HAND"), TEXT("WEP"), TEXT("SPAD"), TEXT("SLEEVE"), TEXT("RING"), TEXT("F1_"), TEXT("F2_"), TEXT("T1_"), TEXT("T2_"), TEXT("T3_") }))
+		return N.EndsWith(TEXT("L")) ? ECoHEmitter::LeftHand : ECoHEmitter::RightHand;
+	return ECoHEmitter::Chest;
+}
+
+bool SCoHHud::TryPickPoint(const FVector& Origin, const FVector& Dir)
+{
+	if (!bPicking) return false;
+	bPicking = false;
+	APlayerController* PC = Player.Get();
+	ACoHHeroCharacter* H = PC ? Cast<ACoHHeroCharacter>(PC->GetPawn()) : nullptr;
+	UCoHPowerComponent* C = Me();
+	if (!H || !C || CustomPower.IsNone()) return true;
+	USkeletalMeshComponent* M = H->GetMesh();
+	// the bone the click ray passes closest to (the root helper joint aside)
+	FName BestBone; FVector BestLoc = FVector::ZeroVector; float Best = TNumericLimits<float>::Max();
+	for (int32 i = 0; i < M->GetNumBones(); ++i)
+	{
+		const FName Bone = M->GetBoneName(i);
+		if (Bone.ToString().Contains(TEXT("ProxyTrueRoot"))) continue;
+		const FVector Loc = M->GetBoneLocation(Bone);
+		const float T = FMath::Max(0.f, FVector::DotProduct(Loc - Origin, Dir));
+		const float D = FVector::Dist(Loc, Origin + Dir * T);
+		if (D < Best) { Best = D; BestBone = Bone; BestLoc = Loc; }
+	}
+	if (BestBone.IsNone() || Best > 60.f) return true;          // clicked beside the hero: nothing chosen
+	// the point of the ray at that bone's depth, as an offset from the bone in actor axes
+	const FVector Point = Origin + Dir * FVector::DotProduct(BestLoc - Origin, Dir);
+	FVector Offset = H->GetActorRotation().UnrotateVector(Point - BestLoc);
+	Offset = Offset.GetClampedToMaxSize(40.f);
+	C->SetPowerPoint(CustomPower, BestBone, Offset, EmitterForBone(BestBone.ToString()));
+	DrawDebugSphere(H->GetWorld(), BestLoc + H->GetActorRotation().RotateVector(Offset), 4.f, 8, FColor::Cyan, false, 3.f);
+	C->PreviewPower(CustomPower);
+	return true;
+}
+
 void SCoHHud::CloseCustomize()
 {
+	bPicking = false;
 	if (!IsCustomizeOpen()) return;
+	if (const UCoHHeroProgress* P = Progress()) P->SaveLooks();       // the hero keeps how its powers look
 	Customize->SetVisibility(EVisibility::Collapsed);
 	if (bCustomBack && Browser) Browser->SetVisibility(EVisibility::Visible);
 	else SetCursor(false);
@@ -490,7 +539,7 @@ TSharedRef<SWidget> SCoHHud::MakeCustomize()
 		Emitters->AddSlot(i % 3, i / 3)
 		[
 			SNew(SButton)
-			.ButtonColorAndOpacity_Lambda([Style, i] { const FCoHPowerStyle* S = Style(); return S && S->bCustomEmitter && (int32)S->Emitter == i ? Gold : FLinearColor(0.6f, 0.65f, 0.8f); })
+			.ButtonColorAndOpacity_Lambda([Style, i] { const FCoHPowerStyle* S = Style(); return S && S->bCustomEmitter && !S->bCustomPoint && (int32)S->Emitter == i ? Gold : FLinearColor(0.6f, 0.65f, 0.8f); })
 			.OnClicked_Lambda([this, i, Preview] { if (UCoHPowerComponent* C = Me()) C->SetPowerEmitter(CustomPower, (ECoHEmitter)i); Preview(); return FReply::Handled(); })
 			[ SNew(STextBlock).Font(Font(9)).Text(FText::FromString(EmitterNames[i])) ]
 		];
@@ -538,7 +587,22 @@ TSharedRef<SWidget> SCoHHud::MakeCustomize()
 			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)
 			[ SNew(STextBlock).Font(Font(9)).ColorAndOpacity(FLinearColor(1, 1, 1, 0.7f)).Text(LOCTEXT("CustomHelp", "Make the power yours. It plays again as you change it.")) ]
 			+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(10, "Bold")).Text(LOCTEXT("CastFrom", "Cast from")) ]
-			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)[Emitters]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 4)[Emitters]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 8)
+			[
+				SNew(SButton).HAlign(HAlign_Center)
+				.ButtonColorAndOpacity_Lambda([this, Style] { const FCoHPowerStyle* S = Style(); return bPicking ? Gold : (S && S->bCustomPoint ? FLinearColor(0.5f, 1.f, 0.9f) : FLinearColor(0.6f, 0.65f, 0.8f)); })
+				.OnClicked_Lambda([this] { bPicking = !bPicking; return FReply::Handled(); })
+				[
+					SNew(STextBlock).Font(Font(9))
+					.Text_Lambda([this, Style]
+					{
+						const FCoHPowerStyle* S = Style();
+						if (bPicking) return FText::FromString(TEXT("Click a spot on your hero..."));
+						return FText::FromString(S && S->bCustomPoint ? FString::Printf(TEXT("Your point: %s (click to change)"), *S->PointBone.ToString()) : FString(TEXT("Pick any point on your hero")));
+					})
+				]
+			]
 			+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(10, "Bold")).Text(LOCTEXT("Theme", "Style")) ]
 			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)
 			[
@@ -597,7 +661,7 @@ TSharedRef<SWidget> SCoHHud::MakeCustomize()
 void SCoHHud::ToggleBrowser()
 {
 	if (!Browser) return;
-	if (IsCustomizeOpen()) { Customize->SetVisibility(EVisibility::Collapsed); Browser->SetVisibility(EVisibility::Collapsed); SetCursor(false); return; }
+	if (IsCustomizeOpen()) { bPicking = false; if (const UCoHHeroProgress* P = Progress()) P->SaveLooks(); Customize->SetVisibility(EVisibility::Collapsed); Browser->SetVisibility(EVisibility::Collapsed); SetCursor(false); return; }
 	const bool bOpen = !IsBrowserOpen();
 	Browser->SetVisibility(bOpen ? EVisibility::Visible : EVisibility::Collapsed);
 	SetCursor(bOpen);

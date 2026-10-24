@@ -61,6 +61,9 @@ struct FCoHFxStyle
 	bool bTint = false;              // mix the two colours into the tinted particle colours
 	FLinearColor Primary = FLinearColor::White, Secondary = FLinearColor::White;
 	int32 Theme = -1;                // entry of the power's "themes" list, -1 the default effects
+	bool bPoint = false;             // a clicked body point replaces the Emitter preset: PointBone + PointOffsetCm
+	FString PointBone;               // lower case
+	FVector PointOffsetCm = FVector::ZeroVector;   // actor axes: x forward, y right, z up
 };
 
 /** A behavior (.bhvr) with an event's overrides applied. */

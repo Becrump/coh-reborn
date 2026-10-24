@@ -430,6 +430,14 @@ void UCoHPowerComponent::SetPowerEmitter(FName Power, ECoHEmitter Emitter)
 	FCoHPowerStyle& S = Styles.FindOrAdd(Power);
 	S.Emitter = Emitter;
 	S.bCustomEmitter = true;
+	S.bCustomPoint = false;
+}
+
+void UCoHPowerComponent::SetPowerPoint(FName Power, FName Bone, FVector Offset, ECoHEmitter Pose)
+{
+	FCoHPowerStyle& S = Styles.FindOrAdd(Power);
+	S.bCustomPoint = true; S.PointBone = Bone; S.PointOffset = Offset;
+	S.Emitter = Pose; S.bCustomEmitter = true;
 }
 
 void UCoHPowerComponent::SetPowerColors(FName Power, FLinearColor Primary, FLinearColor Secondary)
@@ -448,7 +456,7 @@ void UCoHPowerComponent::ResetPowerLook(FName Power)
 {
 	FCoHPowerStyle* S = Styles.Find(Power);
 	if (!S) return;
-	S->Emitter = ECoHEmitter::RightHand; S->bCustomEmitter = false; S->Theme = -1;
+	S->Emitter = ECoHEmitter::RightHand; S->bCustomEmitter = false; S->bCustomPoint = false; S->Theme = -1;
 	S->Tint = FLinearColor(0, 0, 0, 0); S->Tint2 = FLinearColor(0, 0, 0, 0);
 }
 
@@ -1165,6 +1173,7 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	const float Hit = HitDelay(P.Id, Dist);
 	FCoHFxStyle Fx;
 	Fx.bEmitter = S.bCustomEmitter; Fx.Emitter = (uint8)S.Emitter;
+	Fx.bPoint = S.bCustomPoint && !S.PointBone.IsNone(); Fx.PointBone = S.PointBone.ToString().ToLower(); Fx.PointOffsetCm = S.PointOffset;
 	Fx.bTint = S.Tint.A > 0.f || S.Tint2.A > 0.f;
 	Fx.Primary = S.Tint.A > 0.f ? S.Tint : S.Tint2; Fx.Secondary = S.Tint2.A > 0.f ? S.Tint2 : Fx.Primary;
 	Fx.Theme = S.Theme;

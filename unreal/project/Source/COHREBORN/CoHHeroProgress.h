@@ -49,6 +49,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void Train();
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void Pick(FName Power);
+	/** Writes the hero file now (the customize panel calls it when it closes, so powers keep their look). */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void SaveLooks() const { Save(); }
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void UseInspiration(int32 Index);
 	UFUNCTION(Server, Reliable) void ServerTrain();
 	UFUNCTION(Server, Reliable) void ServerPick(FName Power);

@@ -168,6 +168,12 @@ struct FCoHPowerStyle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bCustomEmitter = false;
 	/** Entry of the power's customizable themes (Bright Fire ...), -1 the default effects. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Theme = -1;
+	/** A point the hero clicked on the body: the nearest bone and the offset from it in cm
+	 *  (actor axes: x forward, y right, z up). Replaces the Emitter preset for the effects;
+	 *  Emitter then only picks the pose. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bCustomPoint = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PointBone;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FVector PointOffset = FVector::ZeroVector;
 };
 
 USTRUCT()
@@ -248,6 +254,8 @@ public:
 	/** The two power colours (alpha < 1 on Primary: back to the effects' own colours). */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerColors(FName Power, FLinearColor Primary, FLinearColor Secondary);
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerTheme(FName Power, int32 Theme);
+	/** Casts from a clicked point of the body: Bone plus Offset (cm, actor axes); Pose is the ECoHEmitter whose move fits the region. */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerPoint(FName Power, FName Bone, FVector Offset, ECoHEmitter Pose);
 	/** Back to the power's original look (emitter, colours, theme; the clip stays). */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void ResetPowerLook(FName Power);
 	/** Plays the power here, locally, against a dummy 30 ft ahead, with the hero's style: the

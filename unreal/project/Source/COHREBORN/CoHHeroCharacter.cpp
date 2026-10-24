@@ -925,6 +925,7 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   bRay = PC->DeprojectScreenPositionToWorld(W * 0.5f, H * 0.5f, Origin, Dir);
  }
  if (!bRay) return;
+ if (Hud && Hud->TryPickPoint(Origin, Dir)) return;      // the customize panel's pick of a cast point
  // whoever the ray passes closest to: the whole body counts (feet to head,
  // a generous capsule, looser further out), and only real geometry in front
  // of them blocks the pick (complex collision: the original tiles' simple

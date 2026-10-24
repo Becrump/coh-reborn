@@ -35,6 +35,16 @@ bool UCoHHeroProgress::LoadHeroFile(const FString& File)
 	bHasRecord = true;
 	SaveFile = FPaths::GetCleanFilename(File).Replace(TEXT(".json"), TEXT("")) + TEXT("_save.json");
 	Apply(true);
+	// the powers the hero restyled
+	if (UCoHPowerComponent* P = Powers())
+		for (const FCoHPowerLook& K : Hero.Looks)
+		{
+			FCoHPowerStyle& S = P->Styles.FindOrAdd(K.Power);
+			S.Emitter = (ECoHEmitter)FMath::Clamp(K.Emitter, 0, 8); S.bCustomEmitter = K.bEmitter;
+			S.Tint = K.Tint; S.Tint2 = K.Tint2; S.Theme = K.Theme;
+			S.bCustomPoint = K.bPoint; S.PointBone = K.PointBone; S.PointOffset = K.PointOffset;
+			S.Clip = K.Clip.IsEmpty() ? FSoftObjectPath() : FSoftObjectPath(K.Clip);
+		}
 	UE_LOG(LogTemp, Log, TEXT("CoH hero: %s, %s level %d (%d XP), %s / %s, %d picks, preset %s"), *Hero.Name, *Hero.Class, Hero.Level, Hero.XP,
 		*Hero.Primary, *Hero.Secondary, Hero.Picks.Num(), *Hero.Preset);
 	return true;
@@ -175,7 +185,23 @@ void UCoHHeroProgress::ServerUseInspiration_Implementation(int32 Index)
 void UCoHHeroProgress::Save() const
 {
 	const UCoHGameRules* R = UCoHGameRules::Get(this);
-	if (R && bHasRecord && !SaveFile.IsEmpty()) R->SaveHero(SaveFile, Hero);
+	if (!R || !bHasRecord || SaveFile.IsEmpty()) return;
+	// the powers' looks are the component's styles: written as they stand
+	FCoHHeroRecord Out = Hero;
+	Out.Looks.Reset();
+	if (const UCoHPowerComponent* P = Powers())
+		for (const TPair<FName, FCoHPowerStyle>& KV : P->Styles)
+		{
+			const FCoHPowerStyle& S = KV.Value;
+			if (!S.bCustomEmitter && S.Tint.A <= 0.f && S.Tint2.A <= 0.f && S.Theme < 0 && !S.Clip.IsValid()) continue;     // nothing changed
+			FCoHPowerLook K;
+			K.Power = KV.Key; K.Emitter = (int32)S.Emitter; K.bEmitter = S.bCustomEmitter;
+			K.Tint = S.Tint; K.Tint2 = S.Tint2; K.Theme = S.Theme;
+			K.bPoint = S.bCustomPoint; K.PointBone = S.PointBone; K.PointOffset = S.PointOffset;
+			K.Clip = S.Clip.IsValid() ? S.Clip.ToString() : FString();
+			Out.Looks.Add(K);
+		}
+	R->SaveHero(SaveFile, Out);
 }
 
 void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& Rank, const FString& Group)

@@ -32,6 +32,8 @@ public:
 	void OpenCustomize(FName Power, bool bReturnToBrowser);
 	void CloseCustomize();
 	bool IsCustomizeOpen() const;
+	/** While a pick is on, the next select click (a ray) chooses the cast point on the hero: true when it took the click. */
+	bool TryPickPoint(const FVector& Origin, const FVector& Dir);
 	bool IsBrowserOpen() const;
 	/** Animation test bench (F8): every clip on the hero skeleton. */
 	void ToggleBench();
@@ -51,6 +53,7 @@ private:
 	TSharedPtr<SWidget> Customize;
 	FName CustomPower;
 	bool bCustomBack = false;
+	bool bPicking = false;
 	void ShowSets(const FString& Category);
 	void ShowPowers(const FString& SetId);
 	/** The open level-up pick: only what the original rules allow. */
@@ -90,6 +93,7 @@ class COHREBORN_API UCoHHudWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	void ToggleBrowser() { if (Hud) Hud->ToggleBrowser(); }
+	bool TryPickPoint(const FVector& Origin, const FVector& Dir) { return Hud && Hud->TryPickPoint(Origin, Dir); }
 	void ToggleBench() { if (Hud) Hud->ToggleBench(); }
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;

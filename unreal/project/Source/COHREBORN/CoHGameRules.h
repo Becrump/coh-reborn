@@ -44,6 +44,23 @@ struct FCoHHeroPick
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName Power;
 };
 
+/** How the hero restyled one power (the saved form of FCoHPowerStyle): cast point, colours, theme, clip. */
+USTRUCT(BlueprintType)
+struct FCoHPowerLook
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName Power;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Emitter = 0;          // ECoHEmitter
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bEmitter = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor Tint = FLinearColor(0, 0, 0, 0);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor Tint2 = FLinearColor(0, 0, 0, 0);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Theme = -1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bPoint = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PointBone;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FVector PointOffset = FVector::ZeroVector;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Clip;
+};
+
 /** A hero file, format 2 (docs/hero-build.md), plus the leveling fields. */
 USTRUCT(BlueprintType)
 struct FCoHHeroRecord
@@ -61,6 +78,7 @@ struct FCoHHeroRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Secondary;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHHeroPick> Picks;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> Inspirations;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHPowerLook> Looks;   // restyled powers (the customize panel)
 };
 
 struct FCoHRulePower

@@ -553,6 +553,28 @@ bool UCoHGameRules::LoadHero(const FString& File, FCoHHeroRecord& H) const
 	if (O->TryGetArrayField(TEXT("picks"), Picks))
 		for (const auto& PV : *Picks) { const auto PO = PV->AsObject(); H.Picks.Add({ (int32)N(PO, TEXT("level"), 1), FName(*S(PO, TEXT("power"))) }); }
 	for (const FString& I : L(O, TEXT("inspirations"))) H.Inspirations.Add(FName(*I));
+	const TArray<TSharedPtr<FJsonValue>>* Looks;
+	if (O->TryGetArrayField(TEXT("looks"), Looks))
+		for (const auto& LV : *Looks)
+		{
+			const auto LO = LV->AsObject();
+			if (!LO.IsValid()) continue;
+			auto Col = [&](const TCHAR* Key) { FLinearColor C(0, 0, 0, 0); const TArray<TSharedPtr<FJsonValue>>* A; if (LO->TryGetArrayField(Key, A) && A->Num() >= 4) C = FLinearColor((*A)[0]->AsNumber(), (*A)[1]->AsNumber(), (*A)[2]->AsNumber(), (*A)[3]->AsNumber()); return C; };
+			FCoHPowerLook K;
+			K.Power = FName(*S(LO, TEXT("power")));
+			K.Emitter = (int32)N(LO, TEXT("emitter")); K.bEmitter = B(LO, TEXT("custom_emitter"));
+			K.Tint = Col(TEXT("tint")); K.Tint2 = Col(TEXT("tint2"));
+			K.Theme = (int32)N(LO, TEXT("theme"), -1);
+			K.Clip = S(LO, TEXT("clip"));
+			const TSharedPtr<FJsonObject>* Pt;
+			if (LO->TryGetObjectField(TEXT("point"), Pt))
+			{
+				K.bPoint = true; K.PointBone = FName(*S(*Pt, TEXT("bone")));
+				const TArray<TSharedPtr<FJsonValue>>* Off;
+				if ((*Pt)->TryGetArrayField(TEXT("offset"), Off) && Off->Num() >= 3) K.PointOffset = FVector((*Off)[0]->AsNumber(), (*Off)[1]->AsNumber(), (*Off)[2]->AsNumber());
+			}
+			if (!K.Power.IsNone()) H.Looks.Add(K);
+		}
 	return true;
 }
 
@@ -591,6 +613,26 @@ bool UCoHGameRules::SaveHero(const FString& File, const FCoHHeroRecord& H) const
 	O->SetArrayField(TEXT("auto_powers"), Auto);
 	O->SetArrayField(TEXT("sets"), SetsArr);
 	O->SetArrayField(TEXT("inspirations"), Insp);
+	TArray<TSharedPtr<FJsonValue>> LooksArr;
+	for (const FCoHPowerLook& K : H.Looks)
+	{
+		TSharedRef<FJsonObject> LO = MakeShared<FJsonObject>();
+		auto Col = [](const FLinearColor& C) { TArray<TSharedPtr<FJsonValue>> A; for (float V : { C.R, C.G, C.B, C.A }) A.Add(MakeShared<FJsonValueNumber>(V)); return A; };
+		LO->SetStringField(TEXT("power"), K.Power.ToString());
+		LO->SetNumberField(TEXT("emitter"), K.Emitter); LO->SetBoolField(TEXT("custom_emitter"), K.bEmitter);
+		LO->SetArrayField(TEXT("tint"), Col(K.Tint)); LO->SetArrayField(TEXT("tint2"), Col(K.Tint2));
+		LO->SetNumberField(TEXT("theme"), K.Theme);
+		if (!K.Clip.IsEmpty()) LO->SetStringField(TEXT("clip"), K.Clip);
+		if (K.bPoint)
+		{
+			TSharedRef<FJsonObject> Pt = MakeShared<FJsonObject>();
+			Pt->SetStringField(TEXT("bone"), K.PointBone.ToString());
+			Pt->SetArrayField(TEXT("offset"), { MakeShared<FJsonValueNumber>(K.PointOffset.X), MakeShared<FJsonValueNumber>(K.PointOffset.Y), MakeShared<FJsonValueNumber>(K.PointOffset.Z) });
+			LO->SetObjectField(TEXT("point"), Pt);
+		}
+		LooksArr.Add(MakeShared<FJsonValueObject>(LO));
+	}
+	O->SetArrayField(TEXT("looks"), LooksArr);
 	if (H.Picks.Num() < SchedPicks.Num()) O->SetNumberField(TEXT("next_pick_level"), PickLevel(H.Picks.Num()));
 	FString Text;
 	const TSharedRef<TJsonWriter<>> W = TJsonWriterFactory<>::Create(&Text);

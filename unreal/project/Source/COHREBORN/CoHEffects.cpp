@@ -511,10 +511,15 @@ ACoHFxRunner::ACoHFxRunner()
 
 /** Moves a caster hand node ("wepr", "handl" ...) to the chosen emitter point: the new bone
  *  and the offset from it in feet (game axes: x left, y up, z forward). False: leave the node. */
-static bool EmitterPoint(uint8 Emitter, FString& At, FVector& Offset)
+static bool IsCasterHand(const FString& At)
 {
 	static const TSet<FString> Hands = { TEXT("wepr"), TEXT("wepl"), TEXT("handr"), TEXT("handl"), TEXT("rhand"), TEXT("lhand") };
-	if (!Hands.Contains(At)) return false;
+	return Hands.Contains(At);
+}
+
+static bool EmitterPoint(uint8 Emitter, FString& At, FVector& Offset)
+{
+	if (!IsCasterHand(At)) return false;
 	// order of ECoHEmitter: RightHand, LeftHand, BothHands, Eyes, Chest, Mouth, Feet, Back, Overhead
 	switch (Emitter)
 	{
@@ -633,7 +638,16 @@ void ACoHFxRunner::Step()
 		if (G->At.IsEmpty()) G->At = TEXT("origin");
 		// the hero's emitter choice: the caster's hand nodes (where the power is cast from) move to it
 		FVector EmitterOffset = FVector::ZeroVector;
-		if (Style.bEmitter && !R.Geos.Contains(G->At) && EmitterPoint(Style.Emitter, G->At, EmitterOffset)) {}
+		if (Style.bEmitter && !R.Geos.Contains(G->At))
+		{
+			if (Style.bPoint && IsCasterHand(G->At))
+			{
+				// the clicked point: its bone, and the offset in game axes (x left, y up, z forward) in feet
+				G->At = Style.PointBone;
+				EmitterOffset = FVector(-Style.PointOffsetCm.Y, Style.PointOffsetCm.Z, Style.PointOffsetCm.X) / Ft;
+			}
+			else EmitterPoint(Style.Emitter, G->At, EmitterOffset);
+		}
 		const TArray<TSharedPtr<FJsonValue>>* GeomsA;
 		if (Ev->TryGetArrayField(TEXT("geoms"), GeomsA) && GeomsA->Num()) G->Geom = (*GeomsA)[0]->AsString().ToLower();
 		if (const TSharedPtr<FGeo>* F = R.Geos.Find(G->At))
