@@ -27,6 +27,11 @@ public:
 	virtual ~SCoHHud() override;
 
 	void ToggleBrowser();
+	/** The customize panel (emitter point, theme, the two power colours) with a live preview:
+	 *  it opens whenever a power is chosen, from the browser or the level-up pick. */
+	void OpenCustomize(FName Power, bool bReturnToBrowser);
+	void CloseCustomize();
+	bool IsCustomizeOpen() const;
 	bool IsBrowserOpen() const;
 	/** Animation test bench (F8): every clip on the hero skeleton. */
 	void ToggleBench();
@@ -42,6 +47,10 @@ private:
 	TSharedRef<SWidget> MakeSlot(int32 Index);
 	TSharedRef<SWidget> MakeBar(TFunction<float()> Fraction, FLinearColor Colour, TFunction<FText()> Label);
 	TSharedRef<SWidget> MakeBrowser();
+	TSharedRef<SWidget> MakeCustomize();
+	TSharedPtr<SWidget> Customize;
+	FName CustomPower;
+	bool bCustomBack = false;
 	void ShowSets(const FString& Category);
 	void ShowPowers(const FString& SetId);
 	/** The open level-up pick: only what the original rules allow. */

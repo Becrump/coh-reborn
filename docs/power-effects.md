@@ -127,3 +127,16 @@ The preview skips some things:
 ## Next
 
 Step 6 is enemy setup. It covers the Atlas Park villain groups with their original powers, AI scripts (see `coh-enemy-ai-plan`), animations and these same effects.
+
+## Customizing a power (P menu)
+
+Choosing a power opens a **Customize** panel on the left with a live preview: from the Power Browser (P) when a power goes on the tray, and from the level-up pick (training). Each change replays the power on the hero against a dummy 30 ft ahead (3 ft for melee), through the same effect player as combat. No damage, endurance or recharge runs.
+
+| Choice | What it does |
+| --- | --- |
+| Cast from | Right hand, left hand, eyes, chest, mouth, feet, back, overhead. Only the caster's own hand nodes (`WepR`, `WepL`, `HandR`, `HandL`) move to that point, with a small offset (eyes in front of the head, overhead above it). Hit, target and ambient nodes stay. Both hands keeps the power's own nodes. |
+| Style | The power's customizable `themes` entries (Bright Fire ...), or the original effects. |
+| Primary / Secondary colour | Replaces the share of each particle colour that the original data marks as tintable (`ColorNav` primary% / secondary%). Untinted parts keep their own colour. |
+| Original | Clears emitter, colours and theme (the animation clip stays). |
+
+Code: `FCoHPowerStyle` (CoHPowers.h) holds the choices per power on the hero's `UCoHPowerComponent`; `FCoHFxStyle` carries them into `ACoHFxRunner` (CoHEffects.cpp: `EmitterPoint`, the tint mix in `Draw`); the panel is `SCoHHud::MakeCustomize` (CoHPowerUI.cpp). Open: choices live on the component only and are not saved with the hero yet.

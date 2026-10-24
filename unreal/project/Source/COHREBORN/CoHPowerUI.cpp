@@ -2,6 +2,7 @@
 #include "CoHPowers.h"
 #include "CoHHeroCharacter.h"
 #include "CoHPowerFX.h"
+#include "CoHEffects.h"
 #include "CoHHeroProgress.h"
 #include "Animation/AnimSequence.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -146,6 +147,11 @@ void SCoHHud::Construct(const FArguments& InArgs)
 		+ SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)
 		[
 			SAssignNew(Browser, SBox).Visibility(EVisibility::Collapsed)[MakeBrowser()]
+		]
+		// customize + preview (left, so the hero stays in view)
+		+ SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(24, 0, 0, 0)
+		[
+			SAssignNew(Customize, SBox).Visibility(EVisibility::Collapsed)[MakeCustomize()]
 		]
 		// animation test bench
 		+ SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)
@@ -389,6 +395,7 @@ void SCoHHud::ShowPowers(const FString& SetId)
 					C->SetTray(SelectedSlot, Id);
 					SelectedSlot = (SelectedSlot + 1) % 10;
 				}
+				OpenCustomize(Id, true);
 				return FReply::Handled();
 			})
 			[
@@ -424,7 +431,7 @@ void SCoHHud::ShowPicks()
 		PowerList->AddSlot().Padding(0, 1)
 		[
 			SNew(SButton).ToolTipText(FText::FromString(P->Help))
-			.OnClicked_Lambda([this, Id] { if (UCoHHeroProgress* Hp = Progress()) Hp->Pick(Id); ToggleBrowser(); return FReply::Handled(); })
+			.OnClicked_Lambda([this, Id] { if (UCoHHeroProgress* Hp = Progress()) Hp->Pick(Id); OpenCustomize(Id, false); return FReply::Handled(); })
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot().AutoWidth()[ SNew(SBox).WidthOverride(36).HeightOverride(36)[ SNew(SImage).Image(IconByName(P->Icon)) ] ]
@@ -441,12 +448,156 @@ void SCoHHud::ShowPicks()
 
 bool SCoHHud::IsBrowserOpen() const
 {
-	return Browser.IsValid() && Browser->GetVisibility() == EVisibility::Visible;
+	return IsCustomizeOpen() || (Browser.IsValid() && Browser->GetVisibility() == EVisibility::Visible);
+}
+
+bool SCoHHud::IsCustomizeOpen() const
+{
+	return Customize.IsValid() && Customize->GetVisibility() == EVisibility::Visible;
+}
+
+void SCoHHud::OpenCustomize(FName Power, bool bReturnToBrowser)
+{
+	if (!Customize || Power.IsNone()) return;
+	CustomPower = Power;
+	bCustomBack = bReturnToBrowser;
+	if (Browser) Browser->SetVisibility(EVisibility::Collapsed);
+	Customize->SetVisibility(EVisibility::Visible);
+	SetCursor(true);
+	if (UCoHPowerComponent* C = Me()) C->PreviewPower(CustomPower);
+}
+
+void SCoHHud::CloseCustomize()
+{
+	if (!IsCustomizeOpen()) return;
+	Customize->SetVisibility(EVisibility::Collapsed);
+	if (bCustomBack && Browser) Browser->SetVisibility(EVisibility::Visible);
+	else SetCursor(false);
+}
+
+TSharedRef<SWidget> SCoHHud::MakeCustomize()
+{
+	static const TCHAR* EmitterNames[] = { TEXT("Right hand"), TEXT("Left hand"), TEXT("Both hands"), TEXT("Eyes"), TEXT("Chest"), TEXT("Mouth"), TEXT("Feet"), TEXT("Back"), TEXT("Overhead") };
+	static const FLinearColor Palette[] = {
+		FLinearColor(1.f, 0.15f, 0.1f), FLinearColor(1.f, 0.5f, 0.05f), FLinearColor(1.f, 0.85f, 0.15f), FLinearColor(0.4f, 0.9f, 0.2f),
+		FLinearColor(0.1f, 0.8f, 0.6f), FLinearColor(0.2f, 0.75f, 1.f), FLinearColor(0.2f, 0.35f, 1.f), FLinearColor(0.6f, 0.25f, 1.f),
+		FLinearColor(1.f, 0.3f, 0.8f), FLinearColor(1.f, 1.f, 1.f), FLinearColor(0.6f, 0.6f, 0.65f), FLinearColor(0.12f, 0.12f, 0.15f) };
+	auto Style = [this]() -> FCoHPowerStyle* { UCoHPowerComponent* C = Me(); return C ? &C->Styles.FindOrAdd(CustomPower) : nullptr; };
+	auto Preview = [this] { if (UCoHPowerComponent* C = Me()) C->PreviewPower(CustomPower); };
+
+	TSharedRef<SUniformGridPanel> Emitters = SNew(SUniformGridPanel).SlotPadding(FMargin(2.f));
+	for (int32 i = 0; i < 9; ++i)
+		Emitters->AddSlot(i % 3, i / 3)
+		[
+			SNew(SButton)
+			.ButtonColorAndOpacity_Lambda([Style, i] { const FCoHPowerStyle* S = Style(); return S && S->bCustomEmitter && (int32)S->Emitter == i ? Gold : FLinearColor(0.6f, 0.65f, 0.8f); })
+			.OnClicked_Lambda([this, i, Preview] { if (UCoHPowerComponent* C = Me()) C->SetPowerEmitter(CustomPower, (ECoHEmitter)i); Preview(); return FReply::Handled(); })
+			[ SNew(STextBlock).Font(Font(9)).Text(FText::FromString(EmitterNames[i])) ]
+		];
+
+	auto Swatches = [this, Preview](bool bSecond) -> TSharedRef<SWidget>
+	{
+		TSharedRef<SUniformGridPanel> G = SNew(SUniformGridPanel).SlotPadding(FMargin(2.f));
+		for (int32 i = 0; i < UE_ARRAY_COUNT(Palette); ++i)
+			G->AddSlot(i % 6, i / 6)
+			[
+				SNew(SButton).ButtonColorAndOpacity(Palette[i])
+				.OnClicked_Lambda([this, i, bSecond, Preview]
+				{
+					if (UCoHPowerComponent* C = Me())
+					{
+						FCoHPowerStyle& S = C->Styles.FindOrAdd(CustomPower);
+						// one colour picked: it also colours the second until that is chosen
+						const FLinearColor Col(Palette[i].R, Palette[i].G, Palette[i].B, 1.f);
+						if (bSecond) { if (S.Tint.A <= 0.f) S.Tint = Col; S.Tint2 = Col; }
+						else { S.Tint = Col; if (S.Tint2.A <= 0.f) S.Tint2 = Col; }
+					}
+					Preview();
+					return FReply::Handled();
+				})
+				[ SNew(SBox).WidthOverride(26.f).HeightOverride(20.f) ]
+			];
+		return G;
+	};
+
+	return SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(0.02f, 0.03f, 0.07f, 0.92f)).Padding(12.f)
+	[
+		SNew(SBox).WidthOverride(310.f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot().AutoHeight()
+			[
+				SNew(STextBlock).Font(Font(14, "Bold")).ColorAndOpacity(Gold)
+				.Text_Lambda([this]
+				{
+					const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(Player.Get());
+					const FCoHPowerDef* P = DB ? DB->FindPower(CustomPower) : nullptr;
+					return FText::FromString(P ? P->Display : CustomPower.ToString());
+				})
+			]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)
+			[ SNew(STextBlock).Font(Font(9)).ColorAndOpacity(FLinearColor(1, 1, 1, 0.7f)).Text(LOCTEXT("CustomHelp", "Make the power yours. It plays again as you change it.")) ]
+			+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(10, "Bold")).Text(LOCTEXT("CastFrom", "Cast from")) ]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)[Emitters]
+			+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(10, "Bold")).Text(LOCTEXT("Theme", "Style")) ]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().AutoWidth()
+				[
+					SNew(SButton).OnClicked_Lambda([this, Style, Preview]
+					{
+						UCoHFxLibrary* L = UCoHFxLibrary::Get(Player.Get());
+						const int32 N = L ? L->ThemeNames(CustomPower).Num() : 0;
+						if (FCoHPowerStyle* S = Style()) { if (N) S->Theme = S->Theme <= -1 ? N - 1 : S->Theme - 1; }
+						Preview(); return FReply::Handled();
+					})[ SNew(STextBlock).Text(FText::FromString(TEXT("<"))) ]
+				]
+				+ SHorizontalBox::Slot().FillWidth(1.f).VAlign(VAlign_Center).HAlign(HAlign_Center)
+				[
+					SNew(STextBlock).Font(Font(10))
+					.Text_Lambda([this, Style]
+					{
+						UCoHFxLibrary* L = UCoHFxLibrary::Get(Player.Get());
+						const TArray<FString> Names = L ? L->ThemeNames(CustomPower) : TArray<FString>();
+						const FCoHPowerStyle* S = Style();
+						if (!Names.Num()) return FText::FromString(TEXT("Original only"));
+						return FText::FromString(S && Names.IsValidIndex(S->Theme) ? Names[S->Theme] : FString(TEXT("Original")));
+					})
+				]
+				+ SHorizontalBox::Slot().AutoWidth()
+				[
+					SNew(SButton).OnClicked_Lambda([this, Style, Preview]
+					{
+						UCoHFxLibrary* L = UCoHFxLibrary::Get(Player.Get());
+						const int32 N = L ? L->ThemeNames(CustomPower).Num() : 0;
+						if (FCoHPowerStyle* S = Style()) { if (N) S->Theme = S->Theme + 1 >= N ? -1 : S->Theme + 1; }
+						Preview(); return FReply::Handled();
+					})[ SNew(STextBlock).Text(FText::FromString(TEXT(">"))) ]
+				]
+			]
+			+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(10, "Bold")).Text(LOCTEXT("Primary", "Primary colour")) ]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 8)[Swatches(false)]
+			+ SVerticalBox::Slot().AutoHeight()[ SNew(STextBlock).Font(Font(10, "Bold")).Text(LOCTEXT("Secondary", "Secondary colour")) ]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 10)[Swatches(true)]
+			+ SVerticalBox::Slot().AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().FillWidth(1.f).Padding(0, 0, 4, 0)
+				[ SNew(SButton).HAlign(HAlign_Center).OnClicked_Lambda([Preview] { Preview(); return FReply::Handled(); })[ SNew(STextBlock).Text(LOCTEXT("PreviewBtn", "Preview")) ] ]
+				+ SHorizontalBox::Slot().FillWidth(1.f).Padding(0, 0, 4, 0)
+				[ SNew(SButton).HAlign(HAlign_Center).OnClicked_Lambda([this, Preview] { if (UCoHPowerComponent* C = Me()) C->ResetPowerLook(CustomPower); Preview(); return FReply::Handled(); })[ SNew(STextBlock).Text(LOCTEXT("Original", "Original")) ] ]
+				+ SHorizontalBox::Slot().FillWidth(1.f)
+				[ SNew(SButton).HAlign(HAlign_Center).OnClicked_Lambda([this] { CloseCustomize(); return FReply::Handled(); })[ SNew(STextBlock).Text(LOCTEXT("DoneBtn", "Done")) ] ]
+			]
+		]
+	];
 }
 
 void SCoHHud::ToggleBrowser()
 {
 	if (!Browser) return;
+	if (IsCustomizeOpen()) { Customize->SetVisibility(EVisibility::Collapsed); Browser->SetVisibility(EVisibility::Collapsed); SetCursor(false); return; }
 	const bool bOpen = !IsBrowserOpen();
 	Browser->SetVisibility(bOpen ? EVisibility::Visible : EVisibility::Collapsed);
 	SetCursor(bOpen);

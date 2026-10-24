@@ -49,6 +49,18 @@ struct FCoHPart
 	int32 AnimFrames = 0; float AnimPace = 0;
 	FString Blend, Texture;
 	TArray<FVector3f> ColorPath;      // rgb 0..255 per tick of age
+	TArray<FVector2f> TintPath;       // primary / secondary power colour share 0..1 per tick of age
+};
+
+/** How a hero restyled a power: where it comes from and the two power colours.
+ *  Emitter is an ECoHEmitter value (CoHPowers.h). */
+struct FCoHFxStyle
+{
+	bool bEmitter = false;           // move the caster's hand nodes to Emitter
+	uint8 Emitter = 0;
+	bool bTint = false;              // mix the two colours into the tinted particle colours
+	FLinearColor Primary = FLinearColor::White, Secondary = FLinearColor::White;
+	int32 Theme = -1;                // entry of the power's "themes" list, -1 the default effects
 };
 
 /** A behavior (.bhvr) with an event's overrides applied. */
@@ -91,9 +103,12 @@ public:
 	bool IsLoaded() const { return FxTable.Num() > 0; }
 
 	/** Plays an effect on Owner (with Target); returns the runner or null. */
-	static class ACoHFxRunner* Play(AActor* Owner, const FString& Path, AActor* Target, float Delay = 0.f);
-	/** Plays a power's start effects now and its hit effect on the target at the hit. */
-	static bool PlayPower(AActor* Owner, FName Power, AActor* Target, float HitDelay);
+	static class ACoHFxRunner* Play(AActor* Owner, const FString& Path, AActor* Target, float Delay = 0.f, const FCoHFxStyle* Style = nullptr);
+	/** Plays a power's start effects now and its hit effect on the target at the hit.
+	 *  Style (optional) restyles it: the emitter point moves only the start effects. */
+	static bool PlayPower(AActor* Owner, FName Power, AActor* Target, float HitDelay, const FCoHFxStyle* Style = nullptr);
+	/** Names of the customizable themes of a power ("Bright Fire" ...); empty when it has none. */
+	TArray<FString> ThemeNames(FName Power) const;
 
 private:
 	TMap<FString, TSharedPtr<FJsonObject>> FxTable, PartJson, BhvrJson, Geoms, Textures, Sounds, PowerTable;
@@ -113,7 +128,7 @@ class COHREBORN_API ACoHFxRunner : public AActor
 	GENERATED_BODY()
 public:
 	ACoHFxRunner();
-	void Start(const FString& Path, AActor* InOwner, AActor* InTarget);
+	void Start(const FString& Path, AActor* InOwner, AActor* InTarget, const FCoHFxStyle* InStyle = nullptr);
 	virtual void Tick(float DeltaSeconds) override;
 	/** Ends the effect: systems stop spawning and fade out. */
 	void Stop();
@@ -128,4 +143,5 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<UProceduralMeshComponent>> Pool;
 	float Accum = 0.f;
 	int32 Ticks = 0;
+	FCoHFxStyle Style;
 };

@@ -131,26 +131,40 @@ const TArray<TArray<float>>* UCoHFxLibrary::AltPivots(const FString& Geom) const
 	return Out.Num() ? &Out : nullptr;
 }
 
-/** One rgb per tick (partBuildColorPath); nav points [tick, r, g, b, primary%, secondary%]. */
-static TArray<FVector3f> ColorPath(const TArray<TSharedPtr<FJsonValue>>& Nav)
+/** One value per tick (partBuildColorPath): Get(i) is nav point i's value, blended linearly in between.
+ *  Nav points are [tick, r, g, b, primary%, secondary%]. */
+template <typename T, typename F>
+static TArray<T> BuildPath(const TArray<TSharedPtr<FJsonValue>>& Nav, F Get, const T& Default)
 {
-	TArray<FVector3f> Path;
-	if (Nav.Num() == 0) { Path.Add(FVector3f(255)); return Path; }
-	auto Pt = [&](int32 i, int32 k) { return (float)Nav[i]->AsArray()[k]->AsNumber(); };
+	TArray<T> Path;
+	if (Nav.Num() == 0) { Path.Add(Default); return Path; }
+	auto Tick = [&](int32 i) { return (float)Nav[i]->AsArray()[0]->AsNumber(); };
 	int32 Len = 0;
-	for (int32 i = 0; i < Nav.Num(); ++i) Len = FMath::Max(Len, (int32)Pt(i, 0) + 1);
+	for (int32 i = 0; i < Nav.Num(); ++i) Len = FMath::Max(Len, (int32)Tick(i) + 1);
 	for (int32 i = 0; i + 1 < Nav.Num(); ++i)
 	{
-		const float Dt = FMath::Max(1.f, Pt(i + 1, 0) - Pt(i, 0));
-		FVector3f Cur(Pt(i, 1), Pt(i, 2), Pt(i, 3));
-		const FVector3f Dv = (FVector3f(Pt(i + 1, 1), Pt(i + 1, 2), Pt(i + 1, 3)) - Cur) / Dt;
+		const float Dt = FMath::Max(1.f, Tick(i + 1) - Tick(i));
+		T Cur = Get(i);
+		const T Dv = (Get(i + 1) - Cur) / Dt;
 		Path.Add(Cur);
-		for (int32 T = (int32)Pt(i, 0) + 1; T <= (int32)Pt(i + 1, 0); ++T) { Cur += Dv; Path.Add(Cur); }
+		for (int32 T_ = (int32)Tick(i) + 1; T_ <= (int32)Tick(i + 1); ++T_) { Cur += Dv; Path.Add(Cur); }
 	}
 	const int32 Last = Nav.Num() - 1;
-	while (Path.Num() < Len) Path.Add(FVector3f(Pt(Last, 1), Pt(Last, 2), Pt(Last, 3)));
+	while (Path.Num() < Len) Path.Add(Get(Last));
 	Path.SetNum(FMath::Max(1, Len));
 	return Path;
+}
+
+static TArray<FVector3f> ColorPath(const TArray<TSharedPtr<FJsonValue>>& Nav)
+{
+	auto Pt = [&](int32 i, int32 k) { return (float)Nav[i]->AsArray()[k]->AsNumber(); };
+	return BuildPath<FVector3f>(Nav, [&](int32 i) { return FVector3f(Pt(i, 1), Pt(i, 2), Pt(i, 3)); }, FVector3f(255));
+}
+
+static TArray<FVector2f> TintPath(const TArray<TSharedPtr<FJsonValue>>& Nav)
+{
+	auto Pt = [&](int32 i, int32 k) { return Nav[i]->AsArray().IsValidIndex(k) ? (float)Nav[i]->AsArray()[k]->AsNumber() : 0.f; };
+	return BuildPath<FVector2f>(Nav, [&](int32 i) { return FVector2f(Pt(i, 4), Pt(i, 5)) / 100.f; }, FVector2f(0));
 }
 
 const FCoHPart* UCoHFxLibrary::Part(const FString& Path)
@@ -181,7 +195,8 @@ const FCoHPart* UCoHFxLibrary::Part(const FString& Path)
 	const TArray<TSharedPtr<FJsonValue>>* Flags;
 	if (O->TryGetArrayField(TEXT("Flags"), Flags)) for (const auto& F : *Flags) P.bFadeImmediately |= F->AsString() == TEXT("FadeImmediatelyOnDeath");
 	const TArray<TSharedPtr<FJsonValue>>* Nav;
-	if (O->TryGetArrayField(TEXT("ColorNav"), Nav)) P.ColorPath = ColorPath(*Nav); else P.ColorPath.Add(FVector3f(255));
+	if (O->TryGetArrayField(TEXT("ColorNav"), Nav)) { P.ColorPath = ColorPath(*Nav); P.TintPath = TintPath(*Nav); }
+	else { P.ColorPath.Add(FVector3f(255)); P.TintPath.Add(FVector2f(0)); }
 	return PartCache.Add(Key, MakeUnique<FCoHPart>(MoveTemp(P))).Get();
 }
 
@@ -311,7 +326,7 @@ USoundAttenuation* UCoHFxLibrary::Attenuation(float RadiusFeet)
 	return A;
 }
 
-ACoHFxRunner* UCoHFxLibrary::Play(AActor* Owner, const FString& Path, AActor* Target, float Delay)
+ACoHFxRunner* UCoHFxLibrary::Play(AActor* Owner, const FString& Path, AActor* Target, float Delay, const FCoHFxStyle* Style)
 {
 	UWorld* Wd = Owner ? Owner->GetWorld() : nullptr;
 	UCoHFxLibrary* Lib = Get(Owner);
@@ -320,29 +335,55 @@ ACoHFxRunner* UCoHFxLibrary::Play(AActor* Owner, const FString& Path, AActor* Ta
 	{
 		TWeakObjectPtr<AActor> O(Owner), T(Target);
 		const FString P = Path;
+		const FCoHFxStyle St = Style ? *Style : FCoHFxStyle();
+		const bool bSt = Style != nullptr;
 		FTimerHandle H;
-		Wd->GetTimerManager().SetTimer(H, FTimerDelegate::CreateLambda([O, T, P]() { if (O.IsValid()) Play(O.Get(), P, T.Get(), 0.f); }), Delay, false);
+		Wd->GetTimerManager().SetTimer(H, FTimerDelegate::CreateLambda([O, T, P, St, bSt]() { if (O.IsValid()) Play(O.Get(), P, T.Get(), 0.f, bSt ? &St : nullptr); }), Delay, false);
 		return nullptr;
 	}
 	FActorSpawnParameters SP;
 	SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	ACoHFxRunner* R = Wd->SpawnActor<ACoHFxRunner>(ACoHFxRunner::StaticClass(), FTransform::Identity, SP);
-	if (R) R->Start(Path, Owner, Target);
+	if (R) R->Start(Path, Owner, Target, Style);
 	return R;
 }
 
-bool UCoHFxLibrary::PlayPower(AActor* Owner, FName Power, AActor* Target, float HitDelay)
+TArray<FString> UCoHFxLibrary::ThemeNames(FName Power) const
+{
+	TArray<FString> Out;
+	const TSharedPtr<FJsonObject> P = PowerFx(Power);
+	const TArray<TSharedPtr<FJsonValue>>* Themes;
+	if (P.IsValid() && P->TryGetArrayField(TEXT("themes"), Themes))
+		for (const auto& T : *Themes)
+		{
+			const TSharedPtr<FJsonObject>* O;
+			Out.Add(T->TryGetObject(O) ? Str(*O, TEXT("theme")) : FString());
+		}
+	return Out;
+}
+
+bool UCoHFxLibrary::PlayPower(AActor* Owner, FName Power, AActor* Target, float HitDelay, const FCoHFxStyle* Style)
 {
 	UCoHFxLibrary* Lib = Get(Owner);
-	const TSharedPtr<FJsonObject> P = Lib ? Lib->PowerFx(Power) : nullptr;
+	TSharedPtr<FJsonObject> P = Lib ? Lib->PowerFx(Power) : nullptr;
 	if (!P.IsValid()) return false;
+	// a chosen theme replaces the default effects (its keys are the same)
+	const TArray<TSharedPtr<FJsonValue>>* Themes;
+	if (Style && Style->Theme >= 0 && P->TryGetArrayField(TEXT("themes"), Themes) && Themes->IsValidIndex(Style->Theme))
+	{
+		const TSharedPtr<FJsonObject>* T;
+		if ((*Themes)[Style->Theme]->TryGetObject(T)) P = *T;
+	}
+	// the hit lands on the target: only the caster's own effects move with the emitter
+	FCoHFxStyle HitStyle;
+	if (Style) { HitStyle = *Style; HitStyle.bEmitter = false; }
 	bool bAny = false;
 	// the start effects last for the attack: the game ends them with the
 	// power's move chain (sequencer bits we do not run yet), so they stop a
 	// moment after the hit; their own Destroy / LifeSpan may end them sooner
 	TArray<TWeakObjectPtr<ACoHFxRunner>> Started;
 	for (const TCHAR* K : { TEXT("WindUpFX"), TEXT("ActivationFX"), TEXT("AttackFX"), TEXT("InitialAttackFX") })
-		if (ACoHFxRunner* R = Play(Owner, Str(P, K), Target)) { bAny = true; Started.Add(R); }
+		if (ACoHFxRunner* R = Play(Owner, Str(P, K), Target, 0.f, Style)) { bAny = true; Started.Add(R); }
 	if (Started.Num() && Owner->GetWorld())
 	{
 		FTimerHandle H;
@@ -352,7 +393,7 @@ bool UCoHFxLibrary::PlayPower(AActor* Owner, FName Power, AActor* Target, float 
 	const FString Hit = Str(P, TEXT("HitFX"));
 	if (!Hit.IsEmpty() && Target && Target != Owner)
 	{
-		Play(Target, Hit, Owner, FMath::Max(0.f, HitDelay));
+		Play(Target, Hit, Owner, FMath::Max(0.f, HitDelay), Style ? &HitStyle : nullptr);
 		bAny = true;
 	}
 	return bAny;
@@ -468,6 +509,27 @@ ACoHFxRunner::ACoHFxRunner()
 	SetReplicates(false);
 }
 
+/** Moves a caster hand node ("wepr", "handl" ...) to the chosen emitter point: the new bone
+ *  and the offset from it in feet (game axes: x left, y up, z forward). False: leave the node. */
+static bool EmitterPoint(uint8 Emitter, FString& At, FVector& Offset)
+{
+	static const TSet<FString> Hands = { TEXT("wepr"), TEXT("wepl"), TEXT("handr"), TEXT("handl"), TEXT("rhand"), TEXT("lhand") };
+	if (!Hands.Contains(At)) return false;
+	// order of ECoHEmitter: RightHand, LeftHand, BothHands, Eyes, Chest, Mouth, Feet, Back, Overhead
+	switch (Emitter)
+	{
+	case 0: At = TEXT("wepr"); Offset = FVector::ZeroVector; return true;
+	case 1: At = TEXT("wepl"); Offset = FVector::ZeroVector; return true;
+	case 3: At = TEXT("head"); Offset = FVector(0, 0.25, 0.5); return true;
+	case 4: At = TEXT("chest"); Offset = FVector(0, 0, 0.6); return true;
+	case 5: At = TEXT("head"); Offset = FVector(0, -0.15, 0.5); return true;
+	case 6: At = TEXT("origin"); Offset = FVector(0, 0.3, 0.4); return true;
+	case 7: At = TEXT("chest"); Offset = FVector(0, 0, -0.7); return true;
+	case 8: At = TEXT("head"); Offset = FVector(0, 1.6, 0); return true;
+	default: return false;      // both hands: the power keeps its own hand nodes
+	}
+}
+
 static TSharedPtr<ACoHFxRunner::FRun> MakeRun(UCoHFxLibrary* Lib, const FString& Path, AActor* Entity, AActor* Target, TSharedPtr<ACoHFxRunner::FGeo> At)
 {
 	TSharedPtr<ACoHFxRunner::FRun> R = MakeShared<ACoHFxRunner::FRun>();
@@ -480,10 +542,11 @@ static TSharedPtr<ACoHFxRunner::FRun> MakeRun(UCoHFxLibrary* Lib, const FString&
 	return R;
 }
 
-void ACoHFxRunner::Start(const FString& Path, AActor* InOwner, AActor* InTarget)
+void ACoHFxRunner::Start(const FString& Path, AActor* InOwner, AActor* InTarget, const FCoHFxStyle* InStyle)
 {
 	UCoHFxLibrary* Lib = UCoHFxLibrary::Get(this);
 	if (!Lib) { Destroy(); return; }
+	if (InStyle) Style = *InStyle;
 	Runs.Add(MakeRun(Lib, Path, InOwner, InTarget, nullptr));
 	Step();          // tick 0 fires the time-0 events at once
 	Draw();
@@ -568,6 +631,9 @@ void ACoHFxRunner::Step()
 		G->B = Lib->Behavior(BhvrPath, Ovr ? *Ovr : nullptr);
 		G->At = Str(Ev, TEXT("at")).ToLower();
 		if (G->At.IsEmpty()) G->At = TEXT("origin");
+		// the hero's emitter choice: the caster's hand nodes (where the power is cast from) move to it
+		FVector EmitterOffset = FVector::ZeroVector;
+		if (Style.bEmitter && !R.Geos.Contains(G->At) && EmitterPoint(Style.Emitter, G->At, EmitterOffset)) {}
 		const TArray<TSharedPtr<FJsonValue>>* GeomsA;
 		if (Ev->TryGetArrayField(TEXT("geoms"), GeomsA) && GeomsA->Num()) G->Geom = (*GeomsA)[0]->AsString().ToLower();
 		if (const TSharedPtr<FGeo>* F = R.Geos.Find(G->At))
@@ -586,6 +652,7 @@ void ACoHFxRunner::Step()
 			G->Pos = Bone(R, G->At);
 		}
 		G->Offset = G->Rot.L(FVector(G->B.PositionOffset.X + G->B.StartJitter.X * Rnd(), G->B.PositionOffset.Y + G->B.StartJitter.Y * Rnd(), G->B.PositionOffset.Z + G->B.StartJitter.Z * Rnd())) * Ft;
+		G->Offset += G->Rot.L(EmitterOffset) * Ft;
 		G->Pos += G->Offset;
 		G->Vel = G->Rot.L(FVector(G->B.InitialVelocity.X + G->B.InitialVelocityJitter.X * Rnd(), G->B.InitialVelocity.Y + G->B.InitialVelocityJitter.Y * Rnd(),
 			G->B.InitialVelocity.Z + G->B.InitialVelocityJitter.Z * Rnd())) * Ft;
@@ -915,7 +982,18 @@ void ACoHFxRunner::Draw()
 				int32 Idx = FMath::RoundToInt(Age);
 				if (I.ColorChangeType == 1) Idx = ((Idx % I.ColorPath.Num()) + I.ColorPath.Num()) % I.ColorPath.Num();
 				Idx = FMath::Clamp(Idx, 0, I.ColorPath.Num() - 1);
-				const FVector3f C = I.ColorPath[Idx] / 255.f;
+				FVector3f C = I.ColorPath[Idx] / 255.f;
+				if (Style.bTint && I.TintPath.IsValidIndex(Idx))
+				{
+					// the power colours replace their share of the original colour
+					const FVector2f T = I.TintPath[Idx];
+					const float Share = FMath::Clamp(T.X + T.Y, 0.f, 1.f);
+					if (Share > 0.f)
+					{
+						const FVector3f Mix = (FVector3f(Style.Primary.R, Style.Primary.G, Style.Primary.B) * T.X + FVector3f(Style.Secondary.R, Style.Secondary.G, Style.Secondary.B) * T.Y) / FMath::Max(T.X + T.Y, 0.001f);
+						C = FMath::Lerp(C, Mix, Share);
+					}
+				}
 				float F = 1.f;
 				if (Age >= I.FadeOutStart) F = 1.f - (Age - I.FadeOutStart) / FMath::Max(1.f, I.FadeOutBy - I.FadeOutStart);
 				else if (Age < I.FadeInBy) F = Age / FMath::Max(0.001f, I.FadeInBy);
