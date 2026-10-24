@@ -135,6 +135,7 @@ Choosing a power opens a **Customize** panel on the left with a live preview: fr
 | Choice | What it does |
 | --- | --- |
 | Cast from | Right hand, left hand, eyes, chest, mouth, feet, back, overhead. Only the caster's own hand nodes (`WepR`, `WepL`, `HandR`, `HandL`) move to that point, with a small offset (eyes in front of the head, overhead above it). Hit, target and ambient nodes stay. Both hands keeps the power's own nodes. |
+| Pose | Picking a cast point also changes the body move to a generic original one: right arm out (`onehand_palmcast`), left arm out (`magic_l`), both arms out (`2hand_cast`), eyes (`eye`), chest (`alt_beatchest`), mouth (`scream`), feet (`stomp`), back (`flight_afterburner`), overhead (`sky_summon`). Eyes and mouth also tilt the neck and head forward (`LeanHead` in CoHBodyAnim.cpp). A clip picked on the F8 bench still wins. |
 | Style | The power's customizable `themes` entries (Bright Fire ...), or the original effects. |
 | Primary / Secondary colour | Replaces the share of each particle colour that the original data marks as tintable (`ColorNav` primary% / secondary%). Untinted parts keep their own colour. |
 | Original | Clears emitter, colours and theme (the animation clip stays). |

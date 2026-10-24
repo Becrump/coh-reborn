@@ -511,6 +511,34 @@ bool ACoHHeroCharacter::PlayPowerMoves(FName Power, bool bActivation)
 	return PlayMoves(Segs, bToggle ? 0.f : FMath::Max(0.3f, Def ? Def->Activate : 1.f));
 }
 
+bool ACoHHeroCharacter::PlayEmitterPose(uint8 Emitter, float Duration)
+{
+	// original generic moves (anim_list.json), first one the body has; order of ECoHEmitter
+	static const TArray<TArray<FString>> Poses = {
+		{ TEXT("onehand_palmcast"), TEXT("palmcast"), TEXT("point") },            // right arm out
+		{ TEXT("magic_l"), TEXT("comb_wristshoot_l") },                            // left arm out
+		{ TEXT("2hand_cast"), TEXT("alt_stopcast") },                              // both arms out
+		{ TEXT("eye") },                                                           // eyes
+		{ TEXT("alt_beatchest"), TEXT("comb_beatchest") },                         // chest
+		{ TEXT("scream"), TEXT("sonic_yell") },                                    // mouth
+		{ TEXT("stomp") },                                                         // feet
+		{ TEXT("flight_afterburner"), TEXT("boost") },                             // back
+		{ TEXT("sky_summon"), TEXT("raise_hand") } };                              // overhead
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!R || CoHBodyType.IsEmpty() || !Poses.IsValidIndex(Emitter)) return false;
+	for (const FString& Name : Poses[Emitter])
+		if (UAnimSequenceBase* Clip = R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__") + Name))
+		{
+			FCoHAnimSegment Seg;
+			Seg.Clip = Clip; Seg.End = Clip->GetPlayLength();
+			const bool bOk = PlayMoves({ Seg }, FMath::Max(0.4f, Duration));
+			// eye beam, breath: the head goes forward with the pose
+			if (bOk && (Emitter == 3 || Emitter == 5)) if (UCoHBodyAnim* B = BodyAnim()) B->LeanHead(Emitter == 3 ? 22.f : 28.f, FMath::Max(0.4f, Duration) + 0.2f);
+			return bOk;
+		}
+	return false;
+}
+
 void ACoHHeroCharacter::UpdateClimbAnim()
 {
 	// 0 up, 1 down, 2 left, 3 right; hold the last clip still when idle

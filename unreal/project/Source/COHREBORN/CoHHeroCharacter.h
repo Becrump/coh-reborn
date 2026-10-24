@@ -121,6 +121,10 @@ public:
 	/** Plays a power's original moves (AttackBits, or ActivationBits for
 	 *  toggles and self powers) on a CoH body. False: no moves for it. */
 	bool PlayPowerMoves(FName Power, bool bActivation);
+	/** The generic pose for a cast point (ECoHEmitter value): right / left arm out, both arms out,
+	 *  eyes, chest, mouth, feet, back, overhead; the original moves on the hero's body type.
+	 *  False: the body has none of its clips. */
+	bool PlayEmitterPose(uint8 Emitter, float Duration);
 	/** Plays a list of moves (victim hit reactions...). */
 	bool PlayMoves(const TArray<struct FCoHAnimSegment>& Segments, float Lock);
 	class UCoHBodyAnim* BodyAnim() const;

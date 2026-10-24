@@ -1152,7 +1152,9 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	// the original moves of the power on CoH bodies, else the clip by kind
 	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(Owner))
 	{
-		if (S.Clip.IsValid() || !H->PlayPowerMoves(P.Id, P.Type == TEXT("kToggle") || bSelfOrAlly)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
+		// a chosen cast point has its own generic pose (unless a specific clip was picked)
+		if (S.bCustomEmitter && !S.Clip.IsValid() && H->PlayEmitterPose((uint8)S.Emitter, P.Activate)) {}
+		else if (S.Clip.IsValid() || !H->PlayPowerMoves(P.Id, P.Type == TEXT("kToggle") || bSelfOrAlly)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
 	}
 	else if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Owner))
 	{
