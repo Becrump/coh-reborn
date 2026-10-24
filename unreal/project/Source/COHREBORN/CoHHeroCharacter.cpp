@@ -161,6 +161,7 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	}
 	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
 	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
+	Input->BindKey(EKeys::V, IE_Pressed, this, &ACoHHeroCharacter::ToggleClimbPower);
 	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
 	// L: train to the next level (the original trainer step)
 	{
@@ -308,6 +309,14 @@ void ACoHHeroCharacter::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(V.Y);
 }
 
+bool ACoHHeroCharacter::ClimbPowerOn() const { return Powers && Powers->IsToggleOn(CoHTravel::Climb); }
+bool ACoHHeroCharacter::SprintPowerOn() const { return Powers && Powers->IsToggleOn(CoHTravel::Sprint); }
+
+void ACoHHeroCharacter::ToggleClimbPower()
+{
+	if (Powers) Powers->ActivatePower(CoHTravel::Climb);
+}
+
 void ACoHHeroCharacter::SprintOn(const FInputActionValue&)
 {
 	bSprint = true;
@@ -331,11 +340,11 @@ void ACoHHeroCharacter::ApplyMovementMode()
 {
 	UCharacterMovementComponent* M = GetCharacterMovement();
 	const float Run = bSuperSpeed ? SuperSpeedRunSpeed : (bSuperJump ? SuperJumpRunSpeed : RunSpeed);
-	M->MaxWalkSpeed = bSprint ? FMath::Max(Run, SprintSpeed) : Run;
+	M->MaxWalkSpeed = (bSprint || SprintPowerOn()) ? FMath::Max(Run, SprintSpeed) : Run;
 	M->JumpZVelocity = bSuperJump ? SuperJumpVelocity : 900.f;
 	M->AirControl = bSuperJump ? 0.9f : 0.4f;
 	M->GravityScale = bSuperJump ? 1.5f : 1.f;
-	M->MaxFlySpeed = bClimbing ? ClimbSpeed : (bSuperSpeed ? SuperSpeedRunSpeed : FlightSpeed);
+	M->MaxFlySpeed = bClimbing ? ClimbSpeed * (ClimbPowerOn() ? ClimbPowerSpeedScale : 1.f) : (bSuperSpeed ? SuperSpeedRunSpeed : FlightSpeed);
  M->MaxAcceleration = bSuperSpeed ? 6000.f : 2048.f;
  M->BrakingDecelerationFlying = bClimbing ? 4000.f : 1800.f;
 }
@@ -651,6 +660,12 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
+	// the Sprint and Climb toggles change speeds: follow them
+	if (SprintPowerOn() != bSprintPowerSeen || ClimbPowerOn() != bClimbPowerSeen)
+	{
+		bSprintPowerSeen = SprintPowerOn(); bClimbPowerSeen = ClimbPowerOn();
+		ApplyMovementMode();
+	}
 	ComboWindow = FMath::Max(0.f, ComboWindow - DeltaSeconds);
 	UpdateCamera(DeltaSeconds);
 	if (PunchTimeLeft > 0.f)
@@ -669,11 +684,26 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	if (!bClimbing)
 	{
 		// grab a wall when jumping or falling into it while pushing towards it
-		if (!bFlight && ClimbCooldown <= 0.f && M->IsFalling() && MoveInput.Y > 0.5f && TraceWall(Hit, 40.f, 80.f))
+		// a wall grab needs a little endurance; with Climb on a walk into a wall is enough, else jump or fall into it
+		const bool bCanGrab = !Powers || Powers->Endurance >= 3.f;
+		if (!bFlight && bCanGrab && ClimbCooldown <= 0.f && (M->IsFalling() || ClimbPowerOn()) && MoveInput.Y > 0.5f && TraceWall(Hit, 40.f, 80.f))
 		{
 			StartClimb(Hit.ImpactNormal);
 		}
 		return;
+	}
+	// without the Climb power a wall climb costs Endurance fast; at zero the grip gives out
+	if (Powers && !ClimbPowerOn() && HasAuthority())
+	{
+		Powers->Endurance = FMath::Max(0.f, Powers->Endurance - ClimbFastDrain * DeltaSeconds);
+		if (Powers->Endurance <= 0.f)
+		{
+			const FVector Away = WallNormal.IsNearlyZero() ? -GetActorForwardVector() : WallNormal;
+			StopClimb();
+			LaunchCharacter(Away * 250.f + FVector::UpVector * 100.f, true, true);
+			Powers->MulticastText(TEXT("Out of Endurance: you lose your grip"), FLinearColor(0.4f, 0.6f, 1.f));
+			return;
+		}
 	}
 	if (TraceWall(Hit, 40.f, 90.f))
 	{

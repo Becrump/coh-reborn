@@ -62,6 +62,7 @@ void UCoHHeroProgress::Apply(bool bRefillTray)
 	TArray<FName> Owned;
 	for (const FCoHHeroPick& Pk : Hero.Picks) Owned.AddUnique(Pk.Power);
 	for (const FName& A : R->AutoPowers(Hero)) Owned.AddUnique(A);
+	Owned.AddUnique(CoHTravel::Climb);
 	P->Owned = Owned;
 	// the tray: bought powers in order, then the inherent click / toggle powers
 	// (Brawl, Sprint, Rest); passives (Defiance, Fitness) run on their own

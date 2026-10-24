@@ -201,6 +201,18 @@ void UCoHPowerDatabase::Initialize(FSubsystemCollectionBase& Collection)
 			FCoHPowerDef P = ReadPower(FString(KV.Key), KV.Value->AsObject());
 			Powers.Add(P.Id, MoveTemp(P));
 		}
+	// Climb: a toggle like Sprint (same endurance cost and period), no speed mod; the hero's wall
+	// climb reads it (CoHHeroCharacter.cpp) and Sprint and Climb switch each other off
+	if (!Powers.Contains(CoHTravel::Climb))
+	{
+		FCoHPowerDef C;
+		if (const FCoHPowerDef* Sp = Powers.Find(CoHTravel::Sprint)) C = *Sp;
+		else { C.Type = TEXT("kToggle"); C.Area = TEXT("kCharacter"); C.Target = TEXT("kCaster"); C.Affects = TEXT("kCaster"); C.EndCost = 0.14625f; C.Period = 0.5f; C.Activate = 0.f; C.Recharge = 0.f; }
+		C.Id = CoHTravel::Climb; C.Display = TEXT("Climb"); C.Short = TEXT("Climb walls");
+		C.Help = TEXT("Climb lets you walk up walls, faster than a grab and a scramble, while slightly draining your Endurance. Anyone can cling to a wall, but without Climb it drains Endurance fast. Turns Sprint off.");
+		C.Icon = TEXT("Inherent_Climb.tga"); C.Mods.Reset(); C.AIGroups.Reset();
+		Powers.Add(C.Id, MoveTemp(C));
+	}
 	if (LoadJson(Dir, TEXT("villains.json"), Root))
 		for (const auto& KV : Root->AsObject()->Values)
 		{
@@ -800,6 +812,9 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 	}
 	if (P->Type == TEXT("kToggle"))
 	{
+		// one travel toggle at a time: Climb off Sprint and the other way round
+		const FName Other = Power == CoHTravel::Climb ? CoHTravel::Sprint : (Power == CoHTravel::Sprint ? CoHTravel::Climb : NAME_None);
+		if (!Other.IsNone() && ActiveToggles.Remove(Other)) Buffs.RemoveAll([&](const FCoHBuff& B) { return B.Source == Other; });
 		ActiveToggles.AddUnique(Power);
 		NextToggleTick = 0;       // apply on the next tick
 	}

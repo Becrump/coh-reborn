@@ -138,7 +138,7 @@ void SCoHHud::Construct(const FArguments& InArgs)
 			+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 0, 0, 4)
 			[
 				SNew(STextBlock).Font(Font(10)).ColorAndOpacity(FLinearColor(1, 1, 1, 0.7f))
-				.Text(LOCTEXT("Help", "1-0 use power   Tab target   P powers   F8 animation bench"))
+				.Text(LOCTEXT("Help", "1-0 use power   Tab target   P powers   V climb   F8 animation bench"))
 			]
 			+ SVerticalBox::Slot().AutoHeight()
 			[

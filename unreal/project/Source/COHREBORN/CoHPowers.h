@@ -23,6 +23,13 @@
 class UAnimSequenceBase;
 class UTexture2D;
 
+/** Travel powers every hero has (the tray's inherent powers). Climb is ours: the original game had none. */
+namespace CoHTravel
+{
+	const FName Sprint(TEXT("Inherent.Inherent.Sprint"));
+	const FName Climb(TEXT("Inherent.Inherent.Climb"));
+}
+
 UENUM(BlueprintType)
 enum class ECoHDamage : uint8 { Smashing, Lethal, Fire, Cold, Energy, NegativeEnergy, Psionic, Toxic, Count };
 

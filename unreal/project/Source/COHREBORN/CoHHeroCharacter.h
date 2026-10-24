@@ -54,6 +54,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "CoH|Travel")
 	float ClimbSpeed = 350.f;
+	/** Climb on: the wall climb is this much faster. */
+	UPROPERTY(EditAnywhere, Category = "Climb") float ClimbPowerSpeedScale = 1.4f;
+	/** Endurance per second a wall climb costs without the Climb power on (Sprint costs about 0.3). */
+	UPROPERTY(EditAnywhere, Category = "Climb") float ClimbFastDrain = 4.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Travel")
  float SuperSpeedRunSpeed = 2400.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Travel")
@@ -194,6 +198,10 @@ private:
 	void CameraDragOff(const FInputActionValue& Value);
 	bool bCameraDrag = false;
 	void SprintOn(const FInputActionValue& Value);
+	void ToggleClimbPower();
+	bool ClimbPowerOn() const;
+	bool SprintPowerOn() const;
+	bool bSprintPowerSeen = false, bClimbPowerSeen = false;
 	void SprintOff(const FInputActionValue& Value);
 	void ToggleSuperJump(const FInputActionValue& Value);
  void ToggleFlight(const FInputActionValue& Value);
