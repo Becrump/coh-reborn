@@ -226,6 +226,10 @@ private:
 	bool bBodyApplied = false;
 	FString BodyPreset;
 	void UpdateClimbAnim();
+	/** A climb clip of the hero's CoH body (<body>__<name>, tools/anim/climb_clips_unreal.py), or null. */
+	class UAnimSequenceBase* BodyClip(const FString& Name) const;
+	/** Plays one climb move once (mounting the wall, stepping off); the climb loop resumes after it. */
+	void PlayClimbMove(const FString& Name);
 	void ApplyMovementMode();
 	bool TraceWall(FHitResult& Hit, float Height, float Reach) const;
 	void StartClimb(const FVector& Normal);

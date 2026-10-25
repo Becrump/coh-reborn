@@ -548,8 +548,49 @@ bool ACoHHeroCharacter::PlayEmitterPose(uint8 Emitter, float Duration)
 	return false;
 }
 
+UAnimSequenceBase* ACoHHeroCharacter::BodyClip(const FString& Name) const
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	return R && !CoHBodyType.IsEmpty() ? R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__") + Name) : nullptr;
+}
+
+void ACoHHeroCharacter::PlayClimbMove(const FString& Name)
+{
+	if (UAnimSequenceBase* Clip = BodyClip(Name))
+	{
+		FCoHAnimSegment Seg;
+		Seg.Clip = Clip; Seg.End = Clip->GetPlayLength();
+		if (UCoHBodyAnim* A = BodyAnim()) A->PlaySegments({ Seg });
+	}
+}
+
 void ACoHHeroCharacter::UpdateClimbAnim()
 {
+	// a CoH body: the original-skeleton clips, looping on the body anim (idle on the wall, up, down, sideways)
+	if (UCoHBodyAnim* A = BodyAnim())
+	{
+		const bool bMoving = MoveInput.SizeSquared() > 0.09f;
+		const bool bPower = ClimbPowerOn();
+		// 0 up, 1 down, 2 left, 3 right, 4 holding on
+		int32 Want = 4;
+		if (bMoving) Want = FMath::Abs(MoveInput.Y) >= FMath::Abs(MoveInput.X) ? (MoveInput.Y > 0.f ? 0 : 1) : (MoveInput.X > 0.f ? 3 : 2);
+		const int32 State = Want + (bPower ? 8 : 0);
+		if (State != ClimbClip)
+		{
+			static const TCHAR* Plain[] = { TEXT("climbing_up_wall"), TEXT("climbing_down_wall"), TEXT("Climb_Left_with_Both_Limbs"), TEXT("Climb_Right_with_Both_Limbs"), TEXT("Grab_Wall_Midair_Idle") };
+			// with Climb on the sideways moves are the hanging shuffle, and the climb itself runs faster
+			const TCHAR* Name = Plain[Want];
+			if (bPower && Want == 2) Name = TEXT("Hang_and_Climb_Left");
+			if (bPower && Want == 3) Name = TEXT("Hang_and_Climb_Rght");
+			if (UAnimSequenceBase* Clip = BodyClip(Name))
+			{
+				A->bAutoLocomotion = false;
+				A->SetBase(Clip, true, bPower && Want < 4 ? ClimbPowerSpeedScale : 1.f);
+				ClimbClip = State;
+			}
+		}
+		return;
+	}
 	// 0 up, 1 down, 2 left, 3 right; hold the last clip still when idle
 	int32 Want = ClimbClip < 0 ? 0 : ClimbClip;
 	const bool bMoving = MoveInput.SizeSquared() > 0.09f;
@@ -614,6 +655,7 @@ void ACoHHeroCharacter::LetGo(const FInputActionValue&)
 		// capsule has ended up inside the geometry), then hop outwards
 		const FVector Away = WallNormal.IsNearlyZero() ? -GetActorForwardVector() : WallNormal;
 		StopClimb();
+		PlayClimbMove(TEXT("Wall_Support_to_Step_Down"));
 		SetActorLocation(GetActorLocation() + Away * 50.f, false, nullptr, ETeleportType::TeleportPhysics);
 		LaunchCharacter(Away * 300.f + FVector::UpVector * 150.f, true, true);
 	}
@@ -641,12 +683,14 @@ void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 	ClimbClip = -1;
  ApplyMovementMode();
 	UpdateClimbAnim();
+	PlayClimbMove(TEXT("Jump_and_Grab_Wall"));      // the mount; the idle on the wall resumes after it
 }
 
 void ACoHHeroCharacter::StopClimb()
 {
 	bClimbing = false;
 	ClimbCooldown = 0.4f;
+	if (UCoHBodyAnim* A = BodyAnim()) A->bAutoLocomotion = true;
 	UCharacterMovementComponent* M = GetCharacterMovement();
 	M->bOrientRotationToMovement = !bFirstPerson;
 	M->SetMovementMode(MOVE_Falling);
