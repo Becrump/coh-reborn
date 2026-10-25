@@ -646,7 +646,8 @@ void ACoHLifeManager::BeginPlay()
 		{
 			if (UMaterialInterface* Mat = Ism->GetMaterial(Slot))
 			{
-				if (Mat->GetName().Contains(TEXT("MI_Veh_Light")))
+				const FName SlotName = Mesh->GetStaticMaterials().IsValidIndex(Slot) ? Mesh->GetStaticMaterials()[Slot].MaterialSlotName : NAME_None;
+				if (Mat->GetName().Contains(TEXT("MI_Veh_Light")) || SlotName == FName(TEXT("veh_light")))
 				{
 					HeadlightMats.Add(Ism->CreateDynamicMaterialInstance(Slot, Mat));
 				}
@@ -1258,7 +1259,19 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
         if (M.Comp) M.Comp->SetWorldLocationAndRotation(BestPos, FRotator(0, BestRot.Yaw - 90.f, 0));
         return true;
     };
-    const int32 Active = FMath::RoundToInt(MaxCivilians * CrowdDensity * FMath::Lerp(1.f, NightCivilianScale, Night));
+    int32 Active = FMath::RoundToInt(MaxCivilians * CrowdDensity * FMath::Lerp(1.f, NightCivilianScale, Night));
+    {
+        // Only as many people as the walkable network around the camera can hold (one per 9 m of
+        // path), so a short stretch of pavement never turns into a single-file crowd.
+        float PathLength = 0.f;
+        for (int32 i = 0; i < Walk.Num(); ++i)
+        {
+            if (Walk.Next[i].Num() == 0 || FVector::Dist2D(Walk.P[i], Cam) > ActiveRadius) continue;
+            for (int32 j : Walk.Next[i])
+                if (j > i && FVector::Dist2D(Walk.P[j], Cam) <= ActiveRadius) PathLength += FVector::Dist2D(Walk.P[i], Walk.P[j]);
+        }
+        Active = FMath::Min(Active, FMath::Max(6, FMath::FloorToInt(PathLength / 900.f)));
+    }
     // Limit initialization work per frame; all newly spawned positions are committed immediately.
     for (int32 Spawn = 0; Spawn < 4 && Walkers.Num() < MaxCivilians; ++Spawn)
     {
