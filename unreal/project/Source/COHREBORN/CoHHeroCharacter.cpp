@@ -569,6 +569,9 @@ void ACoHHeroCharacter::UpdateClimbAnim()
 	// a CoH body: the original-skeleton clips, looping on the body anim (idle on the wall, up, down, sideways)
 	if (UCoHBodyAnim* A = BodyAnim())
 	{
+		// measured on the mesh: in the original wall clips the chest points away from the wall, so
+		// the body is turned round while climbing (put back in StopClimb)
+		GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw + 180.f, 0.f));
 		const bool bMoving = MoveInput.SizeSquared() > 0.09f;
 		const bool bPower = ClimbPowerOn();
 		// 0 up, 1 down, 2 left, 3 right, 4 holding on
@@ -577,7 +580,9 @@ void ACoHHeroCharacter::UpdateClimbAnim()
 		const int32 State = Want + (bPower ? 8 : 0);
 		if (State != ClimbClip)
 		{
-			static const TCHAR* Plain[] = { TEXT("climbing_up_wall"), TEXT("climbing_down_wall"), TEXT("Climb_Left_with_Both_Limbs"), TEXT("Climb_Right_with_Both_Limbs"), TEXT("Grab_Wall_Midair_Idle") };
+			// holding on: the first frame of the climb-up clip, held (Grab_Wall_Midair_Idle is a jump that
+			// travels ~90 cm and snaps back on every loop)
+			static const TCHAR* Plain[] = { TEXT("climbing_up_wall"), TEXT("climbing_down_wall"), TEXT("Climb_Left_with_Both_Limbs"), TEXT("Climb_Right_with_Both_Limbs"), TEXT("climbing_up_wall") };
 			// with Climb on the sideways moves are the hanging shuffle, and the climb itself runs faster
 			const TCHAR* Name = Plain[Want];
 			if (bPower && Want == 2) Name = TEXT("Hang_and_Climb_Left");
@@ -585,7 +590,7 @@ void ACoHHeroCharacter::UpdateClimbAnim()
 			if (UAnimSequenceBase* Clip = BodyClip(Name))
 			{
 				A->bAutoLocomotion = false;
-				A->SetBase(Clip, true, bPower && Want < 4 ? ClimbPowerSpeedScale : 1.f);
+				A->SetBase(Clip, true, Want == 4 ? 0.f : (bPower ? ClimbPowerSpeedScale : 1.f));
 				ClimbClip = State;
 			}
 		}
@@ -689,6 +694,7 @@ void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 void ACoHHeroCharacter::StopClimb()
 {
 	bClimbing = false;
+	if (BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
 	ClimbCooldown = 0.4f;
 	if (UCoHBodyAnim* A = BodyAnim()) A->bAutoLocomotion = true;
 	UCharacterMovementComponent* M = GetCharacterMovement();
