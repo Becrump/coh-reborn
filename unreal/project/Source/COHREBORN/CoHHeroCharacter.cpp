@@ -656,16 +656,6 @@ void ACoHHeroCharacter::LetGo(const FInputActionValue&)
 		const FVector Away = WallNormal.IsNearlyZero() ? -GetActorForwardVector() : WallNormal;
 		StopClimb();
 		PlayClimbMove(TEXT("Wall_Support_to_Step_Down"));
-		if (BodyAnim())
-		{
-			// the step-down clip is a wall clip too: keep the body turned round while it plays
-			GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw + 180.f, 0.f));
-			FTimerHandle Back;
-			GetWorldTimerManager().SetTimer(Back, FTimerDelegate::CreateWeakLambda(this, [this]()
-			{
-				if (!bClimbing && BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
-			}), 0.8f, false);
-		}
 		SetActorLocation(GetActorLocation() + Away * 50.f, false, nullptr, ETeleportType::TeleportPhysics);
 		LaunchCharacter(Away * 300.f + FVector::UpVector * 150.f, true, true);
 	}
@@ -683,9 +673,6 @@ bool ACoHHeroCharacter::TraceWall(FHitResult& Hit, float Height, float Reach) co
 void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 {
 	bClimbing = true;
-	// the original wall clips are authored facing the opposite way to the walk and run clips, so
-	// the body is turned round for the climb (its hips point ~180 degrees apart in the clip data)
-	if (BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw + 180.f, 0.f));
 	WallNormal = FVector(Normal.X, Normal.Y, 0.f).GetSafeNormal();
 	UCharacterMovementComponent* M = GetCharacterMovement();
 	M->SetMovementMode(MOVE_Flying);
@@ -702,7 +689,6 @@ void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 void ACoHHeroCharacter::StopClimb()
 {
 	bClimbing = false;
-	if (BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
 	ClimbCooldown = 0.4f;
 	if (UCoHBodyAnim* A = BodyAnim()) A->bAutoLocomotion = true;
 	UCharacterMovementComponent* M = GetCharacterMovement();
