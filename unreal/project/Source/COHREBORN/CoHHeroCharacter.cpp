@@ -161,6 +161,7 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	}
 	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
 	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
+	Input->BindKey(EKeys::V, IE_Pressed, this, &ACoHHeroCharacter::ToggleClimbPower);
 	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
 	// L: train to the next level (the original trainer step)
 	{
@@ -308,6 +309,14 @@ void ACoHHeroCharacter::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(V.Y);
 }
 
+bool ACoHHeroCharacter::ClimbPowerOn() const { return Powers && Powers->IsToggleOn(CoHTravel::Climb); }
+bool ACoHHeroCharacter::SprintPowerOn() const { return Powers && Powers->IsToggleOn(CoHTravel::Sprint); }
+
+void ACoHHeroCharacter::ToggleClimbPower()
+{
+	if (Powers) Powers->ActivatePower(CoHTravel::Climb);
+}
+
 void ACoHHeroCharacter::SprintOn(const FInputActionValue&)
 {
 	bSprint = true;
@@ -331,11 +340,11 @@ void ACoHHeroCharacter::ApplyMovementMode()
 {
 	UCharacterMovementComponent* M = GetCharacterMovement();
 	const float Run = bSuperSpeed ? SuperSpeedRunSpeed : (bSuperJump ? SuperJumpRunSpeed : RunSpeed);
-	M->MaxWalkSpeed = bSprint ? FMath::Max(Run, SprintSpeed) : Run;
+	M->MaxWalkSpeed = (bSprint || SprintPowerOn()) ? FMath::Max(Run, SprintSpeed) : Run;
 	M->JumpZVelocity = bSuperJump ? SuperJumpVelocity : 900.f;
 	M->AirControl = bSuperJump ? 0.9f : 0.4f;
 	M->GravityScale = bSuperJump ? 1.5f : 1.f;
-	M->MaxFlySpeed = bClimbing ? ClimbSpeed : (bSuperSpeed ? SuperSpeedRunSpeed : FlightSpeed);
+	M->MaxFlySpeed = bClimbing ? ClimbSpeed * (ClimbPowerOn() ? ClimbPowerSpeedScale : 1.f) : (bSuperSpeed ? SuperSpeedRunSpeed : FlightSpeed);
  M->MaxAcceleration = bSuperSpeed ? 6000.f : 2048.f;
  M->BrakingDecelerationFlying = bClimbing ? 4000.f : 1800.f;
 }
@@ -511,8 +520,77 @@ bool ACoHHeroCharacter::PlayPowerMoves(FName Power, bool bActivation)
 	return PlayMoves(Segs, bToggle ? 0.f : FMath::Max(0.3f, Def ? Def->Activate : 1.f));
 }
 
+bool ACoHHeroCharacter::PlayEmitterPose(uint8 Emitter, float Duration)
+{
+	// original generic moves (anim_list.json), first one the body has; order of ECoHEmitter
+	static const TArray<TArray<FString>> Poses = {
+		{ TEXT("onehand_palmcast"), TEXT("palmcast"), TEXT("point") },            // right arm out
+		{ TEXT("magic_l"), TEXT("comb_wristshoot_l") },                            // left arm out
+		{ TEXT("2hand_cast"), TEXT("alt_stopcast") },                              // both arms out
+		{ TEXT("eye") },                                                           // eyes
+		{ TEXT("alt_beatchest"), TEXT("comb_beatchest") },                         // chest
+		{ TEXT("scream"), TEXT("sonic_yell") },                                    // mouth
+		{ TEXT("stomp") },                                                         // feet
+		{ TEXT("flight_afterburner"), TEXT("boost") },                             // back
+		{ TEXT("sky_summon"), TEXT("raise_hand") } };                              // overhead
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!R || CoHBodyType.IsEmpty() || !Poses.IsValidIndex(Emitter)) return false;
+	for (const FString& Name : Poses[Emitter])
+		if (UAnimSequenceBase* Clip = R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__") + Name))
+		{
+			FCoHAnimSegment Seg;
+			Seg.Clip = Clip; Seg.End = Clip->GetPlayLength();
+			const bool bOk = PlayMoves({ Seg }, FMath::Max(0.4f, Duration));
+			// eye beam, breath: the head goes forward with the pose
+			if (bOk && (Emitter == 3 || Emitter == 5)) if (UCoHBodyAnim* B = BodyAnim()) B->LeanHead(Emitter == 3 ? 22.f : 28.f, FMath::Max(0.4f, Duration) + 0.2f);
+			return bOk;
+		}
+	return false;
+}
+
+UAnimSequenceBase* ACoHHeroCharacter::BodyClip(const FString& Name) const
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	return R && !CoHBodyType.IsEmpty() ? R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__") + Name) : nullptr;
+}
+
+void ACoHHeroCharacter::PlayClimbMove(const FString& Name)
+{
+	if (UAnimSequenceBase* Clip = BodyClip(Name))
+	{
+		FCoHAnimSegment Seg;
+		Seg.Clip = Clip; Seg.End = Clip->GetPlayLength();
+		if (UCoHBodyAnim* A = BodyAnim()) A->PlaySegments({ Seg });
+	}
+}
+
 void ACoHHeroCharacter::UpdateClimbAnim()
 {
+	// a CoH body: the original-skeleton clips, looping on the body anim (idle on the wall, up, down, sideways)
+	if (UCoHBodyAnim* A = BodyAnim())
+	{
+		const bool bMoving = MoveInput.SizeSquared() > 0.09f;
+		const bool bPower = ClimbPowerOn();
+		// 0 up, 1 down, 2 left, 3 right, 4 holding on
+		int32 Want = 4;
+		if (bMoving) Want = FMath::Abs(MoveInput.Y) >= FMath::Abs(MoveInput.X) ? (MoveInput.Y > 0.f ? 0 : 1) : (MoveInput.X > 0.f ? 3 : 2);
+		const int32 State = Want + (bPower ? 8 : 0);
+		if (State != ClimbClip)
+		{
+			static const TCHAR* Plain[] = { TEXT("climbing_up_wall"), TEXT("climbing_down_wall"), TEXT("Climb_Left_with_Both_Limbs"), TEXT("Climb_Right_with_Both_Limbs"), TEXT("Grab_Wall_Midair_Idle") };
+			// with Climb on the sideways moves are the hanging shuffle, and the climb itself runs faster
+			const TCHAR* Name = Plain[Want];
+			if (bPower && Want == 2) Name = TEXT("Hang_and_Climb_Left");
+			if (bPower && Want == 3) Name = TEXT("Hang_and_Climb_Rght");
+			if (UAnimSequenceBase* Clip = BodyClip(Name))
+			{
+				A->bAutoLocomotion = false;
+				A->SetBase(Clip, true, bPower && Want < 4 ? ClimbPowerSpeedScale : 1.f);
+				ClimbClip = State;
+			}
+		}
+		return;
+	}
 	// 0 up, 1 down, 2 left, 3 right; hold the last clip still when idle
 	int32 Want = ClimbClip < 0 ? 0 : ClimbClip;
 	const bool bMoving = MoveInput.SizeSquared() > 0.09f;
@@ -577,6 +655,17 @@ void ACoHHeroCharacter::LetGo(const FInputActionValue&)
 		// capsule has ended up inside the geometry), then hop outwards
 		const FVector Away = WallNormal.IsNearlyZero() ? -GetActorForwardVector() : WallNormal;
 		StopClimb();
+		PlayClimbMove(TEXT("Wall_Support_to_Step_Down"));
+		if (BodyAnim())
+		{
+			// the step-down clip is a wall clip too: keep the body turned round while it plays
+			GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw + 180.f, 0.f));
+			FTimerHandle Back;
+			GetWorldTimerManager().SetTimer(Back, FTimerDelegate::CreateWeakLambda(this, [this]()
+			{
+				if (!bClimbing && BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
+			}), 0.8f, false);
+		}
 		SetActorLocation(GetActorLocation() + Away * 50.f, false, nullptr, ETeleportType::TeleportPhysics);
 		LaunchCharacter(Away * 300.f + FVector::UpVector * 150.f, true, true);
 	}
@@ -594,6 +683,9 @@ bool ACoHHeroCharacter::TraceWall(FHitResult& Hit, float Height, float Reach) co
 void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 {
 	bClimbing = true;
+	// the original wall clips are authored facing the opposite way to the walk and run clips, so
+	// the body is turned round for the climb (its hips point ~180 degrees apart in the clip data)
+	if (BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw + 180.f, 0.f));
 	WallNormal = FVector(Normal.X, Normal.Y, 0.f).GetSafeNormal();
 	UCharacterMovementComponent* M = GetCharacterMovement();
 	M->SetMovementMode(MOVE_Flying);
@@ -604,12 +696,15 @@ void ACoHHeroCharacter::StartClimb(const FVector& Normal)
 	ClimbClip = -1;
  ApplyMovementMode();
 	UpdateClimbAnim();
+	PlayClimbMove(TEXT("Jump_and_Grab_Wall"));      // the mount; the idle on the wall resumes after it
 }
 
 void ACoHHeroCharacter::StopClimb()
 {
 	bClimbing = false;
+	if (BodyAnim()) GetMesh()->SetRelativeRotation(FRotator(0.f, CoHMeshYaw, 0.f));
 	ClimbCooldown = 0.4f;
+	if (UCoHBodyAnim* A = BodyAnim()) A->bAutoLocomotion = true;
 	UCharacterMovementComponent* M = GetCharacterMovement();
 	M->bOrientRotationToMovement = !bFirstPerson;
 	M->SetMovementMode(MOVE_Falling);
@@ -623,6 +718,12 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
+	// the Sprint and Climb toggles change speeds: follow them
+	if (SprintPowerOn() != bSprintPowerSeen || ClimbPowerOn() != bClimbPowerSeen)
+	{
+		bSprintPowerSeen = SprintPowerOn(); bClimbPowerSeen = ClimbPowerOn();
+		ApplyMovementMode();
+	}
 	ComboWindow = FMath::Max(0.f, ComboWindow - DeltaSeconds);
 	UpdateCamera(DeltaSeconds);
 	if (PunchTimeLeft > 0.f)
@@ -641,11 +742,26 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	if (!bClimbing)
 	{
 		// grab a wall when jumping or falling into it while pushing towards it
-		if (!bFlight && ClimbCooldown <= 0.f && M->IsFalling() && MoveInput.Y > 0.5f && TraceWall(Hit, 40.f, 80.f))
+		// a wall grab needs a little endurance; with Climb on a walk into a wall is enough, else jump or fall into it
+		const bool bCanGrab = !Powers || Powers->Endurance >= 3.f;
+		if (!bFlight && bCanGrab && ClimbCooldown <= 0.f && (M->IsFalling() || ClimbPowerOn()) && MoveInput.Y > 0.5f && TraceWall(Hit, 40.f, 80.f))
 		{
 			StartClimb(Hit.ImpactNormal);
 		}
 		return;
+	}
+	// without the Climb power a wall climb costs Endurance fast; at zero the grip gives out
+	if (Powers && !ClimbPowerOn() && HasAuthority())
+	{
+		Powers->Endurance = FMath::Max(0.f, Powers->Endurance - ClimbFastDrain * DeltaSeconds);
+		if (Powers->Endurance <= 0.f)
+		{
+			const FVector Away = WallNormal.IsNearlyZero() ? -GetActorForwardVector() : WallNormal;
+			StopClimb();
+			LaunchCharacter(Away * 250.f + FVector::UpVector * 100.f, true, true);
+			Powers->MulticastText(TEXT("Out of Endurance: you lose your grip"), FLinearColor(0.4f, 0.6f, 1.f));
+			return;
+		}
 	}
 	if (TraceWall(Hit, 40.f, 90.f))
 	{
@@ -897,6 +1013,7 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   bRay = PC->DeprojectScreenPositionToWorld(W * 0.5f, H * 0.5f, Origin, Dir);
  }
  if (!bRay) return;
+ if (Hud && Hud->TryPickPoint(Origin, Dir)) return;      // the customize panel's pick of a cast point
  // whoever the ray passes closest to: the whole body counts (feet to head,
  // a generous capsule, looser further out), and only real geometry in front
  // of them blocks the pick (complex collision: the original tiles' simple
