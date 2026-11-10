@@ -1,0 +1,12 @@
+{
+  "characters_dir": "C:/Users/rtcru/CoHReborn/out/characters",
+  "work_dir": "C:/Users/rtcru/CoHReborn/out/upgrade_run",
+  "parts": {
+    "hellion_boss_head": {"prompt": "3D character bust of a street gang boss, his whole face is a dark crimson demon mask with a snarling mouth of sharp teeth, two long curved ivory bone spikes jut outward from each cheek like tusks, short olive brown flat-top hair, thick neck, front view facing the camera, symmetrical, stylized modern video game character, clean sculpt, studio lighting, plain light grey background, isolated, head and neck only", "seed": 20261007, "faces": 18000, "replace": ["Head", "Hair", "EyeDetail"]},
+    "hellion_glove": {"prompt": "3D render of a single muscular right human hand wearing a red fingerless leather glove with white studs on the knuckles, bare fingers relaxed and slightly spread, back of the hand facing the camera, forearm cut off cleanly at the wrist, stylized modern video game asset, clean sculpt, studio lighting, plain light grey background, isolated", "seed": 20261007, "faces": 9000, "is_right_hand": true}
+  },
+  "characters": [
+    {"costume": "Thug_Hellion_Boss_01", "head": "hellion_boss_head", "hand": "hellion_glove",
+     "unreal": {"dest": "/Game/UpgradeTest/Hellion_C_NewHead", "label": "Hellion_C_NewHead", "place": [1660, 11000, 924.98, 180], "folder": "UpgradeTest"}}
+  ]
+}

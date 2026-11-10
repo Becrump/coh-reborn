@@ -1,0 +1,1 @@
+﻿Uncompiled draft of option B (car damage stages: dented, smashed glass/dark lights, wrecked with fire), on hold per Robert 2026-10-20. Not in any build path; to use it, copy into Source/COHREBORN, add "Niagara" to COHREBORN.Build.cs, create the Damage MIs it points at, and do a full build.

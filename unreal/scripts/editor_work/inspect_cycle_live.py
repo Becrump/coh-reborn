@@ -1,0 +1,10 @@
+import unreal
+print('MAP',unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world().get_path_name())
+print('SEQUENCER API',[n for n in dir(unreal.LevelSequenceEditorBlueprintLibrary) if any(s in n for s in ['bound','time','open'])])
+a=unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors()
+cycle=next(x for x in a if x.get_actor_label()=='DayNightCycle')
+seq=cycle.get_sequence()
+print('CYCLE',seq.get_path_name(),cycle.get_editor_property('playback_settings'))
+print('ACTORS',len(a))
+print('ROOT MATCHES',sum(1 for b in seq.get_bindings() if not b.get_parent().is_valid() and b.get_name() in {x.get_actor_label() for x in a}))
+print('SAVE',unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True,True))
