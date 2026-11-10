@@ -1,4 +1,5 @@
 #include "CoHHeroCharacter.h"
+#include "CoHActiveRagdoll.h"
 #include "Net/UnrealNetwork.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
@@ -72,6 +73,7 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 	Camera->bUsePawnControlRotation = false;
 
 	Powers = CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
+	Ragdoll = CreateDefaultSubobject<UCoHActiveRagdoll>(TEXT("ActiveRagdoll"));
 	Powers->bPlayerSide = true;
 	Progress = CreateDefaultSubobject<UCoHHeroProgress>(TEXT("Progress"));
 }

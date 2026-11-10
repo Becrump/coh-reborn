@@ -1,6 +1,7 @@
 #include "CoHCombat.h"
 #include "CoHPowers.h"
 #include "CoHBodyAnim.h"
+#include "CoHActiveRagdoll.h"
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -47,6 +48,7 @@ ACoHCombatEnemy::ACoHCombatEnemy()
  GetCharacterMovement()->MaxWalkSpeed=360;
  Tags.Add(TEXT("CoHCombatEnemy"));
  Powers=CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
+ Ragdoll=CreateDefaultSubobject<UCoHActiveRagdoll>(TEXT("ActiveRagdoll"));
  Powers->bPlayerSide=false;
  Powers->ClassName=TEXT("Class_Minion_Grunt");
  Powers->Level=5;
@@ -445,73 +447,124 @@ void ACoHCombatEnemy::BeginPlay()
 void ACoHCombatEnemy::LaunchRagdoll(FVector LaunchVelocity)
 {
  // the host decides; every PC (the host too) throws the body
- if(HasAuthority()) MulticastRagdoll(LaunchVelocity);
+ if(HasAuthority()) MulticastRagdoll(LaunchVelocity,IsDead());
 }
-void ACoHCombatEnemy::MulticastRagdoll_Implementation(FVector_NetQuantize10 LaunchVelocity)
+void ACoHCombatEnemy::MulticastRagdoll_Implementation(FVector_NetQuantize10 LaunchVelocity,bool bDefeated)
 {
- DoRagdoll(LaunchVelocity);
+ DoRagdoll(LaunchVelocity,bDefeated);
 }
-void ACoHCombatEnemy::DoRagdoll(FVector LaunchVelocity)
+UAnimSequence* ACoHCombatEnemy::ReactionClip(const TCHAR* Move) const
+{
+ // the villain's own move (clips are named after moves); any PC can look it up
+ const UCoHGameRules* R=UCoHGameRules::Get(this);
+ if(!R || KitModel.IsEmpty()) return nullptr;
+ return Cast<UAnimSequence>(R->ClipIn(R->EnemyRoot/KitModel,Move));
+}
+void ACoHCombatEnemy::DoRagdoll(FVector LaunchVelocity,bool bDefeated)
 {
  USkeletalMeshComponent* BodyMesh = GetMesh();
  UPhysicsAsset* Physics = BodyMesh->GetPhysicsAsset();
  if (!Physics || Physics->SkeletalBodySetups.Num()==0)
  {
   UE_LOG(LogTemp, Warning, TEXT("CoH ragdoll unavailable: %s has no physics bodies"), *GetName());
-  if (!IsDead() && HasAuthority()) LaunchCharacter(LaunchVelocity,true,true);
+  if (!bDefeated && HasAuthority()) LaunchCharacter(LaunchVelocity,true,true);
   return;
  }
  GetWorldTimerManager().ClearTimer(AttackTimer);
  GetWorldTimerManager().ClearTimer(ReactionTimer);
+ GetWorldTimerManager().ClearTimer(GetUpTimer);
+ const bool bAlreadyDown=bRagdoll && !bGettingUp;
+ bGettingUp=false;
  if (auto* AI=Cast<AAIController>(GetController())) AI->StopMovement();
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->DisableMovement();
  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
- BodyMesh->SetCollisionProfileName(TEXT("Ragdoll"));
- BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
- BodyMesh->SetEnableGravity(true);
- BodyMesh->SetAllBodiesSimulatePhysics(true);
- BodyMesh->WakeAllRigidBodies();
- BodyMesh->AddImpulse(LaunchVelocity,NAME_None,true);
+ // the pose the muscles hold while it flies: the original knock move (a
+ // short shove plays the knockdown); defeated, the death move already plays
+ if (UCoHBodyAnim* BA=BodyAnim()) BA->StopSegments();
+ if (!bDefeated && !bAlreadyDown)
+ {
+  const bool bShove=LaunchVelocity.Size2D()<400.f && LaunchVelocity.Z<400.f;
+  UAnimSequence* Pose=ReactionClip(bShove?TEXT("knockdown"):TEXT("knockback"));
+  if(!Pose) Pose=ReactionClip(bShove?TEXT("knockback"):TEXT("knockdown"));
+  if(Pose) PlayClip(Pose,false);
+ }
+ if (!Ragdoll || !Ragdoll->StartRagdoll(LaunchVelocity,bDefeated))
+ {
+  BodyMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+  BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  BodyMesh->SetEnableGravity(true);
+  BodyMesh->SetAllBodiesSimulatePhysics(true);
+  BodyMesh->WakeAllRigidBodies();
+  BodyMesh->AddImpulse(LaunchVelocity,NAME_None,true);
+ }
  bRagdoll=true;
  RagdollStarted=GetWorld()->GetTimeSeconds();
- if (!IsDead()) GetWorldTimerManager().SetTimer(RagdollTimer,this,&ACoHCombatEnemy::RecoverRagdoll,1.f,false);
+ // only the host decides when it gets up (MulticastGetUp), so every PC
+ // stands it up at the same spot
+ if (bDefeated) GetWorldTimerManager().ClearTimer(RagdollTimer);
+ else if (HasAuthority()) GetWorldTimerManager().SetTimer(RagdollTimer,this,&ACoHCombatEnemy::RecoverRagdoll,1.f,false);
 }
 void ACoHCombatEnemy::RecoverRagdoll()
 {
- if (IsDead()) return;
+ if (IsDead() || !HasAuthority()) return;
  USkeletalMeshComponent* BodyMesh=GetMesh();
- const FVector Body=BodyMesh->GetBoneLocation(BodyMesh->GetBoneName(0));
+ const FVector Body=Ragdoll ? Ragdoll->PelvisLocation() : BodyMesh->GetBoneLocation(BodyMesh->GetBoneName(0));
  FHitResult Floor;
  FCollisionQueryParams Params(SCENE_QUERY_STAT(CoHRagdollLanding),false,this);
  const bool bFloor=GetWorld()->LineTraceSingleByChannel(Floor,Body+FVector(0,0,40),Body-FVector(0,0,220),ECC_Visibility,Params) && Floor.ImpactNormal.Z>.5f;
- const bool bSettled=BodyMesh->GetPhysicsLinearVelocity().Size()<160.f;
+ const bool bSettled=Ragdoll ? Ragdoll->IsSettled(120.f) : BodyMesh->GetPhysicsLinearVelocity().Size()<160.f;
  if ((!bFloor || !bSettled) && GetWorld()->GetTimeSeconds()-RagdollStarted<8.f)
  {
   GetWorldTimerManager().SetTimer(RagdollTimer,this,&ACoHCombatEnemy::RecoverRagdoll,.25f,false);
   return;
  }
- BodyMesh->SetAllBodiesSimulatePhysics(false);
- BodyMesh->SetSimulatePhysics(false);
- BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
- BodyMesh->AttachToComponent(GetCapsuleComponent(),FAttachmentTransformRules::KeepRelativeTransform);
- BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
- if (!HasAuthority())
- {
-  // a player's PC: the body is back in the capsule; the host moves the
-  // villain and its state brings the next clip
-  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-  bRagdoll=false;
-  PlayStateClip(State);
-  return;
- }
  FVector Destination=bFloor ? Floor.ImpactPoint+FVector(0,0,92) : Home;
  FHitResult Block;
  if (GetWorld()->SweepSingleByChannel(Block,Destination,Destination,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(36,90),Params)) Destination=Home;
- SetActorLocation(Destination,false,nullptr,ETeleportType::TeleportPhysics);
+ bool bFaceUp=true;
+ const float Yaw=Ragdoll ? Ragdoll->GetUpYaw(bFaceUp) : GetActorRotation().Yaw;
+ MulticastGetUp(Destination,Yaw);
+}
+void ACoHCombatEnemy::MulticastGetUp_Implementation(FVector_NetQuantize Destination,float Yaw)
+{
+ if (!bRagdoll || IsDead()) return;
+ USkeletalMeshComponent* BodyMesh=GetMesh();
+ GetWorldTimerManager().ClearTimer(RagdollTimer);
+ // where the mesh will sit once the capsule stands at Destination
+ const FTransform Capsule(FRotator(0,Yaw,0),FVector(Destination));
+ const FTransform MeshAt=FTransform(FRotator(0,MeshYaw,0),FVector(0,0,-90),BodyMesh->GetRelativeScale3D())*Capsule;
+ TArray<FTransform> Lying;
+ const bool bPose=Ragdoll && Ragdoll->CaptureLocalPose(MeshAt,Lying);
+ if (Ragdoll) Ragdoll->StopPhysics();
+ else
+ {
+  BodyMesh->SetAllBodiesSimulatePhysics(false);
+  BodyMesh->SetSimulatePhysics(false);
+  BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+ }
+ BodyMesh->AttachToComponent(GetCapsuleComponent(),FAttachmentTransformRules::KeepRelativeTransform);
+ BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
+ SetActorLocationAndRotation(Destination,FRotator(0,Yaw,0),false,nullptr,ETeleportType::TeleportPhysics);
+ if (AController* C=GetController()) C->SetControlRotation(FRotator(0,Yaw,0));
  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
- GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+ // stand up with the original GetUp move, starting from how the body lies
+ UAnimSequence* GetUp=ReactionClip(TEXT("getup"));
+ float Seconds=.3f;
+ if (GetUp){ PlayClip(GetUp,false); Seconds=FMath::Max(.3f,GetUp->GetPlayLength()); }
+ else PlayStateClip(State);
+ if (bPose)
+  if (UCoHBodyAnim* BA=BodyAnim()) BA->BlendFromPose(MoveTemp(Lying),Ragdoll->GetUpBlendSeconds);
+ bGettingUp=true;
+ GetWorldTimerManager().SetTimer(GetUpTimer,this,&ACoHCombatEnemy::FinishGetUp,Seconds,false);
+}
+void ACoHCombatEnemy::FinishGetUp()
+{
+ bGettingUp=false;
  bRagdoll=false;
+ if (IsDead()) return;
+ if (!HasAuthority()) { PlayStateClip(State); return; }
+ GetCharacterMovement()->SetMovementMode(MOVE_Falling);
  State=ECoHEnemyState::Hit;
  SetState(ECoHEnemyState::Idle);
 }
