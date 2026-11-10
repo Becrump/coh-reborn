@@ -53,6 +53,7 @@ struct FCoHMover
 	int32 RouteStep = 0;         // index of From in that circuit
 	float HeldUntil = 0.f;       // held by villains until this clock time (renewed while held)
 	int32 HeldBy = 0;            // gang id holding them (0 = free)
+	bool bHidden = false;         // car parked out of sight until it can reappear unseen
 };
 
 /** A walk link that crosses a road at a signalled junction. */
@@ -278,12 +279,15 @@ private:
 	float DensityRadius = 3000.f;
 
 	/** Draw crossings (green: safe now, red: wait) and log the busiest 100 m cells. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Crowds")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Crowds", meta = (AllowPrivateAccess = "true"))
 	bool bDebugCrowds = false;
 
 	TMap<uint64, FCoHCrossing> Crossings;
 	TArray<float> WalkWeight;            // per walk node: chance to accept it as a spot, evens out density
 	float DebugClock = 0.f;
+	float RecycleClock = 0.f;
+	UPROPERTY()
+	TArray<TObjectPtr<class UMaterialInstanceDynamic>> HeadlightMats;
 	static uint64 LinkKey(int32 A, int32 B) { return (uint64(FMath::Min(A, B)) << 32) | uint32(FMath::Max(A, B)); }
 	void BuildCrossings();
 	void BuildWalkWeights();
