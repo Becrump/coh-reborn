@@ -63,3 +63,21 @@ no mesh assets or original CoH materials edited.
 - `make_window_masks.py` (offline) picks pane-mask settings per original window texture.
 - `apply_test_overrides.py` sets/clears the test overrides (`GLASS_OPTION=none|Reflective|Smudgy|Interior`).
 - `shoot.sh` + `highres_shot.py` + `uex.sh` take the HighResShot screenshots via Python remote execution.
+
+## Zones: glaze at import (asset level)
+Approved 2026-11-10: the glass goes into the original window materials themselves, so every map and future
+zone that uses them gets it, with no per-actor overrides.
+- Table: `unreal/scripts/glass/glass_map.json` (window material -> texture key, panes, theme, masked/mirror),
+  plus `skip` (not windows, with the reason) and `pending_galaxy_city` (need a mask from source first).
+  Masks per texture: `window_masks.json` (colour key) or `masks/T_GlassMask_*.png` (hand-painted).
+- After a zone import (coh2unreal route), run once in the editor:
+  `GLASS_ZONE_PATH=/Game/<zone_folder>` + `unreal/scripts/glass/glaze_zone.py` (`GLASS_DRY=1` to preview).
+  It backs up each matched original MI to `/Game/GlassUpgrade/OriginalBackup/...`, re-parents it to its
+  per-texture glass instance, logs skipped / pending / unmapped window-like names, and saves only the
+  changed packages. Never re-send it after a lost editor connection.
+- Galaxy City (2026-11-10): 13 more windows (deco towers office/residential, Store_Front_Window_1 retail;
+  12 are alpha-cut -> masked) and 6 skips (3 reflection overlay layers, roller shutter, boarded window,
+  dark arched doorway). Masks from the zone export's own textures (`GLASS_TEX_SRC=...\galaxy_city	extures`
+  with `make_clean_masks.py` / `make_rect_masks.py`). `glaze_zone.py` imports any missing mask textures itself.
+- New window textures: add a `glass_map.json` entry, then a mask (`make_window_masks.py` for colour-keyable
+  glass, `make_rect_masks.py` + `import_masks.py` for painted ones), then re-run `glaze_zone.py`.

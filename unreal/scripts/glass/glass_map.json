@@ -1,0 +1,224 @@
+{
+ "_doc": "Window material -> glass mapping shared by apply_test_overrides.py and glaze_zone.py. Keys are original material instance names (Unreal turns '.tga' into '_tga'; matching also ignores case, a leading 'x_' and a trailing '_tga'/'__GLASS'). theme: -1 per-actor CPD, 0 office, 1 residential, 2 retail. extra: masked = keep alpha cut-outs, mirror = reflective glass without rooms. texture = key in window_masks.json.",
+ "windows": {
+  "x_deco_skyscraper_02_window_01": {
+   "texture": "deco_skyscraper_02_window_01_b",
+   "panes_x": 2,
+   "panes_y": 0,
+   "theme": -1,
+   "extra": ""
+  },
+  "x_deco_skyscraper_03_window_01": {
+   "texture": "deco_building_03_window_01_b",
+   "panes_x": 2,
+   "panes_y": 0,
+   "theme": -1,
+   "extra": ""
+  },
+  "x_deco_skyscraper_03_window_03": {
+   "texture": "deco_building_03_window_03_b",
+   "panes_x": 3,
+   "panes_y": 0,
+   "theme": -1,
+   "extra": ""
+  },
+  "x_deco_skyscraper_08_window_01": {
+   "texture": "deco_building_08_window_01_b",
+   "panes_x": 1,
+   "panes_y": 0,
+   "theme": -1,
+   "extra": ""
+  },
+  "Store_Front_Window_2_tga": {
+   "texture": "Store_Front_Window_2",
+   "panes_x": 8,
+   "panes_y": 2,
+   "theme": 2,
+   "extra": ""
+  },
+  "Store_Front_Window_3_tga": {
+   "texture": "Store_Front_Window_3",
+   "panes_x": 8,
+   "panes_y": 2,
+   "theme": 2,
+   "extra": ""
+  },
+  "Store_Front_Window_4_tga": {
+   "texture": "Store_Front_Window_4",
+   "panes_x": 8,
+   "panes_y": 2,
+   "theme": 2,
+   "extra": ""
+  },
+  "Store_Front_Stucco_1d_Window_1_tga": {
+   "texture": "Store_Front_Stucco_1d_Window_1",
+   "panes_x": 4,
+   "panes_y": 2,
+   "theme": 2,
+   "extra": "masked"
+  },
+  "BrickBuild_Window_02_tga": {
+   "texture": "BrickBuild_Window_02",
+   "panes_x": 4,
+   "panes_y": 2,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "BrickBuild_Window_04_tga": {
+   "texture": "BrickBuild_Window_04",
+   "panes_x": 2,
+   "panes_y": 2,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "X_Praet_BrickC_Window1_LOD1": {
+   "texture": "P_BrickC_Window_d",
+   "panes_x": 2,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": ""
+  },
+  "X_Praet_BrickA_StoneWindow": {
+   "texture": "P_BrickA_StoneWindow_d",
+   "panes_x": 2,
+   "panes_y": 2,
+   "theme": 1,
+   "extra": ""
+  },
+  "X_FW_BrickC_RndWin": {
+   "texture": "Bld_SkyB_Base01_d",
+   "panes_x": 2,
+   "panes_y": 3,
+   "theme": 0,
+   "extra": ""
+  },
+  "X_ArchEnt_Window_01": {
+   "texture": "Arch_Ent_Window_GlassWall_01",
+   "panes_x": 4,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": ""
+  },
+  "X_ArchEnt_Window_02": {
+   "texture": "Arch_Ent_Window_GlassCube_01",
+   "panes_x": 2,
+   "panes_y": 2,
+   "theme": 0,
+   "extra": ""
+  },
+  "x_p_warehouse_shipwindow01": {
+   "texture": "p_warehouse_shipwindow01_b",
+   "panes_x": 6,
+   "panes_y": 6,
+   "theme": 0,
+   "extra": "mirror"
+  },
+  "Deco_05_window1_tga": {
+   "texture": "Deco_05_window1",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco11_window_A_tga": {
+   "texture": "deco11_window_A",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco11_window_B_tga": {
+   "texture": "deco11_window_B",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco14_window_tga": {
+   "texture": "deco14_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco15_window_tga": {
+   "texture": "deco15_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco3_window_tga": {
+   "texture": "deco3_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco4_window_A_tga": {
+   "texture": "deco4_window_A",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco4_window_B_tga": {
+   "texture": "deco4_window_B",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco8_window_tga": {
+   "texture": "deco8_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco9_window_tga": {
+   "texture": "deco9_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco9_window_B_tga": {
+   "texture": "deco9_window_B",
+   "panes_x": 4,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco_16_window_A_tga": {
+   "texture": "deco_16_window_A",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "Store_Front_Window_1_tga": {
+   "texture": "Store_Front_Window_1",
+   "panes_x": 8,
+   "panes_y": 2,
+   "theme": 2,
+   "extra": ""
+  }
+ },
+ "skip": {
+  "ArchEnt_INT_Lounge_GlassWall_D_tga": "interior lounge wall with AE logo, not a window",
+  "Storefront_Window_Metal_tga": "64 px metal noise texture, not glass",
+  "ofc1_windowframe_tga": "32 px dark frame noise, not glass",
+  "x_AuctionHouseGlass": "Auction House landmark glass, keep original",
+  "X_ArchEnt_INT_ComputerBank_Glass": "interior prop glass",
+  "X_ArchEnt_INT_Reactor_GlassFloor_01": "interior floor glass",
+  "X_ArchEnt_INT_Window_Cube": "interior window cube",
+  "mono_station_glass": "monorail station glass",
+  "5th_glassreflect1_tga__GLASS": "reflection streak overlay layer (mostly transparent), not a window face",
+  "ofc1_glass_tga__GLASS": "reflection overlay layer (alpha 0.25), not a window face",
+  "universal_window_reflect_tga__GLASS": "reflection overlay layer (alpha 0.15), not a window face",
+  "RuinBrick1_Motel_Shop_Window_01_tga": "closed roller shutter, no glass",
+  "asurp_window_01_tga": "boarded-up window (wood planks), no glass",
+  "deco3_darkwindows_02_tga": "dark arched doorway, no glazing to show"
+ }
+}
