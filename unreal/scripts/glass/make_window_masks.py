@@ -5,7 +5,7 @@ import json, os, sys
 import numpy as np
 from PIL import Image
 
-SRC = os.path.expandvars(r"%USERPROFILE%\CoHReborn\out\atlas_park\textures")
+SRC = os.environ.get("GLASS_TEX_SRC") or os.path.expandvars(r"%USERPROFILE%\CoHReborn\out\atlas_park\textures")
 NAMES = sys.argv[1:] or ["deco_skyscraper_02_window_01_b", "deco_building_03_window_01_b",
                          "deco_building_03_window_03_b", "deco_building_08_window_01_b"]
 # hand-checked against mask previews where Otsu splits inside the pane gradient

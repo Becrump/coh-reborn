@@ -6,7 +6,7 @@ import os
 import numpy as np
 from PIL import Image, ImageFilter
 
-SRC = os.path.expandvars(r"%USERPROFILE%\CoHReborn\out\atlas_park\textures")
+SRC = os.environ.get("GLASS_TEX_SRC") or os.path.expandvars(r"%USERPROFILE%\CoHReborn\out\atlas_park\textures")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "masks")
 SPEC = {  # texture: (rects [(x0, y0, x1, y1)], dark luma cut, saturation cut or None)
     "Store_Front_Stucco_1d_Window_1": ([(0.215, 0.505, 0.785, 0.795)], 0.22, None),
@@ -18,10 +18,18 @@ SPEC = {  # texture: (rects [(x0, y0, x1, y1)], dark luma cut, saturation cut or
     "P_BrickA_StoneWindow_d": ([(0.32, 0.20, 0.435, 0.425), (0.32, 0.45, 0.435, 0.665),
                                 (0.565, 0.20, 0.685, 0.425), (0.565, 0.45, 0.685, 0.665)], 0.0, None),
     "P_BrickC_Window_d": ([(0.445, 0.44, 0.595, 0.74), (0.68, 0.44, 0.83, 0.74)], 0.18, None),
+    # Galaxy City (GLASS_TEX_SRC=<galaxy textures>), where the colour key leaves holes
+    "Store_Front_Window_1": ([(0.0, 0.38, 1.0, 0.965)], 0.0, 0.62),
+    "deco11_window_A": ([(0.03, 0.27, 0.97, 0.68)], 0.06, None),
+    "deco8_window": ([(0.40, 0.19, 0.57, 0.83)], 0.10, None),
+    "deco9_window": ([(0.42, 0.35, 0.59, 0.69)], 0.10, None),
     "p_warehouse_shipwindow01_b": ([(0.03, 0.12, 0.97, 0.70)], 0.2, None),
 }
 os.makedirs(OUT, exist_ok=True)
-for name, (rects, dark, sat) in SPEC.items():
+import sys
+names = sys.argv[1:] or list(SPEC)  # optional subset (textures of one zone)
+for name in names:
+    rects, dark, sat = SPEC[name]
     im = Image.open(os.path.join(SRC, name + ".png")).convert("RGB")
     a = np.asarray(im, dtype=np.float32) / 255
     h, w = a.shape[:2]

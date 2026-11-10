@@ -6,7 +6,7 @@
 //       lands on frame -> show the dark side wall of the window opening instead of glass
 //   z = sill shadow: the frame above (ShadowLen up the texture) shades the top of the pane
 // Samples with SampleLevel and a distance-based mip so it also works in Nanite compute shading.
-float mip = clamp(log2(max(PixelDepth, 1.0) / max(MipDist, 1.0)) + MipBias, 0.0, 6.0);
+float mip = clamp(log2(max(PixelDepth, 1.0) / max(MipDist, 1.0)), 0.0, 6.0);
 SamplerState ss = View.MaterialTextureBilinearWrapedSampler;
 float3 v = normalize(V);
 float2 off = -v.xy * float2(1, FlipY) / max(v.z, 0.25) * RecessDepth;

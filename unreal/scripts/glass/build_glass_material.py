@@ -144,7 +144,7 @@ link(camv, "", to_ts, "")
 pixel_depth = node(unreal.MaterialExpressionPixelDepth, -2000, 1680)
 mrec = custom(open(os.path.join(HERE, "pane_mask.hlsl")).read(), F4,
               ["UV", "V", "WinTex", "MaskTex", "UseTex", "W", "Thr", "Soft", "Inv", "RecessDepth", "ShadowLen",
-               "FlipY", "PixelDepth", "MipDist", "MipBias"], -1500, -400, "PaneMaskRecess")
+               "FlipY", "PixelDepth", "MipDist"], -1500, -400, "PaneMaskRecess")
 link(uvs, "", mrec, "UV")
 link(to_ts, "", mrec, "V")
 link(win_obj, "", mrec, "WinTex")
@@ -159,7 +159,6 @@ link(scalar("SillShadowLength", 0.02, -1800, -180, "Recess"), "", mrec, "ShadowL
 link(scalar("RecessFlipY", 1.0, -1800, -120, "Recess"), "", mrec, "FlipY")
 link(pixel_depth, "", mrec, "PixelDepth")
 link(scalar("MaskMipDistance", 3000.0, -1800, -60, "Recess"), "", mrec, "MipDist")
-link(scalar("MaskMipBias", 0.0, -1800, 0, "Recess"), "", mrec, "MipBias")
 mask_raw = node(unreal.MaterialExpressionComponentMask, -1300, -400, r=True, g=False, b=False, a=False)
 link(mrec, "", mask_raw, "")
 reveal = node(unreal.MaterialExpressionComponentMask, -1300, -340, r=False, g=True, b=False, a=False)
