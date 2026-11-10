@@ -8,3 +8,6 @@ __pycache__/
 
 # local paths for the upgrade pipeline
 tools/upgrade/config.json
+
+# original UI art (tools/ui/export_gui.py output)
+unreal/project/Content/UI/

@@ -99,3 +99,27 @@ original look.
 - Re-run with `tools/ui/export_gui.py <piggs dir> <out dir>`. Needs
   `stage*.pigg`, `texGui1.pigg`, `fonts.pigg`, `texts.pigg` from
   dists.thunderspy.org. Output is game data and stays out of git.
+
+## Status (2026-11-10): first windows built
+
+`CoHUIArt.{h,cpp}` loads the art and fonts at runtime and has `FCoHPainter`, a
+port of the original sprite calls (`display_sprite`, `drawFrame`, `drawBar`,
+`drawCapsule`, z ordering). `CoHOriginalHud.{h,cpp}` ports the status window,
+target window, power tray and inspiration tray, with the original window
+layout, jelly tabs and child buttons, dragging by the jelly and positions saved
+in GameUserSettings (`[CoHUI.<window>]`). `SCoHHud` shows it instead of the
+plain test panels whenever `Content/UI/ui_art.json` exists.
+
+Setup on the PC: unzip `/mnt/project-files/ui/UI_content.zip` (or run the
+exporter) so that `Content/UI/ui_art.json`, `Content/UI/gui/...` and
+`Content/UI/fonts/...` exist. Nothing is imported in the editor; packaging
+stages the folder (`DirectoriesToAlwaysStageAsUFS`). Remove the folder to get
+the plain HUD back.
+
+Preview of the intended look (rendered by a Python copy of the same draw code,
+not by Unreal): `/mnt/project-files/ui/hud_preview.png`.
+
+Input: tray slots click to use (Ctrl+click locks auto-attack), inspirations
+click to use, child buttons toggle windows ("Powers" opens the Power Browser),
+drag a window by its jelly tab. Not yet: compass/nav, chat, menus, tooltips,
+right-click menus, extra trays, window colour options.
