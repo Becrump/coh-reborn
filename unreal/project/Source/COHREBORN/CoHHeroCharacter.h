@@ -13,6 +13,24 @@ class UCoHPowerComponent;
 class UCoHHudWidget;
 struct FInputActionValue;
 
+/** Travel powers and climbing as one state: the player's PC sets it, the host
+ *  moves the hero the same way, and the other players see it. */
+USTRUCT()
+struct FCoHTravelState
+{
+	GENERATED_BODY()
+	UPROPERTY() bool bFlight = false;
+	UPROPERTY() bool bSuperSpeed = false;
+	UPROPERTY() bool bSuperJump = false;
+	UPROPERTY() bool bSprint = false;
+	UPROPERTY() bool bClimbing = false;
+	UPROPERTY() FVector_NetQuantizeNormal WallNormal = FVector::ZeroVector;
+	bool SameAs(const FCoHTravelState& O) const
+	{
+		return bFlight == O.bFlight && bSuperSpeed == O.bSuperSpeed && bSuperJump == O.bSuperJump && bSprint == O.bSprint && bClimbing == O.bClimbing;
+	}
+};
+
 /**
  * Playable hero for testing the zone: third-person camera, run, sprint and
  * jump. Input is built in code (Enhanced Input objects created at startup),
@@ -110,10 +128,14 @@ public:
 	 *  the original power moves; false: the mesh above and its anim blueprint. */
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
 	bool bCoHBody = true;
-	/** Hero file (format 2) in the rules' HeroesDir, e.g. Class_Blaster.json. Empty: the test hero. */
+	/** Starter hero file (format 2) in the rules' HeroesDir, e.g. Class_Blaster.json:
+	 *  a player with no hero of their own yet starts from it. Each player's
+	 *  hero is Saved/Heroes/<name>.json on their own PC, <name> from -Hero=<name>
+	 *  on the command line, else this file's name (with _P1, _P2... for the
+	 *  extra Play-In-Editor players). Empty: the test hero. */
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
 	FString HeroFile;
-	/** Continue from <hero>_save.json when it exists. */
+	/** First run only: start from an old host-side <hero>_save.json in HeroesDir when there is one. */
 	UPROPERTY(Config, EditAnywhere, Category = "CoH|Hero")
 	bool bResumeSave = true;
 	/** Mesh turn for the CoH bodies. */
@@ -187,6 +209,14 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerChooseMonorailDestination(class ARebornMonorail* Train, int32 Destination);
 
+	/** A player's PC sends its hero file (the JSON text) to the host on joining. */
+	UFUNCTION(Server, Reliable)
+	void ServerSubmitHero(const FString& Json);
+	/** A player's PC changed travel power or climb: the host follows. */
+	UFUNCTION(Server, Reliable)
+	void ServerSetTravel(const FCoHTravelState& State);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* Input) override;
@@ -231,6 +261,16 @@ private:
 	/** Plays one climb move once (mounting the wall, stepping off); the climb loop resumes after it. */
 	void PlayClimbMove(const FString& Name);
 	void ApplyMovementMode();
+	/** The owning PC: read this player's hero from Saved/Heroes and send it to the host. */
+	void SendLocalHero();
+	bool bHeroSent = false;
+	UPROPERTY(ReplicatedUsing = OnRep_Travel) FCoHTravelState NetTravel;
+	UFUNCTION() void OnRep_Travel();
+	FCoHTravelState TravelState() const;
+	/** After a local travel change: tell the host (or, on the host, everyone). */
+	void PushTravel();
+	void ApplyTravel(const FCoHTravelState& State);
+	bool bApplyingTravel = false;
 	bool TraceWall(FHitResult& Hit, float Height, float Reach) const;
 	void StartClimb(const FVector& Normal);
 	void StopClimb();

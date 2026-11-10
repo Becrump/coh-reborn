@@ -518,7 +518,7 @@ void SCoHHud::CloseCustomize()
 {
 	bPicking = false;
 	if (!IsCustomizeOpen()) return;
-	if (const UCoHHeroProgress* P = Progress()) P->SaveLooks();       // the hero keeps how its powers look
+	if (UCoHHeroProgress* P = Progress()) P->SaveLooks();       // the hero keeps how its powers look
 	Customize->SetVisibility(EVisibility::Collapsed);
 	if (bCustomBack && Browser) Browser->SetVisibility(EVisibility::Visible);
 	else SetCursor(false);
@@ -661,7 +661,7 @@ TSharedRef<SWidget> SCoHHud::MakeCustomize()
 void SCoHHud::ToggleBrowser()
 {
 	if (!Browser) return;
-	if (IsCustomizeOpen()) { bPicking = false; if (const UCoHHeroProgress* P = Progress()) P->SaveLooks(); Customize->SetVisibility(EVisibility::Collapsed); Browser->SetVisibility(EVisibility::Collapsed); SetCursor(false); return; }
+	if (IsCustomizeOpen()) { bPicking = false; if (UCoHHeroProgress* P = Progress()) P->SaveLooks(); Customize->SetVisibility(EVisibility::Collapsed); Browser->SetVisibility(EVisibility::Collapsed); SetCursor(false); return; }
 	const bool bOpen = !IsBrowserOpen();
 	Browser->SetVisibility(bOpen ? EVisibility::Visible : EVisibility::Collapsed);
 	SetCursor(bOpen);

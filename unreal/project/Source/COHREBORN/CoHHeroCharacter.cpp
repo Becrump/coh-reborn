@@ -1,4 +1,10 @@
 #include "CoHHeroCharacter.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Parse.h"
+#include "Misc/Paths.h"
+#include "Templates/UnrealTemplate.h"
 #include "CoHPowers.h"
 #include "CoHBodyAnim.h"
 #include "CoHGameRules.h"
@@ -82,17 +88,8 @@ void ACoHHeroCharacter::BeginPlay()
 			LocomotionAnimClass = Anim;
 		}
 	}
-	bool bBuilt = false;
-	if (HasAuthority() && !HeroFile.IsEmpty())
-	{
-		// a hero built by the original rules; the save continues it
-		const UCoHGameRules* R = UCoHGameRules::Get(this);
-		const FString Save = FPaths::GetBaseFilename(HeroFile) + TEXT("_save.json");
-		bBuilt = R && R->HasHeroRules() && ((bResumeSave && FPaths::FileExists(R->HeroesDir / Save) && Progress->LoadHeroFile(Save)) || Progress->LoadHeroFile(HeroFile));
-		if (bBuilt) Progress->SaveFile = Save;
-	}
-	if (bBuilt) ApplyCoHBody();
-	else if (HasAuthority())
+	// the test hero until the player's own hero arrives from their PC (SendLocalHero)
+	if (HasAuthority())
 	{
 		Powers->ClassName = TestArchetype;
 		Powers->Level = FMath::Clamp(TestLevel, 1, 50);
@@ -321,18 +318,21 @@ void ACoHHeroCharacter::SprintOn(const FInputActionValue&)
 {
 	bSprint = true;
 	ApplyMovementMode();
+	PushTravel();
 }
 
 void ACoHHeroCharacter::SprintOff(const FInputActionValue&)
 {
 	bSprint = false;
 	ApplyMovementMode();
+	PushTravel();
 }
 
 void ACoHHeroCharacter::ToggleSuperJump(const FInputActionValue&)
 {
 	bSuperJump = !bSuperJump;
 	ApplyMovementMode();
+	PushTravel();
 	UE_LOG(LogTemp, Log, TEXT("Super Jump %s"), bSuperJump ? TEXT("on") : TEXT("off"));
 }
 
@@ -700,6 +700,7 @@ void ACoHHeroCharacter::StartClimb(const FVector& Normal)
  ApplyMovementMode();
 	UpdateClimbAnim();
 	PlayClimbMove(TEXT("Jump_and_Grab_Wall"));      // the mount; the idle on the wall resumes after it
+	PushTravel();
 }
 
 void ACoHHeroCharacter::StopClimb()
@@ -714,11 +715,13 @@ void ACoHHeroCharacter::StopClimb()
 	ClimbClip = -1;
 	GetMesh()->SetPlayRate(1.f);
 	RestoreLocomotion();
+	PushTravel();
 }
 
 void ACoHHeroCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	if (!bHeroSent && Controller && IsLocallyControlled()) { bHeroSent = true; SendLocalHero(); }
 	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
 	// the Sprint and Climb toggles change speeds: follow them
@@ -867,6 +870,7 @@ void ACoHHeroCharacter::OnDefeated()
  if (bClimbing) StopClimb();
  bFlight = false;
  ApplyMovementMode();
+ PushTravel();
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
  SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
@@ -1093,13 +1097,15 @@ void ACoHHeroCharacter::SetFlightEnabled(bool bEnabled)
  StopJumping();
  ApplyMovementMode();
  if (PunchTimeLeft <= 0.f) GetCharacterMovement()->SetMovementMode(bFlight ? MOVE_Flying : MOVE_Falling);
- if (GEngine) GEngine->AddOnScreenDebugMessage(7121, 2.f, FColor::Cyan, bFlight ? TEXT("Flight ON: Space rises, X descends") : TEXT("Flight OFF"));
+ PushTravel();
+ if (GEngine && IsLocallyControlled()) GEngine->AddOnScreenDebugMessage(7121, 2.f, FColor::Cyan, bFlight ? TEXT("Flight ON: Space rises, X descends") : TEXT("Flight OFF"));
 }
 void ACoHHeroCharacter::SetSuperSpeedEnabled(bool bEnabled)
 {
  bSuperSpeed = bEnabled;
  ApplyMovementMode();
- if (GEngine) GEngine->AddOnScreenDebugMessage(7122, 2.f, FColor::Cyan, bSuperSpeed ? TEXT("Super Speed ON") : TEXT("Super Speed OFF"));
+ PushTravel();
+ if (GEngine && IsLocallyControlled()) GEngine->AddOnScreenDebugMessage(7122, 2.f, FColor::Cyan, bSuperSpeed ? TEXT("Super Speed ON") : TEXT("Super Speed OFF"));
 }
 void ACoHHeroCharacter::ToggleFlight(const FInputActionValue&) { SetFlightEnabled(!bFlight); }
 void ACoHHeroCharacter::ToggleSuperSpeed(const FInputActionValue&) { SetSuperSpeedEnabled(!bSuperSpeed); }
@@ -1114,4 +1120,96 @@ void ACoHHeroCharacter::PerformUppercut()
  if (bClimbing || PunchTimeLeft>0 || GetWorld()->GetTimeSeconds()<NextUppercutTime) return;
  Punch(FInputActionValue());
  if (PunchTimeLeft>0) { bUppercutPunch=true; NextUppercutTime=GetWorld()->GetTimeSeconds()+3.f; }
+}
+
+// ------------------------------------------------------------------ multiplayer
+void ACoHHeroCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACoHHeroCharacter, NetTravel);
+}
+
+void ACoHHeroCharacter::SendLocalHero()
+{
+	if (!Progress) return;
+	// which hero: -Hero=<name>, else the starter's name (+ _P<n> for extra PIE players)
+	FString Name;
+	if (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name) || Name.IsEmpty())
+	{
+		Name = HeroFile.IsEmpty() ? FString(TEXT("Hero")) : FPaths::GetBaseFilename(HeroFile);
+		const FWorldContext* WC = GEngine ? GEngine->GetWorldContextFromWorld(GetWorld()) : nullptr;
+		if (WC && WC->PIEInstance > 0) Name += FString::Printf(TEXT("_P%d"), WC->PIEInstance);
+	}
+	Name = FPaths::MakeValidFileName(Name);
+	Progress->SaveFile = Name + TEXT(".json");
+	const FString Mine = UCoHHeroProgress::LocalHeroDir() / Progress->SaveFile;
+	FString Json;
+	if (FFileHelper::LoadFileToString(Json, *Mine))
+	{
+		UE_LOG(LogTemp, Log, TEXT("CoH hero: sending %s to the host"), *Mine);
+	}
+	else if (const UCoHGameRules* R = UCoHGameRules::Get(this); R && !HeroFile.IsEmpty())
+	{
+		// first time: an old host-side save of this hero, else the starter hero
+		const FString Base = FPaths::GetBaseFilename(HeroFile);
+		const FString OldSave = R->HeroesDir / Base + TEXT("_save.json");
+		if (!(bResumeSave && Name == Base && FFileHelper::LoadFileToString(Json, *OldSave)))
+			FFileHelper::LoadFileToString(Json, *(R->HeroesDir / HeroFile));
+		UE_LOG(LogTemp, Log, TEXT("CoH hero: no %s yet, starting from %s"), *Mine, Json.IsEmpty() ? TEXT("the test hero") : *HeroFile);
+	}
+	if (!Json.IsEmpty()) ServerSubmitHero(Json);
+}
+
+void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
+{
+	// one hero per visit; the record then lives on the host until the player leaves
+	if (!Progress || Progress->bHasRecord) return;
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	FCoHHeroRecord H;
+	if (!R || !R->HasHeroRules() || !R->HeroFromJson(Json, H))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CoH hero: a player's hero file could not be read; they keep the test hero"));
+		return;
+	}
+	Progress->LoadHeroRecord(H);
+	ApplyCoHBody();
+}
+
+FCoHTravelState ACoHHeroCharacter::TravelState() const
+{
+	FCoHTravelState S;
+	S.bFlight = bFlight; S.bSuperSpeed = bSuperSpeed; S.bSuperJump = bSuperJump; S.bSprint = bSprint;
+	S.bClimbing = bClimbing; S.WallNormal = WallNormal;
+	return S;
+}
+
+void ACoHHeroCharacter::PushTravel()
+{
+	if (bApplyingTravel) return;
+	const FCoHTravelState S = TravelState();
+	if (HasAuthority()) NetTravel = S;
+	else if (IsLocallyControlled()) ServerSetTravel(S);
+}
+
+void ACoHHeroCharacter::ServerSetTravel_Implementation(const FCoHTravelState& State)
+{
+	ApplyTravel(State);
+	NetTravel = State;
+}
+
+void ACoHHeroCharacter::OnRep_Travel()
+{
+	// the owner already moves this way unless the host changed it (out of
+	// endurance on a wall, defeated); everyone else follows the host
+	if (!NetTravel.SameAs(TravelState())) ApplyTravel(NetTravel);
+}
+
+void ACoHHeroCharacter::ApplyTravel(const FCoHTravelState& State)
+{
+	TGuardValue<bool> Guard(bApplyingTravel, true);
+	bSuperJump = State.bSuperJump; bSprint = State.bSprint; bSuperSpeed = State.bSuperSpeed;
+	if (State.bClimbing && !bClimbing) StartClimb(State.WallNormal);
+	else if (!State.bClimbing && bClimbing) StopClimb();
+	if (bFlight != State.bFlight) SetFlightEnabled(State.bFlight);
+	else ApplyMovementMode();
 }

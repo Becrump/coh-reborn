@@ -4,6 +4,9 @@
 // original reward rules; level-ups wait for training (L, as at a trainer)
 // and open the level's power pick (P lists only what the pick may take).
 // The server owns the record; clients get it by replication.
+// Saves live on each player's own PC (Saved/Heroes/<name>.json): the player
+// sends the hero to the host on joining, and the host sends every save back
+// (and keeps a backup in its own Saved/HeroBackups).
 #pragma once
 
 #include "CoreMinimal.h"
@@ -20,13 +23,17 @@ class COHREBORN_API UCoHHeroProgress : public UActorComponent
 public:
 	UCoHHeroProgress();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CoH|Hero") FCoHHeroRecord Hero;
-	/** Where the record is saved (in the rules' HeroesDir); empty: never saved. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Hero, Category = "CoH|Hero") FCoHHeroRecord Hero;
+	/** The owning player's PC: the hero file in Saved/Heroes the host's saves go to; empty: never saved. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Hero") FString SaveFile;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CoH|Hero") bool bHasRecord = false;
 
 	/** Server: load a hero file and grant its powers. */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") bool LoadHeroFile(const FString& File);
+	/** Server: take this record as the hero and grant its powers. */
+	void LoadHeroRecord(const FCoHHeroRecord& Record);
+	/** Where a player's own heroes are kept on their PC. */
+	static FString LocalHeroDir();
 	/** Server: make the record current on the power component (class, level, powers, tray). */
 	void Apply(bool bRefillTray);
 
@@ -50,11 +57,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void Train();
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void Pick(FName Power);
 	/** Writes the hero file now (the customize panel calls it when it closes, so powers keep their look). */
-	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void SaveLooks() const { Save(); }
+	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void SaveLooks();
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void UseInspiration(int32 Index);
 	UFUNCTION(Server, Reliable) void ServerTrain();
 	UFUNCTION(Server, Reliable) void ServerPick(FName Power);
 	UFUNCTION(Server, Reliable) void ServerUseInspiration(int32 Index);
+	/** The customize panel closed on a player's PC: the host takes the looks, saves, and everyone sees them. */
+	UFUNCTION(Server, Reliable) void ServerSetLooks(const TArray<FCoHPowerLook>& Looks);
+	/** The host saved: write the hero file on the owning player's PC. */
+	UFUNCTION(Client, Reliable) void ClientSaveHero(const FString& Json);
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 	static UCoHHeroProgress* Of(const AActor* A);
@@ -66,5 +77,9 @@ public:
 private:
 	UCoHPowerComponent* Powers() const;
 	void Say(const FString& Text, FLinearColor Colour) const;
-	void Save() const;
+	void Save();
+	UFUNCTION() void OnRep_Hero();
+	/** The power component's styles as saved looks, and back. */
+	TArray<FCoHPowerLook> LooksFromStyles() const;
+	void ApplyLooks(const TArray<FCoHPowerLook>& Looks);
 };

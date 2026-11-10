@@ -209,6 +209,10 @@ public:
 	FCoHHeroRecord NewHero(const FString& Class, const FString& Primary, const FString& Secondary, const FString& First, const FString& Name, const FString& Preset) const;
 	bool LoadHero(const FString& File, FCoHHeroRecord& Out) const;
 	bool SaveHero(const FString& File, const FCoHHeroRecord& Hero) const;
+	/** The hero file's text (format 2) to a record and back: heroes travel as
+	 *  this text between a player's PC and the host. */
+	bool HeroFromJson(const FString& Text, FCoHHeroRecord& Out) const;
+	FString HeroToJson(const FCoHHeroRecord& Hero) const;
 
 	// --- leveling -----------------------------------------------------------
 	bool HasRewards() const { return XPForLevel.Num() > 0; }
