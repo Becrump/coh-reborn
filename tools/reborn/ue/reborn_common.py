@@ -65,7 +65,13 @@ def import_texture(src, dest_dir, name, srgb=True, nearest=False, mips=True,
 
 
 def new_material(path):
+    """an empty material at path; an existing one is emptied in place, not
+    deleted (deleting a material the level uses pops a modal dialog)"""
     if el.does_asset_exist(path):
+        m = el.load_asset(path)
+        if isinstance(m, unreal.Material):
+            mel.delete_all_material_expressions(m)
+            return m
         el.delete_asset(path)
     d, n = path.rsplit("/", 1)
     return tools.create_asset(n, d, unreal.Material, unreal.MaterialFactoryNew())
