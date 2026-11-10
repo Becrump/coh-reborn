@@ -25,6 +25,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #if WITH_EDITOR
 #include "PhysicsAssetUtils.h"
@@ -75,6 +76,7 @@ void ACoHCombatEnemy::InitializeFromCatalog(const TMap<FString,FString>& Entry,c
  if(const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this))
   if(const FCoHClassDef* C=DB->FindClass(RankClass)) AttackDamage=FMath::Max(1.f,-C->TableValue(TEXT("Melee_Damage"),InLevel));
  Powers->InitStats();
+ PublishLook();
  SpawnDefaultController();
 }
 void ACoHCombatEnemy::ApplyVillain(const FString& VillainName,int32 InLevel)
@@ -206,6 +208,7 @@ bool ACoHCombatEnemy::InitializeFromKit(const FString& VillainName,int32 InLevel
  GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
  Faction=K->Group;
  Powers->Body=K->SeqType;
+ PublishLook();
  ApplyVillain(VillainName,InLevel);
  if(Villain.IsEmpty())
  {
@@ -252,6 +255,8 @@ void ACoHCombatEnemy::InitializeFromPreview(AActor* Preview,const TMap<FString,F
  GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
  if(IdleClip) GetMesh()->PlayAnimation(IdleClip,true);
  GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+ MeshYaw=180.f;
+ PublishLook();
  SpawnDefaultController();
 }
 bool ACoHCombatEnemy::CanSee(APawn* Pawn) const
@@ -267,6 +272,10 @@ void ACoHCombatEnemy::SetState(ECoHEnemyState Next)
  State=Next;
  // a chase at the original base run speed (about 21 ft/s); strolls set their own
  if(Next==ECoHEnemyState::Chase) GetCharacterMovement()->MaxWalkSpeed=640.f;
+ PlayStateClip(Next);
+}
+void ACoHCombatEnemy::PlayStateClip(ECoHEnemyState Next)
+{
  UAnimSequence* Clip=Next==ECoHEnemyState::Chase || Next==ECoHEnemyState::ReturnHome ? RunClip : Next==ECoHEnemyState::Attack ? AttackClip : Next==ECoHEnemyState::Hit ? HitClip : Next==ECoHEnemyState::Dead ? DeathClip : IdleClip;
  if(!Clip) Clip=IdleClip;
  if(UCoHBodyAnim* BA=BodyAnim())
@@ -435,12 +444,21 @@ void ACoHCombatEnemy::BeginPlay()
 
 void ACoHCombatEnemy::LaunchRagdoll(FVector LaunchVelocity)
 {
+ // the host decides; every PC (the host too) throws the body
+ if(HasAuthority()) MulticastRagdoll(LaunchVelocity);
+}
+void ACoHCombatEnemy::MulticastRagdoll_Implementation(FVector_NetQuantize10 LaunchVelocity)
+{
+ DoRagdoll(LaunchVelocity);
+}
+void ACoHCombatEnemy::DoRagdoll(FVector LaunchVelocity)
+{
  USkeletalMeshComponent* BodyMesh = GetMesh();
  UPhysicsAsset* Physics = BodyMesh->GetPhysicsAsset();
  if (!Physics || Physics->SkeletalBodySetups.Num()==0)
  {
   UE_LOG(LogTemp, Warning, TEXT("CoH ragdoll unavailable: %s has no physics bodies"), *GetName());
-  if (!IsDead()) LaunchCharacter(LaunchVelocity,true,true);
+  if (!IsDead() && HasAuthority()) LaunchCharacter(LaunchVelocity,true,true);
   return;
  }
  GetWorldTimerManager().ClearTimer(AttackTimer);
@@ -478,6 +496,15 @@ void ACoHCombatEnemy::RecoverRagdoll()
  BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
  BodyMesh->AttachToComponent(GetCapsuleComponent(),FAttachmentTransformRules::KeepRelativeTransform);
  BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
+ if (!HasAuthority())
+ {
+  // a player's PC: the body is back in the capsule; the host moves the
+  // villain and its state brings the next clip
+  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  bRagdoll=false;
+  PlayStateClip(State);
+  return;
+ }
  FVector Destination=bFloor ? Floor.ImpactPoint+FVector(0,0,92) : Home;
  FHitResult Block;
  if (GetWorld()->SweepSingleByChannel(Block,Destination,Destination,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(36,90),Params)) Destination=Home;
@@ -1252,4 +1279,49 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  G.Id=NextGroupId++; G.NextHarass=W->GetTimeSeconds()+1e9;
  Groups.Add(MoveTemp(G));
  return true;
+}
+
+// ------------------------------------------------------------------ multiplayer
+void ACoHCombatEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+ DOREPLIFETIME(ACoHCombatEnemy, State);
+ DOREPLIFETIME(ACoHCombatEnemy, Villain);
+ DOREPLIFETIME(ACoHCombatEnemy, KitModel);
+ DOREPLIFETIME(ACoHCombatEnemy, NetLook);
+}
+void ACoHCombatEnemy::PublishLook()
+{
+ if(!HasAuthority()) return;
+ FCoHEnemyLook L;
+ L.Mesh=GetMesh()->GetSkeletalMeshAsset();
+ L.bBodyAnim=BodyAnim()!=nullptr;
+ L.MeshYaw=MeshYaw;
+ L.MeshScale=GetMesh()->GetRelativeScale3D();
+ L.Idle=IdleClip; L.Run=RunClip; L.Attack=AttackClip; L.Hit=HitClip; L.Death=DeathClip;
+ NetLook=L;
+}
+void ACoHCombatEnemy::OnRep_Look()
+{
+ // a player's PC: the same model and clips the host chose
+ const FCoHEnemyLook& L=NetLook;
+ if(!L.Mesh) return;
+ GetMesh()->SetSkeletalMeshAsset(L.Mesh);
+ MeshYaw=L.MeshYaw;
+ GetMesh()->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
+ GetMesh()->SetRelativeScale3D(L.MeshScale);
+ IdleClip=L.Idle; RunClip=L.Run; AttackClip=L.Attack; HitClip=L.Hit; DeathClip=L.Death;
+ if(L.bBodyAnim)
+ {
+  GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+  GetMesh()->SetAnimInstanceClass(UCoHBodyAnim::StaticClass());
+  if(UCoHBodyAnim* BA=BodyAnim()){ BA->bAutoLocomotion=false; if(IdleClip) BA->SetBase(IdleClip,true); }
+ }
+ else GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+ GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+ if(!bRagdoll) PlayStateClip(State);
+}
+void ACoHCombatEnemy::OnRep_State()
+{
+ if(!bRagdoll) PlayStateClip(State);
 }

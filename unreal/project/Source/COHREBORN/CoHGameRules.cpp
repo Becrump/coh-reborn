@@ -538,9 +538,20 @@ FCoHHeroRecord UCoHGameRules::NewHero(const FString& ClassIn, const FString& Pri
 
 bool UCoHGameRules::LoadHero(const FString& File, FCoHHeroRecord& H) const
 {
-	TSharedPtr<FJsonValue> Root;
 	const FString Path = FPaths::IsRelative(File) ? HeroesDir / File : File;
-	if (!ReadJson(Path, Root) || !Root->AsObject().IsValid()) return false;
+	FString Text;
+	if (!FFileHelper::LoadFileToString(Text, *Path))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CoH game rules: missing %s"), *Path);
+		return false;
+	}
+	return HeroFromJson(Text, H);
+}
+
+bool UCoHGameRules::HeroFromJson(const FString& Text, FCoHHeroRecord& H) const
+{
+	TSharedPtr<FJsonValue> Root;
+	if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), Root) || !Root.IsValid() || !Root->AsObject().IsValid()) return false;
 	const auto O = Root->AsObject();
 	H = FCoHHeroRecord();
 	H.Name = S(O, TEXT("name")); H.Class = S(O, TEXT("class")); H.Origin = S(O, TEXT("origin"));
@@ -579,6 +590,12 @@ bool UCoHGameRules::LoadHero(const FString& File, FCoHHeroRecord& H) const
 }
 
 bool UCoHGameRules::SaveHero(const FString& File, const FCoHHeroRecord& H) const
+{
+	const FString Path = FPaths::IsRelative(File) ? HeroesDir / File : File;
+	return FFileHelper::SaveStringToFile(HeroToJson(H), *Path);
+}
+
+FString UCoHGameRules::HeroToJson(const FCoHHeroRecord& H) const
 {
 	TSharedRef<FJsonObject> O = MakeShared<FJsonObject>();
 	O->SetNumberField(TEXT("format"), 2);
@@ -637,8 +654,7 @@ bool UCoHGameRules::SaveHero(const FString& File, const FCoHHeroRecord& H) const
 	FString Text;
 	const TSharedRef<TJsonWriter<>> W = TJsonWriterFactory<>::Create(&Text);
 	FJsonSerializer::Serialize(O, W);
-	const FString Path = FPaths::IsRelative(File) ? HeroesDir / File : File;
-	return FFileHelper::SaveStringToFile(Text, *Path);
+	return Text;
 }
 
 // ------------------------------------------------------------------ rewards
