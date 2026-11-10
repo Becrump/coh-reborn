@@ -27,6 +27,30 @@ static void Sample(const UAnimSequenceBase* Clip, float Time, FAnimationPoseData
 	Clip->GetAnimationPose(Out, FAnimExtractContext((double)FMath::Clamp(Time, 0.f, L), false));
 }
 
+/** Tilts NECK and HEAD forward by Degrees. The meshes face +Y in component space (mesh yaw -90), so
+ *  forward is a turn about -X; the neck takes 55 %, the head the rest, and what hangs off them follows. */
+static void LeanHead(FPoseContext& Output, float Degrees)
+{
+	const FBoneContainer& BC = Output.Pose.GetBoneContainer();
+	const int32 NeckMesh = BC.GetPoseBoneIndexForBoneName(TEXT("NECK")), HeadMesh = BC.GetPoseBoneIndexForBoneName(TEXT("HEAD"));
+	if (NeckMesh == INDEX_NONE || HeadMesh == INDEX_NONE) return;
+	const FCompactPoseBoneIndex Neck = BC.MakeCompactPoseIndex(FMeshPoseBoneIndex(NeckMesh)), Head = BC.MakeCompactPoseIndex(FMeshPoseBoneIndex(HeadMesh));
+	if (Neck == INDEX_NONE || Head == INDEX_NONE) return;
+	FCSPose<FCompactPose> CS;
+	CS.InitPose(Output.Pose);
+	const FVector Axis(-1, 0, 0);
+	const FQuat QNeck(Axis, FMath::DegreesToRadians(Degrees * 0.55f)), QHead(Axis, FMath::DegreesToRadians(Degrees));
+	auto Rot = [&](FCompactPoseBoneIndex I) { return CS.GetComponentSpaceTransform(I).GetRotation(); };
+	// the neck turns about its own origin; the head carries the neck's turn plus its own
+	const FCompactPoseBoneIndex NeckParent = BC.GetParentBoneIndex(Neck);
+	const FQuat NeckParentRot = NeckParent != INDEX_NONE ? Rot(NeckParent) : FQuat::Identity;
+	const FQuat NeckNew = QNeck * Rot(Neck), HeadNew = QHead * Rot(Head);
+	Output.Pose[Neck].SetRotation((NeckParentRot.Inverse() * NeckNew).GetNormalized());
+	const FCompactPoseBoneIndex HeadParent = BC.GetParentBoneIndex(Head);
+	const FQuat HeadParentNew = HeadParent == Neck ? NeckNew : (HeadParent != INDEX_NONE ? Rot(HeadParent) : FQuat::Identity);
+	Output.Pose[Head].SetRotation((HeadParentNew.Inverse() * HeadNew).GetNormalized());
+}
+
 bool FCoHBodyAnimProxy::Evaluate(FPoseContext& Output)
 {
 	if (!Pose.A)
@@ -38,6 +62,7 @@ bool FCoHBodyAnimProxy::Evaluate(FPoseContext& Output)
 	if (!Pose.B || Pose.Alpha >= 0.999f)
 	{
 		Sample(Pose.A, Pose.TimeA, Out);
+		if (FMath::Abs(Pose.Lean) > 0.01f) LeanHead(Output, Pose.Lean);
 		return true;
 	}
 	FPoseContext PA(Output), PB(Output);
@@ -45,6 +70,7 @@ bool FCoHBodyAnimProxy::Evaluate(FPoseContext& Output)
 	Sample(Pose.A, Pose.TimeA, DA);
 	Sample(Pose.B, Pose.TimeB, DB);
 	FAnimationRuntime::BlendTwoPosesTogether(DA, DB, Pose.Alpha, Out);
+	if (FMath::Abs(Pose.Lean) > 0.01f) LeanHead(Output, Pose.Lean);
 	return true;
 }
 
@@ -55,6 +81,7 @@ FCoHBodyPose UCoHBodyAnim::Current() const
 	P.A = Playing; P.TimeA = Time;
 	P.B = Blend < 1.f ? Previous.Get() : nullptr; P.TimeB = PrevTime;
 	P.Alpha = FMath::Clamp(Blend, 0.f, 1.f);
+	P.Lean = LeanNow;
 	if (!P.A && P.B) { P.A = P.B; P.TimeA = P.TimeB; P.B = nullptr; P.Alpha = 1.f; }
 	return P;
 }
@@ -145,6 +172,9 @@ UAnimSequenceBase* UCoHBodyAnim::PickLocomotion(float& OutRate) const
 void UCoHBodyAnim::NativeUpdateAnimation(float Dt)
 {
 	Super::NativeUpdateAnimation(Dt);
+	// head lean: hold its target for the move, then ease back to straight
+	if (LeanHold > 0.f) LeanHold -= Dt; else LeanTarget = 0.f;
+	LeanNow = FMath::FInterpTo(LeanNow, LeanTarget, Dt, 9.f);
 	if (bFrozen) return;
 	if (Blend < 1.f) { Blend = FMath::Min(1.f, Blend + Dt / FMath::Max(0.01f, BlendTime)); PrevTime += Dt; }
 	// landing: a short land move when touching down from a fall

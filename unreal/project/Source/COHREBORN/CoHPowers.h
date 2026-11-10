@@ -23,6 +23,13 @@
 class UAnimSequenceBase;
 class UTexture2D;
 
+/** Travel powers every hero has (the tray's inherent powers). Climb is ours: the original game had none. */
+namespace CoHTravel
+{
+	const FName Sprint(TEXT("Inherent.Inherent.Sprint"));
+	const FName Climb(TEXT("Inherent.Inherent.Climb"));
+}
+
 UENUM(BlueprintType)
 enum class ECoHDamage : uint8 { Smashing, Lethal, Fire, Cold, Energy, NegativeEnergy, Psionic, Toxic, Count };
 
@@ -161,7 +168,19 @@ struct FCoHPowerStyle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Animation = -1;   // -1: default for the power type
 	/** A specific clip (any animation on the hero's skeleton); overrides Animation. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FSoftObjectPath Clip;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor Tint = FLinearColor(0, 0, 0, 0); // alpha 0: element colour
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor Tint = FLinearColor(0, 0, 0, 0); // alpha 0: element colour / the effects' own colours
+	/** The second power colour (alpha 0: the effects' own). Tint is the first. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor Tint2 = FLinearColor(0, 0, 0, 0);
+	/** True once the hero picked Emitter: the original cast point is replaced. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bCustomEmitter = false;
+	/** Entry of the power's customizable themes (Bright Fire ...), -1 the default effects. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Theme = -1;
+	/** A point the hero clicked on the body: the nearest bone and the offset from it in cm
+	 *  (actor axes: x forward, y right, z up). Replaces the Emitter preset for the effects;
+	 *  Emitter then only picks the pose. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bCustomPoint = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PointBone;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FVector PointOffset = FVector::ZeroVector;
 };
 
 USTRUCT()
@@ -239,6 +258,16 @@ public:
 	 *  clip name, e.g. "MM_Attack_02"); empty = the default for its type. */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") bool SetPowerAnimation(FName Power, const FString& ClipNameOrPath);
 	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerEmitter(FName Power, ECoHEmitter Emitter);
+	/** The two power colours (alpha < 1 on Primary: back to the effects' own colours). */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerColors(FName Power, FLinearColor Primary, FLinearColor Secondary);
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerTheme(FName Power, int32 Theme);
+	/** Casts from a clicked point of the body: Bone plus Offset (cm, actor axes); Pose is the ECoHEmitter whose move fits the region. */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void SetPowerPoint(FName Power, FName Bone, FVector Offset, ECoHEmitter Pose);
+	/** Back to the power's original look (emitter, colours, theme; the clip stays). */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void ResetPowerLook(FName Power);
+	/** Plays the power here, locally, against a dummy 30 ft ahead, with the hero's style: the
+	 *  customize preview. No numbers run (no damage, endurance or recharge). */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Powers") void PreviewPower(FName Power);
 	/** Finds an animation asset by name (any folder) or path. */
 	static FSoftObjectPath FindClip(const FString& NameOrPath);
 	UFUNCTION(Server, Reliable) void ServerActivate(FName Power, AActor* TargetActor, FVector_NetQuantize Location);
