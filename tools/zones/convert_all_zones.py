@@ -109,8 +109,16 @@ def ensure_piggs(work, data):
     for i, n in enumerate(missing, 1):
         print("Downloading %s (%d/%d)..." % (n, i, len(missing)), flush=True)
         tmp = os.path.join(piggs, n + ".part")
-        with urllib.request.urlopen(PIGG_URL + n) as r, open(tmp, "wb") as f:
-            shutil.copyfileobj(r, f, 1 << 20)
+        # curl (built into Windows 10+) works with this server; plain urllib
+        # gets 403, so it is only the fallback.
+        curl = shutil.which("curl")
+        if curl:
+            if run([curl, "-fsSL", "--retry", "3", "-o", tmp, PIGG_URL + n]):
+                sys.exit("download of %s failed (curl)" % n)
+        else:
+            req = urllib.request.Request(PIGG_URL + n, headers={"User-Agent": "curl/8.0"})
+            with urllib.request.urlopen(req) as r, open(tmp, "wb") as f:
+                shutil.copyfileobj(r, f, 1 << 20)
         os.replace(tmp, os.path.join(piggs, n))
     return piggs
 
