@@ -51,26 +51,43 @@ static void LeanHead(FPoseContext& Output, float Degrees)
 	Output.Pose[Head].SetRotation((HeadParentNew.Inverse() * HeadNew).GetNormalized());
 }
 
+/** Blends a held pose (bone-local, by mesh bone index) over the result by Alpha. */
+static void BlendFrom(FPoseContext& Output, const TArray<FTransform>& From, float Alpha)
+{
+	const FBoneContainer& BC = Output.Pose.GetBoneContainer();
+	for (const FCompactPoseBoneIndex I : Output.Pose.ForEachBoneIndex())
+	{
+		const int32 Mesh = BC.MakeMeshPoseIndex(I).GetInt();
+		if (!From.IsValidIndex(Mesh)) continue;
+		FTransform& T = Output.Pose[I];
+		T.BlendWith(From[Mesh], Alpha);
+		T.NormalizeRotation();
+	}
+}
+
 bool FCoHBodyAnimProxy::Evaluate(FPoseContext& Output)
 {
 	if (!Pose.A)
 	{
 		Output.ResetToRefPose();
-		return true;
 	}
-	FAnimationPoseData Out(Output);
-	if (!Pose.B || Pose.Alpha >= 0.999f)
+	else if (!Pose.B || Pose.Alpha >= 0.999f)
 	{
+		FAnimationPoseData Out(Output);
 		Sample(Pose.A, Pose.TimeA, Out);
 		if (FMath::Abs(Pose.Lean) > 0.01f) LeanHead(Output, Pose.Lean);
-		return true;
 	}
-	FPoseContext PA(Output), PB(Output);
-	FAnimationPoseData DA(PA), DB(PB);
-	Sample(Pose.A, Pose.TimeA, DA);
-	Sample(Pose.B, Pose.TimeB, DB);
-	FAnimationRuntime::BlendTwoPosesTogether(DA, DB, Pose.Alpha, Out);
-	if (FMath::Abs(Pose.Lean) > 0.01f) LeanHead(Output, Pose.Lean);
+	else
+	{
+		FAnimationPoseData Out(Output);
+		FPoseContext PA(Output), PB(Output);
+		FAnimationPoseData DA(PA), DB(PB);
+		Sample(Pose.A, Pose.TimeA, DA);
+		Sample(Pose.B, Pose.TimeB, DB);
+		FAnimationRuntime::BlendTwoPosesTogether(DA, DB, Pose.Alpha, Out);
+		if (FMath::Abs(Pose.Lean) > 0.01f) LeanHead(Output, Pose.Lean);
+	}
+	if (Pose.From.IsValid() && Pose.FromAlpha > 0.001f) BlendFrom(Output, *Pose.From, Pose.FromAlpha);
 	return true;
 }
 
@@ -82,6 +99,11 @@ FCoHBodyPose UCoHBodyAnim::Current() const
 	P.B = Blend < 1.f ? Previous.Get() : nullptr; P.TimeB = PrevTime;
 	P.Alpha = FMath::Clamp(Blend, 0.f, 1.f);
 	P.Lean = LeanNow;
+	if (FromPose.IsValid() && FromTotal > 0.f)
+	{
+		P.From = FromPose;
+		P.FromAlpha = FMath::SmoothStep(0.f, 1.f, FMath::Clamp(FromLeft / FromTotal, 0.f, 1.f));
+	}
 	if (!P.A && P.B) { P.A = P.B; P.TimeA = P.TimeB; P.B = nullptr; P.Alpha = 1.f; }
 	return P;
 }
@@ -92,6 +114,13 @@ void UCoHBodyAnim::Switch(UAnimSequenceBase* Clip, float StartTime)
 	Previous = Playing; PrevTime = Time;
 	Playing = Clip; Time = StartTime;
 	Blend = Previous && BlendTime > 0.f ? 0.f : 1.f;
+}
+
+void UCoHBodyAnim::BlendFromPose(TArray<FTransform>&& MeshLocal, float Seconds)
+{
+	if (Seconds <= 0.f || MeshLocal.Num() == 0) { FromPose.Reset(); return; }
+	FromPose = MakeShared<TArray<FTransform>>(MoveTemp(MeshLocal));
+	FromLeft = FromTotal = Seconds;
 }
 
 void UCoHBodyAnim::SetBase(UAnimSequenceBase* Clip, bool bInLoop, float InRate)
@@ -175,6 +204,7 @@ void UCoHBodyAnim::NativeUpdateAnimation(float Dt)
 	// head lean: hold its target for the move, then ease back to straight
 	if (LeanHold > 0.f) LeanHold -= Dt; else LeanTarget = 0.f;
 	LeanNow = FMath::FInterpTo(LeanNow, LeanTarget, Dt, 9.f);
+	if (FromPose.IsValid() && (FromLeft -= Dt) <= 0.f) { FromPose.Reset(); FromLeft = FromTotal = 0.f; }
 	if (bFrozen) return;
 	if (Blend < 1.f) { Blend = FMath::Min(1.f, Blend + Dt / FMath::Max(0.01f, BlendTime)); PrevTime += Dt; }
 	// landing: a short land move when touching down from a fall

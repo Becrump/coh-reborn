@@ -10,6 +10,7 @@ class USpringArmComponent;
 class UInputAction;
 class UInputMappingContext;
 class UCoHPowerComponent;
+class UCoHActiveRagdoll;
 class UCoHHudWidget;
 struct FInputActionValue;
 
@@ -158,6 +159,8 @@ public:
 	/** Powers: health, endurance, tray and the original power data. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Powers")
 	TObjectPtr<UCoHPowerComponent> Powers;
+	/** Rigid bodies with muscles: hit jolts and knockback tumbles (CoHActiveRagdoll.h). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero") TObjectPtr<UCoHActiveRagdoll> Ragdoll;
 
 	/** Test hero: archetype tables, level and the powers on the tray at start
 	 *  (any power can be added from the Power Browser, P). */

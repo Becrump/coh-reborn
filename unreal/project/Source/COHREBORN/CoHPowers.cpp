@@ -1,4 +1,5 @@
 #include "CoHPowers.h"
+#include "CoHActiveRagdoll.h"
 #include "CoHCombat.h"
 #include "CoHHeroCharacter.h"
 #include "CoHLifeManager.h"
@@ -1037,7 +1038,12 @@ void UCoHPowerComponent::ApplyMod(const FCoHPowerDef& P, const FCoHMod& M, UCoHP
 		else Launch = Dir * FMath::Min(450.f + Amount * 180.f, 1400.f) + FVector(0, 0, FMath::Min(260.f + Amount * 40.f, 500.f));
 		UE_LOG(LogTemp, Log, TEXT("CoH %s %s mag %.2f -> %.0f cm/s"), *P.Id.ToString(), *M.Attrib, Amount, Launch.Size());
 		if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Victim->GetOwner())) E->LaunchRagdoll(Launch);
-		else if (ACharacter* Ch = Cast<ACharacter>(Victim->GetOwner())) Ch->LaunchCharacter(Launch, true, true);
+		else if (ACharacter* Ch = Cast<ACharacter>(Victim->GetOwner()))
+		{
+			Ch->LaunchCharacter(Launch, true, true);
+			// heroes keep their capsule (the player stays in control of the camera); the limbs flail
+			if (UCoHActiveRagdoll* Body = UCoHActiveRagdoll::Of(Ch)) Body->MulticastTumble(Launch);
+		}
 		return;
 	}
 	if (M.Attrib == TEXT("kTaunt"))
@@ -1087,6 +1093,9 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 	Health = FMath::Max(0.f, Health - Final);
 	LastHurt = GetWorld()->GetTimeSeconds();
 	MulticastText(Final < 1.f ? FString::Printf(TEXT("%.1f"), Final) : FString::Printf(TEXT("%.0f"), Final), DamageColour(Type));
+	// the body takes the blow (a physical jolt on every PC; a defeat ragdolls instead)
+	if (!IsDefeated())
+		if (UCoHActiveRagdoll* Body = UCoHActiveRagdoll::Of(GetOwner())) Body->HitReact(Causer, Final / FMath::Max(1.f, MaxHealth));
 	if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(GetOwner()))
 	{
 		if (IsDefeated()) E->OnDefeated(Causer); else E->OnHurt(Causer, Final);

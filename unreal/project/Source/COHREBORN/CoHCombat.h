@@ -7,6 +7,7 @@ class UAnimSequence;
 class USkeletalMesh;
 class AAIController;
 class UCoHPowerComponent;
+class UCoHActiveRagdoll;
 UENUM(BlueprintType)
 enum class ECoHEnemyState : uint8 { Idle, Chase, Attack, Hit, ReturnHome, Dead };
 /** What a villain looks like, sent from the host so every player sees the
@@ -55,6 +56,8 @@ public:
  FVector Home;
  /** Health, defence and powers come from the original critter class tables. */
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TObjectPtr<UCoHPowerComponent> Powers;
+ /** Rigid bodies with muscles: flinches, knocks, defeat and get-up (CoHActiveRagdoll.h). */
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TObjectPtr<UCoHActiveRagdoll> Ragdoll;
  /** Set up from the enemy catalog (mesh + idle/run/attack/hit/death clips). */
  void InitializeFromCatalog(const TMap<FString,FString>& Entry, const FString& Faction, const FString& RankClass, int32 InLevel);
  /** Set up from the original enemy kit (kit.json): the villain's model from
@@ -129,8 +132,13 @@ private:
  void PublishLook();
  UPROPERTY(ReplicatedUsing=OnRep_Look) FCoHEnemyLook NetLook;
  UFUNCTION() void OnRep_Look();
- UFUNCTION(NetMulticast, Reliable) void MulticastRagdoll(FVector_NetQuantize10 LaunchVelocity);
- void DoRagdoll(FVector LaunchVelocity);
+ UFUNCTION(NetMulticast, Reliable) void MulticastRagdoll(FVector_NetQuantize10 LaunchVelocity, bool bDefeated);
+ void DoRagdoll(FVector LaunchVelocity, bool bDefeated);
+ /** Host: the body has settled; every PC stands it up at Destination facing Yaw. */
+ UFUNCTION(NetMulticast, Reliable) void MulticastGetUp(FVector_NetQuantize Destination, float Yaw);
+ void FinishGetUp();
+ /** The villain's own move clip by name (knockback, knockdown, getup), on any PC. */
+ UAnimSequence* ReactionClip(const TCHAR* Move) const;
  void BindPowers();
  FName PickAttack(float Distance, float& OutReach) const;
  bool Think(float Delta, class AAIController* AI);
@@ -160,9 +168,10 @@ public:
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat") TObjectPtr<UAnimSequence> DeathClip;
 private:
  void RecoverRagdoll();
- bool bRagdoll = false;
+ bool bRagdoll = false;       // on the ground or getting up: the brain waits
+ bool bGettingUp = false;
  double RagdollStarted = 0;
- FTimerHandle RagdollTimer;
+ FTimerHandle RagdollTimer, GetUpTimer;
  FTimerHandle AttackTimer, ReactionTimer;
  double NextAttackTime = 0;
  double NextPathTime = 0;
