@@ -39,6 +39,9 @@ struct FCoHBodyPose
 	UAnimSequenceBase* B = nullptr; float TimeB = 0.f;
 	float Alpha = 1.f;          // weight of A
 	float Lean = 0.f;           // degrees the neck and head tilt forward on top of the pose
+	/** A held pose (bone-local, by mesh bone index) blended over the result: the get-up from a ragdoll. */
+	TSharedPtr<const TArray<FTransform>> From;
+	float FromAlpha = 0.f;      // weight of From
 };
 
 struct FCoHBodyAnimProxy : public FAnimInstanceProxy
@@ -85,6 +88,9 @@ public:
 	void LeanHead(float Degrees, float Seconds) { LeanTarget = Degrees; LeanHold = Seconds; }
 	/** Holds the current pose (death); cleared by SetBase or PlaySegments. */
 	void Freeze(bool bOn) { bFrozen = bOn; }
+	/** Starts from this pose (bone-local transforms by mesh bone index, e.g.
+	 *  where a ragdoll lies) and crossfades into the playing clip over Seconds. */
+	void BlendFromPose(TArray<FTransform>&& MeshLocal, float Seconds);
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override { return new FCoHBodyAnimProxy(this); }
@@ -107,6 +113,8 @@ private:
 	float SegRate = 1.f;
 	double CombatUntil = 0.0;
 	float LeanTarget = 0.f, LeanHold = 0.f, LeanNow = 0.f;
+	TSharedPtr<const TArray<FTransform>> FromPose;
+	float FromLeft = 0.f, FromTotal = 0.f;
 	bool bWasFalling = false;
 	float LandLeft = 0.f;
 };

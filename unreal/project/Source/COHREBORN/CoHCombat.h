@@ -7,8 +7,26 @@ class UAnimSequence;
 class USkeletalMesh;
 class AAIController;
 class UCoHPowerComponent;
+class UCoHActiveRagdoll;
 UENUM(BlueprintType)
 enum class ECoHEnemyState : uint8 { Idle, Chase, Attack, Hit, ReturnHome, Dead };
+/** What a villain looks like, sent from the host so every player sees the
+ *  same model and clips (the host picks them: a random costume, the catalog). */
+USTRUCT()
+struct FCoHEnemyLook
+{
+ GENERATED_BODY()
+ UPROPERTY() TObjectPtr<USkeletalMesh> Mesh;
+ /** Kit villains run the CoH body anim (power moves); others play single clips. */
+ UPROPERTY() bool bBodyAnim = false;
+ UPROPERTY() float MeshYaw = 180.f;
+ UPROPERTY() FVector MeshScale = FVector::OneVector;
+ UPROPERTY() TObjectPtr<UAnimSequence> Idle;
+ UPROPERTY() TObjectPtr<UAnimSequence> Run;
+ UPROPERTY() TObjectPtr<UAnimSequence> Attack;
+ UPROPERTY() TObjectPtr<UAnimSequence> Hit;
+ UPROPERTY() TObjectPtr<UAnimSequence> Death;
+};
 /** Runtime combat pawn. Original encounter actors remain editable layout previews. */
 UCLASS()
 class COHREBORN_API ACoHCombatEnemy : public ACharacter
@@ -21,7 +39,9 @@ public:
  virtual void BeginPlay() override;
  virtual void Tick(float DeltaSeconds) override;
  virtual float TakeDamage(float Damage, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer) override;
- UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") ECoHEnemyState State = ECoHEnemyState::Idle;
+ /** Replicated: each player's PC plays the state's clip itself. */
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_State, Category="CoH|Combat") ECoHEnemyState State = ECoHEnemyState::Idle;
+ virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") float Health = 100.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat") float AggroRange = 1500.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat") float LeashRange = 2400.f;
@@ -36,6 +56,8 @@ public:
  FVector Home;
  /** Health, defence and powers come from the original critter class tables. */
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TObjectPtr<UCoHPowerComponent> Powers;
+ /** Rigid bodies with muscles: flinches, knocks, defeat and get-up (CoHActiveRagdoll.h). */
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TObjectPtr<UCoHActiveRagdoll> Ragdoll;
  /** Set up from the enemy catalog (mesh + idle/run/attack/hit/death clips). */
  void InitializeFromCatalog(const TMap<FString,FString>& Entry, const FString& Faction, const FString& RankClass, int32 InLevel);
  /** Set up from the original enemy kit (kit.json): the villain's model from
@@ -50,12 +72,12 @@ public:
  /** The encounter's idle behavior (AI_InActive, e.g. <<PL_SprayPaint>>): its
   *  moves loop while the villain is idle, and it holds its spot. */
  void SetEncounterIdle(const FString& Behavior);
- UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString KitModel;
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category="CoH|Combat") FString KitModel;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString EncounterIdle;
  /** Use a villain definition from the rules (class, rank, powers). Auto
   *  powers (inherent resistances...) run all the time; click powers are its attacks. */
  void ApplyVillain(const FString& VillainName, int32 InLevel);
- UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString Villain;
+ UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category="CoH|Combat") FString Villain;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") TArray<FName> Attacks;
  // power system hooks (server)
  void OnHurt(AActor* Causer, float Damage = 0.f);
@@ -103,6 +125,20 @@ public:
  void GoToActor(AActor* Who, float Acceptance);
 private:
  void SetState(ECoHEnemyState Next);
+ /** The clip for a state (server and clients alike). */
+ void PlayStateClip(ECoHEnemyState Next);
+ UFUNCTION() void OnRep_State();
+ /** Host: copy the model and clips just set up into NetLook. */
+ void PublishLook();
+ UPROPERTY(ReplicatedUsing=OnRep_Look) FCoHEnemyLook NetLook;
+ UFUNCTION() void OnRep_Look();
+ UFUNCTION(NetMulticast, Reliable) void MulticastRagdoll(FVector_NetQuantize10 LaunchVelocity, bool bDefeated);
+ void DoRagdoll(FVector LaunchVelocity, bool bDefeated);
+ /** Host: the body has settled; every PC stands it up at Destination facing Yaw. */
+ UFUNCTION(NetMulticast, Reliable) void MulticastGetUp(FVector_NetQuantize Destination, float Yaw);
+ void FinishGetUp();
+ /** The villain's own move clip by name (knockback, knockdown, getup), on any PC. */
+ UAnimSequence* ReactionClip(const TCHAR* Move) const;
  void BindPowers();
  FName PickAttack(float Distance, float& OutReach) const;
  bool Think(float Delta, class AAIController* AI);
@@ -132,9 +168,10 @@ public:
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat") TObjectPtr<UAnimSequence> DeathClip;
 private:
  void RecoverRagdoll();
- bool bRagdoll = false;
+ bool bRagdoll = false;       // on the ground or getting up: the brain waits
+ bool bGettingUp = false;
  double RagdollStarted = 0;
- FTimerHandle RagdollTimer;
+ FTimerHandle RagdollTimer, GetUpTimer;
  FTimerHandle AttackTimer, ReactionTimer;
  double NextAttackTime = 0;
  double NextPathTime = 0;

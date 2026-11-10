@@ -1,6 +1,7 @@
 #include "CoHCombat.h"
 #include "CoHPowers.h"
 #include "CoHBodyAnim.h"
+#include "CoHActiveRagdoll.h"
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -25,6 +26,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #if WITH_EDITOR
 #include "PhysicsAssetUtils.h"
@@ -46,6 +48,7 @@ ACoHCombatEnemy::ACoHCombatEnemy()
  GetCharacterMovement()->MaxWalkSpeed=360;
  Tags.Add(TEXT("CoHCombatEnemy"));
  Powers=CreateDefaultSubobject<UCoHPowerComponent>(TEXT("Powers"));
+ Ragdoll=CreateDefaultSubobject<UCoHActiveRagdoll>(TEXT("ActiveRagdoll"));
  Powers->bPlayerSide=false;
  Powers->ClassName=TEXT("Class_Minion_Grunt");
  Powers->Level=5;
@@ -75,6 +78,7 @@ void ACoHCombatEnemy::InitializeFromCatalog(const TMap<FString,FString>& Entry,c
  if(const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this))
   if(const FCoHClassDef* C=DB->FindClass(RankClass)) AttackDamage=FMath::Max(1.f,-C->TableValue(TEXT("Melee_Damage"),InLevel));
  Powers->InitStats();
+ PublishLook();
  SpawnDefaultController();
 }
 void ACoHCombatEnemy::ApplyVillain(const FString& VillainName,int32 InLevel)
@@ -206,6 +210,7 @@ bool ACoHCombatEnemy::InitializeFromKit(const FString& VillainName,int32 InLevel
  GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
  Faction=K->Group;
  Powers->Body=K->SeqType;
+ PublishLook();
  ApplyVillain(VillainName,InLevel);
  if(Villain.IsEmpty())
  {
@@ -252,6 +257,8 @@ void ACoHCombatEnemy::InitializeFromPreview(AActor* Preview,const TMap<FString,F
  GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
  if(IdleClip) GetMesh()->PlayAnimation(IdleClip,true);
  GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+ MeshYaw=180.f;
+ PublishLook();
  SpawnDefaultController();
 }
 bool ACoHCombatEnemy::CanSee(APawn* Pawn) const
@@ -267,6 +274,10 @@ void ACoHCombatEnemy::SetState(ECoHEnemyState Next)
  State=Next;
  // a chase at the original base run speed (about 21 ft/s); strolls set their own
  if(Next==ECoHEnemyState::Chase) GetCharacterMovement()->MaxWalkSpeed=640.f;
+ PlayStateClip(Next);
+}
+void ACoHCombatEnemy::PlayStateClip(ECoHEnemyState Next)
+{
  UAnimSequence* Clip=Next==ECoHEnemyState::Chase || Next==ECoHEnemyState::ReturnHome ? RunClip : Next==ECoHEnemyState::Attack ? AttackClip : Next==ECoHEnemyState::Hit ? HitClip : Next==ECoHEnemyState::Dead ? DeathClip : IdleClip;
  if(!Clip) Clip=IdleClip;
  if(UCoHBodyAnim* BA=BodyAnim())
@@ -435,56 +446,125 @@ void ACoHCombatEnemy::BeginPlay()
 
 void ACoHCombatEnemy::LaunchRagdoll(FVector LaunchVelocity)
 {
+ // the host decides; every PC (the host too) throws the body
+ if(HasAuthority()) MulticastRagdoll(LaunchVelocity,IsDead());
+}
+void ACoHCombatEnemy::MulticastRagdoll_Implementation(FVector_NetQuantize10 LaunchVelocity,bool bDefeated)
+{
+ DoRagdoll(LaunchVelocity,bDefeated);
+}
+UAnimSequence* ACoHCombatEnemy::ReactionClip(const TCHAR* Move) const
+{
+ // the villain's own move (clips are named after moves); any PC can look it up
+ const UCoHGameRules* R=UCoHGameRules::Get(this);
+ if(!R || KitModel.IsEmpty()) return nullptr;
+ return Cast<UAnimSequence>(R->ClipIn(R->EnemyRoot/KitModel,Move));
+}
+void ACoHCombatEnemy::DoRagdoll(FVector LaunchVelocity,bool bDefeated)
+{
  USkeletalMeshComponent* BodyMesh = GetMesh();
  UPhysicsAsset* Physics = BodyMesh->GetPhysicsAsset();
  if (!Physics || Physics->SkeletalBodySetups.Num()==0)
  {
   UE_LOG(LogTemp, Warning, TEXT("CoH ragdoll unavailable: %s has no physics bodies"), *GetName());
-  if (!IsDead()) LaunchCharacter(LaunchVelocity,true,true);
+  if (!bDefeated && HasAuthority()) LaunchCharacter(LaunchVelocity,true,true);
   return;
  }
  GetWorldTimerManager().ClearTimer(AttackTimer);
  GetWorldTimerManager().ClearTimer(ReactionTimer);
+ GetWorldTimerManager().ClearTimer(GetUpTimer);
+ const bool bAlreadyDown=bRagdoll && !bGettingUp;
+ bGettingUp=false;
  if (auto* AI=Cast<AAIController>(GetController())) AI->StopMovement();
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->DisableMovement();
  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
- BodyMesh->SetCollisionProfileName(TEXT("Ragdoll"));
- BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
- BodyMesh->SetEnableGravity(true);
- BodyMesh->SetAllBodiesSimulatePhysics(true);
- BodyMesh->WakeAllRigidBodies();
- BodyMesh->AddImpulse(LaunchVelocity,NAME_None,true);
+ // the pose the muscles hold while it flies: the original knock move (a
+ // short shove plays the knockdown); defeated, the death move already plays
+ if (UCoHBodyAnim* BA=BodyAnim()) BA->StopSegments();
+ if (!bDefeated && !bAlreadyDown)
+ {
+  const bool bShove=LaunchVelocity.Size2D()<400.f && LaunchVelocity.Z<400.f;
+  UAnimSequence* Pose=ReactionClip(bShove?TEXT("knockdown"):TEXT("knockback"));
+  if(!Pose) Pose=ReactionClip(bShove?TEXT("knockback"):TEXT("knockdown"));
+  if(Pose) PlayClip(Pose,false);
+ }
+ if (!Ragdoll || !Ragdoll->StartRagdoll(LaunchVelocity,bDefeated))
+ {
+  BodyMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+  BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  BodyMesh->SetEnableGravity(true);
+  BodyMesh->SetAllBodiesSimulatePhysics(true);
+  BodyMesh->WakeAllRigidBodies();
+  BodyMesh->AddImpulse(LaunchVelocity,NAME_None,true);
+ }
  bRagdoll=true;
  RagdollStarted=GetWorld()->GetTimeSeconds();
- if (!IsDead()) GetWorldTimerManager().SetTimer(RagdollTimer,this,&ACoHCombatEnemy::RecoverRagdoll,1.f,false);
+ // only the host decides when it gets up (MulticastGetUp), so every PC
+ // stands it up at the same spot
+ if (bDefeated) GetWorldTimerManager().ClearTimer(RagdollTimer);
+ else if (HasAuthority()) GetWorldTimerManager().SetTimer(RagdollTimer,this,&ACoHCombatEnemy::RecoverRagdoll,1.f,false);
 }
 void ACoHCombatEnemy::RecoverRagdoll()
 {
- if (IsDead()) return;
+ if (IsDead() || !HasAuthority()) return;
  USkeletalMeshComponent* BodyMesh=GetMesh();
- const FVector Body=BodyMesh->GetBoneLocation(BodyMesh->GetBoneName(0));
+ const FVector Body=Ragdoll ? Ragdoll->PelvisLocation() : BodyMesh->GetBoneLocation(BodyMesh->GetBoneName(0));
  FHitResult Floor;
  FCollisionQueryParams Params(SCENE_QUERY_STAT(CoHRagdollLanding),false,this);
  const bool bFloor=GetWorld()->LineTraceSingleByChannel(Floor,Body+FVector(0,0,40),Body-FVector(0,0,220),ECC_Visibility,Params) && Floor.ImpactNormal.Z>.5f;
- const bool bSettled=BodyMesh->GetPhysicsLinearVelocity().Size()<160.f;
+ const bool bSettled=Ragdoll ? Ragdoll->IsSettled(120.f) : BodyMesh->GetPhysicsLinearVelocity().Size()<160.f;
  if ((!bFloor || !bSettled) && GetWorld()->GetTimeSeconds()-RagdollStarted<8.f)
  {
   GetWorldTimerManager().SetTimer(RagdollTimer,this,&ACoHCombatEnemy::RecoverRagdoll,.25f,false);
   return;
  }
- BodyMesh->SetAllBodiesSimulatePhysics(false);
- BodyMesh->SetSimulatePhysics(false);
- BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
- BodyMesh->AttachToComponent(GetCapsuleComponent(),FAttachmentTransformRules::KeepRelativeTransform);
- BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
  FVector Destination=bFloor ? Floor.ImpactPoint+FVector(0,0,92) : Home;
  FHitResult Block;
  if (GetWorld()->SweepSingleByChannel(Block,Destination,Destination,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(36,90),Params)) Destination=Home;
- SetActorLocation(Destination,false,nullptr,ETeleportType::TeleportPhysics);
+ bool bFaceUp=true;
+ const float Yaw=Ragdoll ? Ragdoll->GetUpYaw(bFaceUp) : GetActorRotation().Yaw;
+ MulticastGetUp(Destination,Yaw);
+}
+void ACoHCombatEnemy::MulticastGetUp_Implementation(FVector_NetQuantize Destination,float Yaw)
+{
+ if (!bRagdoll || IsDead()) return;
+ USkeletalMeshComponent* BodyMesh=GetMesh();
+ GetWorldTimerManager().ClearTimer(RagdollTimer);
+ // where the mesh will sit once the capsule stands at Destination
+ const FTransform Capsule(FRotator(0,Yaw,0),FVector(Destination));
+ const FTransform MeshAt=FTransform(FRotator(0,MeshYaw,0),FVector(0,0,-90),BodyMesh->GetRelativeScale3D())*Capsule;
+ TArray<FTransform> Lying;
+ const bool bPose=Ragdoll && Ragdoll->CaptureLocalPose(MeshAt,Lying);
+ if (Ragdoll) Ragdoll->StopPhysics();
+ else
+ {
+  BodyMesh->SetAllBodiesSimulatePhysics(false);
+  BodyMesh->SetSimulatePhysics(false);
+  BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+ }
+ BodyMesh->AttachToComponent(GetCapsuleComponent(),FAttachmentTransformRules::KeepRelativeTransform);
+ BodyMesh->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
+ SetActorLocationAndRotation(Destination,FRotator(0,Yaw,0),false,nullptr,ETeleportType::TeleportPhysics);
+ if (AController* C=GetController()) C->SetControlRotation(FRotator(0,Yaw,0));
  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
- GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+ // stand up with the original GetUp move, starting from how the body lies
+ UAnimSequence* GetUp=ReactionClip(TEXT("getup"));
+ float Seconds=.3f;
+ if (GetUp){ PlayClip(GetUp,false); Seconds=FMath::Max(.3f,GetUp->GetPlayLength()); }
+ else PlayStateClip(State);
+ if (bPose)
+  if (UCoHBodyAnim* BA=BodyAnim()) BA->BlendFromPose(MoveTemp(Lying),Ragdoll->GetUpBlendSeconds);
+ bGettingUp=true;
+ GetWorldTimerManager().SetTimer(GetUpTimer,this,&ACoHCombatEnemy::FinishGetUp,Seconds,false);
+}
+void ACoHCombatEnemy::FinishGetUp()
+{
+ bGettingUp=false;
  bRagdoll=false;
+ if (IsDead()) return;
+ if (!HasAuthority()) { PlayStateClip(State); return; }
+ GetCharacterMovement()->SetMovementMode(MOVE_Falling);
  State=ECoHEnemyState::Hit;
  SetState(ECoHEnemyState::Idle);
 }
@@ -1252,4 +1332,49 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  G.Id=NextGroupId++; G.NextHarass=W->GetTimeSeconds()+1e9;
  Groups.Add(MoveTemp(G));
  return true;
+}
+
+// ------------------------------------------------------------------ multiplayer
+void ACoHCombatEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+ DOREPLIFETIME(ACoHCombatEnemy, State);
+ DOREPLIFETIME(ACoHCombatEnemy, Villain);
+ DOREPLIFETIME(ACoHCombatEnemy, KitModel);
+ DOREPLIFETIME(ACoHCombatEnemy, NetLook);
+}
+void ACoHCombatEnemy::PublishLook()
+{
+ if(!HasAuthority()) return;
+ FCoHEnemyLook L;
+ L.Mesh=GetMesh()->GetSkeletalMeshAsset();
+ L.bBodyAnim=BodyAnim()!=nullptr;
+ L.MeshYaw=MeshYaw;
+ L.MeshScale=GetMesh()->GetRelativeScale3D();
+ L.Idle=IdleClip; L.Run=RunClip; L.Attack=AttackClip; L.Hit=HitClip; L.Death=DeathClip;
+ NetLook=L;
+}
+void ACoHCombatEnemy::OnRep_Look()
+{
+ // a player's PC: the same model and clips the host chose
+ const FCoHEnemyLook& L=NetLook;
+ if(!L.Mesh) return;
+ GetMesh()->SetSkeletalMeshAsset(L.Mesh);
+ MeshYaw=L.MeshYaw;
+ GetMesh()->SetRelativeLocationAndRotation(FVector(0,0,-90),FRotator(0,MeshYaw,0));
+ GetMesh()->SetRelativeScale3D(L.MeshScale);
+ IdleClip=L.Idle; RunClip=L.Run; AttackClip=L.Attack; HitClip=L.Hit; DeathClip=L.Death;
+ if(L.bBodyAnim)
+ {
+  GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+  GetMesh()->SetAnimInstanceClass(UCoHBodyAnim::StaticClass());
+  if(UCoHBodyAnim* BA=BodyAnim()){ BA->bAutoLocomotion=false; if(IdleClip) BA->SetBase(IdleClip,true); }
+ }
+ else GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+ GetMesh()->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+ if(!bRagdoll) PlayStateClip(State);
+}
+void ACoHCombatEnemy::OnRep_State()
+{
+ if(!bRagdoll) PlayStateClip(State);
 }

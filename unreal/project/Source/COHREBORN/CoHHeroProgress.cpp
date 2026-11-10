@@ -2,6 +2,11 @@
 #include "CoHPowers.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerState.h"
+#include "HAL/FileManager.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Net/UnrealNetwork.h"
 
 UCoHHeroProgress::UCoHHeroProgress()
@@ -31,23 +36,77 @@ bool UCoHHeroProgress::LoadHeroFile(const FString& File)
 	if (!R || GetOwnerRole() != ROLE_Authority) return false;
 	FCoHHeroRecord H;
 	if (!R->LoadHero(File, H)) return false;
+	LoadHeroRecord(H);
+	return true;
+}
+
+FString UCoHHeroProgress::LocalHeroDir() { return FPaths::ProjectSavedDir() / TEXT("Heroes"); }
+
+void UCoHHeroProgress::ApplyLooks(const TArray<FCoHPowerLook>& Looks)
+{
+	UCoHPowerComponent* P = Powers();
+	if (!P) return;
+	for (const FCoHPowerLook& K : Looks)
+	{
+		FCoHPowerStyle& S = P->Styles.FindOrAdd(K.Power);
+		S.Emitter = (ECoHEmitter)FMath::Clamp(K.Emitter, 0, 8); S.bCustomEmitter = K.bEmitter;
+		S.Tint = K.Tint; S.Tint2 = K.Tint2; S.Theme = K.Theme;
+		S.bCustomPoint = K.bPoint; S.PointBone = K.PointBone; S.PointOffset = K.PointOffset;
+		S.Clip = K.Clip.IsEmpty() ? FSoftObjectPath() : FSoftObjectPath(K.Clip);
+	}
+}
+
+TArray<FCoHPowerLook> UCoHHeroProgress::LooksFromStyles() const
+{
+	TArray<FCoHPowerLook> Out;
+	if (const UCoHPowerComponent* P = Powers())
+		for (const TPair<FName, FCoHPowerStyle>& KV : P->Styles)
+		{
+			const FCoHPowerStyle& S = KV.Value;
+			if (!S.bCustomEmitter && S.Tint.A <= 0.f && S.Tint2.A <= 0.f && S.Theme < 0 && !S.Clip.IsValid()) continue;     // nothing changed
+			FCoHPowerLook K;
+			K.Power = KV.Key; K.Emitter = (int32)S.Emitter; K.bEmitter = S.bCustomEmitter;
+			K.Tint = S.Tint; K.Tint2 = S.Tint2; K.Theme = S.Theme;
+			K.bPoint = S.bCustomPoint; K.PointBone = S.PointBone; K.PointOffset = S.PointOffset;
+			K.Clip = S.Clip.IsValid() ? S.Clip.ToString() : FString();
+			Out.Add(K);
+		}
+	return Out;
+}
+
+void UCoHHeroProgress::OnRep_Hero()
+{
+	// other players' heroes: their powers in their own colours. The owner's
+	// styles are already its own (and may be mid-edit in the customize panel).
+	const APawn* Pawn = Cast<APawn>(GetOwner());
+	if (Pawn && !Pawn->IsLocallyControlled()) ApplyLooks(Hero.Looks);
+}
+
+void UCoHHeroProgress::SaveLooks()
+{
+	if (!bHasRecord) return;
+	if (GetOwnerRole() == ROLE_Authority) { Hero.Looks = LooksFromStyles(); Save(); }
+	else ServerSetLooks(LooksFromStyles());
+}
+
+void UCoHHeroProgress::ServerSetLooks_Implementation(const TArray<FCoHPowerLook>& Looks)
+{
+	if (!bHasRecord) return;
+	ApplyLooks(Looks);
+	Hero.Looks = Looks;
+	Save();
+}
+
+void UCoHHeroProgress::LoadHeroRecord(const FCoHHeroRecord& H)
+{
+	if (GetOwnerRole() != ROLE_Authority) return;
 	Hero = H;
 	bHasRecord = true;
-	SaveFile = FPaths::GetCleanFilename(File).Replace(TEXT(".json"), TEXT("")) + TEXT("_save.json");
 	Apply(true);
 	// the powers the hero restyled
-	if (UCoHPowerComponent* P = Powers())
-		for (const FCoHPowerLook& K : Hero.Looks)
-		{
-			FCoHPowerStyle& S = P->Styles.FindOrAdd(K.Power);
-			S.Emitter = (ECoHEmitter)FMath::Clamp(K.Emitter, 0, 8); S.bCustomEmitter = K.bEmitter;
-			S.Tint = K.Tint; S.Tint2 = K.Tint2; S.Theme = K.Theme;
-			S.bCustomPoint = K.bPoint; S.PointBone = K.PointBone; S.PointOffset = K.PointOffset;
-			S.Clip = K.Clip.IsEmpty() ? FSoftObjectPath() : FSoftObjectPath(K.Clip);
-		}
+	ApplyLooks(Hero.Looks);
 	UE_LOG(LogTemp, Log, TEXT("CoH hero: %s, %s level %d (%d XP), %s / %s, %d picks, preset %s"), *Hero.Name, *Hero.Class, Hero.Level, Hero.XP,
 		*Hero.Primary, *Hero.Secondary, Hero.Picks.Num(), *Hero.Preset);
-	return true;
 }
 
 void UCoHHeroProgress::Apply(bool bRefillTray)
@@ -183,26 +242,30 @@ void UCoHHeroProgress::ServerUseInspiration_Implementation(int32 Index)
 	if (UCoHPowerComponent* C = Powers()) C->UseFreePower(P);
 }
 
-void UCoHHeroProgress::Save() const
+void UCoHHeroProgress::Save()
 {
 	const UCoHGameRules* R = UCoHGameRules::Get(this);
-	if (!R || !bHasRecord || SaveFile.IsEmpty()) return;
+	if (!R || !bHasRecord || GetOwnerRole() != ROLE_Authority) return;
 	// the powers' looks are the component's styles: written as they stand
 	FCoHHeroRecord Out = Hero;
-	Out.Looks.Reset();
-	if (const UCoHPowerComponent* P = Powers())
-		for (const TPair<FName, FCoHPowerStyle>& KV : P->Styles)
-		{
-			const FCoHPowerStyle& S = KV.Value;
-			if (!S.bCustomEmitter && S.Tint.A <= 0.f && S.Tint2.A <= 0.f && S.Theme < 0 && !S.Clip.IsValid()) continue;     // nothing changed
-			FCoHPowerLook K;
-			K.Power = KV.Key; K.Emitter = (int32)S.Emitter; K.bEmitter = S.bCustomEmitter;
-			K.Tint = S.Tint; K.Tint2 = S.Tint2; K.Theme = S.Theme;
-			K.bPoint = S.bCustomPoint; K.PointBone = S.PointBone; K.PointOffset = S.PointOffset;
-			K.Clip = S.Clip.IsValid() ? S.Clip.ToString() : FString();
-			Out.Looks.Add(K);
-		}
-	R->SaveHero(SaveFile, Out);
+	Out.Looks = LooksFromStyles();
+	const FString Json = R->HeroToJson(Out);
+	// the player's own PC keeps the hero (a Client call runs locally for the host's own hero)
+	ClientSaveHero(Json);
+	// the host keeps a backup per player, in case a PC loses its file
+	FString Player = TEXT("Player");
+	if (const APawn* Pawn = Cast<APawn>(GetOwner()))
+		if (const APlayerState* PS = Pawn->GetPlayerState()) Player = PS->GetPlayerName();
+	const FString Backup = FPaths::ProjectSavedDir() / TEXT("HeroBackups") / FPaths::MakeValidFileName(Player) / FPaths::MakeValidFileName(Out.Name) + TEXT(".json");
+	FFileHelper::SaveStringToFile(Json, *Backup);
+}
+
+void UCoHHeroProgress::ClientSaveHero_Implementation(const FString& Json)
+{
+	if (SaveFile.IsEmpty()) return;
+	const FString Path = LocalHeroDir() / SaveFile;
+	if (FFileHelper::SaveStringToFile(Json, *Path)) { UE_LOG(LogTemp, Log, TEXT("CoH hero saved: %s"), *Path); }
+	else { UE_LOG(LogTemp, Warning, TEXT("CoH hero: could not save %s"), *Path); }
 }
 
 void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& Rank, const FString& Group)
