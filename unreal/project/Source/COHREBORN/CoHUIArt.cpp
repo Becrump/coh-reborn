@@ -102,7 +102,7 @@ const FCoHTex* FCoHUIArt::Tex(const FString& InName)
 	Load();
 	FString Key = FPaths::GetBaseFilename(InName).ToLower();
 	if (Key == TEXT("white")) return &WhiteTex;
-	if (const FCoHTex* Hit = Cache.Find(Key)) return Hit;
+	if (const TUniquePtr<FCoHTex>* Hit = Cache.Find(Key)) return Hit->Get();
 	const FEntry* E = Entries.Find(Key);
 	if (!E)
 	{
@@ -113,16 +113,18 @@ const FCoHTex* FCoHUIArt::Tex(const FString& InName)
 		}
 		return &WhiteTex;
 	}
-	FCoHTex T;
+	TUniquePtr<FCoHTex> T = MakeUnique<FCoHTex>();
 	// Slate reads the PNG itself on first draw (as the loading screen does)
-	T.Brush = MakeShared<FSlateDynamicImageBrush>(FName(*E->Path), FVector2D(E->W, E->H));
-	T.W = E->W;
-	T.H = E->H;
-	return &Cache.Add(Key, T);
+	T->Brush = MakeShared<FSlateDynamicImageBrush>(FName(*E->Path), FVector2D(E->W, E->H));
+	T->W = E->W;
+	T->H = E->H;
+	return Cache.Add(Key, MoveTemp(T)).Get();
 }
 
 FSlateFontInfo FCoHUIArt::Font(ECoHFont Kind, float PixelSize, bool bOutline)
 {
+	const uint32 Key = (uint32(Kind) << 24) | (uint32(bOutline) << 23) | (uint32(FMath::RoundToInt(PixelSize * 10.f)) & 0x7fffff);
+	if (const FSlateFontInfo* Hit = Fonts.Find(Key)) return *Hit;
 	const TCHAR* File = TEXT("mont_demibold.ttf");
 	switch (Kind)
 	{
@@ -144,6 +146,7 @@ FSlateFontInfo FCoHUIArt::Font(ECoHFont Kind, float PixelSize, bool bOutline)
 		F.OutlineSettings.OutlineSize = 1;
 		F.OutlineSettings.OutlineColor = FLinearColor::Black;
 	}
+	Fonts.Add(Key, F);
 	return F;
 }
 
@@ -154,14 +157,14 @@ FCoHPainter::FCoHPainter() { Items.Reserve(512); }
 
 void FCoHPainter::Sprite(const FCoHTex* T, float X, float Y, float Z, float XSc, float YSc, uint32 Rgba)
 {
-	if (!T || !T->Brush.IsValid() || (Rgba & 0xff) == 0) return;
+	if (!T || !T->Get() || (Rgba & 0xff) == 0) return;
 	const float W = T->W * XSc, H = T->H * YSc;
 	if (W <= 0.f || H <= 0.f) return;
 	FItem& I = Items.AddDefaulted_GetRef();
 	I.Kind = EKind::Sprite;
 	I.Z = Z;
 	I.Order = Items.Num();
-	I.Brush = T->Brush.Get();
+	I.Brush = T->Get();
 	I.Pos = FVector2f(X, Y);
 	I.Size = FVector2f(W, H);
 	I.Colour = CoHColor(Rgba);

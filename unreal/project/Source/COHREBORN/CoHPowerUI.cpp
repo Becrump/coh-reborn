@@ -6,6 +6,8 @@
 #include "DrawDebugHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "CoHHeroProgress.h"
+#include "CoHOriginalHud.h"
+#include "CoHUIArt.h"
 #include "Animation/AnimSequence.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/SkeletalMesh.h"
@@ -45,6 +47,10 @@ void SCoHHud::Construct(const FArguments& InArgs)
 	TSharedRef<SHorizontalBox> Tray = SNew(SHorizontalBox);
 	for (int32 i = 0; i < 10; ++i) Tray->AddSlot().AutoWidth().Padding(3.f)[MakeSlot(i)];
 
+	// the original HUD (CoHOriginalHud) when its art is in Content/UI; else this plain test HUD
+	const bool bOriginal = FCoHUIArt::Get().IsAvailable();
+	const EVisibility PlainVis = bOriginal ? EVisibility::Collapsed : EVisibility::SelfHitTestInvisible;
+
 	ChildSlot
 	[
 		SNew(SOverlay)
@@ -52,6 +58,7 @@ void SCoHHud::Construct(const FArguments& InArgs)
 		+ SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top).Padding(20.f)
 		[
 			SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(Panel).Padding(10.f)
+			.Visibility(PlainVis)
 			[
 				SNew(SBox).WidthOverride(260.f)
 				[
@@ -114,7 +121,7 @@ void SCoHHud::Construct(const FArguments& InArgs)
 		+ SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Top).Padding(0, 20, 0, 0)
 		[
 			SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(Panel).Padding(10.f)
-			.Visibility_Lambda([this] { return TargetComp() ? EVisibility::HitTestInvisible : EVisibility::Collapsed; })
+			.Visibility_Lambda([this, bOriginal] { return TargetComp() && !bOriginal ? EVisibility::HitTestInvisible : EVisibility::Collapsed; })
 			[
 				SNew(SBox).WidthOverride(300.f)
 				[
@@ -134,7 +141,7 @@ void SCoHHud::Construct(const FArguments& InArgs)
 		// power tray, bottom centre
 		+ SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Bottom).Padding(0, 0, 0, 24)
 		[
-			SNew(SVerticalBox)
+			SNew(SVerticalBox).Visibility(PlainVis)
 			+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 0, 0, 4)
 			[
 				SNew(STextBlock).Font(Font(10)).ColorAndOpacity(FLinearColor(1, 1, 1, 0.7f))
@@ -144,6 +151,21 @@ void SCoHHud::Construct(const FArguments& InArgs)
 			[
 				SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(Panel).Padding(6.f)[Tray]
 			]
+		]
+		// the original windows: status, target, power tray, inspirations
+		+ SOverlay::Slot()
+		[
+			SNew(SCoHOriginalHud)
+			.Visibility(bOriginal ? EVisibility::Visible : EVisibility::Collapsed)
+			.Player(Player)
+			.IconFor([this](FName P) { return IconFor(P); })
+			.SelectedSlot([this] { return IsBrowserOpen() || (Bench.IsValid() && Bench->GetVisibility() == EVisibility::Visible) ? SelectedSlot : -1; })
+			.OnSlotClicked([this](int32 Index, bool bCtrl)
+			{
+				if (IsBrowserOpen() || (Bench.IsValid() && Bench->GetVisibility() == EVisibility::Visible)) { SelectedSlot = Index; return; }
+				if (UCoHPowerComponent* C = Me()) { if (bCtrl) C->ToggleAutoSlot(Index); else C->ActivateSlot(Index); }
+			})
+			.OnCommand([this](const FString& Command) { if (Command == TEXT("powers")) ToggleBrowser(); })
 		]
 		// power browser
 		+ SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)

@@ -16,11 +16,14 @@ class FSlateWindowElementList;
 struct FGeometry;
 
 /** One original texture: the brush plus its ORIGINAL size (the archive stored
- *  most GUI art stretched to a power of two; the UI code places by this size). */
+*  most GUI art padded out to a power of two; the PNGs are cropped back and the UI code places by this size). */
 struct FCoHTex
 {
 	TSharedPtr<FSlateBrush> Brush;
+	/** A brush owned elsewhere (power icons from the power database). */
+	const FSlateBrush* External = nullptr;
 	float W = 1.f, H = 1.f;
+	const FSlateBrush* Get() const { return Brush.IsValid() ? Brush.Get() : External; }
 };
 
 /** The original font contexts (sprite_font.c): game_* is Mont DemiBold,
@@ -47,8 +50,9 @@ private:
 	bool bLoaded = false;
 	struct FEntry { float W = 1.f, H = 1.f; FString Path; };
 	TMap<FString, FEntry> Entries;
-	TMap<FString, FCoHTex> Cache;
+	TMap<FString, TUniquePtr<FCoHTex>> Cache;   // stable addresses
 	TSet<FString> Missing;
+	TMap<uint32, FSlateFontInfo> Fonts;
 	FCoHTex WhiteTex;
 };
 

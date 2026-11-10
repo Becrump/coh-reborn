@@ -7,14 +7,15 @@ Writes every texture under texture_library/gui/ as <out>/gui/.../<name>.png
 <out>/fonts/, and the English menu texts to <out>/texts/. Needs stage*.pigg,
 texGui1.pigg, fonts.pigg and texts.pigg (dists.thunderspy.org/piggs/).
 Also writes <out>/ui_art.json: texture name (lower case, no extension) ->
-[width, height, png path]. The width and height are the ORIGINAL sizes from the
-.texture header; the archive stored most GUI art stretched to a power of two,
-and the UI code positions everything by the original size.
+[width, height, png path]. The archive stores GUI art padded out to a power of
+two (edge pixels repeated); the .texture header keeps the original size, so
+each PNG is cropped back to it. The UI code positions everything by that size.
 Failures are listed in <out>/_failed.txt. Output is game data: keep it out of git.
 
 Unreal: copy <out> to <Project>/Content/UI/ (CoHUIArt.cpp reads it at runtime).
 """
 import glob
+import io
 import json
 import struct
 import os
@@ -27,6 +28,17 @@ from coh2unreal.texture import to_png  # noqa: E402
 PIGGS, OUT = sys.argv[1], sys.argv[2]
 store = AssetStore(pigg_paths=sorted(glob.glob(os.path.join(PIGGS, "*.pigg"))))
 
+def crop(png, w, h):
+    """Cuts the power-of-two padding off (the original art is the top-left w x h)."""
+    from PIL import Image
+    img = Image.open(io.BytesIO(png))
+    if w <= 0 or h <= 0 or (w >= img.width and h >= img.height):
+        return png
+    out = io.BytesIO()
+    img.crop((0, 0, min(w, img.width), min(h, img.height))).save(out, "PNG")
+    return out.getvalue()
+
+
 ok, failed, manifest = 0, [], {}
 for name in store.names():
     low = name.lower()
@@ -38,6 +50,7 @@ for name in store.names():
                 raise ValueError("unsupported format")
             data = store.read(name)
             w, h = struct.unpack_from("<ii", data, 8)
+            png = crop(png, w, h)
             key = os.path.basename(low)[:-len(".texture")]
             rel = os.path.relpath(dest, OUT).replace(os.sep, "/")
             # the same name in several folders: prefer the HUD art
