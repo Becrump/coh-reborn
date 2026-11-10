@@ -34,8 +34,8 @@ bool UCoHIdleComponent::LoadGraphs()
 		UE_LOG(LogCoHIdle, Warning, TEXT("bad idle json %s"), *GraphJson.FilePath);
 		return false;
 	}
-	const TSharedPtr<FJsonObject>* Types;
-	const TArray<TSharedPtr<FJsonValue>>* Arr;
+	const TSharedPtr<FJsonObject>* Types = nullptr;
+	const TArray<TSharedPtr<FJsonValue>>* Arr = nullptr;
 	if (!Root->TryGetObjectField(TEXT("types"), Types) ||
 		!((*Types)->TryGetArrayField(SeqType.ToLower(), Arr) || (*Types)->TryGetArrayField(TEXT("male"), Arr)))
 	{
