@@ -8,6 +8,7 @@ Example (Atlas Park):
 import argparse
 import glob
 import json
+import math
 import os
 import shutil
 import time
@@ -16,6 +17,7 @@ from .pigg import AssetStore
 from . import maplayout as ml
 from . import sky as skymod
 from . import replace as replacemod
+from . import edits as editmod
 from .export import Exporter, write_instances
 
 
@@ -45,6 +47,17 @@ def main():
     ap.add_argument("--keep-props", action="store_true",
                     help="keep CoH street lamps in the tiles instead of "
                          "writing them out for modern replacements")
+    ap.add_argument("--drop", action="append", default=[],
+                    help="leave out pieces: 'PATTERNS@x0,z0,x1,z1' (feet; "
+                         "patterns match model or group names, '|' "
+                         "separated). Repeatable")
+    ap.add_argument("--ruin", action="append", default=[],
+                    help="cut pieces down: 'PATTERNS@x0,z0,x1,z1@h0:h1', "
+                         "the top runs from h0 ft at x0 to h1 ft at x1. "
+                         "Repeatable")
+    ap.add_argument("--tiles", default="",
+                    help="only write these tiles, 'x,z;x,z', or 'auto' for "
+                         "the tiles a --drop/--ruin rule touched")
     ap.add_argument("--limit", type=int, default=0,
                     help="only export the first N instances (testing)")
     args = ap.parse_args()
@@ -70,6 +83,19 @@ def main():
                   if x0 <= lt.pos[0] <= x1 and z0 <= lt.pos[2] <= z1]
         print("objects inside area: %d, lights: %d" % (len(insts),
                                                          len(lights)))
+    ruined, touched = {}, set()
+    if args.drop or args.ruin:
+        drops = [editmod.Rule(t, "drop") for t in args.drop]
+        ruins = [editmod.Rule(t, "ruin") for t in args.ruin]
+        insts, ruined, touched = editmod.apply(insts, drops, ruins, args.tile)
+    if args.tiles:
+        want = touched if args.tiles == "auto" else             editmod.parse_tiles(args.tiles)
+        insts = [i for i in insts if editmod.tile_of(i, args.tile) in want]
+        lights = [lt for lt in lights
+                  if (math.floor(lt.pos[0] / args.tile),
+                      math.floor(-lt.pos[2] / args.tile)) in want]
+        print("tiles kept: %s, objects: %d" % (
+            " ".join("%d,%d" % t for t in sorted(want)), len(insts)))
     if args.limit:
         insts = insts[:args.limit]
     os.makedirs(args.out, exist_ok=True)
@@ -91,6 +117,7 @@ def main():
     ex.lights = lights
     ex.library = args.instanced
     ex.khr_lights = args.coh_lights == "all"
+    ex.ruins = ruined
     skip = ex.plan_lods(insts)
     print("detail levels: %d low-detail duplicates dropped" % len(skip))
     for n, inst in enumerate(insts):

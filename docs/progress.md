@@ -299,3 +299,49 @@ All parked cars in the Nanite map are now City Sample cars with collision, and t
 - 2026-10-20 (Robert approved): "Used with Nanite" turned on for the shared /Game/CoH/Materials/M_CoH_Surface (444 users), compiled, only that material saved. PIE: the 11 police drones render their own Drone_Shell/Blue/Red materials (no more "missing usage flag Nanite" warnings); roads, sidewalks, lot surface and buildings unchanged against the earlier capture. The blimp has no route in this map, so it doesn't spawn. Screenshot: docs/drone_nanite_material.png.
 - 2026-10-20: car damage stages (option B) put on hold by Robert. The uncompiled draft component is kept in unreal/drafts/car_damage (not in the project source); no map actors or assets were changed for it.
 - 2026-10-20 fix (Robert: bumper-like pieces left): two study tiles share the name tile_2_-3 (AtlasSecondPass and AtlasRebuiltStudy), so the hide pass gave both the same car-free copy; the visible Atlas25_Infrastructure_tile_2_-3 actor then showed the SecondPass tile's geometry with its old CoH cars unhidden (white box vans, car bits around ~x 24,000-27,000 / y -31,000..-28,000). It now has its own copy (Tiles/Atlas25_Infrastructure_tile_2_-3_NoCars) and the script never shares a copy between different sources. A map-wide scan finds old car materials only on Nanite_tile_2_3_Solid_00/01 (left alone for the glass test). Before/after: docs/cars_bumpers_before.png, docs/cars_bumpers_after.png.
+
+## Atlas Park expansion test ("the walls came down"), 2026-10-08 (in progress)
+
+A test of opening the War Wall door at the end of the six-lane avenue (game x 1088, z 1024) and continuing the city one block north. **The real level and meshes are untouched.** Everything lives in two places; deleting them undoes the test:
+- level `/Game/AtlasPark4/AtlasPark_ExpansionTest` (a Save As copy of `AtlasPark`, all 1,929 actors), plus its `__ExternalActors__/AtlasPark4/AtlasPark_ExpansionTest` folder;
+- assets `/Game/AtlasExpansionTest/` (`WallTiles/`, `Block/`).
+
+### Done
+1. **Level copy:** Save As via `EditorLoadingAndSavingUtils.save_map`. The copy has all 1,929 actor files. When it's opened, load every actor with `WorldPartitionBlueprintLibrary.load_actors` (only 11 load by default).
+2. **Converter options** (`coh2unreal/coh2unreal/edits.py`):
+   - `--drop "PATTERNS@x0,z0,x1,z1"` leaves out pieces whose model or group name matches, with their origin inside the box (game feet).
+   - `--ruin "PATTERNS@box@h0:h1"` keeps the pieces but clamps their height from h0 at x0 to h1 at x1.
+   - `--tiles auto` writes only the tiles that an edit touched.
+   - Wall re-export → `out/atlas_expansion_wall` (command in `atlas_expansion_wall.log`'s run; rules below). Tiles written: `tile_1_-3`, `2_-3`, `3_-3`, `4_-3`, `2_-4` (+ `_water`/`_glass`). `tile_3_-4` is now empty, so its actor must be removed in the test level. Compared with v5, only the War Wall, pulse-panel, tunnel and road-bend materials changed.
+   - Rules:
+     - door segment (`warwall_base_door|warwall_shield_door`) dropped;
+     - tunnel shell beyond the door (`tunnel_*`, crawl blocks, no-teleport boxes) dropped;
+     - shields, pulse panels and lips dropped on the segments either side (x 704, 1472);
+     - their 1000 ft `_Warwall_straight` cut to stumps: 380→35 ft (west) and 35→420 ft (east). The east stump keeps its pulse emitter and accent.
+3. **New block** (`coh2unreal/tools/expansion/gen_block.py` → `atlas_expansion_block.txt`, a normal CoH map file):
+   - **Road:** three more `6_strt` (z 1152–1536), `4_4to6` reversed, then a `4_3way` T at z 1664–1792 with two `4_strt` arms each way.
+   - **Ground:** `Filler_sidewlk` under the rest of the pocket (x 512–1664, z 1024–1920).
+   - **Buildings, west side:** FillerShop_A, ind_ware_08, **Deco1** (deco), **OT_House_lrg** (Oldtown).
+   - **Buildings, east side:** ind_ware_07, deco_skyscraper_14, FillerShop_C, FillerShop_J.
+   - **Back row:** ind_ware_12, FLRN_BUILDING_B.
+   - **Props:**
+     - two parking lots with `Lamp_Parkinglot_01` and parked cars;
+     - `TrashCan_bag` and `AP_Planter_01` on both curbs;
+     - rubble (`WstRbl_*`, `RUIN_WALL_CHUNKS`), pothole and stain decals, and a wrecked `Rn_Compact` at the old wall line;
+     - concrete barriers closing the T arms.
+   - **Temporary War Wall:** three segments along z 1856 and three on each side (x 512, 1664).
+   - Converted with coh2unreal → `out/atlas_expansion_block` (`expansion.gltf`; 0 missing).
+4. **Import and materials (partly done):**
+   - Both glTFs imported to `/Game/AtlasExpansionTest/{WallTiles,Block}`.
+   - `unreal/scripts/expansion/exp_materials.py` linked 682 slots to the tuned `/Game/atlas_park/Materials` and ran `apply_tuning.tune_materials` on the 57 new-only slots.
+
+### Still to do
+- In the test level:
+  - swap the six wall tile actors to the `WallTiles` meshes and remove `tile_3_-4`;
+  - spawn the `Block` tiles at the origin as `exp_tile_*`;
+  - set complex-as-simple collision, as `fix_tiles.py` does;
+  - spawn modern lamps from `expansion_props.json`.
+- Fix sidewalks and curbs at the seam, then run a collision survey over the new street.
+- Take screenshots by day and night.
+
+Paused 2026-10-08 19:08 UTC: the editor was closed then. Python crashed on exit inside the MetaHuman plugin's cleanup; the test level had no unsaved actor changes.
