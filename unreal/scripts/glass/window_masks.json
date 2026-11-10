@@ -142,5 +142,57 @@
  "Store_Front_Window_4": {
   "key": "texture",
   "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Store_Front_Window_4"
+ },
+ "Deco_05_window1": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Deco_05_window1"
+ },
+ "deco11_window_A": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco11_window_A"
+ },
+ "deco11_window_B": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco11_window_B"
+ },
+ "deco14_window": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco14_window"
+ },
+ "deco15_window": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco15_window"
+ },
+ "deco3_window": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco3_window"
+ },
+ "deco4_window_A": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco4_window_A"
+ },
+ "deco4_window_B": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco4_window_B"
+ },
+ "deco8_window": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco8_window"
+ },
+ "deco9_window": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco9_window"
+ },
+ "deco9_window_B": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco9_window_B"
+ },
+ "deco_16_window_A": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_deco_16_window_A"
+ },
+ "Store_Front_Window_1": {
+  "key": "texture",
+  "mask_texture": "/Game/GlassUpgrade/Masks/T_GlassMask_Store_Front_Window_1"
  }
 }

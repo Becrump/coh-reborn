@@ -34,6 +34,10 @@ OPTION = os.environ.get("GLASS_OPTION", "Interior")
 DRY = os.environ.get("GLASS_DRY") == "1"
 SAVE = os.environ.get("GLASS_SAVE", "1") == "1"
 
+if not DRY:  # bring in any hand-painted masks not imported yet (import only, skips existing ones)
+    exec(compile(open(os.path.join(HERE, "import_masks.py")).read(), "import_masks.py", "exec"),
+         {"__file__": os.path.join(HERE, "import_masks.py"), "__name__": "__main__"})
+
 report = {"glass": [], "already": [], "skip": [], "pending": [], "unmapped": []}
 to_save = []
 for root in [p.strip() for p in paths.split(";") if p.strip()]:

@@ -112,6 +112,97 @@
    "panes_y": 6,
    "theme": 0,
    "extra": "mirror"
+  },
+  "Deco_05_window1_tga": {
+   "texture": "Deco_05_window1",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco11_window_A_tga": {
+   "texture": "deco11_window_A",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco11_window_B_tga": {
+   "texture": "deco11_window_B",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco14_window_tga": {
+   "texture": "deco14_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco15_window_tga": {
+   "texture": "deco15_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco3_window_tga": {
+   "texture": "deco3_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco4_window_A_tga": {
+   "texture": "deco4_window_A",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco4_window_B_tga": {
+   "texture": "deco4_window_B",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco8_window_tga": {
+   "texture": "deco8_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco9_window_tga": {
+   "texture": "deco9_window",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "deco9_window_B_tga": {
+   "texture": "deco9_window_B",
+   "panes_x": 4,
+   "panes_y": 1,
+   "theme": 0,
+   "extra": "masked"
+  },
+  "deco_16_window_A_tga": {
+   "texture": "deco_16_window_A",
+   "panes_x": 1,
+   "panes_y": 1,
+   "theme": 1,
+   "extra": "masked"
+  },
+  "Store_Front_Window_1_tga": {
+   "texture": "Store_Front_Window_1",
+   "panes_x": 8,
+   "panes_y": 2,
+   "theme": 2,
+   "extra": ""
   }
  },
  "skip": {
@@ -122,27 +213,12 @@
   "X_ArchEnt_INT_ComputerBank_Glass": "interior prop glass",
   "X_ArchEnt_INT_Reactor_GlassFloor_01": "interior floor glass",
   "X_ArchEnt_INT_Window_Cube": "interior window cube",
-  "mono_station_glass": "monorail station glass"
- },
- "pending_galaxy_city": {
-  "5th_glassreflect1": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "Deco_05_window1": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "RuinBrick1_Motel_Shop_Window_01": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "Store_Front_Window_1": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "asurp_window_01": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco11_window_A": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco11_window_B": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco14_window": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco15_window": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco3_darkwindows_02": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco3_window": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco4_window_A": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco4_window_B": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco8_window": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco9_window": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco9_window_B": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "deco_16_window_A": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "ofc1_glass": "needs a mask from the Galaxy City source texture (export not on this PC yet)",
-  "universal_window_reflect": "needs a mask from the Galaxy City source texture (export not on this PC yet)"
+  "mono_station_glass": "monorail station glass",
+  "5th_glassreflect1_tga__GLASS": "reflection streak overlay layer (mostly transparent), not a window face",
+  "ofc1_glass_tga__GLASS": "reflection overlay layer (alpha 0.25), not a window face",
+  "universal_window_reflect_tga__GLASS": "reflection overlay layer (alpha 0.15), not a window face",
+  "RuinBrick1_Motel_Shop_Window_01_tga": "closed roller shutter, no glass",
+  "asurp_window_01_tga": "boarded-up window (wood planks), no glass",
+  "deco3_darkwindows_02_tga": "dark arched doorway, no glazing to show"
  }
 }

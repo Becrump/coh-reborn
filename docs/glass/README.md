@@ -75,5 +75,9 @@ zone that uses them gets it, with no per-actor overrides.
   It backs up each matched original MI to `/Game/GlassUpgrade/OriginalBackup/...`, re-parents it to its
   per-texture glass instance, logs skipped / pending / unmapped window-like names, and saves only the
   changed packages. Never re-send it after a lost editor connection.
+- Galaxy City (2026-11-10): 13 more windows (deco towers office/residential, Store_Front_Window_1 retail;
+  12 are alpha-cut -> masked) and 6 skips (3 reflection overlay layers, roller shutter, boarded window,
+  dark arched doorway). Masks from the zone export's own textures (`GLASS_TEX_SRC=...\galaxy_city	extures`
+  with `make_clean_masks.py` / `make_rect_masks.py`). `glaze_zone.py` imports any missing mask textures itself.
 - New window textures: add a `glass_map.json` entry, then a mask (`make_window_masks.py` for colour-keyable
   glass, `make_rect_masks.py` + `import_masks.py` for painted ones), then re-run `glaze_zone.py`.
