@@ -39,6 +39,7 @@ from collections import Counter, defaultdict
 
 import numpy as np
 import shapely
+import shapely.geometry
 from matplotlib.path import Path as MPath
 from PIL import Image
 from scipy import ndimage
@@ -198,6 +199,37 @@ Hroad = grid_h[ri, ci]
 
 # footprints: asphalt (with rounded corners), curb, sidewalk
 road_area = unary_union([p["smooth"].buffer(p["w"] / 2, cap_style=2, join_style=1) for p in P])
+# junction plates: the car lanes turn across the junction between the road
+# ends (each trimmed w/2 + 3 m back, as in roads.json), so pave the whole
+# area those turns can use - the hull of every road end's full width
+_tdeg = Counter()
+for _p in P:
+    if _p["cls"] != "alley":
+        _tdeg[key(_p["line"].coords[0])] += 1
+        _tdeg[key(_p["line"].coords[-1])] += 1
+plates = []
+for _k, _n in _tdeg.items():
+    if _n < 3:
+        continue
+    corners = [_k]
+    for _p in P:
+        if _p["cls"] == "alley":
+            continue
+        _l = _p["smooth"]
+        for _end, _at in ((0, key(_p["line"].coords[0])), (1, key(_p["line"].coords[-1]))):
+            if _at != _k or _l.length < 1:
+                continue
+            _t = min(_p["w"] / 2 + 3, _l.length)
+            _s = _t if _end == 0 else _l.length - _t
+            _q = np.array(_l.interpolate(_s).coords[0])
+            _q2 = np.array(_l.interpolate(min(_l.length, _s + 1) if _end == 0 else max(0, _s - 1)).coords[0])
+            _d = _q2 - _q
+            _d = _d / (np.linalg.norm(_d) or 1)
+            _nrm = np.array([-_d[1], _d[0]])
+            corners += [tuple(_q + _nrm * _p["w"] / 2), tuple(_q - _nrm * _p["w"] / 2)]
+    if len(corners) >= 4:
+        plates.append(shapely.geometry.MultiPoint(corners).convex_hull.buffer(0.5))
+road_area = unary_union([road_area] + plates)
 road_area = road_area.buffer(CORNER_R, join_style=1).buffer(-CORNER_R, join_style=1)
 road_area = road_area.difference(water)
 curb_area = road_area.buffer(CURB, join_style=1).difference(road_area).difference(water)
@@ -236,15 +268,23 @@ G[m_road] = Hroad[m_road]
 dist, (ei, ej) = ndimage.distance_transform_edt(~m_corr, return_indices=True)
 E = Hroad[ei, ej] + CURB_H
 D = np.clip(4 * np.abs(T - E), 10, 60)
-w = np.clip(dist / D, 0, 1)
+# a flat 1.5 m verge at sidewalk height before the ease starts, so the
+# sidewalk's outer edge never stands above the lawn as a step
+VERGE = 1.5
+w = np.clip((dist - VERGE) / D, 0, 1)
 w = w * w * (3 - 2 * w)
 out = ~m_corr
 G[out] = (E + (T - E) * w)[out]
 G[m_water] = T[m_water]
 np.save(os.path.join(OUT, "ground_z.npy"), G.astype(np.float32))
-# landscape: 10 cm under the road / sidewalk meshes
+# the corridor mask for later steps (lot pads keep off it)
+np.save(os.path.join(OUT, "corridor_mask.npy"), m_corr)
+open(os.path.join(OUT, "corridor.wkt"), "w").write(corridor.wkt)
+open(os.path.join(OUT, "road_area.wkt"), "w").write(road_area.wkt)
+# landscape: 10 cm under the road / sidewalk meshes - only well inside them
+# (one cell in), so there is no dip along the sidewalk's outer edge
 Lh = G.copy()
-Lh[m_corr] -= UNDER
+Lh[ndimage.binary_erosion(m_corr, iterations=1)] -= UNDER
 hm16 = np.clip(np.round(Lh * 128 + 32768), 0, 65535).astype(np.uint16)
 Image.fromarray(hm16).save(os.path.join(OUT, "heightmap.png"))
 slope = np.hypot(*np.gradient(G))
@@ -262,6 +302,9 @@ def sraster(geom):
 
 
 stale = sraster(old_corr.difference(corridor.buffer(1)))
+# a 4 m lawn strip outside every sidewalk: old paving there read as a
+# second, sloping sidewalk next to the new one
+stale |= sraster(corridor.buffer(4).difference(corridor))
 surf[..., 0] = 0                              # no painted asphalt: the road mesh is the road
 surf[stale, 2] = 0                            # old sidewalk paving -> lawn
 surf[stale, 3] = 0
@@ -350,7 +393,7 @@ paint_y = unary_union(paint_y).intersection(road_area)
 
 # ------------------------------------------------------------------ meshes per tile
 os.makedirs(os.path.join(OUT, "road_tiles"), exist_ok=True)
-for f in os.listdir(os.path.join(OUT, "road_tiles")):
+for f in [f for f in os.listdir(os.path.join(OUT, "road_tiles")) if f.endswith(".npz")]:
     os.remove(os.path.join(OUT, "road_tiles", f))
 
 

@@ -156,8 +156,11 @@ def buildings():
         for nm in b["candidates"]:
             cls = by[nm]["path"] + "." + nm + "_C"
             # long side along the lot; either way round
+            # the ground-floor pack (lobby / storefront) goes at the same spot;
+            # buildings without one get a plain empty actor
+            gcls = (by[nm]["ground_path"] + "." + by[nm]["ground_name"] + "_C") if by[nm].get("ground_name") else "/Script/Engine.Actor"
             for turn in (by[nm]["yaw"], by[nm]["yaw"] + 180):
-                entries.append({"Building": ("class", cls), "Turn": ("rotator", turn)})
+                entries.append({"Building": ("class", cls), "Ground": ("class", gcls), "Turn": ("rotator", turn)})
         m = pick(g, ga, "Out", 300, y, entries, 100 + k)
         edge(g, m, "Out", merge, "In")
         y += 200 + 140 * len(entries)
@@ -178,6 +181,12 @@ def buildings():
     cb = cast(g, rot, "Out", 3050, 200, "Building", "class")
     edge(g, cb, "Out", sp, "In")
     edge(g, sp, "Out", g.get_output_node(), "Out")
+    sp2, ss2 = node(g, unreal.PCGSpawnActorSettings, 3200, 400, spawn_by_attribute=True,
+                    option=unreal.PCGSpawnActorOption.NO_MERGING)
+    ss2.set_editor_property("spawn_attribute", "Ground")
+    cg = cast(g, rot, "Out", 3050, 500, "Ground", "class")
+    edge(g, cg, "Out", sp2, "In")
+    edge(g, sp2, "Out", g.get_output_node(), "Out")
     comp = volume("PCG_Reborn_Buildings", g)
     comp.generate(True)
     return comp
