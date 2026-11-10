@@ -14,6 +14,8 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/StaticMeshComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Volume.h"
 #include "GameFramework/Character.h"
@@ -199,6 +201,18 @@ void UCoHPowerDatabase::Initialize(FSubsystemCollectionBase& Collection)
 			FCoHPowerDef P = ReadPower(FString(KV.Key), KV.Value->AsObject());
 			Powers.Add(P.Id, MoveTemp(P));
 		}
+	// Climb: a toggle like Sprint (same endurance cost and period), no speed mod; the hero's wall
+	// climb reads it (CoHHeroCharacter.cpp) and Sprint and Climb switch each other off
+	if (!Powers.Contains(CoHTravel::Climb))
+	{
+		FCoHPowerDef C;
+		if (const FCoHPowerDef* Sp = Powers.Find(CoHTravel::Sprint)) C = *Sp;
+		else { C.Type = TEXT("kToggle"); C.Area = TEXT("kCharacter"); C.Target = TEXT("kCaster"); C.Affects = TEXT("kCaster"); C.EndCost = 0.14625f; C.Period = 0.5f; C.Activate = 0.f; C.Recharge = 0.f; }
+		C.Id = CoHTravel::Climb; C.Display = TEXT("Climb"); C.Short = TEXT("Climb walls");
+		C.Help = TEXT("Climb lets you walk up walls, faster than a grab and a scramble, while slightly draining your Endurance. Anyone can cling to a wall, but without Climb it drains Endurance fast. Turns Sprint off.");
+		C.Icon = TEXT("Inherent_Climb.tga"); C.Mods.Reset(); C.AIGroups.Reset();
+		Powers.Add(C.Id, MoveTemp(C));
+	}
 	if (LoadJson(Dir, TEXT("villains.json"), Root))
 		for (const auto& KV : Root->AsObject()->Values)
 		{
@@ -425,7 +439,64 @@ bool UCoHPowerComponent::SetPowerAnimation(FName Power, const FString& ClipNameO
 
 void UCoHPowerComponent::SetPowerEmitter(FName Power, ECoHEmitter Emitter)
 {
-	Styles.FindOrAdd(Power).Emitter = Emitter;
+	FCoHPowerStyle& S = Styles.FindOrAdd(Power);
+	S.Emitter = Emitter;
+	S.bCustomEmitter = true;
+	S.bCustomPoint = false;
+}
+
+void UCoHPowerComponent::SetPowerPoint(FName Power, FName Bone, FVector Offset, ECoHEmitter Pose)
+{
+	FCoHPowerStyle& S = Styles.FindOrAdd(Power);
+	S.bCustomPoint = true; S.PointBone = Bone; S.PointOffset = Offset;
+	S.Emitter = Pose; S.bCustomEmitter = true;
+}
+
+void UCoHPowerComponent::SetPowerColors(FName Power, FLinearColor Primary, FLinearColor Secondary)
+{
+	FCoHPowerStyle& S = Styles.FindOrAdd(Power);
+	S.Tint = Primary;
+	S.Tint2 = Secondary;
+}
+
+void UCoHPowerComponent::SetPowerTheme(FName Power, int32 Theme)
+{
+	Styles.FindOrAdd(Power).Theme = Theme;
+}
+
+void UCoHPowerComponent::ResetPowerLook(FName Power)
+{
+	FCoHPowerStyle* S = Styles.Find(Power);
+	if (!S) return;
+	S->Emitter = ECoHEmitter::RightHand; S->bCustomEmitter = false; S->bCustomPoint = false; S->Theme = -1;
+	S->Tint = FLinearColor(0, 0, 0, 0); S->Tint2 = FLinearColor(0, 0, 0, 0);
+}
+
+void UCoHPowerComponent::PreviewPower(FName Power)
+{
+	AActor* Owner = GetOwner();
+	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
+	if (!Owner || !P || !Owner->GetWorld()) return;
+	AActor* Dummy_ = Owner;
+	if (P->Target != TEXT("kCaster") && P->Target != TEXT("kFriend") && P->Type != TEXT("kToggle") && P->Type != TEXT("kAuto"))
+	{
+		// a plain dummy (an engine cylinder, hero height) in front of the hero
+		FActorSpawnParameters SP;
+		SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		const float Dist = FMath::Clamp(P->IsMelee() ? 3.f : 30.f, 3.f, 60.f) * FeetToCm;
+		const FVector At = Owner->GetActorLocation() + Owner->GetActorForwardVector() * Dist;
+		AStaticMeshActor* Dummy = Owner->GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), FTransform(FRotator::ZeroRotator, At, FVector(0.5f, 0.5f, 1.8f)), SP);
+		if (Dummy)
+		{
+			Dummy->SetMobility(EComponentMobility::Movable);
+			if (UStaticMesh* Cyl = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"))) Dummy->GetStaticMeshComponent()->SetStaticMesh(Cyl);
+			Dummy->GetStaticMeshComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Dummy->SetLifeSpan(6.f);
+			Dummy_ = Dummy;
+		}
+	}
+	PlayLocal(*P, Dummy_, Dummy_->GetActorLocation(), 1);
 }
 
 float UCoHPowerComponent::BaseAttrib(const TCHAR* Name, float Default) const
@@ -741,6 +812,9 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 	}
 	if (P->Type == TEXT("kToggle"))
 	{
+		// one travel toggle at a time: Climb off Sprint and the other way round
+		const FName Other = Power == CoHTravel::Climb ? CoHTravel::Sprint : (Power == CoHTravel::Sprint ? CoHTravel::Climb : NAME_None);
+		if (!Other.IsNone() && ActiveToggles.Remove(Other)) Buffs.RemoveAll([&](const FCoHBuff& B) { return B.Source == Other; });
 		ActiveToggles.AddUnique(Power);
 		NextToggleTick = 0;       // apply on the next tick
 	}
@@ -1101,7 +1175,9 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	// the original moves of the power on CoH bodies, else the clip by kind
 	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(Owner))
 	{
-		if (S.Clip.IsValid() || !H->PlayPowerMoves(P.Id, P.Type == TEXT("kToggle") || bSelfOrAlly)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
+		// a chosen cast point has its own generic pose (unless a specific clip was picked)
+		if (S.bCustomEmitter && !S.Clip.IsValid() && H->PlayEmitterPose((uint8)S.Emitter, P.Activate)) {}
+		else if (S.Clip.IsValid() || !H->PlayPowerMoves(P.Id, P.Type == TEXT("kToggle") || bSelfOrAlly)) H->PlayPowerAnimation(Kind, P.Activate, S.Animation, S.Clip);
 	}
 	else if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Owner))
 	{
@@ -1110,7 +1186,13 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	// the original effects (fx_library.json) when the power has them
 	const float Dist = TargetActor && TargetActor != Owner ? FVector::Dist(Owner->GetActorLocation(), TargetActor->GetActorLocation()) : 0.f;
 	const float Hit = HitDelay(P.Id, Dist);
-	if (S.Tint.A <= 0.f && UCoHFxLibrary::PlayPower(Owner, P.Id, TargetActor, Hit >= 0.f ? Hit : Release)) return;
+	FCoHFxStyle Fx;
+	Fx.bEmitter = S.bCustomEmitter; Fx.Emitter = (uint8)S.Emitter;
+	Fx.bPoint = S.bCustomPoint && !S.PointBone.IsNone(); Fx.PointBone = S.PointBone.ToString().ToLower(); Fx.PointOffsetCm = S.PointOffset;
+	Fx.bTint = S.Tint.A > 0.f || S.Tint2.A > 0.f;
+	Fx.Primary = S.Tint.A > 0.f ? S.Tint : S.Tint2; Fx.Secondary = S.Tint2.A > 0.f ? S.Tint2 : Fx.Primary;
+	Fx.Theme = S.Theme;
+	if (UCoHFxLibrary::PlayPower(Owner, P.Id, TargetActor, Hit >= 0.f ? Hit : Release, &Fx)) return;
 	if (P.Type == TEXT("kToggle") || P.Type == TEXT("kAuto"))
 	{
 		ACoHPowerFX::Burst(Owner, Owner->GetActorLocation(), 150.f, Colour, 0.6f, 0.f);

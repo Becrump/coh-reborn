@@ -54,6 +54,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "CoH|Travel")
 	float ClimbSpeed = 350.f;
+	/** Climb on: the wall climb is this much faster. */
+	UPROPERTY(EditAnywhere, Category = "Climb") float ClimbPowerSpeedScale = 1.4f;
+	/** Endurance per second a wall climb costs without the Climb power on (Sprint costs about 0.3). */
+	UPROPERTY(EditAnywhere, Category = "Climb") float ClimbFastDrain = 4.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Travel")
  float SuperSpeedRunSpeed = 2400.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Travel")
@@ -121,6 +125,10 @@ public:
 	/** Plays a power's original moves (AttackBits, or ActivationBits for
 	 *  toggles and self powers) on a CoH body. False: no moves for it. */
 	bool PlayPowerMoves(FName Power, bool bActivation);
+	/** The generic pose for a cast point (ECoHEmitter value): right / left arm out, both arms out,
+	 *  eyes, chest, mouth, feet, back, overhead; the original moves on the hero's body type.
+	 *  False: the body has none of its clips. */
+	bool PlayEmitterPose(uint8 Emitter, float Duration);
 	/** Plays a list of moves (victim hit reactions...). */
 	bool PlayMoves(const TArray<struct FCoHAnimSegment>& Segments, float Lock);
 	class UCoHBodyAnim* BodyAnim() const;
@@ -190,6 +198,10 @@ private:
 	void CameraDragOff(const FInputActionValue& Value);
 	bool bCameraDrag = false;
 	void SprintOn(const FInputActionValue& Value);
+	void ToggleClimbPower();
+	bool ClimbPowerOn() const;
+	bool SprintPowerOn() const;
+	bool bSprintPowerSeen = false, bClimbPowerSeen = false;
 	void SprintOff(const FInputActionValue& Value);
 	void ToggleSuperJump(const FInputActionValue& Value);
  void ToggleFlight(const FInputActionValue& Value);
@@ -214,6 +226,10 @@ private:
 	bool bBodyApplied = false;
 	FString BodyPreset;
 	void UpdateClimbAnim();
+	/** A climb clip of the hero's CoH body (<body>__<name>, tools/anim/climb_clips_unreal.py), or null. */
+	class UAnimSequenceBase* BodyClip(const FString& Name) const;
+	/** Plays one climb move once (mounting the wall, stepping off); the climb loop resumes after it. */
+	void PlayClimbMove(const FString& Name);
 	void ApplyMovementMode();
 	bool TraceWall(FHitResult& Hit, float Height, float Reach) const;
 	void StartClimb(const FVector& Normal);

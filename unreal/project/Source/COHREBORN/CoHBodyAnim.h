@@ -38,6 +38,7 @@ struct FCoHBodyPose
 	UAnimSequenceBase* A = nullptr; float TimeA = 0.f;
 	UAnimSequenceBase* B = nullptr; float TimeB = 0.f;
 	float Alpha = 1.f;          // weight of A
+	float Lean = 0.f;           // degrees the neck and head tilt forward on top of the pose
 };
 
 struct FCoHBodyAnimProxy : public FAnimInstanceProxy
@@ -80,6 +81,8 @@ public:
 	float SegmentsLeft() const;
 	/** In combat for a while after a power: idle uses the combat ready. */
 	void MarkCombat(float Seconds = 8.f);
+	/** Tilts the neck and head forward by Degrees for Seconds (an eye beam, a breath), eased in and out. */
+	void LeanHead(float Degrees, float Seconds) { LeanTarget = Degrees; LeanHold = Seconds; }
 	/** Holds the current pose (death); cleared by SetBase or PlaySegments. */
 	void Freeze(bool bOn) { bFrozen = bOn; }
 
@@ -103,6 +106,7 @@ private:
 	int32 Seg = INDEX_NONE;
 	float SegRate = 1.f;
 	double CombatUntil = 0.0;
+	float LeanTarget = 0.f, LeanHold = 0.f, LeanNow = 0.f;
 	bool bWasFalling = false;
 	float LandLeft = 0.f;
 };
