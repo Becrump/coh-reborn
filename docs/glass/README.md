@@ -81,3 +81,19 @@ zone that uses them gets it, with no per-actor overrides.
   with `make_clean_masks.py` / `make_rect_masks.py`). `glaze_zone.py` imports any missing mask textures itself.
 - New window textures: add a `glass_map.json` entry, then a mask (`make_window_masks.py` for colour-keyable
   glass, `make_rect_masks.py` + `import_masks.py` for painted ones), then re-run `glaze_zone.py`.
+
+## 2026-11-11: asset-level rollout in Atlas Park (done)
+- `glaze_zone.py` on `/Game/atlas_park;/Game/AtlasExpansionTest;/Game/AtlasUpgraded;/Game/AtlasSecondPass;/Game/AtlasNanite`:
+  59 original window MIs re-parented to the glass (backups in `/Game/GlassUpgrade/OriginalBackup/...`),
+  32 skipped by the table, 72 window-like names not in the table left untouched (interior props,
+  `deco_reflect1__GLASS` overlay panes, curtained ruin windows, ...). The 6 skyscraper tiles' per-actor
+  overrides were cleared (the materials carry the glass now). 138 packages saved by explicit list.
+- Tuned `MI_Glass_Interior` first: `ForegroundSteps` 4, `InteriorMipDistance` 800, `MaskMipDistance` 1500.
+- Perf (PIE, GPU ms/frame, RTX 3070): tower view 65.7 before -> ~65 after; low-rise street 77.0 -> 74.0;
+  2D texture memory 318-323 MB -> 318-350 MB. Untuned the same rollout cost +3..6 ms.
+  (The editor viewport doesn't draw when the window is unfocused, so measure in PIE.)
+- Shots `20_*`: day wide, 19:00 wide, 02:00 wide, 02:00 close-up, 19:00 street, day street (Simulate,
+  day/night sequence jumped to the frame). The blue panels are the map's zone-boundary walls.
+- Still open: Lumen `r.EyeAdaptation.CachedLightingPreExposure` warning. Setting 128 live did not clear the
+  on-screen warning (likely read at startup); next step is `r.EyeAdaptation.CachedLightingPreExposure=128`
+  under `[SystemSettings]` in Config/DefaultEngine.ini plus an editor restart to verify day and night.
