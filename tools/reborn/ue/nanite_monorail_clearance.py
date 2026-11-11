@@ -8,8 +8,6 @@ scraped off by that collision. This removes, along Monorail_Track:
   collision  every triangle of the original tiles' collision (the hidden
              *_DryCollision proxies, the tile_*_glass panes) inside the car's volume
              (|lateral| < HALF_W, beam top + 0.1 m .. + CAR_H);
-  render     the parked car itself (monocab_* / monorail_intr_* materials)
-             from the render pieces attached to the station tile.
 
 Nothing is edited in place: the mesh each component uses now (which may
 already be another pass's copy, e.g. the car-free tiles) is copied to
@@ -79,7 +77,7 @@ def tri_points(dsc, tid):
     return pts
 
 
-def copy_without(mesh, comp, pick):
+def copy_without(mesh, comp, pick, count_only=False):
     """copy mesh minus the triangles pick(desc, tid, world_points) chooses; returns count"""
     xf = comp.get_world_transform()
     dsc = mesh.get_static_mesh_description(0)
@@ -94,7 +92,7 @@ def copy_without(mesh, comp, pick):
         pts = [xf.transform_location(q) for q in tri_points(dsc, tid)]
         if pick(dsc, tid, pts):
             kill.append(tid)
-    if not kill or DRY:
+    if not kill or DRY or count_only:
         return len(kill), None
     # always a fresh copy of the mesh the tile uses now (other passes keep
     # their own copies, e.g. the car-free tiles): never delete or reuse one
@@ -125,7 +123,13 @@ def overlaps_track(a):
 
 
 report = []
-# collision: the tile actors (hidden collision proxies, *_glass panes...)
+# Never build or edit a StaticMesh while the editor is running: rebuilding a
+# mesh that has render resources (even a hidden collision proxy) crashed the
+# editor twice ("FRenderResource was deleted without being released"). Only
+# component settings change here: glass in the path stops blocking pawns. Any
+# other tile in the path is reported; trim the track (port_monorail_nanite.py
+# REBORN_TRIM_SOUTH_M) instead of cutting its collision.
+in_path = lambda dsc, tid, pts: any(inside(p.x, p.y, p.z) for p in pts)
 for a in acts:
     if not isinstance(a, unreal.StaticMeshActor) or not overlaps_track(a):
         continue
@@ -133,31 +137,20 @@ for a in acts:
     m = c.static_mesh
     if not m or not a.get_actor_label().startswith("tile_") or c.get_collision_enabled() == unreal.CollisionEnabled.NO_COLLISION:
         continue
-    n, new = copy_without(m, c, lambda dsc, tid, pts: any(inside(p.x, p.y, p.z) for p in pts))
-    if n:
-        report.append(("collision", a.get_actor_label(), m.get_name(), n))
-# render: the parked car in the station tile's render pieces
-station = next(a for a in acts if a.get_actor_label() == "tile_1_3")
-for k in acts:
-    if k.get_attach_parent_actor() != station:
+    if c.get_collision_response_to_channel(unreal.CollisionChannel.ECC_PAWN) == unreal.CollisionResponseType.ECR_IGNORE:
         continue
-    for c in k.get_components_by_class(unreal.StaticMeshComponent):
-        m = c.static_mesh
-        bad = {i for i, sm in enumerate(m.static_materials)
-               if sm.material_interface and any(s in sm.material_interface.get_name().lower() for s in PARKED)}
-        if not bad:
-            continue
-        sect = {}
-        dsc = m.get_static_mesh_description(0)
-
-        def pick(dsc, tid, pts, bad=bad):
-            g = dsc.get_triangle_polygon_group(tid).id_value
-            return g in bad and any(inside(p.x, p.y, p.z) for p in pts)
-        n, new = copy_without(m, c, pick)
-        if n:
-            report.append(("render", k.get_actor_label(), m.get_name(), n))
+    n, _ = copy_without(m, c, in_path, count_only=True)
+    if not n:
+        continue
+    if a.get_actor_label().endswith("_glass"):
+        if not DRY:
+            c.modify()
+            c.set_collision_response_to_channel(unreal.CollisionChannel.ECC_PAWN, unreal.CollisionResponseType.ECR_IGNORE)
+        report.append(("glass ignores pawns", a.get_actor_label(), m.get_name(), n))
+    else:
+        report.append(("TILE IN PATH (not changed; trim the track)", a.get_actor_label(), m.get_name(), n))
 for r in report:
     print(*r)
-if not DRY and report:
+if not DRY and any(r[0] == "glass ignores pawns" for r in report):
     unreal.EditorLoadingAndSavingUtils.save_map(w, MAP)
 print("dry run" if DRY else "saved", len(report), "meshes")
