@@ -102,6 +102,9 @@ def wall_end(seq):
 
 i0 = wall_end(full)
 i1 = len(full) - 1 - wall_end(full[::-1])
+# extra trim at the south end (REBORN_TRIM_SOUTH_M, 5 m points): the south
+# wall tile is visible geometry, so its collision is not cut away
+i1 -= int(float(os.environ.get("REBORN_TRIM_SOUTH_M", 0)) // 5)
 track = full[i0:i1 + 1]
 
 # ------------------------------------------------------------ track spline

@@ -345,3 +345,36 @@ A test of opening the War Wall door at the end of the six-lane avenue (game x 10
 - Take screenshots by day and night.
 
 Paused 2026-10-08 19:08 UTC: the editor was closed then. Python crashed on exit inside the MetaHuman plugin's cleanup; the test level had no unsaved actor changes.
+
+## 2026-11-11: old Atlas maps deleted; monorail pass in the Nanite map
+
+**Deleted (Robert's go, 2026-11-10).** Backup first: `C:\Users\rtcru\COHReborn_Backups\2026-11-10_old_maps.zip` (21,635 files, checked). 882 MB freed.
+
+- **Maps:** AtlasPark4 `AtlasPark_DressingStudy`, `_CitySampleStudy`, `_ExpansionTest`, `_SecondPass` and `_Upgraded`, with their external actor and object folders.
+- **Folders:** `/Game/AtlasPark3`, `/Game/AtlasPark2`, `/Game/AtlasModern` and `/Game/AtlasPCG`.
+- **Kept:**
+  - `AtlasPark_DressingStudy_Nanite` (the one map).
+  - `AtlasPark4/AtlasPark` (the reference) and `/Game/CoH/DayNight`.
+  - `/Game/AtlasReborn`, including `L_MonorailRide`.
+  - Every folder the Nanite map uses.
+- **Checks:**
+  - The Nanite map has no missing references (8,158 packages checked).
+  - Only the day/night sequences still hold soft binding references to the deleted DressingStudy world. That is harmless, because the Nanite map binds through actor overrides.
+  - The 16 redirectors under `/Game` are older and not from this deletion (CaptainValor anims, City Sample vehicle physics, one SoulCity streetlight).
+- **Deleting a World Partition map from the editor loads it first.** That hung the editor, so the rest was removed on disk with the editor closed.
+
+**Monorail (plan changed 2026-11-10: one continuous line through all zones; `L_MonorailRide` and ServerTravel are only a stopgap).**
+
+- **Never build or edit a StaticMesh with the editor running.** `build_from_static_mesh_descriptions` on a mesh with render resources crashed the editor twice ("FRenderResource was deleted without being released"), even for a hidden collision proxy.
+- **`nanite_monorail_clearance.py` now only changes component settings.** Glass in the path ignores pawns (`tile_3_-1_glass`). Any other tile in the path is reported, not changed.
+- **`port_monorail_nanite.py REBORN_TRIM_SOUTH_M=130`** ends the line before the south wall tile.
+- **Line now:** 1,760 m, on the original CoH route (CoHLife json), wall to wall.
+  - East end: about x = 873 m, y = −83 m, short of the east War Wall.
+  - South end: about x = −156 m, y = 685 m, short of the south War Wall.
+  - The original route carries on through both walls: east at y ≈ −83 m, and south along x ≈ −156 m towards y ≈ 784 m. These are the two lines out of Atlas Park to extend into the neighbouring zones. Which zone each one reaches is still to be matched against the one-world zone layout.
+  - No track outside Atlas Park.
+- **Still blocking riders: the car-free tile collisions.** `tile_1_3` and `tile_3_-1` now use `/Game/AtlasPark4/CitySampleCars/Tiles/*_Mono_NoCars`, which were built before my path cut.
+  - A rider capsule still hits `tile_3_-1` at 429–431 m (shop front) and `tile_1_3` at 1,049–1,050 m (station end wall).
+  - Fix with the editor closed or before the map loads: rebuild those two NoCars copies minus the path triangles, with CPU access.
+- **Screenshots:** `C:\Users\rtcru\ClaudeProjects\COHReborn\look\monorail_nanite\10_station_2026-11-11.png` and `11_track_into_station_2026-11-11.png`.
+- **Ride test:** not run this pass. The two collision spots above would knock a rider off, so it waits for that fix.
