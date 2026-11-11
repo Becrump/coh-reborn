@@ -67,3 +67,22 @@ Files on the PC: `COHReborn\exports\zones\` - run `join_instanced.cmd`; it unpac
 3. Replace trees and street lamps with the modern versions as in Atlas. No civilians. Parked cars are in for now (cars to be revisited).
 4. Offset the whole zone by Galaxy's `offset_m` in `zone_offsets.json` (game axes x, z in meters; convert like the importer does: glTF z = -game z).
 5. Report: actor count, a screenshot from the Perez Park gate side, memory use. Do not merge into the Atlas map yet; that waits on checking whether the Atlas map uses World Partition.
+
+## Filler between zones (plan, 2026-11-11)
+
+Grid: `docs/zones/filler/filler_grid.json` (250 m cells, world meters in the `zone_offsets.json` frame), made by `tools/zones/filler.py` from the reference map; picture `docs/zones/filler/filler_overlay.jpg`. The city area is about 16.5 x 14 km:
+
+| Cell | Area | Fill |
+|---|---|---|
+| Placed zones | 76 km² | nothing (playable) |
+| Water (ocean, Liberty Harbor, canals) | 36 km² | one water plane, matched to each zone's water height |
+| Forest / park (green on the map) | 25 km² | forest filler: Megaplant HLOD trees, no undergrowth |
+| City | 71 km² | city filler: City Sample buildings, HLOD only, no interiors, no traffic, heights by district |
+| War Wall buffer (one cell around each zone) | 24 km² | low city (2-4 floors) so the wall reads; nothing tall at the wall |
+
+Rules:
+- Unplayable: the energy barrier sits on each zone's War Wall line (about 149 km of wall in total, all zone rectangles). Flying over it is blocked. Gates open only where two zones meet (inner ring first).
+- Filler is HLOD only, so far away it is one cheap mesh per cell. It never streams in at full detail, so it costs almost no memory.
+- The monorail track crosses the filler on its own visible line. Stations are only inside zones.
+- Build order: water plane first, then city blocks per district, then forest. Each is one PCG graph that reads `filler_grid.json`, so moving a zone means re-running `place_all.py`, `filler.py` and the graph.
+- The grid is only as good as the reference map's colors: hatched zone boxes and the map frame can mislabel a few cells. Fix those by hand in the JSON before building.
