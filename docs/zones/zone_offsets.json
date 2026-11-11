@@ -1,53 +1,158 @@
 {
  "units": "meters",
  "frame": "game axes; map east = -x, map north = -z; Atlas Park at 0,0",
+ "map_fit": {
+  "m_per_display_px": 11.63,
+  "x": "10646.7 - k*u",
+  "z": "-7474.0 + k*v",
+  "display_scale_to_original": 1.676
+ },
  "zones": {
-  "city_01_01": {
-   "name": "Atlas Park",
+  "city_01_03": {
+   "name": "Galaxy City",
    "offset_m": [
-    0.0,
-    0.0
+    2614.6,
+    -507.2
    ],
    "world_rect_m": [
-    -551.1,
-    -746.2,
-    863.2,
-    317.0
+    1985.5,
+    -1331.4,
+    3048.6,
+    -34.1
    ],
    "gates_world_m": {
+    "GALAXYCITY_KINGSROW": [
+     2283.0,
+     -40.8
+    ],
     "HAZARD_PEREZPARK": [
-     847.6,
-     -579.7
-    ],
-    "atlas_steelcanyon": [
-     214.6,
-     -739.4
-    ],
-    "HAZARD_EASTGATE": [
-     -535.2,
-     -228.6
-    ],
-    "ATLAS_SKYWAYCITY": [
-     331.6,
-     310.3
+     2001.0,
+     -434.6
     ]
    },
    "lines_on_map": [
     "yellow"
    ],
+   "station": null,
+   "placed_by": "gate match (inner ring)",
+   "map_number": 2
+  },
+  "hazard_01_01": {
+   "name": "Perez Park",
+   "offset_m": [
+    1834.0,
+    -975.4
+   ],
+   "world_rect_m": [
+    899.6,
+    -1090.1,
+    1945.5,
+    290.5
+   ],
+   "gates_world_m": {
+    "HAZARD_ATLASPARK": [
+     908.6,
+     -579.7
+    ],
+    "HAZARD_STEELCANYON": [
+     1555.4,
+     -1081.4
+    ],
+    "HAZARD_GALAXYCITY": [
+     1940.1,
+     -434.6
+    ],
+    "HAZARD_SKYWAYCITY": [
+     1321.3,
+     301.1
+    ]
+   },
+   "lines_on_map": [],
+   "station": null,
+   "placed_by": "gate match (inner ring)",
+   "map_number": 4
+  },
+  "city_01_02": {
+   "name": "Kings Row",
+   "offset_m": [
+    2112.3,
+    1871.5
+   ],
+   "world_rect_m": [
+    1151.5,
+    832.7,
+    2565.8,
+    2832.2
+   ],
+   "gates_world_m": {},
+   "lines_on_map": [
+    "yellow"
+   ],
    "station": {
     "local_m": [
-     204.1,
-     22.6,
-     -419.8
+     -471.6,
+     -3.0,
+     200.7
     ],
     "world_m": [
-     204.1,
-     22.6,
-     -419.8
+     1640.7,
+     -3.0,
+     2072.2
     ],
-    "game_yaw_deg": -90.0
-   }
+    "game_yaw_deg": -0.0
+   },
+   "placed_by": "gate match (inner ring)",
+   "map_number": 3
+  },
+  "city_02_01": {
+   "name": "Steel Canyon",
+   "offset_m": [
+    1734.3,
+    -1975.2
+   ],
+   "world_rect_m": [
+    207.9,
+    -3033.5,
+    1271.0,
+    -1151.0
+   ],
+   "gates_world_m": {
+    "HAZARD_BOOMTOWN": [
+     842.5,
+     -3017.9
+    ],
+    "STEEL_INDEPENDENCE": [
+     1264.3,
+     -2267.8
+    ],
+    "HAZARD_PEREZPARK": [
+     1104.6,
+     -1166.9
+    ],
+    "STEEL_ATLAS": [
+     214.6,
+     -1331.5
+    ]
+   },
+   "lines_on_map": [
+    "yellow",
+    "green"
+   ],
+   "station": {
+    "local_m": [
+     -1408.8,
+     9.8,
+     699.4
+    ],
+    "world_m": [
+     325.5,
+     9.8,
+     -1275.8
+    ],
+    "game_yaw_deg": -270.0
+   },
+   "placed_by": "gate match (inner ring)",
+   "map_number": 5
   },
   "city_02_02": {
    "name": "Skyway City",
@@ -119,252 +224,345 @@
      2508.8
     ],
     "game_yaw_deg": -90.0
-   }
+   },
+   "placed_by": "gate match (inner ring)",
+   "map_number": 6
   },
-  "hazard_01_01": {
-   "name": "Perez Park",
+  "city_03_02": {
+   "name": "Independence Port",
    "offset_m": [
-    1834.0,
-    -975.4
+    4428.0,
+    613.2
    ],
    "world_rect_m": [
-    899.6,
-    -1090.1,
-    1945.5,
-    290.5
+    3729.6,
+    -2394.3,
+    5237.4,
+    2215.0
    ],
-   "gates_world_m": {
-    "HAZARD_ATLASPARK": [
-     908.6,
-     -579.7
-    ],
-    "HAZARD_STEELCANYON": [
-     1555.4,
-     -1081.4
-    ],
-    "HAZARD_GALAXYCITY": [
-     1940.1,
-     -434.6
-    ],
-    "HAZARD_SKYWAYCITY": [
-     1321.3,
-     301.1
-    ]
-   },
-   "lines_on_map": [],
-   "station": null
-  },
-  "city_02_01": {
-   "name": "Steel Canyon",
-   "offset_m": [
-    1734.3,
-    -1975.2
-   ],
-   "world_rect_m": [
-    207.9,
-    -3033.5,
-    1271.0,
-    -1151.0
-   ],
-   "gates_world_m": {
-    "HAZARD_BOOMTOWN": [
-     842.5,
-     -3017.9
-    ],
-    "STEEL_INDEPENDENCE": [
-     1264.3,
-     -2267.8
-    ],
-    "HAZARD_PEREZPARK": [
-     1104.6,
-     -1166.9
-    ],
-    "STEEL_ATLAS": [
-     214.6,
-     -1331.5
-    ]
-   },
-   "lines_on_map": [
-    "yellow",
-    "green"
-   ],
+   "placed_by": "reference map box center",
+   "map_number": 10,
    "station": {
     "local_m": [
-     -1408.8,
-     9.8,
-     699.4
+     -544.0,
+     9.9,
+     -1535.0
     ],
     "world_m": [
-     325.5,
-     9.8,
-     -1275.8
+     3884.0,
+     9.9,
+     -921.8
     ],
     "game_yaw_deg": -270.0
    }
   },
-  "city_01_03": {
-   "name": "Galaxy City",
+  "city_03_01": {
+   "name": "Talos Island",
    "offset_m": [
-    2614.6,
-    -507.2
+    -1462.2,
+    1066.0
    ],
    "world_rect_m": [
-    1985.5,
-    -1331.4,
-    3048.6,
-    -34.1
+    -3729.9,
+    124.8,
+    -560.0,
+    4231.0
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 9,
+   "station": {
+    "local_m": [
+     -301.8,
+     58.5,
+     2243.9
+    ],
+    "world_m": [
+     -1764.0,
+     58.5,
+     3309.9
+    ],
+    "game_yaw_deg": -270.0
+   }
+  },
+  "city_04_02": {
+   "name": "Brickstown",
+   "offset_m": [
+    2728.0,
+    3507.7
+   ],
+   "world_rect_m": [
+    1571.6,
+    2932.2,
+    3023.0,
+    4314.2
+   ],
+   "placed_by": "reference map box center, nudged 492 m to clear Kings Row",
+   "map_number": 14,
+   "station": {
+    "local_m": [
+     -92.4,
+     9.8,
+     -521.1
+    ],
+    "world_m": [
+     2635.6,
+     9.8,
+     2986.6
+    ],
+    "game_yaw_deg": -270.0
+   }
+  },
+  "city_04_01": {
+   "name": "Founders' Falls",
+   "offset_m": [
+    -3696.4,
+    4394.4
+   ],
+   "world_rect_m": [
+    -3759.8,
+    4331.0,
+    -2111.4,
+    5979.4
+   ],
+   "placed_by": "reference map box center, nudged 209 m to clear Eden",
+   "map_number": 13,
+   "station": {
+    "local_m": [
+     665.9,
+     9.8,
+     884.0
+    ],
+    "world_m": [
+     -3030.5,
+     9.8,
+     5278.4
+    ],
+    "game_yaw_deg": -270.0
+   }
+  },
+  "city_05_01": {
+   "name": "Peregrine Island",
+   "offset_m": [
+    -2866.9,
+    -1866.3
+   ],
+   "world_rect_m": [
+    -3766.1,
+    -4609.2,
+    -651.1,
+    24.8
+   ],
+   "placed_by": "reference map box center, nudged 6 m to clear Atlas Park",
+   "map_number": 19,
+   "station": {
+    "local_m": [
+     487.8,
+     0.0,
+     -216.6
+    ],
+    "world_m": [
+     -2379.1,
+     0.0,
+     -2082.9
+    ],
+    "game_yaw_deg": -270.0
+   }
+  },
+  "city_02_05": {
+   "name": "Faultline",
+   "offset_m": [
+    160.7,
+    4033.4
+   ],
+   "world_rect_m": [
+    -130.2,
+    3449.9,
+    608.1,
+    5289.3
+   ],
+   "placed_by": "reference map box center, nudged 76 m to clear Eden",
+   "map_number": 8,
+   "station": {
+    "local_m": [
+     -2.7,
+     0.0,
+     -562.8
+    ],
+    "world_m": [
+     158.0,
+     0.0,
+     3470.6
+    ],
+    "game_yaw_deg": -180.0
+   }
+  },
+  "city_03_03": {
+   "name": "Croatoa",
+   "offset_m": [
+    7431.1,
+    -5630.8
+   ],
+   "world_rect_m": [
+    6519.0,
+    -6526.0,
+    8308.9,
+    -4631.0
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 21,
+   "station": {
+    "local_m": [
+     290.4,
+     14.6,
+     630.7
+    ],
+    "world_m": [
+     7721.5,
+     14.6,
+     -5000.1
+    ],
+    "game_yaw_deg": -270.0
+   }
+  },
+  "hazard_02_01": {
+   "name": "Boomtown",
+   "offset_m": [
+    1494.3,
+    -5281.7
+   ],
+   "world_rect_m": [
+    50.8,
+    -5665.1,
+    2357.5,
+    -3584.6
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 7
+  },
+  "hazard_03_01": {
+   "name": "Dark Astoria",
+   "offset_m": [
+    -6009.4,
+    2103.1
+   ],
+   "world_rect_m": [
+    -5694.4,
+    2179.1,
+    -4107.4,
+    3642.0
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 11
+  },
+  "hazard_03_02": {
+   "name": "Crey's Folly",
+   "offset_m": [
+    6170.6,
+    4055.0
+   ],
+   "world_rect_m": [
+    4069.5,
+    2941.7,
+    6409.2,
+    4484.2
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 15
+  },
+  "hazard_04_01": {
+   "name": "Eden",
+   "offset_m": [
+    -2046.0,
+    5678.3
+   ],
+   "world_rect_m": [
+    -2011.4,
+    5389.3,
+    512.5,
+    6827.7
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 16
+  },
+  "trial_05_01": {
+   "name": "Rikti Crash Site",
+   "offset_m": [
+    7827.9,
+    2888.9
+   ],
+   "world_rect_m": [
+    7691.0,
+    619.1,
+    9183.6,
+    3155.4
+   ],
+   "placed_by": "reference map box center",
+   "map_number": 17
+  },
+  "city_01_01": {
+   "name": "Atlas Park",
+   "offset_m": [
+    0.0,
+    0.0
+   ],
+   "world_rect_m": [
+    -551.1,
+    -746.2,
+    863.2,
+    317.0
    ],
    "gates_world_m": {
-    "GALAXYCITY_KINGSROW": [
-     2283.0,
-     -40.8
-    ],
     "HAZARD_PEREZPARK": [
-     2001.0,
-     -434.6
+     847.6,
+     -579.7
+    ],
+    "atlas_steelcanyon": [
+     214.6,
+     -739.4
+    ],
+    "HAZARD_EASTGATE": [
+     -535.2,
+     -228.6
+    ],
+    "ATLAS_SKYWAYCITY": [
+     331.6,
+     310.3
     ]
    },
    "lines_on_map": [
     "yellow"
    ],
-   "station": null
-  },
-  "city_01_02": {
-   "name": "Kings Row",
-   "offset_m": [
-    2112.3,
-    1871.5
-   ],
-   "world_rect_m": [
-    1151.5,
-    832.7,
-    2565.8,
-    2832.2
-   ],
-   "gates_world_m": {},
-   "lines_on_map": [
-    "yellow"
-   ],
    "station": {
     "local_m": [
-     -471.6,
-     -3.0,
-     200.7
+     204.1,
+     22.6,
+     -419.8
     ],
     "world_m": [
-     1640.7,
-     -3.0,
-     2072.2
+     204.1,
+     22.6,
+     -419.8
     ],
-    "game_yaw_deg": -0.0
-   }
+    "game_yaw_deg": -90.0
+   },
+   "placed_by": "gate match (inner ring)",
+   "map_number": 1
   }
  },
- "station_note": "station = original monorail arrival point (SpawnLocation monorail_zoneteleport_PC), zone-local and world meters in game axes (x, height, z); yaw in game degrees around the up axis. Lines read from the Homecoming map; original data has one station per zone. Galaxy City and Perez Park have no station in the data (Galaxy was cut from the original line).",
- "other_zone_stations_local": {
-  "city_02_05": {
-   "local_ft": [
-    -8.8,
-    0.0,
-    -1846.3
-   ],
-   "local_m": [
-    -2.7,
-    0.0,
-    -562.8
-   ],
-   "game_yaw_deg": -180.0
-  },
-  "city_03_01": {
-   "local_ft": [
-    -990.2,
-    192.0,
-    7361.7
-   ],
-   "local_m": [
-    -301.8,
-    58.5,
-    2243.9
-   ],
-   "game_yaw_deg": -270.0
-  },
-  "city_03_02": {
-   "local_ft": [
-    -1784.7,
-    32.5,
-    -5036.3
-   ],
-   "local_m": [
-    -544.0,
-    9.9,
-    -1535.0
-   ],
-   "game_yaw_deg": -270.0
-  },
-  "city_03_03": {
-   "local_ft": [
-    952.8,
-    48.0,
-    2069.3
-   ],
-   "local_m": [
-    290.4,
-    14.6,
-    630.7
-   ],
-   "game_yaw_deg": -270.0
-  },
-  "city_04_01": {
-   "local_ft": [
-    2184.8,
-    32.0,
-    2900.3
-   ],
-   "local_m": [
-    665.9,
-    9.8,
-    884.0
-   ],
-   "game_yaw_deg": -270.0
-  },
-  "city_04_02": {
-   "local_ft": [
-    -303.2,
-    32.0,
-    -1709.7
-   ],
-   "local_m": [
-    -92.4,
-    9.8,
-    -521.1
-   ],
-   "game_yaw_deg": -270.0
-  },
-  "city_05_01": {
-   "local_ft": [
-    1600.3,
-    0.0,
-    -710.7
-   ],
-   "local_m": [
-    487.8,
-    0.0,
-    -216.6
-   ],
-   "game_yaw_deg": -270.0
-  },
-  "hazard_01_02": {
-   "local_ft": [
-    2520.3,
-    0.0,
-    -3848.7
-   ],
-   "local_m": [
-    768.2,
-    0.0,
-    -1173.1
-   ],
-   "game_yaw_deg": -270.0
-  }
+ "separate_levels": {
+  "city_03_04": "firebase_zulu",
+  "city_02_04": "pocket_d",
+  "hazard_01_02": "the_hollows",
+  "hazard_06_01": "shadow_shard_1",
+  "hazard_06_02": "shadow_shard_2",
+  "hazard_06_03": "shadow_shard_3",
+  "war_05_01": "rikti_war_zone",
+  "trial_01_01": "trial_01_01",
+  "trial_01_02": "trial_01_02",
+  "trial_02_01": "trial_02_01",
+  "trial_03_01": "trial_03_01",
+  "trial_04_01": "terra_volta",
+  "trial_04_02": "trial_04_02",
+  "trial_06_01": "trial_06_01"
  }
 }
