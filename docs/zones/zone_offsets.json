@@ -259,16 +259,16 @@
   "city_03_01": {
    "name": "Talos Island",
    "offset_m": [
-    -1462.2,
+    -3152.9,
     1066.0
    ],
    "world_rect_m": [
-    -3729.9,
+    -5420.6,
     124.8,
-    -560.0,
+    -2250.7,
     4231.0
    ],
-   "placed_by": "reference map box center",
+   "placed_by": "reference map box center, nudged 303 m to clear The Hollows",
    "map_number": 9,
    "station": {
     "local_m": [
@@ -277,7 +277,7 @@
      2243.9
     ],
     "world_m": [
-     -1764.0,
+     -3454.7,
      58.5,
      3309.9
     ],
@@ -315,16 +315,16 @@
   "city_04_01": {
    "name": "Founders' Falls",
    "offset_m": [
-    -3696.4,
+    -3487.2,
     4394.4
    ],
    "world_rect_m": [
-    -3759.8,
+    -3550.6,
     4331.0,
-    -2111.4,
+    -1902.2,
     5979.4
    ],
-   "placed_by": "reference map box center, nudged 209 m to clear Eden",
+   "placed_by": "reference map box center, nudged 861 m to clear Talos Island",
    "map_number": 13,
    "station": {
     "local_m": [
@@ -333,7 +333,7 @@
      884.0
     ],
     "world_m": [
-     -3030.5,
+     -2821.3,
      9.8,
      5278.4
     ],
@@ -343,16 +343,16 @@
   "city_05_01": {
    "name": "Peregrine Island",
    "offset_m": [
-    -2866.9,
-    -1866.3
+    -2861.4,
+    -2904.7
    ],
    "world_rect_m": [
-    -3766.1,
-    -4609.2,
-    -651.1,
-    24.8
+    -3760.6,
+    -5647.6,
+    -645.6,
+    -1013.6
    ],
-   "placed_by": "reference map box center, nudged 6 m to clear Atlas Park",
+   "placed_by": "reference map box center, nudged 1038 m to clear The Hollows",
    "map_number": 19,
    "station": {
     "local_m": [
@@ -361,9 +361,9 @@
      -216.6
     ],
     "world_m": [
-     -2379.1,
+     -2373.6,
      0.0,
-     -2082.9
+     -3121.3
     ],
     "game_yaw_deg": -270.0
    }
@@ -372,15 +372,15 @@
    "name": "Faultline",
    "offset_m": [
     160.7,
-    4033.4
+    4109.4
    ],
    "world_rect_m": [
     -130.2,
-    3449.9,
+    3525.9,
     608.1,
-    5289.3
+    5365.3
    ],
-   "placed_by": "reference map box center, nudged 76 m to clear Eden",
+   "placed_by": "reference map box center",
    "map_number": 8,
    "station": {
     "local_m": [
@@ -391,7 +391,7 @@
     "world_m": [
      158.0,
      0.0,
-     3470.6
+     3546.6
     ],
     "game_yaw_deg": -180.0
    }
@@ -424,6 +424,34 @@
     "game_yaw_deg": -270.0
    }
   },
+  "hazard_01_02": {
+   "name": "The Hollows",
+   "offset_m": [
+    -1424.1,
+    529.9
+   ],
+   "world_rect_m": [
+    -2150.7,
+    -913.6,
+    -651.1,
+    1594.9
+   ],
+   "placed_by": "reference map box center, nudged 117 m to clear Atlas Park",
+   "map_number": 18,
+   "station": {
+    "local_m": [
+     768.2,
+     0.0,
+     -1173.1
+    ],
+    "world_m": [
+     -655.9,
+     0.0,
+     -643.2
+    ],
+    "game_yaw_deg": -270.0
+   }
+  },
   "hazard_02_01": {
    "name": "Boomtown",
    "offset_m": [
@@ -442,16 +470,16 @@
   "hazard_03_01": {
    "name": "Dark Astoria",
    "offset_m": [
-    -6009.4,
+    -7422.6,
     2103.1
    ],
    "world_rect_m": [
-    -5694.4,
+    -7107.6,
     2179.1,
-    -4107.4,
+    -5520.6,
     3642.0
    ],
-   "placed_by": "reference map box center",
+   "placed_by": "reference map box center, nudged 303 m to clear Talos Island",
    "map_number": 11
   },
   "hazard_03_02": {
@@ -472,16 +500,16 @@
   "hazard_04_01": {
    "name": "Eden",
    "offset_m": [
-    -2046.0,
-    5678.3
+    -1836.8,
+    5754.3
    ],
    "world_rect_m": [
-    -2011.4,
-    5389.3,
-    512.5,
-    6827.7
+    -1802.2,
+    5465.3,
+    721.7,
+    6903.7
    ],
-   "placed_by": "reference map box center",
+   "placed_by": "reference map box center, nudged 76 m to clear Faultline",
    "map_number": 16
   },
   "trial_05_01": {
@@ -552,7 +580,6 @@
  "separate_levels": {
   "city_03_04": "firebase_zulu",
   "city_02_04": "pocket_d",
-  "hazard_01_02": "the_hollows",
   "hazard_06_01": "shadow_shard_1",
   "hazard_06_02": "shadow_shard_2",
   "hazard_06_03": "shadow_shard_3",
