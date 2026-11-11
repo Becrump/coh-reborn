@@ -14,6 +14,12 @@ Set `I24_DATA` to an i24 `data` folder (sparse: maps/city_zones, object_library,
   including Kings Row's per-district ones and the older group-less ES_ defs (Skyway City). Needs the sparse i24 paths
   above plus data/defs and data/scripts.loc/spawndefs. All 35 zones take about a minute; output is ~150 MB, so it is not
   committed: run it where the game data is. Counts per zone: `docs/zones/encounters/summary.json`.
+- `tree_table.py` - tree replacement table for all zones from `docs/zones/data/*/*_trees.json` ->
+  `docs/zones/tree_replacement.json` (model -> category, replace/keep, Megaplant species, counts per zone).
+  Use it per zone with `coh2unreal/unreal/setup_trees.py "<zone folder>" docs/zones/tree_replacement.json`:
+  removes the original actors of "replace" models and plants Megaplant trees; "keep" models (forest edge walls,
+  backdrop and canopy cards, burnt dead and twisted trees) stay for now. Street lamps need no table: the converter
+  already leaves them out and `setup_level.py` places the modern lamps and lights from `<name>_props.json`.
 
 Axes: all zones share one orientation; map east = game -x, map north = game -z.
 

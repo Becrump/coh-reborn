@@ -11,6 +11,13 @@ on in Project Settings), after `python -m coh2unreal.trees`:
    Each mesh variant is one instanced component on a single CoHTrees actor,
    so a thousand trees cost a few dozen draw groups.
 Safe to run again (replaces CoHTrees, re-hides).
+
+Instanced zones (import_instanced.py / the zone batch, no tile actors): pass
+the replacement table as a second argument,
+    py setup_trees.py "<zone out folder>" "<repo>/docs/zones/tree_replacement.json"
+Only models with action "replace" are planted, with the table's species, and
+their original actors (labels SM_<model>...) are removed; "keep" models stay.
+Saves only the current level.
 """
 import json
 import os
@@ -40,6 +47,32 @@ asub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 
 def log(msg):
     unreal.log("[CoH trees] " + msg)
+
+
+def table():
+    args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if len(args) > 1:
+        return json.load(open(args[1]))["models"]
+    return None
+
+
+def mesh_label(model):
+    """import_instanced / props.py mesh name for a CoH model."""
+    return "SM_" + "".join(c if c.isalnum() else "_" for c in model)
+
+
+def remove_instanced(models):
+    """Deletes the original actors of the given tree models."""
+    prefixes = tuple(mesh_label(m) for m in models)
+    n = 0
+    for a in asub.get_all_level_actors():
+        label = a.get_actor_label()
+        if label.startswith(prefixes):
+            rest = label[len(next(p for p in prefixes if label.startswith(p))):]
+            if rest == "" or rest[0] == "_":
+                asub.destroy_actor(a)
+                n += 1
+    log("original tree actors removed: %d" % n)
 
 
 def out_dir():
@@ -100,7 +133,12 @@ def main():
     folder = out_dir()
     cfg = load_trees(folder)
     rng = random.Random(42)
-    hide_old(cfg["materials"])
+    tab = table()
+    if tab is None:
+        hide_old(cfg["materials"])
+    else:
+        remove_instanced(m for m, v in tab.items() if v["action"] == "replace")
+    seen = set()
     for a in asub.get_all_level_actors():
         if a.get_actor_label() == LABEL:
             asub.destroy_actor(a)
@@ -108,7 +146,18 @@ def main():
     groups = {}
     missing = set()
     for t in cfg["trees"]:
-        species = rng.choice(SPECIES.get(t["kind"], SPECIES["tree"]))
+        if tab is not None:
+            row = tab.get(t["model"])
+            if not row or row["action"] != "replace" or not row["species"]:
+                continue
+            # a tree's root and leaf models can be listed apart: plant once
+            cell = (round(t["p"][0] / 300), round(t["p"][1] / 300))
+            if cell in seen:
+                continue
+            seen.add(cell)
+            species = rng.choice(row["species"])
+        else:
+            species = rng.choice(SPECIES.get(t["kind"], SPECIES["tree"]))
         variant = rng.choice(VARIANTS)
         key = (species, variant)
         if key not in tops:
@@ -144,7 +193,10 @@ def main():
     log("planted %d trees in %d groups%s" % (
         total, len(groups),
         "; missing meshes: %s" % sorted(missing) if missing else ""))
-    unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
+    if tab is None:
+        unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
+    else:   # zone batch: never save other maps' packages
+        unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
 
 
 main()
