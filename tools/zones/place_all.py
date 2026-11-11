@@ -22,9 +22,9 @@ MAP={ # zone id: (map number, display box center)
  "hazard_02_01":(7,(812,245)),"city_02_05":(8,(895,1025)),"city_03_01":(9,(1100,830)),
  "city_03_02":(10,(530,635)),"hazard_03_01":(11,(1337,893)),"city_04_01":(13,(1150,1012)),
  "city_04_02":(14,(718,912)),"hazard_03_02":(15,(465,962)),"hazard_04_01":(16,(980,1168)),
- "trial_05_01":(17,(190,805)),"city_05_01":(19,(1105,520)),"city_03_03":(21,(278,163)),
+ "trial_05_01":(17,(190,805)),"city_05_01":(19,(1105,520)),"hazard_01_02":(18,(1010,672)),"city_03_03":(21,(278,163)),
 }
-NAMES={1:"Atlas Park",2:"Galaxy City",3:"Kings Row",4:"Perez Park",5:"Steel Canyon",6:"Skyway City",7:"Boomtown",8:"Faultline",9:"Talos Island",10:"Independence Port",11:"Dark Astoria",13:"Founders' Falls",14:"Brickstown",15:"Crey's Folly",16:"Eden",17:"Rikti Crash Site",19:"Peregrine Island",21:"Croatoa"}
+NAMES={1:"Atlas Park",2:"Galaxy City",3:"Kings Row",4:"Perez Park",5:"Steel Canyon",6:"Skyway City",7:"Boomtown",8:"Faultline",9:"Talos Island",10:"Independence Port",11:"Dark Astoria",13:"Founders' Falls",14:"Brickstown",15:"Crey's Folly",16:"Eden",17:"Rikti Crash Site",18:"The Hollows",19:"Peregrine Island",21:"Croatoa"}
 def center(z):
     b=B[z]["bounds_ft"]; return ((b[0]+b[2])/2*FT,(b[1]+b[3])/2*FT)
 # fit x = a - k*u, z = b + k*v using inner ring world centers
@@ -60,17 +60,21 @@ st=json.load(open("stations.json"))
 for z,v in out["zones"].items():
     if "station" not in v and z in st:
         s=st[z]; o=v["offset_m"]; v["station"]={"local_m":s["local_m"],"world_m":[round(s["local_m"][0]+o[0],1),s["local_m"][1],round(s["local_m"][2]+o[1],1)],"game_yaw_deg":s["game_yaw_deg"]}
-# separate overlaps: inner ring and Talos stay, others move along the
-# shorter overlap axis, away from the fixed zone, plus a 100 m road gap
-FIXED=set(Z["zones"])|{"city_03_01"}
+# separate overlaps: lower rank stays, higher rank moves along the shorter
+# overlap axis, away from the other zone, plus a 100 m road gap. Inner ring
+# first, then the Hollows (owns map box 18 east of Atlas, per Robert), then
+# Talos, then the rest in list order.
+FIXED=set(Z["zones"])
+RANK={z:0 for z in FIXED}; RANK.update({"hazard_01_02":1,"city_03_01":2})
 GAP=100.0
 for it in range(50):
     moved=False
     ks=list(out["zones"])
     for p in ks:
         for q in ks:
-            if p==q or q in FIXED and p in FIXED: continue
-            if p in FIXED or (q not in FIXED and ks.index(q)<ks.index(p)): continue
+            if p==q: continue
+            rp,rq=(RANK.get(p,3),ks.index(p)),(RANK.get(q,3),ks.index(q))
+            if p in FIXED or rq>rp: continue
             A_=out["zones"][q]["world_rect_m"];B_=out["zones"][p]["world_rect_m"]
             w=min(A_[2],B_[2])-max(A_[0],B_[0]); h=min(A_[3],B_[3])-max(A_[1],B_[1])
             if w>-GAP and h>-GAP:
