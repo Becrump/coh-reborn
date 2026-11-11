@@ -1,0 +1,916 @@
+{
+ "format": 1,
+ "note": "Rival names and power options. Power set names are short set names; check them with gen_rivals.py --catalog <catalog.json from coh_rules.py catalog>.",
+ "stages": [
+  {
+   "stage": 0,
+   "id": "Marked",
+   "rank": "Minion",
+   "name": "{handle}",
+   "traits": 0,
+   "crew": 0
+  },
+  {
+   "stage": 1,
+   "id": "Rising",
+   "rank": "Lieutenant",
+   "name": "{handle}",
+   "traits": 1,
+   "crew": 2
+  },
+  {
+   "stage": 2,
+   "id": "Crew Boss",
+   "rank": "Boss",
+   "name": "{prefix_or_handle}",
+   "traits": 1,
+   "crew": 4
+  },
+  {
+   "stage": 3,
+   "id": "Gang Legend",
+   "rank": "Elite Boss",
+   "name": "legend_titles",
+   "traits": 2,
+   "crew": 5
+  },
+  {
+   "stage": 4,
+   "id": "Breakout",
+   "rank": "Elite Boss",
+   "name": "keep",
+   "traits": 2,
+   "crew": 5,
+   "origin": true
+  },
+  {
+   "stage": 5,
+   "id": "Supervillain",
+   "rank": "Archvillain",
+   "name": "super_titles",
+   "traits": 3,
+   "crew": 8,
+   "origin": true
+  }
+ ],
+ "factions": {
+  "Hellions": {
+   "display": "Hellions",
+   "handles": [
+    "Cinder",
+    "Ash",
+    "Brimstone",
+    "Scorch",
+    "Blaze",
+    "Sulfur",
+    "Torch",
+    "Kindling",
+    "Ember",
+    "Matchstick",
+    "Hotfoot",
+    "Smolder",
+    "Fuse",
+    "Char",
+    "Wick",
+    "Flashpoint",
+    "Tinder",
+    "Soot",
+    "Sparky",
+    "Pyre",
+    "Backdraft",
+    "Burnout",
+    "Lighter",
+    "Firebug",
+    "Hex",
+    "Hellcat",
+    "Sinner",
+    "Damnit",
+    "Ignis",
+    "Flint"
+   ],
+   "prefixes": [
+    "Big",
+    "Lil'",
+    "Crazy",
+    "Mad",
+    "Sick",
+    "Hot"
+   ],
+   "suffixes": [
+    "the Torch",
+    "the Firebug",
+    "Six-Six-Six",
+    "from Hell"
+   ],
+   "legend_titles": [
+    "{h} the Damned",
+    "{h}, Hellion Warlord",
+    "Hellboss {h}",
+    "{h} of the Burning Streets"
+   ],
+   "super_titles": [
+    "Lord {h}",
+    "{h} the Infernal",
+    "{h}, Herald of the Pit",
+    "Archfiend {h}",
+    "{h} Hellborn"
+   ],
+   "traits": [
+    "Fireproof",
+    "Hotfoot (fast)",
+    "Arsonist (sets fires on the street)",
+    "Crowd-puller",
+    "Showboat",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Magic",
+     "story": "Demonic pact",
+     "power_sets": [
+      "Fire_Blast",
+      "Fiery_Aura",
+      "Demon_Summoning",
+      "Fire_Manipulation",
+      "Fire_Melee"
+     ]
+    },
+    {
+     "origin": "Mutation",
+     "story": "Burned in a warehouse blaze and came out on fire",
+     "power_sets": [
+      "Fire_Blast",
+      "Fiery_Aura",
+      "Fire_Control",
+      "Fire_Manipulation"
+     ]
+    },
+    {
+     "origin": "Technology",
+     "story": "Stolen flamethrower rig",
+     "power_sets": [
+      "Assault_Rifle",
+      "Devices",
+      "Traps",
+      "Fire_Manipulation"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Hellions",
+    "Fallen"
+   ]
+  },
+  "Skulls": {
+   "display": "Skulls",
+   "handles": [
+    "Marrow",
+    "Rattles",
+    "Bones",
+    "Grin",
+    "Crypt",
+    "Gravedigger",
+    "Tombstone",
+    "Jawbone",
+    "Cadaver",
+    "Ossuary",
+    "Rigor",
+    "Morticia",
+    "Coffin",
+    "Ghoul",
+    "Hollow",
+    "Bonesaw",
+    "Dirge",
+    "Shroud",
+    "Wraith",
+    "Epitaph",
+    "Knuckles",
+    "Skully",
+    "Ribcage",
+    "Mortis",
+    "Vulture",
+    "Cold Hands",
+    "Requiem",
+    "Hearse",
+    "Spook",
+    "Sexton"
+   ],
+   "prefixes": [
+    "Dead",
+    "Grim",
+    "Old",
+    "Pale",
+    "Rotten"
+   ],
+   "suffixes": [
+    "the Gravedigger",
+    "Six Feet",
+    "the Undertaker",
+    "Bonepicker"
+   ],
+   "legend_titles": [
+    "{h} the Deathless",
+    "Skull King {h}",
+    "{h}, Lord of Bones",
+    "{h} of the Last Rites"
+   ],
+   "super_titles": [
+    "{h} the Death Lord",
+    "Necrarch {h}",
+    "{h}, Who Walks Beyond",
+    "The Pale {h}",
+    "Lich-King {h}"
+   ],
+   "traits": [
+    "Deathless (gets up once)",
+    "Bone Wall (resists smashing)",
+    "Graveyard Call (raises a dead minion)",
+    "Ambusher",
+    "Terrify (fear on spawn)",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Magic",
+     "story": "Bargain with Death",
+     "power_sets": [
+      "Dark_Blast",
+      "Dark_Armor",
+      "Necromancy",
+      "Dark_Melee",
+      "Dark_Miasma"
+     ]
+    },
+    {
+     "origin": "Science",
+     "story": "Embalming-fluid experiment",
+     "power_sets": [
+      "Dark_Blast",
+      "Regeneration",
+      "Darkness_Control",
+      "Poison"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Skulls"
+   ]
+  },
+  "Outcasts": {
+   "display": "Outcasts",
+   "handles": [
+    "Shock",
+    "Static",
+    "Frostbite",
+    "Quake",
+    "Rubble",
+    "Volt",
+    "Chill",
+    "Tremor",
+    "Gust",
+    "Hailstone",
+    "Sleet",
+    "Gravel",
+    "Ozone",
+    "Circuit",
+    "Iceberg",
+    "Boulder",
+    "Twister",
+    "Jolt",
+    "Glacier",
+    "Cyclone",
+    "Spark",
+    "Pebble",
+    "Slush",
+    "Shiver",
+    "Rockslide",
+    "Ampere",
+    "Breeze",
+    "Granite",
+    "Arc",
+    "Rime"
+   ],
+   "prefixes": [
+    "Little",
+    "Wild",
+    "Cold",
+    "Hard",
+    "Live"
+   ],
+   "suffixes": [
+    "the Wire",
+    "Stone Cold",
+    "on Ice",
+    "the Storm"
+   ],
+   "legend_titles": [
+    "{h}, Outcast Kingpin",
+    "{h} the Elemental",
+    "{h} Stormcaller",
+    "Boss {h} of the Corners"
+   ],
+   "super_titles": [
+    "{h} the Living Storm",
+    "Elemental Lord {h}",
+    "{h}, Avatar of Earth",
+    "{h} Absolute Zero",
+    "The Tempest {h}"
+   ],
+   "traits": [
+    "Element Shift (changes element each fight)",
+    "Grounded (resists its own element)",
+    "Runner",
+    "Crowd-puller",
+    "Showboat",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Mutation",
+     "story": "Element awakens fully",
+     "power_sets": [
+      "Electrical_Blast",
+      "Electric_Armor",
+      "Ice_Blast",
+      "Ice_Armor",
+      "Earth_Control",
+      "Stone_Armor",
+      "Storm_Summoning"
+     ]
+    },
+    {
+     "origin": "Science",
+     "story": "Lab accident amplifies their element",
+     "power_sets": [
+      "Electrical_Blast",
+      "Electric_Melee",
+      "Ice_Control",
+      "Earth_Control",
+      "Kinetics"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Outcasts"
+   ]
+  },
+  "Clockwork": {
+   "display": "Clockwork",
+   "handles": [
+    "Cog",
+    "Gear",
+    "Sprocket",
+    "Mainspring",
+    "Tick",
+    "Ratchet",
+    "Pendulum",
+    "Flywheel",
+    "Escapement",
+    "Piston",
+    "Rivet",
+    "Gyro",
+    "Spindle",
+    "Crank",
+    "Tock",
+    "Bolt",
+    "Chime",
+    "Winder",
+    "Armature",
+    "Gimbal"
+   ],
+   "prefixes": [],
+   "suffixes": [
+    "Mark II",
+    "Mark III",
+    "Prime"
+   ],
+   "legend_titles": [
+    "{h} Mark IV",
+    "{h}, Clockwork Captain",
+    "Overseer {h}",
+    "{h} the Assembler"
+   ],
+   "super_titles": [
+    "{h}, the Iron Paragon",
+    "Machine Lord {h}",
+    "{h} Omega",
+    "{h} the Unwound",
+    "Paladin {h}"
+   ],
+   "traits": [
+    "Self-repair",
+    "Overclock (faster)",
+    "Shielded",
+    "Crowd-puller (builds gears)",
+    "Ambusher",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Technology",
+     "story": "Rebuilt as a war machine",
+     "power_sets": [
+      "Energy_Blast",
+      "Electrical_Blast",
+      "Robotics",
+      "Electric_Armor",
+      "Devices",
+      "Invulnerability"
+     ]
+    },
+    {
+     "origin": "Mutation",
+     "story": "Psychic spark from the Clockwork King",
+     "power_sets": [
+      "Psychic_Blast",
+      "Mind_Control",
+      "Gravity_Control",
+      "Robotics"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Clockwork"
+   ]
+  },
+  "Vahzilok": {
+   "display": "Vahzilok",
+   "handles": [
+    "Stitches",
+    "Scalpel",
+    "Sutures",
+    "Ligature",
+    "Lancet",
+    "Formaldehyde",
+    "Gurney",
+    "Tourniquet",
+    "Splice",
+    "Patchwork",
+    "Morgue",
+    "Bonesaw",
+    "Cyst",
+    "Graft",
+    "Ether",
+    "Ward 9",
+    "Lobotomy",
+    "Cleaver",
+    "Forceps",
+    "Swab"
+   ],
+   "prefixes": [
+    "Doc",
+    "Nurse",
+    "Orderly"
+   ],
+   "suffixes": [
+    "the Surgeon",
+    "MD",
+    "Unlicensed"
+   ],
+   "legend_titles": [
+    "Dr. {h}",
+    "{h} the Reaper Surgeon",
+    "{h}, Chief of Surgery",
+    "{h} of the Sewers"
+   ],
+   "super_titles": [
+    "Professor {h}",
+    "{h} the Plague Doctor",
+    "{h}, Lord of Flesh",
+    "The Grand Anatomist {h}"
+   ],
+   "traits": [
+    "Contagion (debuff on hit)",
+    "Stitched (high HP)",
+    "Reanimate (raises a minion)",
+    "Ambusher",
+    "Terrify",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Science",
+     "story": "Grafted experiments onto self",
+     "power_sets": [
+      "Poison",
+      "Regeneration",
+      "Necromancy",
+      "Radiation_Emission",
+      "Claws"
+     ]
+    },
+    {
+     "origin": "Magic",
+     "story": "Dark rites from Vahzilok's journal",
+     "power_sets": [
+      "Dark_Blast",
+      "Dark_Miasma",
+      "Necromancy"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Vahzilok"
+   ]
+  },
+  "Trolls": {
+   "display": "Trolls",
+   "handles": [
+    "Dozer",
+    "Slab",
+    "Grinder",
+    "Bulldog",
+    "Knuckles",
+    "Wrecker",
+    "Crusher",
+    "Hammerhead",
+    "Tank",
+    "Brick",
+    "Rhino",
+    "Hulk",
+    "Moose",
+    "Smash",
+    "Tusk",
+    "Rocky",
+    "Slug",
+    "Bruiser",
+    "Mauler",
+    "Boulder"
+   ],
+   "prefixes": [
+    "Big",
+    "Bad",
+    "Huge"
+   ],
+   "suffixes": [
+    "the Wall",
+    "Mountain",
+    "the Pile Driver"
+   ],
+   "legend_titles": [
+    "{h} the Juggernaut",
+    "Troll Chief {h}",
+    "{h}, King of the Skyway",
+    "{h} the Unbreakable"
+   ],
+   "super_titles": [
+    "{h} the Colossus",
+    "Titan {h}",
+    "{h}, the Living Siege",
+    "Behemoth {h}"
+   ],
+   "traits": [
+    "Superadine rage (stronger when hurt)",
+    "Thick skin",
+    "Charge",
+    "Crowd-puller",
+    "Showboat",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Science",
+     "story": "Superadine overdose",
+     "power_sets": [
+      "Super_Strength",
+      "Invulnerability",
+      "Willpower",
+      "Stone_Melee",
+      "Stone_Armor"
+     ]
+    },
+    {
+     "origin": "Mutation",
+     "story": "Body keeps growing",
+     "power_sets": [
+      "Super_Strength",
+      "Regeneration",
+      "Stone_Armor",
+      "Earth_Control"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Trolls"
+   ]
+  },
+  "Tsoo": {
+   "display": "Tsoo",
+   "handles": [
+    "Ink",
+    "Lotus",
+    "Tiger",
+    "Crane",
+    "Jade",
+    "Mantis",
+    "Shadow",
+    "Viper",
+    "Dragonfly",
+    "Paper",
+    "Brush",
+    "Scroll",
+    "Wind",
+    "Talon",
+    "Silk",
+    "Fang",
+    "Monsoon",
+    "Lantern",
+    "Willow",
+    "Thunder"
+   ],
+   "prefixes": [],
+   "suffixes": [
+    "the Inkman",
+    "Sorcerer",
+    "the Blade"
+   ],
+   "legend_titles": [
+    "Master {h}",
+    "{h} of the Ink",
+    "Shadow Lord {h}",
+    "{h} the Sorcerer"
+   ],
+   "super_titles": [
+    "Grand Master {h}",
+    "{h}, the Ink Emperor",
+    "{h} of Ten Thousand Blades",
+    "The Dragon {h}"
+   ],
+   "traits": [
+    "Teleport strike",
+    "Ink Seal (blocks travel powers)",
+    "Ambusher",
+    "Runner",
+    "Crowd-puller",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Magic",
+     "story": "Bound to an ink spirit",
+     "power_sets": [
+      "Martial_Arts",
+      "Ninja_Blade",
+      "Storm_Summoning",
+      "Ninjas",
+      "Dark_Miasma"
+     ]
+    },
+    {
+     "origin": "Natural",
+     "story": "Mastered forbidden techniques",
+     "power_sets": [
+      "Martial_Arts",
+      "Katana",
+      "Ninjitsu",
+      "Super_Reflexes"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Tsoo"
+   ]
+  },
+  "Family": {
+   "display": "Family",
+   "handles": [
+    "Vinnie",
+    "Sal",
+    "Tony Two-Times",
+    "Frankie",
+    "Carmine",
+    "Big Paulie",
+    "Nicky Knuckles",
+    "Joey",
+    "Sonny",
+    "Dom",
+    "Lucky",
+    "Fat Sal",
+    "Mickey",
+    "Rocco",
+    "Vito",
+    "Gino",
+    "Bones Malone",
+    "Johnny Bats",
+    "Sally Ice",
+    "Dino"
+   ],
+   "prefixes": [
+    "Little",
+    "Big",
+    "Slick"
+   ],
+   "suffixes": [
+    "the Shark",
+    "the Fixer",
+    "Moneybags"
+   ],
+   "legend_titles": [
+    "Don {h}",
+    "{h} the Boss of Bosses",
+    "{h}, Capo of Steel Canyon"
+   ],
+   "super_titles": [
+    "The Godfather {h}",
+    "{h} the Untouchable",
+    "Kingpin {h}",
+    "{h}, Emperor of Paragon"
+   ],
+   "traits": [
+    "Bodyguards (extra lieutenant)",
+    "Bribed cops (fewer hero helpers)",
+    "Runner",
+    "Crowd-puller",
+    "Showboat",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Technology",
+     "story": "Bought Crey or Malta weapons",
+     "power_sets": [
+      "Assault_Rifle",
+      "Mercenaries",
+      "Thugs",
+      "Traps",
+      "Devices",
+      "Dual_Pistols"
+     ]
+    },
+    {
+     "origin": "Natural",
+     "story": "Took over the whole underworld",
+     "power_sets": [
+      "Thugs",
+      "Martial_Arts",
+      "Willpower",
+      "Dual_Pistols"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Family",
+    "Hellions",
+    "Skulls"
+   ]
+  },
+  "Freakshow": {
+   "display": "Freakshow",
+   "handles": [
+    "Chainsaw",
+    "Grinder",
+    "Tank",
+    "Juicer",
+    "Stunner",
+    "Mohawk",
+    "Spike",
+    "Rivet",
+    "Riot",
+    "Thrash",
+    "Static",
+    "Wrecker",
+    "Glitch",
+    "Sledge",
+    "Moshpit",
+    "Feedback",
+    "Overdrive",
+    "Crash",
+    "Razor",
+    "Jackhammer"
+   ],
+   "prefixes": [
+    "Mad",
+    "Raw",
+    "Loud"
+   ],
+   "suffixes": [
+    "the Freak",
+    "Unplugged",
+    "on Juice"
+   ],
+   "legend_titles": [
+    "{h} the Freak King",
+    "{h}, Tank of the Show",
+    "Ringmaster {h}"
+   ],
+   "super_titles": [
+    "{h} the Abomination",
+    "Super-Freak {h}",
+    "{h}, Lord of Chaos",
+    "{h} Overload"
+   ],
+   "traits": [
+    "Rez (gets up once)",
+    "Juiced (faster attacks)",
+    "Electric spikes",
+    "Charge",
+    "Showboat",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Technology",
+     "story": "Full-body cyber upgrade",
+     "power_sets": [
+      "Electric_Melee",
+      "Electric_Armor",
+      "Super_Strength",
+      "Electrical_Blast"
+     ]
+    },
+    {
+     "origin": "Science",
+     "story": "Drug-fuelled mutation",
+     "power_sets": [
+      "Super_Strength",
+      "Regeneration",
+      "Claws",
+      "Willpower"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Freakshow"
+   ]
+  },
+  "Lost": {
+   "display": "Lost",
+   "handles": [
+    "Whisper",
+    "Hollow",
+    "Drifter",
+    "Vacant",
+    "Mumbles",
+    "Shiver",
+    "Gutter",
+    "Rumor",
+    "Murmur",
+    "Echo",
+    "Stray",
+    "Static",
+    "Brine",
+    "Rags",
+    "Lurker",
+    "Sewer",
+    "Twitch",
+    "Tremble",
+    "Cipher",
+    "Nobody"
+   ],
+   "prefixes": [
+    "Lost",
+    "Hollow",
+    "Silent"
+   ],
+   "suffixes": [
+    "the Prophet",
+    "the Chosen",
+    "Who Listens"
+   ],
+   "legend_titles": [
+    "{h} the Prophet",
+    "High Priest {h}",
+    "{h}, Voice of the Deep"
+   ],
+   "super_titles": [
+    "{h} the Ascended",
+    "{h}, Herald of the Rikti",
+    "The Changed One {h}",
+    "{h} Beyond"
+   ],
+   "traits": [
+    "Mind fog (confuse on hit)",
+    "Phase out",
+    "Ambusher",
+    "Crowd-puller",
+    "Terrify",
+    "Grudge"
+   ],
+   "origins": [
+    {
+     "origin": "Science",
+     "story": "Fully mutated by Rikti tech",
+     "power_sets": [
+      "Psychic_Blast",
+      "Mind_Control",
+      "Psionic_Melee",
+      "Radiation_Blast",
+      "Claws"
+     ]
+    },
+    {
+     "origin": "Magic",
+     "story": "Hears the voices for real",
+     "power_sets": [
+      "Illusion_Control",
+      "Psychic_Blast",
+      "Dark_Miasma"
+     ]
+    }
+   ],
+   "crew_from": [
+    "Lost"
+   ]
+  }
+ }
+}
