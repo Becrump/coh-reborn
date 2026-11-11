@@ -1,6 +1,6 @@
 {
  "format": 1,
- "note": "Rival names and power options. Power set names are short set names; check them with gen_rivals.py --catalog <catalog.json from coh_rules.py catalog>.",
+ "note": "Rival names and power options. Power set names are internal set names, checked against the i24 catalog (coh_rules.py catalog) on 2026-11-11 with gen_rivals.py --catalog.",
  "stages": [
   {
    "stage": 0,
@@ -132,7 +132,7 @@
       "Fiery_Aura",
       "Demon_Summoning",
       "Fire_Manipulation",
-      "Fire_Melee"
+      "Fiery_Melee"
      ]
     },
     {
@@ -150,7 +150,7 @@
      "story": "Stolen flamethrower rig",
      "power_sets": [
       "Assault_Rifle",
-      "Devices",
+      "Gadgets",
       "Traps",
       "Fire_Manipulation"
      ]
@@ -343,7 +343,7 @@
      "story": "Lab accident amplifies their element",
      "power_sets": [
       "Electrical_Blast",
-      "Electric_Melee",
+      "Electrical_Melee",
       "Ice_Control",
       "Earth_Control",
       "Kinetics"
@@ -414,7 +414,7 @@
       "Electrical_Blast",
       "Robotics",
       "Electric_Armor",
-      "Devices",
+      "Gadgets",
       "Invulnerability"
      ]
     },
@@ -650,7 +650,7 @@
      "story": "Bound to an ink spirit",
      "power_sets": [
       "Martial_Arts",
-      "Ninja_Blade",
+      "Ninja_Sword",
       "Storm_Summoning",
       "Ninjas",
       "Dark_Miasma"
@@ -733,7 +733,7 @@
       "Mercenaries",
       "Thugs",
       "Traps",
-      "Devices",
+      "Gadgets",
       "Dual_Pistols"
      ]
     },
@@ -812,7 +812,7 @@
      "origin": "Technology",
      "story": "Full-body cyber upgrade",
      "power_sets": [
-      "Electric_Melee",
+      "Electrical_Melee",
       "Electric_Armor",
       "Super_Strength",
       "Electrical_Blast"

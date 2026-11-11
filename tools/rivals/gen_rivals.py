@@ -127,7 +127,7 @@ def main():
         return selftest()
     data = load()
     if a.catalog:
-        return check_catalog(data, a.catalog)
+        return 1 if check_catalog(data, a.catalog) else 0
     rng = random.Random(a.seed)
     if a.path:
         r = new_rival(data, rng, a.path)
