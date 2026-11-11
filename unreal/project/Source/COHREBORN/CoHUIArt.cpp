@@ -80,7 +80,7 @@ void FCoHUIArt::Load()
 		E.W = (float)(*A)[0]->AsNumber();
 		E.H = (float)(*A)[1]->AsNumber();
 		E.Path = Dir() / (*A)[2]->AsString();
-		Entries.Add(Pair.Key.ToLower(), E);
+		Entries.Add(FString(Pair.Key).ToLower(), E);
 	}
 	UE_LOG(LogCoHUI, Log, TEXT("Original UI art: %d textures"), Entries.Num());
 }

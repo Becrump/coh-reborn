@@ -33,6 +33,10 @@ enum class ECoHFont : uint8 { Game, GameBold, Title, Digital, Tiny, Tahoma };
 class COHREBORN_API FCoHUIArt
 {
 public:
+	FCoHUIArt() = default;
+	// one shared instance; the texture cache holds unique pointers, so no copies
+	FCoHUIArt(const FCoHUIArt&) = delete;
+	FCoHUIArt& operator=(const FCoHUIArt&) = delete;
 	static FCoHUIArt& Get();
 	/** Content/UI/ui_art.json exists (the art has been copied in). */
 	bool IsAvailable();

@@ -1042,7 +1042,7 @@ void UCoHPowerComponent::ApplyMod(const FCoHPowerDef& P, const FCoHMod& M, UCoHP
 		{
 			Ch->LaunchCharacter(Launch, true, true);
 			// heroes keep their capsule (the player stays in control of the camera); the limbs flail
-			if (UCoHActiveRagdoll* Body = UCoHActiveRagdoll::Of(Ch)) Body->MulticastTumble(Launch);
+			if (UCoHActiveRagdoll* Rag = UCoHActiveRagdoll::Of(Ch)) Rag->MulticastTumble(Launch);
 		}
 		return;
 	}
@@ -1095,7 +1095,7 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 	MulticastText(Final < 1.f ? FString::Printf(TEXT("%.1f"), Final) : FString::Printf(TEXT("%.0f"), Final), DamageColour(Type));
 	// the body takes the blow (a physical jolt on every PC; a defeat ragdolls instead)
 	if (!IsDefeated())
-		if (UCoHActiveRagdoll* Body = UCoHActiveRagdoll::Of(GetOwner())) Body->HitReact(Causer, Final / FMath::Max(1.f, MaxHealth));
+		if (UCoHActiveRagdoll* Rag = UCoHActiveRagdoll::Of(GetOwner())) Rag->HitReact(Causer, Final / FMath::Max(1.f, MaxHealth));
 	if (ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(GetOwner()))
 	{
 		if (IsDefeated()) E->OnDefeated(Causer); else E->OnHurt(Causer, Final);
