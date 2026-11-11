@@ -1,0 +1,1583 @@
+{
+ "note": "action replace: original left out, Megaplant tree planted; keep: original stays for now",
+ "species": {
+  "street_small": [
+   "Common_Hazel",
+   "Hornbeam"
+  ],
+  "street_large": [
+   "Hornbeam",
+   "Black_Alder",
+   "Black_Poplar"
+  ],
+  "birch_small": [
+   "Silver_Birch"
+  ],
+  "conifer": [
+   "Norway_Spruce",
+   "Baltic_Pine"
+  ],
+  "forest_pine": [
+   "Baltic_Pine",
+   "Norway_Spruce",
+   "Aleppo_Pine"
+  ],
+  "forest_broadleaf": [
+   "Black_Alder",
+   "Hornbeam",
+   "Silver_Birch"
+  ],
+  "palm": [
+   "Ginkgo"
+  ]
+ },
+ "models": {
+  "_frst_treetop_med_01": {
+   "category": "forest_canopy_top",
+   "action": "keep",
+   "species": [],
+   "count": 28592,
+   "zones": {
+    "city_03_03": 17223,
+    "hazard_01_01": 3660,
+    "hazard_01_02": 348,
+    "hazard_03_02": 464,
+    "trial_04_01": 6456,
+    "trial_04_02": 441
+   }
+  },
+  "_frst_lopotree_03": {
+   "category": "forest_pine",
+   "action": "replace",
+   "species": [
+    "Baltic_Pine",
+    "Norway_Spruce",
+    "Aleppo_Pine"
+   ],
+   "count": 3960,
+   "zones": {
+    "city_03_03": 937,
+    "hazard_01_01": 1142,
+    "hazard_01_02": 117,
+    "hazard_03_02": 156,
+    "trial_04_01": 1520,
+    "trial_04_02": 88
+   }
+  },
+  "_frst_fftree_02": {
+   "category": "forest_broadleaf",
+   "action": "replace",
+   "species": [
+    "Black_Alder",
+    "Hornbeam",
+    "Silver_Birch"
+   ],
+   "count": 3744,
+   "zones": {
+    "city_03_03": 761,
+    "hazard_01_01": 1130,
+    "hazard_01_02": 111,
+    "hazard_03_02": 148,
+    "trial_04_01": 1515,
+    "trial_04_02": 79
+   }
+  },
+  "_frst_lopotree_02": {
+   "category": "forest_pine",
+   "action": "replace",
+   "species": [
+    "Baltic_Pine",
+    "Norway_Spruce",
+    "Aleppo_Pine"
+   ],
+   "count": 3648,
+   "zones": {
+    "city_03_03": 893,
+    "hazard_01_01": 1056,
+    "hazard_01_02": 108,
+    "hazard_03_02": 144,
+    "trial_04_01": 1364,
+    "trial_04_02": 83
+   }
+  },
+  "_maple_sml1_root": {
+   "category": "street_small",
+   "action": "replace",
+   "species": [
+    "Common_Hazel",
+    "Hornbeam"
+   ],
+   "count": 2968,
+   "zones": {
+    "city_01_02": 45,
+    "city_01_03": 140,
+    "city_02_01": 238,
+    "city_02_02": 183,
+    "city_02_05": 37,
+    "city_03_01": 192,
+    "city_03_02": 56,
+    "city_03_03": 80,
+    "city_03_04": 9,
+    "city_04_01": 182,
+    "city_04_02": 17,
+    "city_05_01": 127,
+    "hazard_01_01": 165,
+    "hazard_01_02": 494,
+    "hazard_03_01": 142,
+    "hazard_03_02": 135,
+    "trial_02_01": 107,
+    "trial_04_01": 148,
+    "trial_04_02": 202,
+    "trial_05_01": 144,
+    "war_05_01": 125
+   }
+  },
+  "frst_leafs_hang_med_01": {
+   "category": "foliage_cards",
+   "action": "keep",
+   "species": [],
+   "count": 2847,
+   "zones": {
+    "city_03_03": 6,
+    "hazard_01_01": 955,
+    "hazard_01_02": 72,
+    "hazard_03_02": 96,
+    "trial_04_01": 1621,
+    "trial_04_02": 97
+   }
+  },
+  "_frst_lopotree_04": {
+   "category": "forest_pine",
+   "action": "replace",
+   "species": [
+    "Baltic_Pine",
+    "Norway_Spruce",
+    "Aleppo_Pine"
+   ],
+   "count": 2721,
+   "zones": {
+    "city_03_03": 506,
+    "hazard_01_01": 838,
+    "hazard_01_02": 90,
+    "hazard_03_02": 120,
+    "trial_04_01": 1105,
+    "trial_04_02": 62
+   }
+  },
+  "_tree_xlrg2_root": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 2431,
+   "zones": {
+    "city_01_02": 209,
+    "city_01_03": 93,
+    "city_02_01": 153,
+    "city_02_02": 89,
+    "city_02_05": 70,
+    "city_03_01": 297,
+    "city_03_02": 53,
+    "city_03_03": 49,
+    "city_03_04": 3,
+    "city_04_01": 214,
+    "city_04_02": 62,
+    "city_05_01": 54,
+    "hazard_01_01": 162,
+    "hazard_01_02": 189,
+    "hazard_03_01": 102,
+    "hazard_03_02": 91,
+    "trial_02_01": 56,
+    "trial_04_01": 142,
+    "trial_04_02": 66,
+    "trial_05_01": 145,
+    "war_05_01": 132
+   }
+  },
+  "_frst_fftree_01": {
+   "category": "forest_broadleaf",
+   "action": "replace",
+   "species": [
+    "Black_Alder",
+    "Hornbeam",
+    "Silver_Birch"
+   ],
+   "count": 2423,
+   "zones": {
+    "city_03_03": 578,
+    "hazard_01_01": 692,
+    "hazard_01_02": 45,
+    "hazard_03_02": 60,
+    "trial_04_01": 1003,
+    "trial_04_02": 45
+   }
+  },
+  "_frst_lopotree_01": {
+   "category": "forest_pine",
+   "action": "replace",
+   "species": [
+    "Baltic_Pine",
+    "Norway_Spruce",
+    "Aleppo_Pine"
+   ],
+   "count": 2223,
+   "zones": {
+    "city_03_03": 581,
+    "hazard_01_01": 626,
+    "hazard_01_02": 42,
+    "hazard_03_02": 56,
+    "trial_04_01": 875,
+    "trial_04_02": 43
+   }
+  },
+  "_maple_lrg1_root": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 1746,
+   "zones": {
+    "city_01_02": 153,
+    "city_01_03": 81,
+    "city_02_01": 146,
+    "city_02_02": 92,
+    "city_02_05": 54,
+    "city_03_01": 147,
+    "city_03_02": 29,
+    "city_03_03": 5,
+    "city_03_04": 22,
+    "city_04_01": 238,
+    "city_04_02": 17,
+    "city_05_01": 74,
+    "hazard_01_01": 52,
+    "hazard_01_02": 181,
+    "hazard_03_01": 63,
+    "hazard_03_02": 75,
+    "trial_02_01": 61,
+    "trial_04_01": 98,
+    "trial_04_02": 88,
+    "trial_05_01": 37,
+    "war_05_01": 33
+   }
+  },
+  "_tree_xlrg1_root": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 1657,
+   "zones": {
+    "city_01_02": 67,
+    "city_01_03": 73,
+    "city_02_01": 122,
+    "city_02_02": 111,
+    "city_02_05": 43,
+    "city_03_01": 169,
+    "city_03_02": 36,
+    "city_03_03": 3,
+    "city_03_04": 3,
+    "city_04_01": 150,
+    "city_04_02": 32,
+    "city_05_01": 88,
+    "hazard_01_01": 70,
+    "hazard_01_02": 52,
+    "hazard_03_01": 68,
+    "hazard_03_02": 101,
+    "trial_02_01": 28,
+    "trial_04_01": 136,
+    "trial_04_02": 207,
+    "trial_05_01": 50,
+    "war_05_01": 48
+   }
+  },
+  "_conifer_med1_root": {
+   "category": "conifer",
+   "action": "replace",
+   "species": [
+    "Norway_Spruce",
+    "Baltic_Pine"
+   ],
+   "count": 1600,
+   "zones": {
+    "city_01_03": 24,
+    "city_02_01": 79,
+    "city_02_02": 58,
+    "city_03_01": 55,
+    "city_03_02": 35,
+    "city_03_04": 52,
+    "city_04_01": 172,
+    "city_04_02": 3,
+    "city_05_01": 93,
+    "hazard_01_01": 110,
+    "hazard_01_02": 366,
+    "trial_02_01": 1,
+    "trial_04_01": 115,
+    "trial_04_02": 433,
+    "trial_05_01": 2,
+    "war_05_01": 2
+   }
+  },
+  "_maple_smlsqsh1_leaves": {
+   "category": "street_small",
+   "action": "replace",
+   "species": [
+    "Common_Hazel",
+    "Hornbeam"
+   ],
+   "count": 1469,
+   "zones": {
+    "city_01_02": 4,
+    "city_01_03": 77,
+    "city_02_01": 104,
+    "city_02_02": 73,
+    "city_02_05": 8,
+    "city_03_01": 81,
+    "city_03_02": 29,
+    "city_03_03": 41,
+    "city_03_04": 2,
+    "city_04_01": 82,
+    "city_04_02": 5,
+    "city_05_01": 91,
+    "hazard_01_01": 132,
+    "hazard_01_02": 269,
+    "hazard_03_01": 69,
+    "hazard_03_02": 67,
+    "trial_02_01": 50,
+    "trial_04_01": 96,
+    "trial_04_02": 144,
+    "trial_05_01": 23,
+    "war_05_01": 22
+   }
+  },
+  "_tree_xlrg2_leaves": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 1453,
+   "zones": {
+    "city_01_02": 168,
+    "city_01_03": 62,
+    "city_02_01": 46,
+    "city_02_02": 48,
+    "city_02_05": 9,
+    "city_03_01": 121,
+    "city_03_02": 27,
+    "city_03_03": 4,
+    "city_04_01": 133,
+    "city_04_02": 54,
+    "city_05_01": 37,
+    "hazard_01_01": 119,
+    "hazard_01_02": 131,
+    "hazard_03_01": 56,
+    "hazard_03_02": 39,
+    "trial_02_01": 10,
+    "trial_04_01": 115,
+    "trial_04_02": 60,
+    "trial_05_01": 114,
+    "war_05_01": 100
+   }
+  },
+  "_tree_sml1_root": {
+   "category": "birch_small",
+   "action": "replace",
+   "species": [
+    "Silver_Birch"
+   ],
+   "count": 1370,
+   "zones": {
+    "city_01_02": 93,
+    "city_01_03": 66,
+    "city_02_01": 177,
+    "city_02_02": 109,
+    "city_02_05": 6,
+    "city_03_01": 196,
+    "city_03_02": 28,
+    "city_03_03": 9,
+    "city_04_01": 92,
+    "city_04_02": 65,
+    "city_05_01": 30,
+    "hazard_01_01": 46,
+    "hazard_01_02": 140,
+    "hazard_03_01": 54,
+    "hazard_03_02": 54,
+    "trial_04_01": 14,
+    "trial_05_01": 98,
+    "war_05_01": 93
+   }
+  },
+  "_tree_sml1_leaves": {
+   "category": "birch_small",
+   "action": "replace",
+   "species": [
+    "Silver_Birch"
+   ],
+   "count": 1298,
+   "zones": {
+    "city_01_02": 93,
+    "city_01_03": 49,
+    "city_02_01": 169,
+    "city_02_02": 94,
+    "city_02_05": 6,
+    "city_03_01": 191,
+    "city_03_02": 25,
+    "city_03_03": 9,
+    "city_04_01": 92,
+    "city_04_02": 65,
+    "city_05_01": 22,
+    "hazard_01_01": 46,
+    "hazard_01_02": 136,
+    "hazard_03_01": 53,
+    "hazard_03_02": 54,
+    "trial_04_01": 14,
+    "trial_05_01": 94,
+    "war_05_01": 86
+   }
+  },
+  "_frst_fringe_90out_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 1262,
+   "zones": {
+    "city_03_03": 248,
+    "hazard_01_01": 374,
+    "hazard_01_02": 66,
+    "hazard_03_02": 88,
+    "trial_04_01": 446,
+    "trial_04_02": 40
+   }
+  },
+  "_frst_bkdrop_90out_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 1261,
+   "zones": {
+    "city_03_03": 249,
+    "hazard_01_01": 373,
+    "hazard_01_02": 66,
+    "hazard_03_02": 88,
+    "trial_04_01": 445,
+    "trial_04_02": 40
+   }
+  },
+  "_conifer_sml1_root": {
+   "category": "conifer",
+   "action": "replace",
+   "species": [
+    "Norway_Spruce",
+    "Baltic_Pine"
+   ],
+   "count": 1231,
+   "zones": {
+    "city_01_03": 23,
+    "city_02_01": 50,
+    "city_02_02": 41,
+    "city_02_04": 2,
+    "city_03_01": 71,
+    "city_03_02": 15,
+    "city_03_04": 16,
+    "city_04_01": 142,
+    "city_04_02": 2,
+    "city_05_01": 79,
+    "hazard_01_01": 108,
+    "hazard_01_02": 283,
+    "trial_04_01": 70,
+    "trial_04_02": 325,
+    "trial_05_01": 2,
+    "war_05_01": 2
+   }
+  },
+  "_canopy_fill_sml": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 1181,
+   "zones": {
+    "city_03_03": 930,
+    "hazard_01_01": 71,
+    "hazard_01_02": 12,
+    "hazard_03_02": 16,
+    "trial_04_01": 143,
+    "trial_04_02": 9
+   }
+  },
+  "_tree_lrg1_root": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 1163,
+   "zones": {
+    "city_01_02": 87,
+    "city_01_03": 32,
+    "city_02_01": 155,
+    "city_02_02": 61,
+    "city_02_05": 3,
+    "city_03_01": 137,
+    "city_03_02": 23,
+    "city_03_03": 17,
+    "city_04_01": 221,
+    "city_04_02": 67,
+    "city_05_01": 24,
+    "hazard_01_01": 4,
+    "hazard_01_02": 106,
+    "hazard_03_01": 41,
+    "hazard_03_02": 53,
+    "trial_02_01": 4,
+    "trial_04_01": 3,
+    "trial_05_01": 65,
+    "war_05_01": 60
+   }
+  },
+  "_maple_xlrg1_leaves": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 973,
+   "zones": {
+    "city_01_02": 32,
+    "city_01_03": 39,
+    "city_02_01": 44,
+    "city_02_02": 30,
+    "city_02_05": 34,
+    "city_03_01": 107,
+    "city_03_02": 16,
+    "city_03_03": 2,
+    "city_03_04": 3,
+    "city_04_01": 90,
+    "city_05_01": 71,
+    "hazard_01_01": 33,
+    "hazard_01_02": 34,
+    "hazard_03_01": 36,
+    "hazard_03_02": 62,
+    "trial_02_01": 28,
+    "trial_04_01": 99,
+    "trial_04_02": 181,
+    "trial_05_01": 16,
+    "war_05_01": 16
+   }
+  },
+  "_maple_xlrg2_leaves": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 968,
+   "zones": {
+    "city_01_02": 41,
+    "city_01_03": 31,
+    "city_02_01": 107,
+    "city_02_02": 41,
+    "city_02_05": 56,
+    "city_03_01": 176,
+    "city_03_02": 26,
+    "city_03_03": 45,
+    "city_03_04": 3,
+    "city_04_01": 81,
+    "city_04_02": 8,
+    "city_05_01": 17,
+    "hazard_01_01": 43,
+    "hazard_01_02": 58,
+    "hazard_03_01": 46,
+    "hazard_03_02": 52,
+    "trial_02_01": 46,
+    "trial_04_01": 27,
+    "trial_04_02": 6,
+    "trial_05_01": 31,
+    "war_05_01": 27
+   }
+  },
+  "_conifer_lrg1_root": {
+   "category": "conifer",
+   "action": "replace",
+   "species": [
+    "Norway_Spruce",
+    "Baltic_Pine"
+   ],
+   "count": 905,
+   "zones": {
+    "city_01_03": 14,
+    "city_02_01": 69,
+    "city_02_02": 27,
+    "city_03_01": 56,
+    "city_03_02": 14,
+    "city_03_04": 43,
+    "city_04_01": 105,
+    "city_04_02": 2,
+    "city_05_01": 65,
+    "hazard_01_01": 64,
+    "hazard_01_02": 67,
+    "trial_02_01": 1,
+    "trial_04_01": 79,
+    "trial_04_02": 297,
+    "trial_05_01": 1,
+    "war_05_01": 1
+   }
+  },
+  "_BrntDead_Tree_Big_A": {
+   "category": "dead_burnt",
+   "action": "keep",
+   "species": [],
+   "count": 848,
+   "zones": {
+    "city_02_02": 14,
+    "city_02_05": 1,
+    "city_03_01": 37,
+    "city_03_02": 17,
+    "city_03_03": 1,
+    "city_04_02": 4,
+    "hazard_01_01": 1,
+    "hazard_01_02": 42,
+    "hazard_02_01": 568,
+    "hazard_03_01": 10,
+    "trial_04_01": 25,
+    "trial_05_01": 72,
+    "war_05_01": 56
+   }
+  },
+  "_BrntDead_Tree_Md_A": {
+   "category": "dead_burnt",
+   "action": "keep",
+   "species": [],
+   "count": 681,
+   "zones": {
+    "city_01_03": 4,
+    "city_03_01": 28,
+    "city_03_02": 24,
+    "city_04_02": 1,
+    "hazard_01_02": 64,
+    "hazard_02_01": 463,
+    "hazard_03_01": 20,
+    "trial_04_01": 24,
+    "trial_05_01": 27,
+    "war_05_01": 26
+   }
+  },
+  "_tree_xlrg1_leaves": {
+   "category": "street_large",
+   "action": "replace",
+   "species": [
+    "Hornbeam",
+    "Black_Alder",
+    "Black_Poplar"
+   ],
+   "count": 674,
+   "zones": {
+    "city_01_02": 35,
+    "city_01_03": 34,
+    "city_02_01": 78,
+    "city_02_02": 81,
+    "city_02_05": 2,
+    "city_03_01": 62,
+    "city_03_02": 20,
+    "city_03_03": 1,
+    "city_04_01": 60,
+    "city_04_02": 32,
+    "city_05_01": 17,
+    "hazard_01_01": 37,
+    "hazard_01_02": 18,
+    "hazard_03_01": 32,
+    "hazard_03_02": 39,
+    "trial_04_01": 37,
+    "trial_04_02": 26,
+    "trial_05_01": 34,
+    "war_05_01": 29
+   }
+  },
+  "_tree_twisted_med_02_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 667,
+   "zones": {
+    "city_01_03": 1,
+    "city_03_03": 412,
+    "city_05_01": 1,
+    "hazard_01_01": 63,
+    "hazard_01_02": 15,
+    "hazard_03_01": 36,
+    "hazard_03_02": 24,
+    "trial_04_01": 107,
+    "trial_04_02": 8
+   }
+  },
+  "_tree_twisted_med_02_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 667,
+   "zones": {
+    "city_01_03": 1,
+    "city_03_03": 412,
+    "city_05_01": 1,
+    "hazard_01_01": 63,
+    "hazard_01_02": 15,
+    "hazard_03_01": 36,
+    "hazard_03_02": 24,
+    "trial_04_01": 107,
+    "trial_04_02": 8
+   }
+  },
+  "_BrntDead_Tree_Fat_A": {
+   "category": "dead_burnt",
+   "action": "keep",
+   "species": [],
+   "count": 647,
+   "zones": {
+    "city_01_03": 3,
+    "city_02_02": 4,
+    "city_03_01": 32,
+    "city_03_02": 10,
+    "city_03_03": 5,
+    "city_04_02": 2,
+    "city_05_01": 1,
+    "hazard_01_01": 1,
+    "hazard_01_02": 39,
+    "hazard_02_01": 383,
+    "hazard_03_01": 21,
+    "trial_04_01": 19,
+    "trial_04_02": 3,
+    "trial_05_01": 68,
+    "war_05_01": 56
+   }
+  },
+  "_frst_fringe_str_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 624,
+   "zones": {
+    "city_03_03": 174,
+    "hazard_01_01": 172,
+    "hazard_01_02": 12,
+    "hazard_03_02": 16,
+    "trial_04_01": 238,
+    "trial_04_02": 12
+   }
+  },
+  "_frst_bkdrop_str_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 619,
+   "zones": {
+    "city_03_03": 174,
+    "hazard_01_01": 170,
+    "hazard_01_02": 12,
+    "hazard_03_02": 16,
+    "trial_04_01": 236,
+    "trial_04_02": 11
+   }
+  },
+  "_tree_twisted_med_04_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 486,
+   "zones": {
+    "city_03_03": 296,
+    "hazard_01_01": 49,
+    "hazard_01_02": 13,
+    "hazard_03_01": 33,
+    "hazard_03_02": 15,
+    "trial_04_01": 74,
+    "trial_04_02": 6
+   }
+  },
+  "_tree_twisted_med_04_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 486,
+   "zones": {
+    "city_03_03": 296,
+    "hazard_01_01": 49,
+    "hazard_01_02": 13,
+    "hazard_03_01": 33,
+    "hazard_03_02": 15,
+    "trial_04_01": 74,
+    "trial_04_02": 6
+   }
+  },
+  "_BrntDead_Tree_SM_A": {
+   "category": "dead_burnt",
+   "action": "keep",
+   "species": [],
+   "count": 462,
+   "zones": {
+    "city_01_02": 1,
+    "city_01_03": 3,
+    "city_02_01": 1,
+    "city_02_02": 5,
+    "city_03_01": 24,
+    "city_03_02": 10,
+    "city_03_03": 4,
+    "city_04_02": 1,
+    "city_05_01": 1,
+    "hazard_01_01": 4,
+    "hazard_01_02": 95,
+    "hazard_02_01": 214,
+    "hazard_03_01": 19,
+    "trial_04_01": 19,
+    "trial_04_02": 5,
+    "trial_05_01": 31,
+    "war_05_01": 25
+   }
+  },
+  "_frst_fringe_str_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 388,
+   "zones": {
+    "city_03_03": 148,
+    "hazard_01_01": 87,
+    "hazard_01_02": 6,
+    "hazard_03_02": 8,
+    "trial_04_01": 128,
+    "trial_04_02": 11
+   }
+  },
+  "_frst_bkdrop_str_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 388,
+   "zones": {
+    "city_03_03": 148,
+    "hazard_01_01": 87,
+    "hazard_01_02": 6,
+    "hazard_03_02": 8,
+    "trial_04_01": 128,
+    "trial_04_02": 11
+   }
+  },
+  "_frst_fringe_90in_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 347,
+   "zones": {
+    "city_03_03": 70,
+    "hazard_01_01": 119,
+    "hazard_01_02": 9,
+    "hazard_03_02": 12,
+    "trial_04_01": 133,
+    "trial_04_02": 4
+   }
+  },
+  "_frst_bkdrop_90in_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 345,
+   "zones": {
+    "city_03_03": 68,
+    "hazard_01_01": 119,
+    "hazard_01_02": 9,
+    "hazard_03_02": 12,
+    "trial_04_01": 133,
+    "trial_04_02": 4
+   }
+  },
+  "_tree_twisted_med_01_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 278,
+   "zones": {
+    "city_03_03": 80,
+    "city_05_01": 1,
+    "hazard_01_01": 49,
+    "hazard_01_02": 17,
+    "hazard_03_01": 49,
+    "hazard_03_02": 16,
+    "trial_04_01": 61,
+    "trial_04_02": 5
+   }
+  },
+  "_tree_twisted_med_01_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 278,
+   "zones": {
+    "city_03_03": 80,
+    "city_05_01": 1,
+    "hazard_01_01": 49,
+    "hazard_01_02": 17,
+    "hazard_03_01": 49,
+    "hazard_03_02": 16,
+    "trial_04_01": 61,
+    "trial_04_02": 5
+   }
+  },
+  "frst_leafs_flat_med_01": {
+   "category": "foliage_cards",
+   "action": "keep",
+   "species": [],
+   "count": 264,
+   "zones": {
+    "hazard_01_01": 104,
+    "hazard_01_02": 6,
+    "hazard_03_02": 8,
+    "trial_04_01": 130,
+    "trial_04_02": 16
+   }
+  },
+  "_frst_fringe_45_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 244,
+   "zones": {
+    "city_03_03": 15,
+    "hazard_01_01": 78,
+    "trial_04_01": 145,
+    "trial_04_02": 6
+   }
+  },
+  "_frst_bkdrop_45_01": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 241,
+   "zones": {
+    "city_03_03": 15,
+    "hazard_01_01": 78,
+    "trial_04_01": 143,
+    "trial_04_02": 5
+   }
+  },
+  "_canopy_90out_02": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 237,
+   "zones": {
+    "city_03_03": 156,
+    "hazard_01_01": 32,
+    "hazard_01_02": 9,
+    "hazard_03_02": 12,
+    "trial_04_01": 25,
+    "trial_04_02": 3
+   }
+  },
+  "frst_leafs_hang_sml_01": {
+   "category": "foliage_cards",
+   "action": "keep",
+   "species": [],
+   "count": 234,
+   "zones": {
+    "hazard_01_01": 26,
+    "hazard_01_02": 39,
+    "hazard_03_02": 52,
+    "trial_04_01": 117
+   }
+  },
+  "_tree_twisted_med_03_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 228,
+   "zones": {
+    "city_01_03": 1,
+    "hazard_01_01": 61,
+    "hazard_01_02": 22,
+    "hazard_03_01": 34,
+    "hazard_03_02": 16,
+    "trial_04_01": 88,
+    "trial_04_02": 6
+   }
+  },
+  "_tree_twisted_med_03_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 228,
+   "zones": {
+    "city_01_03": 1,
+    "hazard_01_01": 61,
+    "hazard_01_02": 22,
+    "hazard_03_01": 34,
+    "hazard_03_02": 16,
+    "trial_04_01": 88,
+    "trial_04_02": 6
+   }
+  },
+  "_frst_fringe_90in_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 213,
+   "zones": {
+    "city_03_03": 10,
+    "hazard_01_01": 66,
+    "hazard_01_02": 3,
+    "hazard_03_02": 4,
+    "trial_04_01": 128,
+    "trial_04_02": 2
+   }
+  },
+  "_frst_bkdrop_90in_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 213,
+   "zones": {
+    "city_03_03": 10,
+    "hazard_01_01": 66,
+    "hazard_01_02": 3,
+    "hazard_03_02": 4,
+    "trial_04_01": 128,
+    "trial_04_02": 2
+   }
+  },
+  "_frst_fringe_45_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 210,
+   "zones": {
+    "city_03_03": 11,
+    "hazard_01_01": 74,
+    "trial_04_01": 123,
+    "trial_04_02": 2
+   }
+  },
+  "_frst_bkdrop_45_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 210,
+   "zones": {
+    "city_03_03": 11,
+    "hazard_01_01": 74,
+    "trial_04_01": 123,
+    "trial_04_02": 2
+   }
+  },
+  "_frst_fringe_90out_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 188,
+   "zones": {
+    "city_03_03": 70,
+    "hazard_01_01": 45,
+    "hazard_01_02": 9,
+    "hazard_03_02": 12,
+    "trial_04_01": 49,
+    "trial_04_02": 3
+   }
+  },
+  "_frst_bkdrop_90out_02": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 184,
+   "zones": {
+    "city_03_03": 66,
+    "hazard_01_01": 45,
+    "hazard_01_02": 9,
+    "hazard_03_02": 12,
+    "trial_04_01": 49,
+    "trial_04_02": 3
+   }
+  },
+  "_canopy_str_02": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 172,
+   "zones": {
+    "city_03_03": 100,
+    "hazard_01_01": 20,
+    "hazard_01_02": 6,
+    "hazard_03_02": 8,
+    "trial_04_01": 35,
+    "trial_04_02": 3
+   }
+  },
+  "_canopy_90in_01": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 166,
+   "zones": {
+    "city_03_03": 68,
+    "hazard_01_01": 29,
+    "trial_04_01": 69
+   }
+  },
+  "_frst_fringe_str_03": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 163,
+   "zones": {
+    "city_03_03": 80,
+    "hazard_01_01": 40,
+    "trial_04_01": 39,
+    "trial_04_02": 4
+   }
+  },
+  "_frst_bkdrop_str_03": {
+   "category": "forest_edge",
+   "action": "keep",
+   "species": [],
+   "count": 162,
+   "zones": {
+    "city_03_03": 80,
+    "hazard_01_01": 39,
+    "trial_04_01": 39,
+    "trial_04_02": 4
+   }
+  },
+  "_canopy_str_01": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 149,
+   "zones": {
+    "city_03_03": 57,
+    "hazard_01_01": 23,
+    "hazard_01_02": 6,
+    "hazard_03_02": 8,
+    "trial_04_01": 43,
+    "trial_04_02": 12
+   }
+  },
+  "_tree_twisted_sml_02_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 145,
+   "zones": {
+    "city_01_03": 2,
+    "city_03_03": 2,
+    "city_05_01": 1,
+    "hazard_01_01": 23,
+    "hazard_01_02": 2,
+    "hazard_03_01": 84,
+    "trial_04_01": 30,
+    "trial_04_02": 1
+   }
+  },
+  "_tree_twisted_sml_02_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 144,
+   "zones": {
+    "city_01_03": 1,
+    "city_03_03": 2,
+    "city_05_01": 1,
+    "hazard_01_01": 23,
+    "hazard_01_02": 2,
+    "hazard_03_01": 84,
+    "trial_04_01": 30,
+    "trial_04_02": 1
+   }
+  },
+  "frst_leafs_flat_sml_01": {
+   "category": "foliage_cards",
+   "action": "keep",
+   "species": [],
+   "count": 131,
+   "zones": {
+    "hazard_01_01": 30,
+    "hazard_01_02": 21,
+    "hazard_03_02": 28,
+    "trial_04_01": 43,
+    "trial_04_02": 9
+   }
+  },
+  "_canopy_str_03": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 119,
+   "zones": {
+    "city_03_03": 53,
+    "hazard_01_01": 27,
+    "hazard_01_02": 3,
+    "hazard_03_02": 4,
+    "trial_04_01": 32
+   }
+  },
+  "_tree_twisted_sml_01_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 113,
+   "zones": {
+    "city_03_03": 1,
+    "city_05_01": 1,
+    "hazard_01_01": 18,
+    "hazard_01_02": 4,
+    "hazard_03_01": 58,
+    "trial_04_01": 29,
+    "trial_04_02": 2
+   }
+  },
+  "_tree_twisted_sml_01_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 113,
+   "zones": {
+    "city_03_03": 1,
+    "city_05_01": 1,
+    "hazard_01_01": 18,
+    "hazard_01_02": 4,
+    "hazard_03_01": 58,
+    "trial_04_01": 29,
+    "trial_04_02": 2
+   }
+  },
+  "_Palmtree_top_med_01": {
+   "category": "palm",
+   "action": "replace",
+   "species": [
+    "Ginkgo"
+   ],
+   "count": 106,
+   "zones": {
+    "city_02_04": 16,
+    "city_02_05": 90
+   }
+  },
+  "_canopy_fill_med": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 101,
+   "zones": {
+    "hazard_01_01": 26,
+    "trial_04_01": 71,
+    "trial_04_02": 4
+   }
+  },
+  "_tree_twisted_sml_03_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 97,
+   "zones": {
+    "city_03_03": 1,
+    "city_05_01": 3,
+    "hazard_01_01": 15,
+    "hazard_01_02": 4,
+    "hazard_03_01": 59,
+    "trial_04_01": 15
+   }
+  },
+  "_tree_twisted_sml_03_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 97,
+   "zones": {
+    "city_03_03": 1,
+    "city_05_01": 3,
+    "hazard_01_01": 15,
+    "hazard_01_02": 4,
+    "hazard_03_01": 59,
+    "trial_04_01": 15
+   }
+  },
+  "_tree_twisted_sml_04_roots": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 72,
+   "zones": {
+    "city_01_03": 2,
+    "city_03_03": 1,
+    "city_05_01": 2,
+    "hazard_01_01": 7,
+    "hazard_01_02": 2,
+    "hazard_03_01": 51,
+    "trial_04_01": 7
+   }
+  },
+  "_tree_twisted_sml_04_branches": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 71,
+   "zones": {
+    "city_01_03": 1,
+    "city_03_03": 1,
+    "city_05_01": 2,
+    "hazard_01_01": 7,
+    "hazard_01_02": 2,
+    "hazard_03_01": 51,
+    "trial_04_01": 7
+   }
+  },
+  "_tree_smlsqsh1_leaves": {
+   "category": "birch_small",
+   "action": "replace",
+   "species": [
+    "Silver_Birch"
+   ],
+   "count": 69,
+   "zones": {
+    "city_01_03": 17,
+    "city_02_01": 8,
+    "city_02_02": 15,
+    "city_03_01": 5,
+    "city_03_02": 3,
+    "city_05_01": 8,
+    "hazard_01_02": 4,
+    "hazard_03_01": 1,
+    "trial_05_01": 4,
+    "war_05_01": 4
+   }
+  },
+  "_tree_twisted_sml_04_trunk_HI": {
+   "category": "twisted",
+   "action": "keep",
+   "species": [],
+   "count": 68,
+   "zones": {
+    "city_01_03": 2,
+    "city_03_03": 1,
+    "hazard_01_01": 6,
+    "hazard_01_02": 2,
+    "hazard_03_01": 51,
+    "trial_04_01": 6
+   }
+  },
+  "_canopy_90out_01": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 63,
+   "zones": {
+    "city_03_03": 19,
+    "hazard_01_01": 18,
+    "hazard_01_02": 3,
+    "hazard_03_02": 4,
+    "trial_04_01": 14,
+    "trial_04_02": 5
+   }
+  },
+  "_canopy_45L_01": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 58,
+   "zones": {
+    "hazard_01_01": 20,
+    "hazard_01_02": 3,
+    "hazard_03_02": 4,
+    "trial_04_01": 28,
+    "trial_04_02": 3
+   }
+  },
+  "_canopy_45R_01": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 35,
+   "zones": {
+    "hazard_01_01": 18,
+    "trial_04_01": 17
+   }
+  },
+  "_canopy_fill_lrg": {
+   "category": "canopy_fill",
+   "action": "keep",
+   "species": [],
+   "count": 12,
+   "zones": {
+    "hazard_01_01": 5,
+    "trial_04_01": 7
+   }
+  }
+ },
+ "zones": {
+  "city_01_02": {
+   "replace": 1027,
+   "keep": 1,
+   "total": 1028
+  },
+  "city_01_03": {
+   "replace": 855,
+   "keep": 22,
+   "total": 877
+  },
+  "city_02_01": {
+   "replace": 1745,
+   "keep": 1,
+   "total": 1746
+  },
+  "city_02_02": {
+   "replace": 1153,
+   "keep": 23,
+   "total": 1176
+  },
+  "city_02_04": {
+   "replace": 18,
+   "keep": 0,
+   "total": 18
+  },
+  "city_02_05": {
+   "replace": 418,
+   "keep": 1,
+   "total": 419
+  },
+  "city_03_01": {
+   "replace": 2063,
+   "keep": 121,
+   "total": 2184
+  },
+  "city_03_02": {
+   "replace": 435,
+   "keep": 61,
+   "total": 496
+  },
+  "city_03_03": {
+   "replace": 4521,
+   "keep": 21856,
+   "total": 26377
+  },
+  "city_03_04": {
+   "replace": 156,
+   "keep": 0,
+   "total": 156
+  },
+  "city_04_01": {
+   "replace": 2054,
+   "keep": 0,
+   "total": 2054
+  },
+  "city_04_02": {
+   "replace": 431,
+   "keep": 8,
+   "total": 439
+  },
+  "city_05_01": {
+   "replace": 897,
+   "keep": 20,
+   "total": 917
+  },
+  "hazard_01_01": {
+   "replace": 6675,
+   "keep": 7752,
+   "total": 14427
+  },
+  "hazard_01_02": {
+   "replace": 3041,
+   "keep": 1138,
+   "total": 4179
+  },
+  "hazard_02_01": {
+   "replace": 0,
+   "keep": 1628,
+   "total": 1628
+  },
+  "hazard_03_01": {
+   "replace": 763,
+   "keep": 929,
+   "total": 1692
+  },
+  "hazard_03_02": {
+   "replace": 1506,
+   "keep": 1126,
+   "total": 2632
+  },
+  "hazard_04_01": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "hazard_06_01": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "hazard_06_02": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "hazard_06_03": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "trial_01_01": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "trial_01_02": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "trial_02_01": {
+   "replace": 392,
+   "keep": 0,
+   "total": 392
+  },
+  "trial_03_01": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "trial_04_01": {
+   "replace": 8575,
+   "keep": 12619,
+   "total": 21194
+  },
+  "trial_04_02": {
+   "replace": 2435,
+   "keep": 832,
+   "total": 3267
+  },
+  "trial_05_01": {
+   "replace": 860,
+   "keep": 198,
+   "total": 1058
+  },
+  "trial_06_01": {
+   "replace": 0,
+   "keep": 0,
+   "total": 0
+  },
+  "war_05_01": {
+   "replace": 780,
+   "keep": 163,
+   "total": 943
+  }
+ }
+}
