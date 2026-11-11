@@ -7,7 +7,13 @@ Set `I24_DATA` to an i24 `data` folder (sparse: maps/city_zones, object_library,
 - `gates.py ZONE...` - footprint plus zone-gate sign positions (TexWordLayout props) -> gates.json.
 - `place.py` - places the inner ring from gates.json by matching gate pairs -> zone_offsets.json.
 - `stations.py [city_zones dir]` - original monorail arrival points per zone.
-- `spawns.py I24_DATA ZONE OUT.json` - original encounter groups/layouts/slots (zone-local feet).
+- `spawns.py I24_DATA ZONE OUT.json` - original encounter groups/layouts/slots (zone-local feet). Superseded by encounters.py.
+- `encounters.py I24_DATA OUT [ZONE...]` - every zone's original enemies in game format: `OUT/<zone>/encounters.json`
+  (spawn definitions, same schema as Atlas Park's, read by UCoHGameRules) and `OUT/<zone>/sites.json` (every encounter
+  spot with its CanSpawn definitions, slot positions and yaw, Unreal cm, zone-local and world). Reads all spawn layers,
+  including Kings Row's per-district ones and the older group-less ES_ defs (Skyway City). Needs the sparse i24 paths
+  above plus data/defs and data/scripts.loc/spawndefs. All 35 zones take about a minute; output is ~150 MB, so it is not
+  committed: run it where the game data is. Counts per zone: `docs/zones/encounters/summary.json`.
 
 Axes: all zones share one orientation; map east = game -x, map north = game -z.
 

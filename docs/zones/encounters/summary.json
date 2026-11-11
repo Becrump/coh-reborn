@@ -1,0 +1,1080 @@
+{
+ "city_00_01": {
+  "sites": 315,
+  "event_sites": 0,
+  "spawn_definitions": 4,
+  "missing": 0,
+  "levels": [
+   1,
+   3
+  ],
+  "top_groups": [
+   [
+    "Contaminated",
+    301
+   ],
+   [
+    "PracticeRobots",
+    14
+   ]
+  ],
+  "placed": false
+ },
+ "city_01_01": {
+  "sites": 2096,
+  "event_sites": 0,
+  "spawn_definitions": 568,
+  "missing": 0,
+  "levels": [
+   1,
+   54
+  ],
+  "top_groups": [
+   [
+    "Hellions",
+    4038
+   ],
+   [
+    "Vahzilok",
+    1274
+   ],
+   [
+    "Skulls",
+    614
+   ],
+   [
+    "Clockwork",
+    550
+   ],
+   [
+    "ParagonPolice",
+    264
+   ],
+   [
+    "Arachnos",
+    261
+   ]
+  ],
+  "placed": true
+ },
+ "city_01_02": {
+  "sites": 3011,
+  "event_sites": 0,
+  "spawn_definitions": 283,
+  "missing": 0,
+  "levels": [
+   5,
+   50
+  ],
+  "top_groups": [
+   [
+    "Skulls",
+    6641
+   ],
+   [
+    "TheLost",
+    1199
+   ],
+   [
+    "Clockwork",
+    1191
+   ],
+   [
+    "CircleofThorns",
+    1147
+   ],
+   [
+    "Vahzilok",
+    710
+   ],
+   [
+    "ParagonPolice",
+    517
+   ]
+  ],
+  "placed": true
+ },
+ "city_01_03": {
+  "sites": 2193,
+  "event_sites": 0,
+  "spawn_definitions": 322,
+  "missing": 0,
+  "levels": [
+   1,
+   50
+  ],
+  "top_groups": [
+   [
+    "Hellions",
+    2700
+   ],
+   [
+    "Vahzilok",
+    2196
+   ],
+   [
+    "Clockwork",
+    550
+   ],
+   [
+    "FreedomCorps",
+    324
+   ],
+   [
+    "Infected",
+    212
+   ],
+   [
+    "ParagonPolice",
+    48
+   ]
+  ],
+  "placed": true
+ },
+ "city_01_04": {
+  "sites": 2196,
+  "event_sites": 0,
+  "spawn_definitions": 326,
+  "missing": 0,
+  "levels": [
+   1,
+   50
+  ],
+  "top_groups": [
+   [
+    "Hellions",
+    2700
+   ],
+   [
+    "Vahzilok",
+    2196
+   ],
+   [
+    "Clockwork",
+    550
+   ],
+   [
+    "FreedomCorps",
+    324
+   ],
+   [
+    "Infected",
+    212
+   ],
+   [
+    "ParagonPolice",
+    51
+   ]
+  ],
+  "placed": false
+ },
+ "city_02_01": {
+  "sites": 882,
+  "event_sites": 0,
+  "spawn_definitions": 288,
+  "missing": 0,
+  "levels": [
+   10,
+   19
+  ],
+  "top_groups": [
+   [
+    "Outcasts",
+    3380
+   ],
+   [
+    "Trolls",
+    540
+   ],
+   [
+    "Clockwork",
+    339
+   ],
+   [
+    "Council",
+    300
+   ],
+   [
+    "Tsoo",
+    285
+   ],
+   [
+    "Vahzilok",
+    228
+   ]
+  ],
+  "placed": true
+ },
+ "city_02_02": {
+  "sites": 914,
+  "event_sites": 0,
+  "spawn_definitions": 88,
+  "missing": 0,
+  "levels": [
+   10,
+   19
+  ],
+  "top_groups": [
+   [
+    "Trolls",
+    2545
+   ],
+   [
+    "Clockwork",
+    1375
+   ],
+   [
+    "TheLost",
+    265
+   ]
+  ],
+  "placed": true
+ },
+ "city_02_04": {
+  "sites": 138,
+  "event_sites": 0,
+  "spawn_definitions": 84,
+  "missing": 0,
+  "levels": [
+   1,
+   50
+  ],
+  "top_groups": [],
+  "placed": false
+ },
+ "city_02_05": {
+  "sites": 1183,
+  "event_sites": 0,
+  "spawn_definitions": 564,
+  "missing": 0,
+  "levels": [
+   1,
+   50
+  ],
+  "top_groups": [
+   [
+    "TheLost",
+    1256
+   ],
+   [
+    "Arachnos",
+    744
+   ],
+   [
+    "Vahzilok",
+    640
+   ],
+   [
+    "ParagonPolice",
+    410
+   ],
+   [
+    "Clockwork",
+    339
+   ],
+   [
+    "Freakshow",
+    211
+   ]
+  ],
+  "placed": true
+ },
+ "city_03_01": {
+  "sites": 1120,
+  "event_sites": 0,
+  "spawn_definitions": 181,
+  "missing": 0,
+  "levels": [
+   20,
+   29
+  ],
+  "top_groups": [
+   [
+    "Tsoo",
+    2548
+   ],
+   [
+    "Warriors",
+    2355
+   ],
+   [
+    "DevouringEarth",
+    2000
+   ],
+   [
+    "Freakshow",
+    870
+   ],
+   [
+    "BanishedPantheon",
+    410
+   ],
+   [
+    "TheFamily,",
+    58
+   ]
+  ],
+  "placed": true
+ },
+ "city_03_02": {
+  "sites": 1313,
+  "event_sites": 0,
+  "spawn_definitions": 149,
+  "missing": 0,
+  "levels": [
+   20,
+   29
+  ],
+  "top_groups": [
+   [
+    "TheFamily",
+    13637
+   ],
+   [
+    "Freakshow",
+    3026
+   ],
+   [
+    "SkyRaiders",
+    2876
+   ],
+   [
+    "Tsoo",
+    1932
+   ],
+   [
+    "DevouringEarth",
+    360
+   ],
+   [
+    "5thColumn",
+    241
+   ]
+  ],
+  "placed": true
+ },
+ "city_03_03": {
+  "sites": 4603,
+  "event_sites": 0,
+  "spawn_definitions": 285,
+  "missing": 0,
+  "levels": [
+   1,
+   54
+  ],
+  "top_groups": [
+   [
+    "FirBolg",
+    3009
+   ],
+   [
+    "Cabal",
+    2459
+   ],
+   [
+    "Tuatha",
+    2223
+   ],
+   [
+    "RedCaps",
+    2115
+   ],
+   [
+    "CroatoaGhosts",
+    573
+   ],
+   [
+    "DevouringEarth",
+    120
+   ]
+  ],
+  "placed": true
+ },
+ "city_03_04": {
+  "sites": 109,
+  "event_sites": 0,
+  "spawn_definitions": 56,
+  "missing": 0,
+  "levels": [
+   36,
+   54
+  ],
+  "top_groups": [
+   [
+    "Romans",
+    247
+   ],
+   [
+    "Romans_Good",
+    105
+   ]
+  ],
+  "placed": false
+ },
+ "city_04_01": {
+  "sites": 561,
+  "event_sites": 0,
+  "spawn_definitions": 135,
+  "missing": 0,
+  "levels": [
+   1,
+   54
+  ],
+  "top_groups": [
+   [
+    "DevouringEarth",
+    1240
+   ],
+   [
+    "CircleOfThorns",
+    567
+   ],
+   [
+    "Crey",
+    300
+   ],
+   [
+    "Rikti",
+    251
+   ],
+   [
+    "CircleofThorns",
+    245
+   ],
+   [
+    "Council",
+    238
+   ]
+  ],
+  "placed": true
+ },
+ "city_04_02": {
+  "sites": 2060,
+  "event_sites": 0,
+  "spawn_definitions": 251,
+  "missing": 0,
+  "levels": [
+   30,
+   38
+  ],
+  "top_groups": [
+   [
+    "Freakshow",
+    2943
+   ],
+   [
+    "Prisoners",
+    2454
+   ],
+   [
+    "Council",
+    995
+   ],
+   [
+    "ParagonPolice",
+    739
+   ],
+   [
+    "Objects",
+    117
+   ],
+   [
+    "5thColumn",
+    58
+   ]
+  ],
+  "placed": true
+ },
+ "city_05_01": {
+  "sites": 4862,
+  "event_sites": 0,
+  "spawn_definitions": 255,
+  "missing": 0,
+  "levels": [
+   1,
+   54
+  ],
+  "top_groups": [
+   [
+    "Nemesis",
+    14664
+   ],
+   [
+    "Rikti",
+    8391
+   ],
+   [
+    "Carnival",
+    5358
+   ],
+   [
+    "Malta",
+    5358
+   ],
+   [
+    "CircleOfThorns",
+    2010
+   ],
+   [
+    "DevouringEarth",
+    531
+   ]
+  ],
+  "placed": true
+ },
+ "city_06_01": {
+  "sites": 0,
+  "event_sites": 0,
+  "spawn_definitions": 0,
+  "missing": 0,
+  "levels": null,
+  "top_groups": [],
+  "placed": false
+ },
+ "city_06_02": {
+  "sites": 218,
+  "event_sites": 0,
+  "spawn_definitions": 18,
+  "missing": 0,
+  "levels": [
+   48,
+   50
+  ],
+  "top_groups": [],
+  "placed": false
+ },
+ "hazard_01_01": {
+  "sites": 707,
+  "event_sites": 0,
+  "spawn_definitions": 148,
+  "missing": 0,
+  "levels": [
+   6,
+   14
+  ],
+  "top_groups": [
+   [
+    "Hellions",
+    2098
+   ],
+   [
+    "Clockwork",
+    1744
+   ],
+   [
+    "Skulls",
+    1146
+   ],
+   [
+    "CircleofThorns",
+    1069
+   ],
+   [
+    "Hydra",
+    480
+   ],
+   [
+    "Vahzilok",
+    420
+   ]
+  ],
+  "placed": true
+ },
+ "hazard_01_02": {
+  "sites": 3493,
+  "event_sites": 0,
+  "spawn_definitions": 464,
+  "missing": 0,
+  "levels": [
+   5,
+   15
+  ],
+  "top_groups": [
+   [
+    "Skulls",
+    3090
+   ],
+   [
+    "TheLost",
+    2927
+   ],
+   [
+    "Trolls",
+    1576
+   ],
+   [
+    "CircleofThorns",
+    1515
+   ],
+   [
+    "Outcasts",
+    1501
+   ],
+   [
+    "Hellions",
+    1436
+   ]
+  ],
+  "placed": true
+ },
+ "hazard_02_01": {
+  "sites": 824,
+  "event_sites": 0,
+  "spawn_definitions": 23,
+  "missing": 0,
+  "levels": [
+   11,
+   19
+  ],
+  "top_groups": [
+   [
+    "Clockwork",
+    452
+   ],
+   [
+    "Vahzilok",
+    274
+   ],
+   [
+    "Trolls",
+    271
+   ],
+   [
+    "Outcasts",
+    253
+   ],
+   [
+    "TheLost",
+    177
+   ],
+   [
+    "5thColumn",
+    74
+   ]
+  ],
+  "placed": true
+ },
+ "hazard_03_01": {
+  "sites": 662,
+  "event_sites": 0,
+  "spawn_definitions": 63,
+  "missing": 0,
+  "levels": [
+   21,
+   29
+  ],
+  "top_groups": [
+   [
+    "BanishedPantheon",
+    2751
+   ],
+   [
+    "Tsoo",
+    306
+   ],
+   [
+    "CircleOfThorns",
+    150
+   ],
+   [
+    "CircleofThorns",
+    132
+   ]
+  ],
+  "placed": true
+ },
+ "hazard_03_02": {
+  "sites": 4792,
+  "event_sites": 0,
+  "spawn_definitions": 391,
+  "missing": 0,
+  "levels": [
+   20,
+   29
+  ],
+  "top_groups": [
+   [
+    "Council",
+    10428
+   ],
+   [
+    "Warriors",
+    4274
+   ],
+   [
+    "TheFamily",
+    2575
+   ],
+   [
+    "SkyRaiders",
+    1196
+   ],
+   [
+    "Objects",
+    1100
+   ],
+   [
+    "DevouringEarth",
+    819
+   ]
+  ],
+  "placed": true
+ },
+ "hazard_04_01": {
+  "sites": 2034,
+  "event_sites": 0,
+  "spawn_definitions": 194,
+  "missing": 0,
+  "levels": [
+   31,
+   41
+  ],
+  "top_groups": [
+   [
+    "Freakshow",
+    3413
+   ],
+   [
+    "Crey",
+    1478
+   ],
+   [
+    "Rikti",
+    1262
+   ],
+   [
+    "PracticeRobots",
+    770
+   ],
+   [
+    "DevouringEarth",
+    567
+   ],
+   [
+    "Nemesis",
+    542
+   ]
+  ],
+  "placed": true
+ },
+ "hazard_06_01": {
+  "sites": 1394,
+  "event_sites": 0,
+  "spawn_definitions": 60,
+  "missing": 0,
+  "levels": [
+   40,
+   44
+  ],
+  "top_groups": [
+   [
+    "Rularuu",
+    4146
+   ],
+   [
+    "Crey",
+    2375
+   ],
+   [
+    "Nemesis",
+    1685
+   ],
+   [
+    "Reflections",
+    1229
+   ]
+  ],
+  "placed": false
+ },
+ "hazard_06_02": {
+  "sites": 3818,
+  "event_sites": 0,
+  "spawn_definitions": 53,
+  "missing": 0,
+  "levels": [
+   40,
+   44
+  ],
+  "top_groups": [
+   [
+    "Rularuu",
+    11218
+   ],
+   [
+    "Nemesis",
+    2672
+   ],
+   [
+    "Reflections",
+    2600
+   ],
+   [
+    "Pets",
+    129
+   ]
+  ],
+  "placed": false
+ },
+ "hazard_06_03": {
+  "sites": 1781,
+  "event_sites": 0,
+  "spawn_definitions": 61,
+  "missing": 0,
+  "levels": [
+   44,
+   47
+  ],
+  "top_groups": [
+   [
+    "Rularuu",
+    9124
+   ],
+   [
+    "Reflections",
+    1508
+   ]
+  ],
+  "placed": false
+ },
+ "trial_01_01": {
+  "sites": 1123,
+  "event_sites": 0,
+  "spawn_definitions": 68,
+  "missing": 0,
+  "levels": [
+   35,
+   40
+  ],
+  "top_groups": [
+   [
+    "Rikti",
+    3072
+   ],
+   [
+    "Hydra",
+    1968
+   ],
+   [
+    "CircleOfThorns",
+    1400
+   ]
+  ],
+  "placed": false
+ },
+ "trial_01_02": {
+  "sites": 997,
+  "event_sites": 0,
+  "spawn_definitions": 39,
+  "missing": 0,
+  "levels": [
+   3,
+   10
+  ],
+  "top_groups": [
+   [
+    "Vahzilok",
+    1812
+   ],
+   [
+    "Hellions",
+    1107
+   ],
+   [
+    "TheLost",
+    1050
+   ]
+  ],
+  "placed": false
+ },
+ "trial_02_01": {
+  "sites": 411,
+  "event_sites": 0,
+  "spawn_definitions": 14,
+  "missing": 0,
+  "levels": [
+   14,
+   19
+  ],
+  "top_groups": [
+   [
+    "Vahzilok",
+    209
+   ],
+   [
+    "Clockwork",
+    180
+   ],
+   [
+    "CircleOfThorns",
+    117
+   ]
+  ],
+  "placed": false
+ },
+ "trial_03_01": {
+  "sites": 1030,
+  "event_sites": 0,
+  "spawn_definitions": 150,
+  "missing": 0,
+  "levels": [
+   21,
+   29
+  ],
+  "top_groups": [
+   [
+    "Freakshow",
+    3258
+   ],
+   [
+    "SkyRaiders",
+    3034
+   ],
+   [
+    "TheLost",
+    468
+   ],
+   [
+    "DevouringEarth",
+    438
+   ]
+  ],
+  "placed": false
+ },
+ "trial_04_01": {
+  "sites": 702,
+  "event_sites": 0,
+  "spawn_definitions": 97,
+  "missing": 0,
+  "levels": [
+   33,
+   39
+  ],
+  "top_groups": [
+   [
+    "Crey",
+    2070
+   ],
+   [
+    "Nemesis",
+    1610
+   ],
+   [
+    "DevouringEarth",
+    1353
+   ]
+  ],
+  "placed": false
+ },
+ "trial_04_02": {
+  "sites": 515,
+  "event_sites": 0,
+  "spawn_definitions": 10,
+  "missing": 0,
+  "levels": [
+   1,
+   54
+  ],
+  "top_groups": [
+   [
+    "DevouringEarth",
+    15
+   ],
+   [
+    "Pets",
+    2
+   ]
+  ],
+  "placed": false
+ },
+ "trial_05_01": {
+  "sites": 38,
+  "event_sites": 0,
+  "spawn_definitions": 94,
+  "missing": 0,
+  "levels": [
+   40,
+   50
+  ],
+  "top_groups": [
+   [
+    "Rikti",
+    75
+   ],
+   [
+    "DevouringEarth",
+    53
+   ],
+   [
+    "Pets",
+    15
+   ],
+   [
+    "Crey",
+    13
+   ],
+   [
+    "Nemesis",
+    1
+   ]
+  ],
+  "placed": true
+ },
+ "trial_06_01": {
+  "sites": 1689,
+  "event_sites": 0,
+  "spawn_definitions": 30,
+  "missing": 0,
+  "levels": [
+   48,
+   53
+  ],
+  "top_groups": [
+   [
+    "Rularuu",
+    4741
+   ],
+   [
+    "StormElementals",
+    3885
+   ]
+  ],
+  "placed": false
+ },
+ "war_05_01": {
+  "sites": 3574,
+  "event_sites": 0,
+  "spawn_definitions": 690,
+  "missing": 0,
+  "levels": [
+   35,
+   54
+  ],
+  "top_groups": [
+   [
+    "Rikti",
+    3384
+   ],
+   [
+    "Crey",
+    1852
+   ],
+   [
+    "Council",
+    1562
+   ],
+   [
+    "Arachnos",
+    1510
+   ],
+   [
+    "Vanguard_Shield",
+    1202
+   ],
+   [
+    "Turrets",
+    942
+   ]
+  ],
+  "placed": false
+ }
+}
