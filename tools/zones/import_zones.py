@@ -149,8 +149,7 @@ def filter_gltf(zdir, name, index):
            "new_mat_names": [g["materials"][i]["name"] for i in new_mats],
            "new_meshes_gltf": None, "new_mats_gltf": None}
     base = dict(g)
-    base["buffers"] = [dict(g["buffers"][0], uri=abs_bin)]
-    base["images"] = [{"uri": os.path.join(zdir, im["uri"]).replace("\\", "/")} for im in g.get("images", [])]
+    # written next to the original so the relative .bin/texture uris resolve (Unreal treats absolute uris as relative)
     if new_meshes:
         m = dict(base)
         m["meshes"] = [g["meshes"][i] for i in new_meshes]
@@ -160,7 +159,7 @@ def filter_gltf(zdir, name, index):
         m["materials"] = [{"name": mt["name"]} for mt in g["materials"]]
         for k in ("textures", "images", "samplers"):
             m.pop(k, None)
-        res["new_meshes_gltf"] = os.path.join(WORK, name + "_new_meshes.gltf").replace("\\", "/")
+        res["new_meshes_gltf"] = os.path.join(zdir, name + "_new_meshes.gltf").replace("\\", "/")
         json.dump(m, open(res["new_meshes_gltf"], "w"))
     if new_mats:
         # one tiny carrier mesh per new material (the material pass imports no meshes)
@@ -170,7 +169,7 @@ def filter_gltf(zdir, name, index):
                        for k, i in enumerate(new_mats)]
         t["nodes"] = [{"name": "carrier_%d" % k, "mesh": k} for k in range(len(new_mats))]
         t["scenes"] = [{"name": name + "_mats", "nodes": list(range(len(new_mats)))}]
-        res["new_mats_gltf"] = os.path.join(WORK, name + "_new_mats.gltf").replace("\\", "/")
+        res["new_mats_gltf"] = os.path.join(zdir, name + "_new_mats.gltf").replace("\\", "/")
         json.dump(t, open(res["new_mats_gltf"], "w"))
     return res
 
@@ -216,7 +215,7 @@ def run_zone(zid, name, zone, st, dry=False):
     t0 = time.time()
     notes = []
     for stage in STAGES:
-        if stage in zs["done"]:
+        if stage in zs["done"] and stage != "level":   # always re-open the zone level on resume
             continue
         if stage == "glaze" and zs.get("glaze_sent"):
             notes.append("glaze already sent earlier; not re-sent")
@@ -289,8 +288,15 @@ def run_zone(zid, name, zone, st, dry=False):
     zs["minutes"] = round((time.time() - t0) / 60, 1)
     zs.pop("failed", None)
     save_state(st)
-    logline("OK   %-16s actors %d, instance actors %d, instances %d, %.0f min; %s"
-            % (zone, s["actors"], s["instance_actors"], s["instances"], zs["minutes"], "; ".join(notes)))
+    # counts from the placement step (the stats stage only sees World Partition cells loaded in the editor)
+    rep = open(os.path.join(rdir, "report.txt"), encoding="utf-8").read()
+    m = re.findall(r"place: (\d+) single, (\d+) instances in (\d+) instance actors; (\d+) models missing", rep)
+    if m:
+        single, inst, iact, miss = (int(x) for x in m[-1])
+        counts = "actors %d + instance actors %d (%d instances), %d models missing" % (single, iact, inst, miss)
+    else:
+        counts = "loaded actors %d, instances %d" % (s["actors"], s["instances"])
+    logline("OK   %-16s %s, %.0f min; %s" % (zone, counts, zs["minutes"], "; ".join(notes)))
     return "ok"
 
 
