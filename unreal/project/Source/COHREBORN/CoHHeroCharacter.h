@@ -117,6 +117,9 @@ public:
 	virtual void Jump() override;
 	UFUNCTION(BlueprintCallable, Category="CoH|Settings")
 	void ToggleGraphicsMenu();
+	/** Esc: Return to HQ / Keep playing / Quit (UCoHFrontend). */
+	UFUNCTION(BlueprintCallable, Category="CoH|Lobby")
+	void ToggleLeaveMenu();
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 	UPROPERTY(Transient)
 	TObjectPtr<class UCoHGraphicsMenu> GraphicsMenu;
@@ -355,4 +358,17 @@ public:
 	/** Maps with no enemy spawner placed (or not in the loaded cells) get one,
 	 *  so the original encounters and wandering gangs run everywhere. */
 	virtual void StartPlay() override;
+
+	/** Reads ServerName= and Password= from the host's URL (set by the HQ
+	 *  lobby, docs/lobby.md); kept across monorail travel. */
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	/** Turns a joining player away when the password doesn't match. */
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+	/** No hero on the HQ frontend map (if it ever runs with this mode). */
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+
+	/** Shown in the lobby's server list. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "CoH|Lobby") FString ServerName;
+	/** Empty: anyone may join. */
+	UPROPERTY(Transient) FString ServerPassword;
 };

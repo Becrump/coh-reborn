@@ -5,7 +5,10 @@ the Claude Doc "Multiplayer hosting and saves review" in the project.
 
 ## Hosting (friends group)
 
-A listen server: one player hosts and plays, the others join.
+A listen server: one player hosts and plays, the others join. Normally this
+is done from the HQ lobby the game starts in (docs/lobby.md): host with an
+optional password, or join friends' saved servers with live status. The
+command lines below still work and skip the lobby.
 
 - Host: `COHREBORN.exe AtlasPark_DressingStudy_Nanite?listen`
 - Join: `COHREBORN.exe <host IP>` (or console `open <host IP>`)
