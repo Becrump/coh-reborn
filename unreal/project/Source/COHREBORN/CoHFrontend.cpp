@@ -5,6 +5,10 @@
 #include "CoHGraphicsMenu.h"
 #include "CoHHeroCharacter.h"
 #include "CoHHeroProgress.h"
+#include "CoHPortMapper.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
@@ -92,6 +96,8 @@ void UCoHFrontend::Deinitialize()
 	}
 	HideLobby();
 	HostBeacon.Stop();
+	if (bPortsOpen)
+		CoHPortMapper::ClosePorts({CoHLobby::DefaultGamePort, CoHLobby::DefaultGamePort + CoHLobby::BeaconOffset});
 	Client.Stop();
 	Super::Deinitialize();
 }
@@ -520,6 +526,73 @@ TArray<FCoHLocalAddress> UCoHFrontend::LocalAddresses() const
 	return Out;
 }
 
+void UCoHFrontend::PrepareHosting()
+{
+	if (bPrepared) return;
+	bPrepared = true;
+	TWeakObjectPtr<UCoHFrontend> Weak(this);
+
+	// what friends type: the public IP (a tiny plain-text lookup, nothing sent but the request)
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Req = FHttpModule::Get().CreateRequest();
+	Req->SetURL(TEXT("https://api.ipify.org"));
+	Req->SetVerb(TEXT("GET"));
+	Req->OnProcessRequestComplete().BindLambda([Weak](FHttpRequestPtr, FHttpResponsePtr Resp, bool bOk)
+	{
+		UCoHFrontend* F = Weak.Get();
+		if (!F) return;
+		if (bOk && Resp.IsValid() && Resp->GetResponseCode() == 200)
+			F->PublicAddress = Resp->GetContentAsString().TrimStartAndEnd();
+		F->CheckSharedIp();
+		++F->Revision;
+	});
+	Req->ProcessRequest();
+
+	// open the ports on the router, pointing at this PC's home network address
+	for (const FCoHLocalAddress& A : LocalAddresses())
+		if (A.Kind == TEXT("Home network")) { PortsLanIp = A.Ip; break; }
+	if (PortsLanIp.IsEmpty())
+	{
+		PortMessage = TEXT("No home network address found");
+		return;
+	}
+	bPortsBusy = true;
+	CoHPortMapper::OpenPorts({CoHLobby::DefaultGamePort, CoHLobby::DefaultGamePort + CoHLobby::BeaconOffset}, PortsLanIp,
+		[Weak](const CoHPortMapper::FResult& R)
+		{
+			UCoHFrontend* F = Weak.Get();
+			if (!F) return;
+			F->bPortsBusy = false;
+			F->bPortsOpen = R.bOpened;
+			F->RouterAddress = R.RouterIp;
+			F->PortMessage = R.Message;
+			F->CheckSharedIp();
+			++F->Revision;
+		});
+}
+
+void UCoHFrontend::CheckSharedIp()
+{
+	// a router whose internet address is private (100.64/10, 10/8, 192.168/16, 172.16/12) sits
+	// behind the provider's own NAT: no port forward can reach it
+	bSharedIp = false;
+	if (RouterAddress.IsEmpty() || PublicAddress.IsEmpty() || RouterAddress == PublicAddress) return;
+	TArray<FString> P;
+	if (RouterAddress.ParseIntoArray(P, TEXT(".")) != 4) return;
+	const int32 A = FCString::Atoi(*P[0]), B = FCString::Atoi(*P[1]);
+	bSharedIp = A == 10 || (A == 100 && B >= 64 && B <= 127) || (A == 192 && B == 168) || (A == 172 && B >= 16 && B <= 31);
+}
+
+FString UCoHFrontend::InternetStatus() const
+{
+	if (bPortsBusy) return TEXT("Asking the router to open the ports...");
+	if (bSharedIp)
+		return TEXT("Your internet provider shares one address between homes (CGNAT), so friends can't reach you directly. Ask the provider for a public IP, or use Tailscale.");
+	if (bPortsOpen) return TEXT("Ports opened on the router automatically. Friends add this address.");
+	if (PortMessage.IsEmpty()) return TEXT("Checking the router...");
+	return PortMessage + FString::Printf(TEXT(". In the router, forward UDP %d-%d to %s once."),
+		CoHLobby::DefaultGamePort, CoHLobby::DefaultGamePort + CoHLobby::BeaconOffset, PortsLanIp.IsEmpty() ? TEXT("this PC") : *PortsLanIp);
+}
+
 void UCoHFrontend::ReturnToHQ()
 {
 	UWorld* World = GetGameInstance()->GetWorld();
@@ -590,7 +663,7 @@ void UCoHFrontend::HandleNetworkFailure(UWorld* World, UNetDriver*, ENetworkFail
 	else if (Type == ENetworkFailure::NetGuidMismatch || Type == ENetworkFailure::NetChecksumMismatch || Type == ENetworkFailure::OutdatedClient || Type == ENetworkFailure::OutdatedServer)
 		ErrorText = TEXT("Your game version doesn't match the host's. Both need the same build.");
 	else if (Type == ENetworkFailure::PendingConnectionFailure || Type == ENetworkFailure::ConnectionTimeout)
-		ErrorText = TEXT("Couldn't reach the server. Check that it's running and the address is right (Tailscale on?).");
+		ErrorText = TEXT("Couldn't reach the server. Check that it's running, the address is right, and the host's router ports are open.");
 	else
 		ErrorText = TEXT("Lost the connection to the host. The server may have closed.");
 	UE_LOG(LogTemp, Warning, TEXT("CoH lobby: network failure %s: %s"), ENetworkFailure::ToString(Type), *Message);

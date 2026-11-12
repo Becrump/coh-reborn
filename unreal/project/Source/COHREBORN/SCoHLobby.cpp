@@ -586,7 +586,12 @@ TSharedRef<SWidget> SCoHLobby::MakeTopBar()
 				SNew(STextBlock).Text(FText::FromString(Names[i])).Font(HQ::Label(14))
 				.ColorAndOpacity_Lambda([this, Me] { return FSlateColor(Tab == Me ? FLinearColor::White : HQ::Muted()); }),
 				TAttribute<bool>::CreateLambda([this, Me] { return Tab == Me; }),
-				FOnClicked::CreateLambda([this, Me] { Tab = Me; return FReply::Handled(); }),
+				FOnClicked::CreateLambda([this, Me]
+				{
+					Tab = Me;
+					if (Me == ETab::Host && F.IsValid()) F->PrepareHosting();
+					return FReply::Handled();
+				}),
 				HQ::Box(HQ::Blue(.38f), HQ::Blue(), 4.f, 1.f), HQ::Box(HQ::Clear(), HQ::Clear(), 4.f, 0.f), HQ::Box(HQ::Blue(.14f), HQ::Sky(.3f), 4.f, 1.f),
 				FMargin(18, 12))
 		];
@@ -709,7 +714,7 @@ TSharedRef<SWidget> SCoHLobby::MakeJoinPage()
 		[
 			SNew(STextBlock).Font(HQ::Body(14)).ColorAndOpacity(FSlateColor(HQ::Dim())).AutoWrapText(true)
 			.Text(FText::FromString(TEXT("Status is checked every few seconds with a small UDP ping on the game port + 1 (7778). "
-				"Friends over the internet: everyone on the same Tailscale network, or the host forwards UDP 7777 and 7778.")))
+				"Friends over the internet: add the host's internet address (their Host tab shows it). The game opens the router ports itself where the router allows it.")))
 		];
 }
 
@@ -1054,13 +1059,45 @@ TSharedRef<SWidget> SCoHLobby::MakeHostPage()
 			];
 		}
 
-	// tell your friends
+	// tell your friends: the internet address first (public IP, ports opened by UPnP)
 	TSharedRef<SVerticalBox> Addresses = SNew(SVerticalBox);
+	Addresses->AddSlot().AutoHeight().Padding(0, 0, 0, 8)
+	[
+		SNew(SBorder)
+		.BorderImage_Lambda([this] { return F.IsValid() && F->InternetReady() ? HQ::Box(HQ::Green(.1f), HQ::Green(.45f), 4.f, 1.f) : HQ::Box(HQ::Gold(.08f), HQ::Gold(.4f), 4.f, 1.f); })
+		.Padding(FMargin(12, 8))
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot().AutoHeight()
+				[
+					SNew(STextBlock).Font(HQ::Bold(18)).ColorAndOpacity(FSlateColor(HQ::Ink()))
+					.Text_Lambda([this] { const FString Ip = F.IsValid() ? F->PublicIp() : FString(); return FText::FromString(Ip.IsEmpty() ? TEXT("Internet address...") : Ip); })
+				]
+				+ SVerticalBox::Slot().AutoHeight()
+				[
+					SNew(STextBlock).Font(HQ::Body(13)).AutoWrapText(true)
+					.ColorAndOpacity_Lambda([this] { return FSlateColor(F.IsValid() && F->InternetReady() ? HQ::C(0x8de0b2) : HQ::C(0xffd38a)); })
+					.Text_Lambda([this] { return FText::FromString(F.IsValid() ? F->InternetStatus() : FString()); })
+				]
+			]
+			+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(10, 0, 0, 0)
+			[
+				HQ::Button(TEXT("COPY"), HQ::EBtn::Secondary, FOnClicked::CreateLambda([this]
+				{
+					if (F.IsValid() && !F->PublicIp().IsEmpty()) FPlatformApplicationMisc::ClipboardCopy(*F->PublicIp());
+					return FReply::Handled();
+				}), TAttribute<bool>::CreateLambda([this] { return F.IsValid() && !F->PublicIp().IsEmpty(); }), 12.f, 36.f)
+			]
+		]
+	];
 	const TArray<FCoHLocalAddress> Local = F.IsValid() ? F->LocalAddresses() : TArray<FCoHLocalAddress>();
 	for (const FCoHLocalAddress& A : Local)
 	{
 		const bool bTail = A.Kind == TEXT("Tailscale");
-		const FString Note = bTail ? TEXT("Tailscale: works over the internet") : A.Kind == TEXT("Home network") ? TEXT("Home network only") : TEXT("Internet: needs UDP 7777 and 7778 forwarded");
+		const FString Note = bTail ? TEXT("Tailscale: works over the internet") : A.Kind == TEXT("Home network") ? TEXT("Home network only") : TEXT("This PC's own internet address");
 		const FString Ip = A.Ip;
 		Addresses->AddSlot().AutoHeight().Padding(0, 0, 0, 8)
 		[
@@ -1154,7 +1191,7 @@ TSharedRef<SWidget> SCoHLobby::MakeHostPage()
 					+ SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 12)
 					[
 						SNew(STextBlock).Font(HQ::Body(15)).ColorAndOpacity(FSlateColor(HQ::C(0xaac4e6))).AutoWrapText(true)
-						.Text(FText::FromString(TEXT("Friends add one of these under Join Friends. Game port 7777.")))
+						.Text(FText::FromString(TEXT("Friends add one of these under Join Friends: the internet address from anywhere, the home one from your network.")))
 					]
 					+ SVerticalBox::Slot().AutoHeight()[Addresses]
 					+ SVerticalBox::Slot().FillHeight(1)
@@ -1390,7 +1427,7 @@ void SCoHLobby::Rebuild()
 			ServerRows->AddSlot().AutoHeight().Padding(0, 10)
 			[
 				SNew(STextBlock).Font(HQ::Body(17)).ColorAndOpacity(FSlateColor(HQ::Muted())).AutoWrapText(true)
-				.Text(FText::FromString(TEXT("No saved servers yet. Add a friend's address (their Tailscale IP or PC name), or host your own.")))
+				.Text(FText::FromString(TEXT("No saved servers yet. Add a friend's address (the internet address from their Host tab), or host your own.")))
 			];
 	}
 	if (LanRows.IsValid())
@@ -1544,7 +1581,7 @@ void SCoHLobby::OpenServerEditor(int32 Index)
 	const FCoHServerEntry* S = Index >= 0 ? Server(Index) : nullptr;
 	TSharedRef<SEditableTextBox> Name = HQ::Input(S ? S->Name : FString(), TEXT("e.g. Robert's Base"));
 	TSharedRef<SEditableTextBox> Addr = HQ::Input(S ? (S->Port == CoHLobby::DefaultGamePort ? S->Host : FString::Printf(TEXT("%s:%d"), *S->Host, S->Port)) : FString(),
-		TEXT("Tailscale IP or PC name, :port optional"));
+		TEXT("Friend's internet address, :port optional"));
 	TSharedRef<SEditableTextBox> Pw = HQ::Input(S ? S->Password : FString(), TEXT("Only if the server has one"), true);
 	TSharedRef<bool> Remember = MakeShared<bool>(S ? S->bRemember : true);
 	TSharedRef<FString> Error = MakeShared<FString>();

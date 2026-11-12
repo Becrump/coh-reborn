@@ -147,6 +147,14 @@ public:
 	void Host(const FCoHHostSettings& Settings);
 	FCoHHostSettings& HostSettings() { return LastHost; }
 	TArray<FCoHLocalAddress> LocalAddresses() const;
+	/** Host tab opened: look up the public IP and ask the router (UPnP) to
+	 *  open UDP 7777/7778, so friends can join over the internet. Once per run. */
+	void PrepareHosting();
+	FString PublicIp() const { return PublicAddress; }
+	/** One line for "Tell your friends": ports opened, or what to do. */
+	FString InternetStatus() const;
+	/** true: ports open and the IP is really public (friends can reach us). */
+	bool InternetReady() const { return bPortsOpen && !bSharedIp && !PublicAddress.IsEmpty(); }
 	bool IsConnecting() const { return bConnecting; }
 	/** The running server's name and password, so they survive monorail travel. */
 	FString HostedName() const { return ActiveName; }
@@ -219,6 +227,13 @@ private:
 	double NextQuery = 0.0;
 
 	FString ActiveName, ActivePassword;
+	// internet hosting
+	void CheckSharedIp();
+	bool bPrepared = false;
+	bool bPortsBusy = false;
+	bool bPortsOpen = false;
+	bool bSharedIp = false;       // the router's own internet address isn't our public IP (CGNAT)
+	FString PublicAddress, RouterAddress, PortMessage, PortsLanIp;
 	bool bConnecting = false;
 	bool bLeaving = false;
 	FString ConnectingName;
