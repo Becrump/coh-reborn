@@ -18,6 +18,7 @@
 #include "Framework/Commands/InputChord.h"
 #include "CoHCombat.h"
 #include "CoHGraphicsMenu.h"
+#include "CoHFrontend.h"
 #include "RebornMonorail.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
@@ -37,6 +38,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
@@ -129,6 +131,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
 	Input->BindKey(EKeys::F10, IE_Pressed, this, &ACoHHeroCharacter::ToggleGraphicsMenu);
+	// Esc: back to the HQ lobby (in the editor's Play-In-Editor, Esc stops play first)
+	Input->BindKey(EKeys::Escape, IE_Pressed, this, &ACoHHeroCharacter::ToggleLeaveMenu);
 	// power tray: 1..0 fire the slot once; Ctrl + 1..0 locks that power as
 	// the auto attack (Ctrl + the same number again unlocks). Each press is
 	// logged ("CoH key ...") so a test shows which key did what.
@@ -246,6 +250,12 @@ void ACoHHeroCharacter::ToggleGraphicsMenu()
 {
     if (!GraphicsMenu) GraphicsMenu = NewObject<UCoHGraphicsMenu>(this);
     GraphicsMenu->Toggle(Cast<APlayerController>(GetController()));
+}
+
+void ACoHHeroCharacter::ToggleLeaveMenu()
+{
+	if (UCoHFrontend* Front = UCoHFrontend::Get(this))
+		Front->ToggleLeaveMenu(Cast<APlayerController>(GetController()));
 }
 
 void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
@@ -787,10 +797,45 @@ ACoHGameMode::ACoHGameMode()
 	bUseSeamlessTravel = true;
 }
 
+void ACoHGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	UCoHFrontend* Front = UCoHFrontend::Get(this);
+	ServerName = UGameplayStatics::HasOption(Options, TEXT("ServerName"))
+		? CoHLobby::DecodeOption(UGameplayStatics::ParseOption(Options, TEXT("ServerName")))
+		: Front ? Front->HostedName() : FString();
+	ServerPassword = UGameplayStatics::HasOption(Options, TEXT("Password"))
+		? CoHLobby::DecodeOption(UGameplayStatics::ParseOption(Options, TEXT("Password")))
+		: Front ? Front->HostedPassword() : FString();
+	if (Front) Front->RememberHosted(ServerName, ServerPassword);
+}
+
+void ACoHGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
+{
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+	if (!ErrorMessage.IsEmpty() || ServerPassword.IsEmpty()) return;
+	const FString Given = CoHLobby::DecodeOption(UGameplayStatics::ParseOption(Options, TEXT("Password")));
+	if (Given != ServerPassword)
+	{
+		// the lobby turns this code into "Wrong password"
+		ErrorMessage = TEXT("WRONG_PASSWORD");
+		UE_LOG(LogTemp, Log, TEXT("CoH lobby: turned away %s (wrong password)"), *Address);
+	}
+}
+
+UClass* ACoHGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	const UCoHFrontend* Front = UCoHFrontend::Get(this);
+	if (Front && Front->IsFrontendMap(GetWorld())) return nullptr;
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
 void ACoHGameMode::StartPlay()
 {
 	Super::StartPlay();
 	UWorld* W = GetWorld();
+	const UCoHFrontend* Front = UCoHFrontend::Get(this);
+	if (Front && Front->IsFrontendMap(W)) return;   // the HQ lobby: no villains
 	if (W && !TActorIterator<ACoHEnemySpawner>(W))
 	{
 		W->SpawnActor<ACoHEnemySpawner>(ACoHEnemySpawner::StaticClass(), FTransform::Identity);
@@ -1124,8 +1169,10 @@ void ACoHHeroCharacter::SendLocalHero()
 {
 	if (!Progress) return;
 	// which hero: -Hero=<name>, else the starter's name (+ _P<n> for extra PIE players)
+	// the hero picked in the HQ lobby, else -Hero=<name>, else the starter's name
 	FString Name;
-	if (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name) || Name.IsEmpty())
+	if (const UCoHFrontend* Front = UCoHFrontend::Get(this)) Name = Front->ChosenHero();
+	if (Name.IsEmpty() && (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name) || Name.IsEmpty()))
 	{
 		Name = HeroFile.IsEmpty() ? FString(TEXT("Hero")) : FPaths::GetBaseFilename(HeroFile);
 		const FWorldContext* WC = GEngine ? GEngine->GetWorldContextFromWorld(GetWorld()) : nullptr;
@@ -1164,6 +1211,8 @@ void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
 	}
 	Progress->LoadHeroRecord(H);
 	ApplyCoHBody();
+	// the lobby's server list shows who is on by hero name
+	if (APlayerState* PS = GetPlayerState(); PS && !H.Name.IsEmpty()) PS->SetPlayerName(H.Name);
 }
 
 FCoHTravelState ACoHHeroCharacter::TravelState() const
