@@ -117,6 +117,13 @@ public:
 	virtual void Jump() override;
 	UFUNCTION(BlueprintCallable, Category="CoH|Settings")
 	void ToggleGraphicsMenu();
+	/** The HQ terminal's pedestal (ACoHHeroStage): load this hero file
+	 *  (Saved/Heroes/<Name>.json; empty = the default hero) on a hero no one
+	 *  controls, standing still and idling. Standalone only (needs authority). */
+	bool ShowcaseHero(const FString& HeroName);
+	/** The hero file text for a hero name: the PC's own Saved/Heroes file,
+	 *  else the starter (HeroFile). OutSaveFile: the file name it saves to. */
+	FString ReadHeroJson(const FString& HeroName, FString& OutSaveFile) const;
 	/** Esc: Return to HQ / Keep playing / Quit (UCoHFrontend). */
 	UFUNCTION(BlueprintCallable, Category="CoH|Lobby")
 	void ToggleLeaveMenu();

@@ -8,6 +8,42 @@ The game now starts in the HQ lobby instead of dropping straight into Atlas
 Park. Everyone settles how the game runs there: host a server, or join a
 friend's.
 
+The first screen is the **Hero Corps terminal** (added 2026-11-12, also
+uncompiled): pick which hero to "call", see it in 3D on a pedestal, read its
+profile and Nemesis file, restyle and play its powers, then **CALL** it, which
+opens **Deploy** (the join / host pages below). Esc or the HERO TERMINAL tab
+goes back.
+
+## Hero Corps terminal
+
+- **Your heroes** (left): every hero file in `Saved/Heroes` plus the starter
+  hero, and **Recruit new hero** (the new hero dialog). Clicking one puts it
+  on the pedestal.
+- **The pedestal** (middle, `ACoHHeroStage`, `CoHHeroStage.h/.cpp`): built in
+  code on the empty frontend map from engine basic shapes: dark floor,
+  pedestal, holo ring, key / rim / fill lights, two searchlights sweeping
+  through volumetric haze, and a camera that becomes the view. The hero is a
+  real `ACoHHeroCharacter` nobody controls, loaded from the file
+  (`ShowcaseHero`), standing still and idling in its own body. Drag to turn,
+  double-click to face front. Light and camera values are in
+  `DefaultGame.ini [/Script/COHREBORN.CoHHeroStage]`, guesses until the
+  first run.
+- **Profile**: level, archetype, origin, sets, XP bar, picks waiting,
+  health / endurance / regeneration / recovery, influence, debt.
+- **Powers**: the hero's picks with their icons. Clicking one plays it on the
+  hero (side-on, at a dummy, through `PreviewPower`). **Delivery** (right
+  hand, eyes, chest ...) and **element color** restyle it and replay it.
+  **Save to hero file** writes the looks (Call also saves them). The same
+  looks the in-game customize panel saves.
+- **Nemesis file**: reads `Saved/Heroes/<hero>.rivals.json` (format in the
+  Nemesis research doc: name, faction, rank, level, stage 0-5, grudge,
+  arrests, status, history). The Nemesis (or first rival) gets the full file
+  with the Marked to Supervillain track; the rest are listed. Shows "No
+  rivals on file" until the rivals system writes that file.
+- **Database**: entries from `DefaultGame.ini [CoHFrontend] Database`.
+- Shared look: `CoHHQStyle.h` (colours, buttons, panels) used by both
+  `SCoHLobby` and `SCoHTerminal`.
+
 ## What the player sees
 
 A "mission control" screen over the city at night: searchlights, a holo grid,
@@ -48,6 +84,9 @@ stops play first, so test this in Standalone or a build.
 | Server status beacon | `CoHLobbyNet.h/.cpp` |
 | The HQ screen (Slate) | `SCoHLobby.h/.cpp` |
 | Password check, server name | `ACoHGameMode::InitGame/PreLogin` in `CoHHeroCharacter.cpp` |
+| Hero Corps terminal (screen) | `SCoHTerminal.h/.cpp` |
+| Hero pedestal (3D) | `CoHHeroStage.h/.cpp`, `ACoHHeroCharacter::ShowcaseHero` |
+| Shared HQ look | `CoHHQStyle.h` |
 | Hero choice | `ACoHHeroCharacter::SendLocalHero` uses the lobby's pick first, then `-Hero=` |
 
 - **Startup**: `GameDefaultMap` is the empty engine map `/Engine/Maps/Entry`.
@@ -108,6 +147,18 @@ stops play first, so test this in Standalone or a build.
 - Windows asks to allow the game through the firewall the first time it
   hosts: allow private networks (and public if Tailscale shows as public).
 
+## Later: the host's base (not started)
+
+Robert, 2026-11-12: terminal now, base later. The idea, for after the first
+real multiplayer test: joining lands you in the host's own base (like the
+original game's supergroup bases), with teleporters into the zones. Everyone
+playing on the server adds to a shared **Hero Points** pool (like the
+original Prestige), saved on the host, which unlocks base perks: zone
+teleport beacons, a medical bay as the respawn point, empowerment stations
+(short buffs), a shared vault, and a trophy room for rivals you've ended.
+**No base raids**: we stay small scale. Still to check: the base room and
+item definitions and base art in the i24 data and piggs.
+
 ## Test plan (when the editor is free)
 
 1. Build. Run Standalone (or a packaged build): the HQ appears, the
@@ -119,5 +170,10 @@ stops play first, so test this in Standalone or a build.
    with the right one and "remember": in game.
 4. Host presses Esc > Close server: the client returns to HQ with "Lost the
    connection". The server shows OFFLINE, "last seen just now".
-5. Hero Roster: New Hero (needs the starters in the rules HeroesDir), pick
-   it, host or join: the hero arrives with that name.
+5. Terminal: Recruit new hero (needs the starters in the rules HeroesDir),
+   it appears on the pedestal in its body, idling; drag turns it. Call it,
+   host or join: the hero arrives with that name.
+6. Terminal Powers: click a power, it plays on the hero. Change delivery and
+   color, Save, then in game the power uses the new look.
+7. Tune the pedestal lights and exposure in DefaultGame.ini if it is too dark
+   or too bright (no rebuild needed).

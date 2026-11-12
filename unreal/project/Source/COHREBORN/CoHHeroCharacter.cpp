@@ -1178,13 +1178,21 @@ void ACoHHeroCharacter::SendLocalHero()
 		const FWorldContext* WC = GEngine ? GEngine->GetWorldContextFromWorld(GetWorld()) : nullptr;
 		if (WC && WC->PIEInstance > 0) Name += FString::Printf(TEXT("_P%d"), WC->PIEInstance);
 	}
-	Name = FPaths::MakeValidFileName(Name);
-	Progress->SaveFile = Name + TEXT(".json");
-	const FString Mine = UCoHHeroProgress::LocalHeroDir() / Progress->SaveFile;
+	FString SaveAs;
+	const FString Json = ReadHeroJson(Name, SaveAs);
+	Progress->SaveFile = SaveAs;
+	if (!Json.IsEmpty()) ServerSubmitHero(Json);
+}
+
+FString ACoHHeroCharacter::ReadHeroJson(const FString& HeroName, FString& OutSaveFile) const
+{
+	const FString Name = FPaths::MakeValidFileName(HeroName);
+	OutSaveFile = Name + TEXT(".json");
+	const FString Mine = UCoHHeroProgress::LocalHeroDir() / OutSaveFile;
 	FString Json;
 	if (FFileHelper::LoadFileToString(Json, *Mine))
 	{
-		UE_LOG(LogTemp, Log, TEXT("CoH hero: sending %s to the host"), *Mine);
+		UE_LOG(LogTemp, Log, TEXT("CoH hero: read %s"), *Mine);
 	}
 	else if (const UCoHGameRules* R = UCoHGameRules::Get(this); R && !HeroFile.IsEmpty())
 	{
@@ -1195,7 +1203,29 @@ void ACoHHeroCharacter::SendLocalHero()
 			FFileHelper::LoadFileToString(Json, *(R->HeroesDir / HeroFile));
 		UE_LOG(LogTemp, Log, TEXT("CoH hero: no %s yet, starting from %s"), *Mine, Json.IsEmpty() ? TEXT("the test hero") : *HeroFile);
 	}
-	if (!Json.IsEmpty()) ServerSubmitHero(Json);
+	return Json;
+}
+
+bool ACoHHeroCharacter::ShowcaseHero(const FString& HeroName)
+{
+	// a display hero: never sends a file to a host, never moves
+	bHeroSent = true;
+	GetCharacterMovement()->DisableMovement();
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!Progress || !R || !R->HasHeroRules() || !HasAuthority()) return false;
+	const FString Name = HeroName.IsEmpty() ? (HeroFile.IsEmpty() ? FString(TEXT("Hero")) : FPaths::GetBaseFilename(HeroFile)) : HeroName;
+	FString SaveAs;
+	const FString Json = ReadHeroJson(Name, SaveAs);
+	FCoHHeroRecord H;
+	if (Json.IsEmpty() || !R->HeroFromJson(Json, H))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CoH terminal: hero %s could not be read"), *Name);
+		return false;
+	}
+	Progress->SaveFile = SaveAs;
+	Progress->LoadHeroRecord(H);
+	ApplyCoHBody();
+	return true;
 }
 
 void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)

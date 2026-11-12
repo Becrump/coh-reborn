@@ -23,6 +23,7 @@
 #include "CoHFrontend.generated.h"
 
 class SCoHLobby;
+class ACoHHeroStage;
 class UTexture2D;
 
 /** A zone the host can start in. */
@@ -87,6 +88,33 @@ struct FCoHHeroCard
 	FString SetsLine() const;        // "Fire Blast · Fire Manipulation"
 };
 
+/** One rival from Saved/Heroes/<hero>.rivals.json (the Nemesis system,
+ *  /mnt research doc section 5), as the terminal's Nemesis file shows it. */
+struct FCoHRivalCard
+{
+	FString Name;
+	FString Faction;         // Hellions
+	FString Rank;            // Lieutenant
+	int32 Level = 1;
+	int32 Stage = 0;         // 0 Marked .. 5 Supervillain
+	int32 Grudge = 0;        // 0..10
+	int32 Arrests = 0;
+	bool bNemesis = false;
+	FString Status;          // free, jailed, ...
+	TArray<FString> History; // newest first, readable lines
+	static FString StageName(int32 Stage);
+};
+
+/** A Hero Corps database entry (the terminal's Database tab). */
+USTRUCT()
+struct FCoHDatabaseEntry
+{
+	GENERATED_BODY()
+	UPROPERTY(Config) FString Category;   // Zones, Villain groups, Contacts, Guide
+	UPROPERTY(Config) FString Title;
+	UPROPERTY(Config) FString Body;
+};
+
 /** Last host settings, remembered. */
 struct FCoHHostSettings
 {
@@ -126,6 +154,8 @@ public:
 	UPROPERTY(Config) TArray<FString> NewsLines;
 	/** Seconds between status checks. */
 	UPROPERTY(Config) float StatusInterval = 4.f;
+	/** The terminal's Database tab. */
+	UPROPERTY(Config) TArray<FCoHDatabaseEntry> Database;
 
 	// ---- servers
 	const TArray<FCoHServerEntry>& Servers() const { return ServerList; }
@@ -182,6 +212,15 @@ public:
 	TArray<FString> StarterClasses() const;
 	/** Copies a starter into Saved/Heroes/<Name>.json and picks it. */
 	bool CreateHero(const FString& Name, const FString& StarterClass, FString& OutError);
+	/** The hero's rivals (empty when it has none yet). Nemesis first. */
+	TArray<FCoHRivalCard> Rivals(const FString& HeroFile) const;
+
+	// ---- the Hero Corps terminal's 3D stage (CoHHeroStage.h)
+	ACoHHeroStage* Stage() const { return HeroStage.Get(); }
+	/** The hero standing on the pedestal (its powers, looks and record), or null. */
+	class ACoHHeroCharacter* StageHero() const;
+	/** Write the pedestal hero's power looks to its file (the terminal's Save). */
+	void SaveStageLooks();
 
 	// ---- messages
 	FString LastError() const { return ErrorText; }
@@ -241,6 +280,7 @@ private:
 	TSharedPtr<SCoHLobby> Lobby;
 	TSharedPtr<class SWidget> LeaveMenu;
 	TWeakObjectPtr<UWorld> LobbyWorld;
+	TWeakObjectPtr<ACoHHeroStage> HeroStage;
 	FTSTicker::FDelegateHandle TickHandle;
 	FDelegateHandle NetFailHandle, TravelFailHandle;
 };
