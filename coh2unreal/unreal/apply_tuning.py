@@ -8,7 +8,8 @@ by eye on Atlas Park, so a re-import gets them back in one go:
 1. Moves the imported material instances onto the CoH masters
    (coh_materials.py): cutouts and road lines -> M_CoH_Masked, additive
    layers -> M_CoH_Additive, lawns and detail/night-glow layers ->
-   M_CoH_Surface, grass decals -> M_CoH_Decal, water -> M_CoH_Water.
+   M_CoH_Surface, grass decals -> M_CoH_Decal, water -> M_CoH_Water,
+   traffic/pedestrian signals -> M_CoH_TrafficSignal (glowing, cycling).
 2. Per-material tweaks: glossy windows, window glow strength, War Wall
    dimmed at night, faint caustics, City Hall trim without glow, interior
    cube-map boxes hidden.
@@ -142,13 +143,15 @@ def tune_materials(folder):
         water_n.set_editor_property("srgb", False)
         el.save_loaded_asset(water_n, False)
     water = master("M_CoH_Water", cm.build_water, water_n)
+    signal = master("M_CoH_TrafficSignal", cm.build_signal)
 
     def get(name):
         d = by_name.get(name.lower())
         return d.get_asset() if d else None
 
     stats = dict.fromkeys(("lines", "additive", "masked", "lawns", "decals",
-                           "layers", "detail", "glow", "water"), 0)
+                           "layers", "detail", "glow", "water", "signals"),
+                          0)
     masked_names = {n.lower() for n in json.load(
         open(find("masked_materials.json")))} if find(
         "masked_materials.json") else set()
@@ -167,6 +170,13 @@ def tune_materials(folder):
                 if mi.parent != masked:
                     cm.reparent(mi, masked)
                 stats["masked"] += 1
+    for low, d in by_name.items():
+        ped = cm.signal_kind(low)
+        if ped is not None:
+            mi = d.get_asset()
+            if mi.parent != signal:
+                cm.reparent(mi, signal, {"Pedestrian": ped})
+            stats["signals"] += 1
     for n in ROAD_LINES:
         mi, tex = get(n + "_tga"), unreal.load_asset("%s/%s" % (textures, n))
         if mi:

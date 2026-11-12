@@ -414,6 +414,155 @@ def build_additive():
     return m
 
 
+# ------------------------------------------------------------ traffic signals
+SIGNAL_MPC_PATH = DIR + "/MPC_CoHSignals"
+
+# Shared by the emissive (Mode 0) and base colour (Mode 1) nodes. Lens
+# positions are the circles painted on traffic_light.tga (u 0.795; v 0.18,
+# 0.50, 0.82; lens radius 0.125 inside a 0.15 black rim). The direction group
+# comes from the face's world normal, so every head of a baked tile or an
+# instanced model finds its own group: heads facing along world X (traffic
+# moving along X) are group 0, heads facing along Y group 1, half a cycle
+# apart. Timing matches ACoHLifeManager::SignalState with Offset 0: green
+# while T < Half - Amber, amber until Half, then red.
+SIGNAL_HLSL = r"""
+float clk = SignalClock > 0.001 ? SignalClock : GameTime;
+float halfc = Cycle * 0.5;
+float grp = abs(N.x) >= abs(N.y) ? 0.0 : 1.0;
+float t = fmod(clk + grp * halfc, Cycle);
+if (t < 0) t += Cycle;
+float green = t < halfc - Amber ? 1.0 : 0.0;
+float amber = (t >= halfc - Amber && t < halfc) ? 1.0 : 0.0;
+float red = 1.0 - green - amber;
+float3 glow = 0;
+float off = 0;
+if (Pedestrian > 0.5)
+{
+    // red hand on the left half, white walker on the right half
+    float inV = (UV.y > 0.15 && UV.y < 0.85) ? 1.0 : 0.0;   // inside the black panels
+    float hand = (UV.x > 0.12 && UV.x < 0.5 ? inV : 0.0) * saturate((Tex.r - 2.0 * Tex.g) * 4.0);
+    float walk = (UV.x >= 0.5 && UV.x < 0.88 ? inV : 0.0) * saturate((min(Tex.r, min(Tex.g, Tex.b)) - 0.45) * 4.0);
+    float blink = frac(clk) < 0.5 ? 1.0 : 0.0;          // hand flashes during amber
+    float handOn = red + amber * blink;
+    glow = float3(1.0, 0.08, 0.03) * hand * handOn + float3(0.9, 0.95, 1.0) * walk * green;
+    off = hand * (1.0 - handOn) + walk * (1.0 - green);
+}
+else
+{
+    float r1 = saturate((Radius - distance(UV, float2(LensU, RedV))) / Soft);
+    float r2 = saturate((Radius - distance(UV, float2(LensU, AmberV))) / Soft);
+    float r3 = saturate((Radius - distance(UV, float2(LensU, GreenV))) / Soft);
+    float lum = dot(Tex, float3(0.3, 0.59, 0.11));
+    float detail = 0.75 + 0.5 * saturate(lum * 2.0);   // keep the lens ribbing
+    glow = (float3(1.0, 0.04, 0.02) * r1 * red + float3(1.0, 0.42, 0.02) * r2 * amber
+          + float3(0.05, 1.0, 0.42) * r3 * green) * detail;
+    off = r1 * (1.0 - red) + r2 * (1.0 - amber) + r3 * (1.0 - green);
+}
+return Mode < 0.5 ? glow * Glow : Tex * (1.0 - Dim * off);
+"""
+SIGNAL_INPUTS = ("UV", "Tex", "N", "SignalClock", "GameTime", "Cycle",
+                 "Amber", "Pedestrian", "LensU", "RedV", "AmberV", "GreenV",
+                 "Radius", "Soft", "Glow", "Dim", "Mode")
+
+
+def signal_collection():
+    """MPC_CoHSignals.SignalClock: server seconds, written each frame by
+    ACoHLifeManager when its SignalCollection points here (lamps and stopping
+    cars then share one clock). Left at 0, the lamps run on the game time."""
+    if unreal.EditorAssetLibrary.does_asset_exist(SIGNAL_MPC_PATH):
+        return unreal.load_asset(SIGNAL_MPC_PATH)
+    mpc = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+        "MPC_CoHSignals", DIR, unreal.MaterialParameterCollection,
+        unreal.MaterialParameterCollectionFactoryNew())
+    p = unreal.CollectionScalarParameter()
+    p.set_editor_property("parameter_name", "SignalClock")
+    p.set_editor_property("default_value", 0.0)
+    mpc.set_editor_property("scalar_parameters", [p])
+    unreal.EditorAssetLibrary.save_loaded_asset(mpc, False)
+    return mpc
+
+
+def build_signal():
+    """Traffic and pedestrian signals (traffic_light.tga,
+    traffic_light_pedestrian.tga): the original texture, with the lit lamp
+    glowing and cycling green, amber, red. Pedestrian = 1 for the walk/hand
+    panel. Opaque, so it works on Nanite tiles and instanced props alike."""
+    m = _new("M_CoH_TrafficSignal", unreal.BlendMode.BLEND_OPAQUE)
+    for flag in ("used_with_nanite", "used_with_instanced_static_meshes"):
+        try:
+            m.set_editor_property(flag, True)
+        except Exception:
+            pass
+    uv = _uv(m, "BaseColorTexture", -1500, -400)
+    tex = _node(m, unreal.MaterialExpressionTextureSampleParameter2D, -1300,
+                -400, parameter_name="BaseColorTexture",
+                texture=unreal.load_asset(
+                    "/Engine/EngineResources/WhiteSquareTexture"))
+    mel.connect_material_expressions(uv, "", tex, "UVs")
+    fac = _node(m, unreal.MaterialExpressionVectorParameter, -1300, -150,
+                parameter_name="BaseColorFactor",
+                default_value=unreal.LinearColor(1, 1, 1, 1))
+    col = _node(m, unreal.MaterialExpressionMultiply, -1050, -400)
+    mel.connect_material_expressions(tex, "RGB", col, "A")
+    mel.connect_material_expressions(fac, "", col, "B")
+    nrm = _node(m, unreal.MaterialExpressionVertexNormalWS, -1050, -50)
+    clk = _node(m, unreal.MaterialExpressionCollectionParameter, -1050, 50)
+    clk.set_editor_property("collection", signal_collection())
+    clk.set_editor_property("parameter_name", "SignalClock")
+    gt = _node(m, unreal.MaterialExpressionTime, -1050, 150)
+    params = {"Cycle": 40.0, "Amber": 3.0, "Pedestrian": 0.0, "LensU": 0.795,
+              "RedV": 0.18, "AmberV": 0.50, "GreenV": 0.82, "Radius": 0.125,
+              "Soft": 0.02, "Glow": 40.0, "Dim": 0.7}
+    srcs = {"UV": (uv, ""), "Tex": (col, ""), "N": (nrm, ""),
+            "SignalClock": (clk, ""), "GameTime": (gt, "")}
+    y = 250
+    for name, default in params.items():
+        srcs[name] = (_scalar(m, "Signal" + name if name not in (
+            "Pedestrian",) else name, default, -1050, y), "")
+        y += 90
+    outs = []
+    for mode, (x, yy) in enumerate(((-500, -300), (-500, 300))):
+        c = _node(m, unreal.MaterialExpressionCustom, x, yy, code=SIGNAL_HLSL,
+                  output_type=unreal.CustomMaterialOutputType.CMOT_FLOAT3,
+                  description="Signal" + ("Glow" if mode == 0 else "Base"))
+        ins = []
+        for n in SIGNAL_INPUTS:
+            ci = unreal.CustomInput()
+            ci.set_editor_property("input_name", n)
+            ins.append(ci)
+        c.set_editor_property("inputs", ins)
+        for n in SIGNAL_INPUTS[:-1]:
+            e, o = srcs[n]
+            mel.connect_material_expressions(e, o, c, n)
+        mel.connect_material_expressions(
+            _node(m, unreal.MaterialExpressionConstant, x - 200, yy + 200,
+                  r=float(mode)), "", c, "Mode")
+        outs.append(c)
+    mel.connect_material_property(outs[0], "",
+                                  unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    mel.connect_material_property(outs[1], "",
+                                  unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(_normal(m, -400, 700), "",
+                                  unreal.MaterialProperty.MP_NORMAL)
+    mel.connect_material_property(_scalar(m, "RoughnessFactor", 0.45, 0, 900),
+                                  "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.recompile_material(m)
+    unreal.EditorAssetLibrary.save_loaded_asset(m, False)
+    return m
+
+
+# original material instance (normalised name) -> Pedestrian value
+SIGNAL_MATERIALS = {"traffic_light": 0.0, "traffic_light_pedestrian": 1.0}
+
+
+def signal_kind(name):
+    """Pedestrian value for an original signal material name, else None.
+    Case, a leading 'x_' and a '.tga'/'_tga' suffix don't matter."""
+    import re
+    n = re.sub(r"[._]tga$", "", name.lower())
+    return SIGNAL_MATERIALS.get(re.sub(r"^x_", "", n))
+
+
 def _snapshot(mi, parent):
     """Values the instance has for every parameter the new parent uses."""
     vals = []

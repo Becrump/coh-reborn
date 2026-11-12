@@ -50,6 +50,17 @@ Galaxy City goes first (smallest neighbor, west of Atlas Park).
 
 Recreate each zone as faithfully as possible from the original: buildings, props, enemy placements. Exceptions: plants (to be upgraded), our glass upgrade, and other deliberate upgrades. No civilians for now (that system is being upgraded); cars revisited later. The monorail is the one big change (continuous line). Atlas Park keeps its current map.
 
+## Deliberate upgrades (applied to every zone)
+
+The only planned changes to the original look; everything else stays faithful.
+
+| Upgrade | How it reaches every zone | Status |
+|---|---|---|
+| Trees and plants | `setup_trees.py` + `docs/zones/tree_replacement.json` | in the import batch |
+| Window glass | asset-level glass on the original window materials (`unreal/scripts/glass/glaze_zone.py`) | Atlas done, zones per import |
+| Street and parking lamps | `<zone>_props.json` -> modern lamp model + real light (`setup_level.py`) | in the import batch |
+| Traffic signals glow and cycle green / amber / red, walk panels show walk / flashing hand | `M_CoH_TrafficSignal` on the original `traffic_light` and `traffic_light_pedestrian` materials (`unreal/scripts/signals/`) | added 2026-11-12 |
+
 ## Props stay editable
 
 New zones are not baked into merged tiles. They use the repo converter's `--instanced` export (coh-reborn `coh2unreal/`, the source of truth; the copy in the shared folder is older): every unique original model once in `<zone>.gltf`, plus `<zone>_placements.json` with every placed object. `coh2unreal/unreal/import_instanced.py` places them in Unreal as single actors (rare models) or one instance actor per model (common ones), and points each material slot at the existing tuned material of the same name, so Atlas Park fixes and the glass carry over automatically.
