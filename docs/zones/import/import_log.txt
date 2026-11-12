@@ -1,0 +1,6 @@
+2026-11-11 17:23:41  FAIL GalaxyCity       stage level after 0 min: FAILED
+2026-11-11 17:34:38  FAIL GalaxyCity       stage sky after 11 min: no Unreal editor found (is Remote Execution enabled?)
+2026-11-11 17:42:37  FAIL GalaxyCity       stage shot_overview after 5 min: shot file None
+- 2026-11-11 17:44:38 GalaxyCity glaze run ONCE on /Game/Zones/GalaxyCity (driver's earlier glaze hit the empty library path)
+2026-11-11 17:54:10  FAIL GalaxyCity       stage shot_street after 9 min: shot file None
+2026-11-11 18:05:17  FAIL GalaxyCity       stage shot_street after 8 min: shot file None
