@@ -22,7 +22,12 @@ import re
 import sys
 import time
 
+import warnings
+
 import unreal
+
+# remote execution runs unattended, where a DeprecationWarning becomes an exception
+warnings.simplefilter("ignore", DeprecationWarning)
 
 CFG = globals().get("ZONE_CFG") or {}
 STAGE = globals().get("STAGE", "")
@@ -155,7 +160,6 @@ def _pipelines(meshes, materials):
         p.material_pipeline.texture_pipeline.set_editor_property("import_textures", materials)
     except Exception as e:
         log("pipeline: texture flag not set (%s)" % e)
-    p.mesh_pipeline.set_editor_property("combine_static_meshes", False)
     stack.add_pipeline(p)
     gl = unreal.load_asset("/Interchange/Pipelines/DefaultGLTFPipeline")
     if gl:
@@ -195,6 +199,9 @@ def stage_meshes():
     _drop_scene_actors(set())
     made = collections.Counter(unreal.load_asset(p).get_class().get_name() for p in got[:5000])
     log("meshes: imported %d objects %s in %.0fs" % (len(got), dict(made), time.time() - t0))
+    want = len(CFG.get("new_mesh_names", []))
+    if want and not made.get("StaticMesh"):
+        raise RuntimeError("expected %d new models, Interchange imported none" % want)
 
 
 def stage_mats():
@@ -207,6 +214,8 @@ def stage_mats():
     _drop_scene_actors(set())
     made = collections.Counter(unreal.load_asset(p).get_class().get_name() for p in got)
     log("mats: imported %d objects %s in %.0fs" % (len(got), dict(made), time.time() - t0))
+    if not got:
+        raise RuntimeError("expected %d new materials, Interchange imported none" % len(CFG.get("new_mat_names", [])))
 
 
 def _kind(low, masked):
