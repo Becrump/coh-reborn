@@ -8,7 +8,8 @@ public class COHREBORN : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core", "CoreUObject", "Engine", "PhysicsCore", "Json", "JsonUtilities",
 			"EnhancedInput", "InputCore", "AIModule", "NavigationSystem",
-			"MoviePlayer", "Slate", "SlateCore", "UMG", "AssetRegistry", "ProceduralMeshComponent"
+			"MoviePlayer", "Slate", "SlateCore", "UMG", "AssetRegistry", "ProceduralMeshComponent",
+			"Sockets", "Networking", "ApplicationCore"
 		});
         if (Target.bBuildEditor) PrivateDependencyModuleNames.AddRange(new string[] { "PhysicsUtilities", "AssetRegistry" });
 	}
