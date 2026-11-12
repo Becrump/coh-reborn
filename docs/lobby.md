@@ -23,8 +23,8 @@ and a Paragon News ticker. Four tabs:
 - **Host a Server**: server name, optional password (Show/Hide), max heroes
   2 to 7, start zone (Atlas Park now; other zones show "After zone import"),
   "Show on local network", "Remember these settings". **Tell your friends**
-  lists this PC's addresses with Copy buttons: the Tailscale one first
-  (works over the internet), then the home network one. Launch Server.
+  lists the internet address (public IP, router ports opened by UPnP)
+  and the home network address, with Copy buttons. Launch Server.
 - **Hero Roster**: the hero files in `Saved/Heroes` as cards (name, level,
   origin, archetype, sets), plus "Starter hero" and **New Hero** (name +
   archetype, copied from the archetype starters).
@@ -91,11 +91,20 @@ stops play first, so test this in Standalone or a build.
 - `FrontendMap` must match `GameDefaultMap`. A playable HQ zone later only
   needs a new map here; the screen draws over whatever map that is.
 
-## Networking notes for friends
+## Networking notes for friends (no Tailscale needed)
 
-- Same Tailscale network: nothing to forward. Give friends the 100.x address
-  from "Tell your friends".
-- Without Tailscale the host forwards **UDP 7777 and 7778**.
+- Opening the Host tab looks up the host's public IP (api.ipify.org) and asks
+  the router over UPnP to forward **UDP 7777 and 7778** to this PC
+  (`CoHPortMapper`, Windows UPnP NAT service, removed again when the game
+  quits). "Tell your friends" shows the internet address with Copy, and says
+  whether the ports opened.
+- If the router has UPnP off, the line says to forward UDP 7777-7778 to the
+  PC's home address once in the router.
+- If the router's own internet address is private (CGNAT from the provider),
+  no port forward can work; the line says so. Tailscale (or a relay later)
+  is the way around that.
+- Same home network: nothing needed, servers show under "Found on your network".
+- Tailscale still works if someone has it: its 100.x address is listed too.
 - Windows asks to allow the game through the firewall the first time it
   hosts: allow private networks (and public if Tailscale shows as public).
 
