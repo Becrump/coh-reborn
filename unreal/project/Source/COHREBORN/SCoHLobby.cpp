@@ -1,5 +1,7 @@
 #include "SCoHLobby.h"
 
+#include "CoHHQStyle.h"
+#include "SCoHTerminal.h"
 #include "Brushes/SlateDynamicImageBrush.h"
 #include "Brushes/SlateNoResource.h"
 #include "Brushes/SlateRoundedBoxBrush.h"
@@ -27,337 +29,6 @@
 #include "Widgets/SLeafWidget.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
-
-// =================================================================== style
-// One look for the whole HQ: deep navy glass, CoH blue holo lines (0x3399ff,
-// the original UI's frame tint), gold for the actions that start play.
-namespace HQ
-{
-	static FLinearColor C(uint32 Hex, float A = 1.f)
-	{
-		FLinearColor L(FColor((Hex >> 16) & 255, (Hex >> 8) & 255, Hex & 255));
-		L.A = A;
-		return L;
-	}
-	static FLinearColor Blue(float A = 1.f)  { return C(0x3399ff, A); }
-	static FLinearColor Sky(float A = 1.f)   { return C(0x7cc4ff, A); }
-	static FLinearColor Gold(float A = 1.f)  { return C(0xffb21e, A); }
-	static FLinearColor Green(float A = 1.f) { return C(0x3ddc84, A); }
-	static FLinearColor Red(float A = 1.f)   { return C(0xff6b6b, A); }
-	static FLinearColor Ink()   { return C(0xe6f0ff); }
-	static FLinearColor Muted() { return C(0x9fb6d6); }
-	static FLinearColor Dim()   { return C(0x7f95b5); }
-	static FLinearColor Grey()  { return C(0x7f8ea6); }
-	static FLinearColor Night(float A = 1.f) { return C(0x040913, A); }
-	static FLinearColor Clear() { return FLinearColor::Transparent; }
-
-	// Red Circle (the original title font), Mont for the rest; Roboto when the UI art isn't copied in
-	static FSlateFontInfo Title(float Px) { return FCoHUIArt::Get().Font(ECoHFont::Title, Px, false); }
-	static FSlateFontInfo Bold(float Px)  { return FCoHUIArt::Get().Font(ECoHFont::GameBold, Px, false); }
-	static FSlateFontInfo Body(float Px)  { return FCoHUIArt::Get().Font(ECoHFont::Game, Px, false); }
-	static FSlateFontInfo Label(float Px = 12.f)
-	{
-		FSlateFontInfo F = Bold(Px);
-		F.LetterSpacing = 260;
-		return F;
-	}
-
-	static const FSlateBrush* White() { return FCoreStyle::Get().GetBrush("WhiteBrush"); }
-
-	static const FSlateBrush* Box(const FLinearColor& Fill, const FLinearColor& Line = FLinearColor::Transparent, float Radius = 4.f, float Width = 1.f)
-	{
-		static TMap<FString, TUniquePtr<FSlateRoundedBoxBrush>> Cache;
-		const FString Key = FString::Printf(TEXT("%s|%s|%.1f|%.1f"), *Fill.ToString(), *Line.ToString(), Radius, Width);
-		if (const TUniquePtr<FSlateRoundedBoxBrush>* Hit = Cache.Find(Key)) return Hit->Get();
-		return Cache.Add(Key, MakeUnique<FSlateRoundedBoxBrush>(Fill, Radius, Line, Width)).Get();
-	}
-
-	enum class EBtn : uint8 { Primary, Secondary, Danger, Count };
-
-	static const FButtonStyle& BtnStyle(EBtn Kind)
-	{
-		static FButtonStyle Styles[(int32)EBtn::Count];
-		static bool bMade = false;
-		if (!bMade)
-		{
-			bMade = true;
-			const FMargin Pad(18, 10), Down(18, 11, 18, 9);
-			const FSlateBrush* Off = Box(C(0x0a1426, .55f), Sky(.15f));
-			Styles[(int32)EBtn::Primary] = FButtonStyle()
-				.SetNormal(*Box(Gold())).SetHovered(*Box(C(0xffcf5a))).SetPressed(*Box(C(0xe08a00))).SetDisabled(*Off)
-				.SetNormalPadding(Pad).SetPressedPadding(Down);
-			Styles[(int32)EBtn::Secondary] = FButtonStyle()
-				.SetNormal(*Box(Blue(.12f), Sky(.5f))).SetHovered(*Box(Blue(.28f), Sky())).SetPressed(*Box(Blue(.4f), Sky())).SetDisabled(*Off)
-				.SetNormalPadding(Pad).SetPressedPadding(Down);
-			Styles[(int32)EBtn::Danger] = FButtonStyle()
-				.SetNormal(*Box(C(0x280810, .6f), C(0xff7878, .45f))).SetHovered(*Box(C(0x501018, .8f), C(0xff7878, .85f)))
-				.SetPressed(*Box(C(0x601420, .9f), C(0xff7878))).SetDisabled(*Off)
-				.SetNormalPadding(Pad).SetPressedPadding(Down);
-		}
-		return Styles[(int32)Kind];
-	}
-
-	static const FButtonStyle& Bare()
-	{
-		static FButtonStyle S = FButtonStyle()
-			.SetNormal(FSlateNoResource()).SetHovered(FSlateNoResource()).SetPressed(FSlateNoResource()).SetDisabled(FSlateNoResource())
-			.SetNormalPadding(FMargin(0)).SetPressedPadding(FMargin(0));
-		return S;
-	}
-
-	static const FEditableTextBoxStyle& InputStyle()
-	{
-		static FEditableTextBoxStyle S = FEditableTextBoxStyle(FCoreStyle::Get().GetWidgetStyle<FEditableTextBoxStyle>("NormalEditableTextBox"))
-			.SetBackgroundImageNormal(*Box(C(0x040c1a, .85f), Sky(.4f)))
-			.SetBackgroundImageHovered(*Box(C(0x040c1a, .9f), Sky(.7f)))
-			.SetBackgroundImageFocused(*Box(C(0x040c1a, .95f), Sky(), 4.f, 1.5f))
-			.SetBackgroundImageReadOnly(*Box(C(0x040c1a, .5f), Sky(.2f)))
-			.SetPadding(FMargin(14, 11))
-			.SetForegroundColor(FSlateColor(Ink()));
-		return S;
-	}
-
-	static TSharedRef<STextBlock> Text(const FString& S, const FSlateFontInfo& Font, const FLinearColor& Color)
-	{
-		return SNew(STextBlock).Text(FText::FromString(S)).Font(Font).ColorAndOpacity(FSlateColor(Color));
-	}
-
-	static TSharedRef<SWidget> ButtonT(TAttribute<FText> Caption, EBtn Kind, FOnClicked OnClick, TAttribute<bool> Enabled = true, float FontPx = 15.f, float MinHeight = 44.f)
-	{
-		const FLinearColor TextColor = Kind == EBtn::Primary ? C(0x1b0d00) : Kind == EBtn::Danger ? C(0xffc9c9) : C(0xcfe6ff);
-		return SNew(SBox).MinDesiredHeight(MinHeight)
-			[
-				SNew(SButton)
-				.ButtonStyle(&BtnStyle(Kind))
-				.IsEnabled(Enabled)
-				.OnClicked(OnClick)
-				.HAlign(HAlign_Center).VAlign(VAlign_Center)
-				[
-					SNew(STextBlock).Text(Caption).Font(Label(FontPx))
-					.ColorAndOpacity_Lambda([TextColor, Enabled] { return FSlateColor(Enabled.Get() ? TextColor : Dim()); })
-				]
-			];
-	}
-
-	static TSharedRef<SWidget> Button(const FString& Caption, EBtn Kind, FOnClicked OnClick, TAttribute<bool> Enabled = true, float FontPx = 15.f, float MinHeight = 44.f)
-	{
-		return ButtonT(TAttribute<FText>(FText::FromString(Caption)), Kind, OnClick, Enabled, FontPx, MinHeight);
-	}
-
-	/** A button whose frame shows selection: tabs, choice chips, cards. */
-	static TSharedRef<SWidget> Selectable(TSharedRef<SWidget> Content, TAttribute<bool> Selected, FOnClicked OnClick,
-		const FSlateBrush* On, const FSlateBrush* Off, const FSlateBrush* Hover, FMargin Pad, TAttribute<bool> Enabled = true)
-	{
-		TSharedRef<TWeakPtr<SButton>> Self = MakeShared<TWeakPtr<SButton>>();
-		TSharedRef<SButton> B = SNew(SButton)
-			.ButtonStyle(&Bare())
-			.ContentPadding(0)
-			.IsEnabled(Enabled)
-			.OnClicked(OnClick)
-			[
-				SNew(SBorder)
-				.Padding(Pad)
-				.BorderImage_Lambda([Self, Selected, On, Off, Hover]
-				{
-					if (Selected.Get()) return On;
-					const TSharedPtr<SButton> P = Self->Pin();
-					return P.IsValid() && P->IsHovered() && P->IsEnabled() ? Hover : Off;
-				})
-				[
-					Content
-				]
-			];
-		*Self = B;
-		return B;
-	}
-
-	static TSharedRef<SEditableTextBox> Input(const FString& Initial, const FString& Hint, bool bPassword = false)
-	{
-		return SNew(SEditableTextBox)
-			.Style(&InputStyle())
-			.Text(FText::FromString(Initial))
-			.HintText(FText::FromString(Hint))
-			.Font(Body(18))
-			.IsPassword(bPassword)
-			.ForegroundColor(FSlateColor(Ink()));
-	}
-
-	static TSharedRef<SWidget> Field(const FString& Caption, TSharedRef<SWidget> Content)
-	{
-		return SNew(SVerticalBox)
-			+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 6)[Text(Caption, Label(12), Muted())]
-			+ SVerticalBox::Slot().AutoHeight()[Content];
-	}
-
-	static TSharedRef<SWidget> Check(const FString& Caption, TAttribute<ECheckBoxState> State, FOnCheckStateChanged OnChanged)
-	{
-		return SNew(SCheckBox)
-			.IsChecked(State)
-			.OnCheckStateChanged(OnChanged)
-			[
-				SNew(SBox).Padding(FMargin(6, 0, 0, 0))[Text(Caption, Body(16), C(0xcfe0f6))]
-			];
-	}
-
-	static TSharedRef<SWidget> Kicker(const FString& Small, const FString& Big)
-	{
-		return SNew(SVerticalBox)
-			+ SVerticalBox::Slot().AutoHeight()[Text(Small, Label(12), Sky())]
-			+ SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 0)[Text(Big, Title(36), Ink())];
-	}
-
-	static FLinearColor ArchetypeColor(const FString& Class)
-	{
-		static const TMap<FString, uint32> Map = {
-			{TEXT("Class_Blaster"), 0xe2561c}, {TEXT("Class_Controller"), 0x3399ff}, {TEXT("Class_Defender"), 0x3ddc84},
-			{TEXT("Class_Scrapper"), 0xff4d6d}, {TEXT("Class_Tanker"), 0x8a97a8}, {TEXT("Class_Brute"), 0xc0392b},
-			{TEXT("Class_Corruptor"), 0x9b59b6}, {TEXT("Class_Dominator"), 0xe67e22}, {TEXT("Class_Mastermind"), 0x6c5ce7},
-			{TEXT("Class_Stalker"), 0x4a6278}, {TEXT("Class_Peacebringer"), 0xf1c40f}, {TEXT("Class_Warshade"), 0x7e57c2}};
-		const uint32* Hex = Map.Find(Class);
-		return C(Hex ? *Hex : 0x7cc4ff);
-	}
-
-	static FString Ago(const FDateTime& When)
-	{
-		if (When <= FDateTime::MinValue()) return TEXT("Never seen online");
-		const FTimespan D = FDateTime::UtcNow() - When;
-		if (D.GetTotalMinutes() < 2) return TEXT("Last seen just now");
-		if (D.GetTotalHours() < 1) return FString::Printf(TEXT("Last seen %d min ago"), (int32)D.GetTotalMinutes());
-		if (D.GetTotalDays() < 1) return FString::Printf(TEXT("Last seen %d h ago"), (int32)D.GetTotalHours());
-		return FString::Printf(TEXT("Last seen %d days ago"), (int32)D.GetTotalDays());
-	}
-
-	// ---- painting helpers (local units)
-	static void Lines(FSlateWindowElementList& Out, int32 Layer, const FGeometry& G, TArray<FVector2f> P, const FLinearColor& Col, float Thick = 1.f)
-	{
-		FSlateDrawElement::MakeLines(Out, Layer, G.ToPaintGeometry(), MoveTemp(P), ESlateDrawEffect::None, Col, true, Thick);
-	}
-
-	static void Arc(FSlateWindowElementList& Out, int32 Layer, const FGeometry& G, FVector2f Center, float R, float A0, float A1, const FLinearColor& Col, float Thick)
-	{
-		TArray<FVector2f> P;
-		const int32 Seg = FMath::Max(2, FMath::CeilToInt(FMath::Abs(A1 - A0) / (PI / 32.f)));
-		for (int32 i = 0; i <= Seg; ++i)
-		{
-			const float A = FMath::Lerp(A0, A1, (float)i / Seg);
-			P.Add(Center + FVector2f(FMath::Cos(A), FMath::Sin(A)) * R);
-		}
-		Lines(Out, Layer, G, MoveTemp(P), Col, Thick);
-	}
-
-	static void Rect(FSlateWindowElementList& Out, int32 Layer, const FGeometry& G, FVector2f Pos, FVector2f Size, const FSlateBrush* Brush, const FLinearColor& Col)
-	{
-		FSlateDrawElement::MakeBox(Out, Layer, G.ToPaintGeometry(Size, FSlateLayoutTransform(Pos)), Brush, ESlateDrawEffect::None, Col);
-	}
-
-	struct FStop { float At; FLinearColor Col; };
-
-	/** Gradient whose stops run along X (bAlongX) or along Y. Stops are (fraction, color). */
-	static void Gradient(FSlateWindowElementList& Out, int32 Layer, const FGeometry& G, FVector2f Pos, FVector2f Size, bool bAlongX,
-		std::initializer_list<FStop> Stops)
-	{
-		TArray<FSlateGradientStop> S;
-		for (const FStop& St : Stops)
-			S.Add(FSlateGradientStop(bAlongX ? FVector2D(St.At * Size.X, 0) : FVector2D(0, St.At * Size.Y), St.Col));
-		// Orient_Vertical: vertical stop lines, so the colour changes along X
-		FSlateDrawElement::MakeGradient(Out, Layer, G.ToPaintGeometry(Size, FSlateLayoutTransform(Pos)), MoveTemp(S),
-			bAlongX ? Orient_Vertical : Orient_Horizontal);
-	}
-}
-
-// =================================================================== little painted widgets
-using FCoHPaintFn = TFunction<void(const FGeometry&, FSlateWindowElementList&, int32, double)>;
-
-/** A leaf that paints with a lambda (emblem, holo rings, spinner, ticker, corner brackets). */
-class SCoHCanvas : public SLeafWidget
-{
-public:
-	SLATE_BEGIN_ARGS(SCoHCanvas) : _Size(FVector2D(1, 1)) {}
-		SLATE_ARGUMENT(FVector2D, Size)
-		SLATE_ARGUMENT(FCoHPaintFn, Painter)
-	SLATE_END_ARGS()
-
-	void Construct(const FArguments& A)
-	{
-		Size = A._Size;
-		Painter = A._Painter;
-		SetVisibility(EVisibility::HitTestInvisible);
-	}
-	virtual FVector2D ComputeDesiredSize(float) const override { return Size; }
-	virtual int32 OnPaint(const FPaintArgs&, const FGeometry& Geometry, const FSlateRect&, FSlateWindowElementList& Out,
-		int32 Layer, const FWidgetStyle&, bool) const override
-	{
-		if (Painter) Painter(Geometry, Out, Layer, FSlateApplication::Get().GetCurrentTime());
-		return Layer + 4;
-	}
-
-private:
-	FVector2D Size;
-	FCoHPaintFn Painter;
-};
-
-static TSharedRef<SWidget> Corners()
-{
-	return SNew(SCoHCanvas).Painter([](const FGeometry& G, FSlateWindowElementList& Out, int32 L, double)
-	{
-		const FVector2f S = FVector2f(G.GetLocalSize());
-		const float K = 26.f, T = 3.f;
-		const FLinearColor Col = HQ::Blue();
-		HQ::Lines(Out, L, G, {{0, K}, {0, 0}, {K, 0}}, Col, T);
-		HQ::Lines(Out, L, G, {{S.X - K, 0}, {S.X, 0}, {S.X, K}}, Col, T);
-		HQ::Lines(Out, L, G, {{0, S.Y - K}, {0, S.Y}, {K, S.Y}}, Col, T);
-		HQ::Lines(Out, L, G, {{S.X - K, S.Y}, {S.X, S.Y}, {S.X, S.Y - K}}, Col, T);
-	});
-}
-
-/** Glass console panel with the blue corner brackets. */
-static TSharedRef<SWidget> Panel(TSharedRef<SWidget> Content, FMargin Pad, const FLinearColor& Fill = HQ::C(0x061020, .80f))
-{
-	return SNew(SOverlay)
-		+ SOverlay::Slot()
-		[
-			SNew(SBorder).BorderImage(HQ::Box(Fill, HQ::Sky(.35f), 6.f, 1.f)).Padding(Pad)[Content]
-		]
-		+ SOverlay::Slot()[Corners()];
-}
-
-static TSharedRef<SWidget> Emblem(float Scale = 1.f)
-{
-	return SNew(SCoHCanvas).Size(FVector2D(40, 46) * Scale).Painter([Scale](const FGeometry& G, FSlateWindowElementList& Out, int32 L, double)
-	{
-		auto P = [Scale](float X, float Y) { return FVector2f(X, Y) * Scale; };
-		// shield
-		TArray<FVector2f> Shield = {P(20, 2), P(37, 8), P(37, 22)};
-		for (int32 i = 1; i <= 8; ++i) { const float t = i / 8.f; Shield.Add(FMath::Lerp(FMath::Lerp(P(37, 22), P(34, 36), t), FMath::Lerp(P(34, 36), P(20, 44), t), t)); }
-		for (int32 i = 1; i <= 8; ++i) { const float t = i / 8.f; Shield.Add(FMath::Lerp(FMath::Lerp(P(20, 44), P(6, 36), t), FMath::Lerp(P(6, 36), P(3, 22), t), t)); }
-		Shield.Append({P(3, 8), P(20, 2)});
-		HQ::Lines(Out, L, G, Shield, HQ::Blue(), 2.f * Scale);
-		// star
-		TArray<FVector2f> Star;
-		for (int32 i = 0; i <= 10; ++i)
-		{
-			const float A = -HALF_PI + i * PI / 5.f;
-			const float R = (i % 2 ? 4.5f : 11.f) * Scale;
-			Star.Add(P(20, 21) + FVector2f(FMath::Cos(A), FMath::Sin(A)) * R);
-		}
-		HQ::Lines(Out, L + 1, G, Star, HQ::Gold(), 2.5f * Scale);
-	});
-}
-
-static TSharedRef<SWidget> Spinner(float Size)
-{
-	return SNew(SCoHCanvas).Size(FVector2D(Size, Size)).Painter([](const FGeometry& G, FSlateWindowElementList& Out, int32 L, double T)
-	{
-		const FVector2f S = FVector2f(G.GetLocalSize());
-		const FVector2f C = S * .5f;
-		const float R = S.X * .5f - 4.f;
-		HQ::Arc(Out, L, G, C, R, 0, TWO_PI, HQ::Blue(.2f), 4.f);
-		const float A = (float)FMath::Fmod(T * 5.5, (double)TWO_PI);
-		HQ::Arc(Out, L + 1, G, C, R, A, A + PI * .55f, HQ::Blue(), 4.f);
-		const float B = -(float)FMath::Fmod(T * 3.9, (double)TWO_PI);
-		HQ::Arc(Out, L + 1, G, C, R - 18.f, B, B + PI * .45f, HQ::Gold(), 3.f);
-	});
-}
 
 // =================================================================== construct
 void SCoHLobby::Construct(const FArguments& InArgs)
@@ -387,19 +58,36 @@ void SCoHLobby::Construct(const FArguments& InArgs)
 				ESlateDrawEffect::None, HQ::C(0xaac4e6));
 	});
 
+	// a failed join comes back to Deploy, where the message shows; else the terminal
+	bTerminal = !F.IsValid() || F->LastError().IsEmpty();
+	auto Deploy = [this] { return bTerminal ? EVisibility::Collapsed : EVisibility::SelfHitTestInvisible; };
+
 	ChildSlot
 	[
 		SNew(SOverlay)
 
-		// ---- top bar
-		+ SOverlay::Slot().VAlign(VAlign_Top)
+		// ---- the Hero Corps terminal: pick, inspect and Call a hero
+		+ SOverlay::Slot()
 		[
-			MakeTopBar()
+			SNew(SBox).Visibility_Lambda([this] { return bTerminal ? EVisibility::SelfHitTestInvisible : EVisibility::Collapsed; })
+			[
+				SNew(SCoHTerminal).Frontend(F.Get())
+				.OnCall(FSimpleDelegate::CreateLambda([this] { bTerminal = false; if (Tab == ETab::Roster) Tab = ETab::Join; }))
+				.OnNewHero(FSimpleDelegate::CreateLambda([this] { OpenNewHero(); }))
+			]
 		]
 
-		// ---- console + right column
+		// ---- deploy: top bar
+		+ SOverlay::Slot().VAlign(VAlign_Top)
+		[
+			SNew(SBox).Visibility_Lambda(Deploy)[MakeTopBar()]
+		]
+
+		// ---- deploy: console + right column
 		+ SOverlay::Slot().Padding(40, 108, 40, 72)
 		[
+			SNew(SBox).Visibility_Lambda(Deploy)
+			[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot().FillWidth(.64f)
 			[
@@ -439,6 +127,7 @@ void SCoHLobby::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot().FillWidth(.36f).Padding(32, 0, 0, 0)
 			[
 				MakeRightColumn()
+			]
 			]
 		]
 
@@ -502,6 +191,22 @@ int32 SCoHLobby::OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, cons
 	const double T = FSlateApplication::Get().GetCurrentTime();
 	int32 L = Layer;
 
+	if (bTerminal)
+	{
+		// the hero stage (3D) shows through: shade only the edges under the panels
+		HQ::Gradient(Out, L, Geometry, FVector2f::ZeroVector, S, true,
+			{{0.f, HQ::Night(.9f)}, {.24f, HQ::Night(.55f)}, {.36f, HQ::Night(0.f)}, {.62f, HQ::Night(0.f)}, {.70f, HQ::Night(.6f)}, {1.f, HQ::Night(.92f)}});
+		HQ::Gradient(Out, L, Geometry, FVector2f::ZeroVector, S, false,
+			{{0.f, HQ::Night(.8f)}, {.14f, HQ::Night(0.f)}, {.86f, HQ::Night(0.f)}, {1.f, HQ::Night(.9f)}});
+		for (float X = 0; X < S.X; X += 40.f) HQ::Lines(Out, L + 1, Geometry, {{X, 0}, {X, S.Y}}, HQ::Blue(.03f), 1.f);
+		for (float Y = 0; Y < S.Y; Y += 40.f) HQ::Lines(Out, L + 1, Geometry, {{0, Y}, {S.X, Y}}, HQ::Blue(.03f), 1.f);
+		const float Band = 130.f;
+		const float SweepY = (float)FMath::Fmod(T / 7.0, 1.0) * (S.Y + Band) - Band;
+		HQ::Gradient(Out, L + 1, Geometry, FVector2f(0, SweepY), FVector2f(S.X, Band), false,
+			{{0.f, HQ::Blue(0.f)}, {.5f, HQ::Blue(.05f)}, {1.f, HQ::Blue(0.f)}});
+		return SCompoundWidget::OnPaint(Args, Geometry, Culling, Out, L + 2, Style, bParentEnabled);
+	}
+
 	// night
 	HQ::Rect(Out, L, Geometry, FVector2f::ZeroVector, S, HQ::White(), HQ::C(0x050a14));
 
@@ -563,6 +268,11 @@ FReply SCoHLobby::OnKeyDown(const FGeometry& Geometry, const FKeyEvent& Key)
 		CloseModal();
 		return FReply::Handled();
 	}
+	if (Key.GetKey() == EKeys::Escape && !bTerminal && F.IsValid() && !F->IsConnecting())
+	{
+		bTerminal = true;
+		return FReply::Handled();
+	}
 	return SCompoundWidget::OnKeyDown(Geometry, Key);
 }
 
@@ -576,7 +286,7 @@ FText SCoHLobby::HeroChipText() const
 TSharedRef<SWidget> SCoHLobby::MakeTopBar()
 {
 	TSharedRef<SHorizontalBox> Tabs = SNew(SHorizontalBox);
-	const TCHAR* Names[] = {TEXT("JOIN FRIENDS"), TEXT("HOST A SERVER"), TEXT("HERO ROSTER"), TEXT("SETTINGS")};
+	const TCHAR* Names[] = {TEXT("JOIN FRIENDS"), TEXT("HOST A SERVER"), TEXT("HERO TERMINAL"), TEXT("SETTINGS")};
 	for (int32 i = 0; i < 4; ++i)
 	{
 		const ETab Me = (ETab)i;
@@ -588,6 +298,8 @@ TSharedRef<SWidget> SCoHLobby::MakeTopBar()
 				TAttribute<bool>::CreateLambda([this, Me] { return Tab == Me; }),
 				FOnClicked::CreateLambda([this, Me]
 				{
+					// the hero tab is the terminal itself now
+					if (Me == ETab::Roster) { bTerminal = true; return FReply::Handled(); }
 					Tab = Me;
 					if (Me == ETab::Host && F.IsValid()) F->PrepareHosting();
 					return FReply::Handled();
@@ -633,7 +345,7 @@ TSharedRef<SWidget> SCoHLobby::MakeTopBar()
 			]
 		],
 		false,
-		FOnClicked::CreateLambda([this] { Tab = ETab::Roster; return FReply::Handled(); }),
+		FOnClicked::CreateLambda([this] { bTerminal = true; return FReply::Handled(); }),
 		nullptr, HQ::Box(HQ::C(0x281a04, .6f), HQ::Gold(.45f), 26.f, 1.f), HQ::Box(HQ::C(0x3a2808, .8f), HQ::Gold(.9f), 26.f, 1.f),
 		FMargin(6, 6, 18, 6));
 

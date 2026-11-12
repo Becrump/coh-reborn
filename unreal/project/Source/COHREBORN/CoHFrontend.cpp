@@ -5,6 +5,7 @@
 #include "CoHGraphicsMenu.h"
 #include "CoHHeroCharacter.h"
 #include "CoHHeroProgress.h"
+#include "CoHHeroStage.h"
 #include "CoHPortMapper.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
@@ -169,9 +170,24 @@ FCoHServerInfo UCoHFrontend::MakeHostInfo(UWorld* World) const
 
 void UCoHFrontend::TickFrontend(UWorld* World, double Now)
 {
+	// the Hero Corps terminal's pedestal, with the chosen hero on it (after
+	// BeginPlay, so the hero's own start-up doesn't overwrite the loaded file)
+	if (!HeroStage.IsValid() && World->HasBegunPlay())
+	{
+		FActorSpawnParameters SP;
+		SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (ACoHHeroStage* NewStage = World->SpawnActor<ACoHHeroStage>(ACoHHeroStage::StaticClass(), FTransform::Identity, SP))
+		{
+			HeroStage = NewStage;
+			NewStage->ShowHero(SelectedHero);
+			++Revision;
+		}
+	}
 	// the player controller arrives a frame or two after the map
 	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController(World))
 	{
+		// look through the stage's camera
+		if (ACoHHeroStage* S = HeroStage.Get(); S && PC->GetViewTarget() != S) PC->SetViewTarget(S);
 		if (!PC->ShouldShowMouseCursor() && Lobby.IsValid())
 		{
 			PC->SetShowMouseCursor(true);
@@ -336,6 +352,8 @@ void UCoHFrontend::HideLobby()
 		Lobby.Reset();
 	}
 	LobbyWorld.Reset();
+	if (ACoHHeroStage* S = HeroStage.Get()) S->Destroy();
+	HeroStage.Reset();
 	Client.Stop();
 	LanList.Reset();
 	bConnecting = false;
@@ -696,6 +714,7 @@ void UCoHFrontend::RescanHeroes()
 	IFileManager::Get().FindFiles(Files, *(Dir / TEXT("*.json")), true, false);
 	for (const FString& File : Files)
 	{
+		if (File.EndsWith(TEXT(".rivals.json"))) continue;   // a hero's rivals, not a hero
 		FString Json;
 		TSharedPtr<FJsonObject> O;
 		if (!FFileHelper::LoadFileToString(Json, *(Dir / File))) continue;
@@ -725,7 +744,79 @@ void UCoHFrontend::ChooseHero(const FString& File)
 {
 	SelectedHero = File;
 	Save();
+	if (ACoHHeroStage* S = HeroStage.Get()) S->ShowHero(File);
 	++Revision;
+}
+
+ACoHHeroCharacter* UCoHFrontend::StageHero() const
+{
+	const ACoHHeroStage* S = HeroStage.Get();
+	return S ? S->Hero() : nullptr;
+}
+
+void UCoHFrontend::SaveStageLooks()
+{
+	ACoHHeroCharacter* H = StageHero();
+	if (H && H->Progress) H->Progress->SaveLooks();
+	RescanHeroes();
+}
+
+FString FCoHRivalCard::StageName(int32 Stage)
+{
+	static const TCHAR* Names[] = {TEXT("Marked"), TEXT("Rising"), TEXT("Crew Boss"), TEXT("Gang Legend"), TEXT("Breakout"), TEXT("Supervillain")};
+	return Names[FMath::Clamp(Stage, 0, 5)];
+}
+
+TArray<FCoHRivalCard> UCoHFrontend::Rivals(const FString& HeroFile) const
+{
+	// Saved/Heroes/<hero>.rivals.json: an array of rival records, or {"rivals": [...]}
+	TArray<FCoHRivalCard> Out;
+	FString Name = HeroFile;
+	if (Name.IsEmpty()) return Out;
+	FString Json;
+	if (!FFileHelper::LoadFileToString(Json, *(UCoHHeroProgress::LocalHeroDir() / Name + TEXT(".rivals.json")))) return Out;
+	TArray<TSharedPtr<FJsonValue>> List;
+	TSharedPtr<FJsonObject> Top;
+	if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), List))
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Inner = nullptr;
+		if (FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Top) && Top.IsValid() && Top->TryGetArrayField(TEXT("rivals"), Inner)) List = *Inner;
+	}
+	for (const TSharedPtr<FJsonValue>& V : List)
+	{
+		const TSharedPtr<FJsonObject>* O = nullptr;
+		if (!V.IsValid() || !V->TryGetObject(O)) continue;
+		const FJsonObject& R = **O;
+		FCoHRivalCard C;
+		R.TryGetStringField(TEXT("name"), C.Name);
+		R.TryGetStringField(TEXT("faction"), C.Faction);
+		R.TryGetStringField(TEXT("rank"), C.Rank);
+		R.TryGetStringField(TEXT("status"), C.Status);
+		R.TryGetBoolField(TEXT("isNemesis"), C.bNemesis);
+		R.TryGetNumberField(TEXT("level"), C.Level);
+		R.TryGetNumberField(TEXT("stage"), C.Stage);
+		R.TryGetNumberField(TEXT("grudge"), C.Grudge);
+		R.TryGetNumberField(TEXT("arrests"), C.Arrests);
+		const TArray<TSharedPtr<FJsonValue>>* Hist = nullptr;
+		if (R.TryGetArrayField(TEXT("history"), Hist))
+			for (int32 i = Hist->Num() - 1; i >= 0; --i)
+			{
+				const TSharedPtr<FJsonObject>* H = nullptr;
+				if (!(*Hist)[i].IsValid() || !(*Hist)[i]->TryGetObject(H)) continue;
+				FString When, Event, Who, Power;
+				(*H)->TryGetStringField(TEXT("t"), When);
+				(*H)->TryGetStringField(TEXT("event"), Event);
+				(*H)->TryGetStringField(TEXT("hero"), Who);
+				(*H)->TryGetStringField(TEXT("power"), Power);
+				FString Line = When + TEXT("  ") + Event.ToUpper();
+				if (!Who.IsEmpty()) Line += TEXT("  ") + Who;
+				if (!Power.IsEmpty()) Line += TEXT(" (") + Power + TEXT(")");
+				C.History.Add(Line);
+			}
+		if (!C.Name.IsEmpty()) Out.Add(C);
+	}
+	Out.StableSort([](const FCoHRivalCard& A, const FCoHRivalCard& B) { return A.bNemesis && !B.bNemesis; });
+	return Out;
 }
 
 TArray<FString> UCoHFrontend::StarterClasses() const

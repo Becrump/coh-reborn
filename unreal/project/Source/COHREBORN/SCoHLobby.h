@@ -63,6 +63,8 @@ private:
 
 	TWeakObjectPtr<UCoHFrontend> F;
 	ETab Tab = ETab::Join;
+	/** true: the Hero Corps terminal shows; false: Deploy (join / host). */
+	bool bTerminal = true;
 	int32 BuiltRevision = -1;
 
 	TSharedPtr<SVerticalBox> ServerRows;
