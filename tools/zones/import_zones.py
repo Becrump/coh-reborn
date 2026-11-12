@@ -30,7 +30,7 @@ SETUP_LEVEL = os.path.join(REPO, "coh2unreal", "unreal", "setup_level.py")
 SETUP_TREES = os.path.join(REPO, "coh2unreal", "unreal", "setup_trees.py")
 TREE_TABLE = os.path.join(REPO, "docs", "zones", "tree_replacement.json")
 GLAZE_PATHS = {"GalaxyCity": "/Game/Zones/GalaxyCity"}   # Galaxy's materials predate the library
-OPTIONAL = {"props", "trees"}   # a failure here is logged, the zone carries on
+OPTIONAL = {"props", "trees", "shot_street"}   # a failure here is logged, the zone carries on
 OUT = os.path.join(REPO, "docs", "zones", "import")
 WORK = os.path.join(os.environ.get("TEMP", "."), "coh_zone_batch")
 SHOT_DIR = r"C:\Users\rtcru\OneDrive\Documents\Unreal Projects\COHREBORN\Saved\Screenshots\WindowsEditor"
@@ -75,8 +75,9 @@ def save_state(st):
 
 def logline(line):
     print(line, flush=True)
-    with open(os.path.join(OUT, "import_log.txt"), "a", encoding="utf-8") as f:
-        f.write("%s  %s\n" % (now(), line))
+    for d in (OUT, os.path.dirname(EXPORTS)):
+        with open(os.path.join(d, "import_log.txt"), "a", encoding="utf-8") as f:
+            f.write("%s  %s\n" % (now(), line))
 
 
 def ue(code, timeout=7200):
@@ -84,16 +85,22 @@ def ue(code, timeout=7200):
     os.makedirs(WORK, exist_ok=True)
     f = os.path.join(WORK, "_stage.py")
     open(f, "w", encoding="utf-8").write(code)
-    p = subprocess.run([sys.executable, UE_EXEC, f, "--file", "--timeout", str(timeout)],
-                       capture_output=True, text=True, timeout=timeout + 120)
-    out = p.stdout + p.stderr
+    for attempt in range(40):
+        p = subprocess.run([sys.executable, UE_EXEC, f, "--file", "--timeout", str(timeout)],
+                           capture_output=True, text=True, timeout=timeout + 120)
+        out = p.stdout + p.stderr
+        # "no Unreal editor found" = the command was never sent (editor busy saving): safe to wait and retry
+        if "no Unreal editor found" not in out:
+            break
+        print("editor busy, waiting (%d)" % attempt, flush=True)
+        time.sleep(60)
     ok = p.returncode == 0 and out.rstrip().endswith("success")
     return ok, out
 
 
 def stage_code(cfg, stage):
     return "ZONE_CFG = %s\nSTAGE = %r\nexec(compile(open(r%r).read(), %r, 'exec'))\n" % (
-        json.dumps(cfg), stage, UE_MOD, "zone_batch_ue.py")
+        repr(cfg), stage, UE_MOD, "zone_batch_ue.py")
 
 
 def editor_free():
@@ -170,10 +177,12 @@ def filter_gltf(zdir, name, index):
 
 def shot_to_repo(zone, which, dst_dir):
     src = os.path.join(SHOT_DIR, "%s_%s.png" % (zone, which))
-    for _ in range(150):
+    # the editor only renders in the background when poked: nudge it until the shot lands
+    for i in range(60):
         if os.path.isfile(src):
             break
-        time.sleep(2)
+        ue("import unreal\nunreal.EditorLevelLibrary.editor_invalidate_viewports()\n", 60)
+        time.sleep(5)
     if not os.path.isfile(src):
         return None
     time.sleep(2)
@@ -227,8 +236,9 @@ def run_zone(zid, name, zone, st, dry=False):
         elif stage == "glaze":
             zs["glaze_sent"] = now()
             save_state(st)
-            code = ("import os\nos.environ['GLASS_ZONE_PATH']='/Game/Zones/Library/Materials'\n"
-                    "os.environ['GLASS_SAVE']='1'\n__file__=r%r\n" % GLAZE) + open(GLAZE).read()
+            code = ("import os\nos.environ['GLASS_ZONE_PATH']=%r\nos.environ['GLASS_DRY']='0'\n"
+                    "os.environ['GLASS_SAVE']='1'\n__file__=r%r\n"
+                    % (GLAZE_PATHS.get(zone, "/Game/Zones/Library/Materials"), GLAZE)) + open(GLAZE).read()
             ok, out = ue(code, 3600)
             glazed = re.search(r"^glass\s+(\d+)\s+(.*)$", out, re.M)
             notes.append("glazed %s" % (glazed.group(1) + ": " + glazed.group(2)[:300] if glazed else "0"))
@@ -245,6 +255,9 @@ def run_zone(zid, name, zone, st, dry=False):
             notes.append("trees %s" % ("; ".join(m[-2:]) if ok else "FAILED (continuing without trees)"))
         elif stage.startswith("shot_"):
             which = stage[5:]
+            stale = os.path.join(SHOT_DIR, "%s_%s.png" % (zone, which))
+            if os.path.isfile(stale):
+                os.replace(stale, stale + ".old")   # our own earlier shot; keep it aside
             c = dict(cfg, shot=which)
             ok, out = ue(stage_code(c, "shots"), 300)
             if ok:

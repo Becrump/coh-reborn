@@ -1,0 +1,29 @@
+{
+ "GalaxyCity": {
+  "done": [
+   "index",
+   "filter",
+   "level",
+   "meshes",
+   "mats",
+   "link",
+   "place",
+   "props",
+   "trees",
+   "sky",
+   "save",
+   "glaze",
+   "save2",
+   "shot_overview"
+  ],
+  "started": "2026-11-11 17:23:35",
+  "filter": {
+   "new_mesh_names": [],
+   "new_mat_names": [],
+   "new_meshes_gltf": null,
+   "new_mats_gltf": null
+  },
+  "failed": "shot_street at 2026-11-11 18:05:17",
+  "glaze_sent": "2026-11-11 17:37:27"
+ }
+}

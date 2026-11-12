@@ -1,0 +1,49 @@
+2026-11-11 17:23:38 index OK
+[zone] index: written
+2026-11-11 17:23:38 filter OK
+filtered
+2026-11-11 17:23:41 level FAIL
+[Error] Traceback (most recent call last):
+[Error]   File "C:/Users/rtcru/AppData/Local/Temp/coh_zone_batch/_stage.py", line 1, in <module>
+[Error]     ZONE_CFG = {"zone": "GalaxyCity", "name": "galaxy_city", "placements": "C:\\Users\\rtcru\\ClaudeProjects\\COHReborn\\exports\\zones\\zones\\city_01_03_galaxy_city\\galaxy_city_placements.json", "masked_json": "C:\\Users\\rtcru\\ClaudeProjects\\COHReborn\\exports\\zones\\zones\\city_01_03_galaxy_city\\masked_materials.json", "index_out": "C:\\Users\\rtcru\\AppData\\Local\\Temp\\coh_zone_batch\\library_index.json", "stats_out": "C:\\Users\\rtcru\\ClaudeProjects\\coh-reborn-zones\\docs\\zones\\import\\GalaxyCity\\stats.json", "shot_dir": "C:/Users/rtcru/OneDrive/Documents/Unreal Projects/COHREBORN/Saved/Screenshots/WindowsEditor", "new_mesh_names": [], "new_mat_names": [], "new_meshes_gltf": null, "new_mats_gltf": null}
+[Error]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ^^^^
+[Error] NameError: name 'null' is not defined
+2026-11-11 17:24:04 level OK
+[zone] level: already open /Game/Zones/GalaxyCity/L_GalaxyCity
+2026-11-11 17:24:07 meshes OK
+[zone] meshes: nothing new
+2026-11-11 17:24:10 mats OK
+[zone] mats: nothing new
+2026-11-11 17:24:13 link OK
+[zone] link: 0 slots linked, 0 unlinked []; new materials fixed {} (0s)
+2026-11-11 17:29:28 place OK
+[zone] place: 11475 single, 415034 instances in 499 instance actors; 0 models missing [] (311s)
+2026-11-11 17:30:46 props OK
+[CoH setup] street lamps: 555 new lamp models, 689 lights (on at night)
+success
+
+2026-11-11 17:34:28 trees OK
+[CoH trees] original tree actors removed: 90
+[Warning] C:/Users/rtcru/AppData/Local/Temp/coh_zone_batch/_stage.py:132: DeprecationWarning: SubobjectDataBlueprintFunctionLibrary: Function 'get_object' on 'SubobjectDataBlueprintFunctionLibrary' is deprecated: Use GetAssociatedObject - it will not return template objects for instances
+[CoH trees] planted 621 trees in 28 groups
+success
+
+2026-11-11 17:34:38 sky FAIL
+no Unreal editor found (is Remote Execution enabled?)
+
+2026-11-11 17:37:22 sky OK
+[zone] sky: ready
+2026-11-11 17:37:27 save OK
+[zone] save: 81 zone/library packages saved; 79 other dirty packages left unsaved ['/Game/atlas_park/Materials/slground_glow_tga__ADD__NIGHT', '/Game/atlas_park/Materials/forest_bush_02_tga', '/Game/atlas_park/Materials/off_monitor01_tga', '/Game/atlas_park/Materials/off_monitor02_tga', '/Game/atlas_park/Materials/off_trash03_tga', '/Game/atlas_park/Materials/white_tga', '/Game/atlas_park/Materials/clearalpha_tga', '/Game/atlas_park/Materials/fire_hydrant_base_tga']
+2026-11-11 17:37:30 glaze OK
+glass       0
+2026-11-11 17:37:33 save2 OK
+[zone] save: 0 zone/library packages saved; 79 other dirty packages left unsaved ['/Game/atlas_park/Materials/slground_glow_tga__ADD__NIGHT', '/Game/atlas_park/Materials/forest_bush_02_tga', '/Game/atlas_park/Materials/off_monitor01_tga', '/Game/atlas_park/Materials/off_monitor02_tga', '/Game/atlas_park/Materials/off_trash03_tga', '/Game/atlas_park/Materials/white_tga', '/Game/atlas_park/Materials/clearalpha_tga', '/Game/atlas_park/Materials/fire_hydrant_base_tga']
+2026-11-11 17:42:37 shot_overview FAIL
+[zone] shots: requested C:/Users/rtcru/OneDrive/Documents/Unreal Projects/COHREBORN/Saved/Screenshots/WindowsEditor/GalaxyCity_overview at <Struct 'Vector' (0x00000268B0E07260) {x: -77011.535500, y: -50707.290500, z: 73212.465500}>
+2026-11-11 17:46:07 shot_overview OK
+[zone] shots: requested C:/Users/rtcru/OneDrive/Documents/Unreal Projects/COHREBORN/Saved/Screenshots/WindowsEditor/GalaxyCity_overview at <Struct 'Vector' (0x00000269AD892FE0) {x: -77011.535500, y: -50707.290500, z: 73212.465500}>
+2026-11-11 17:54:10 shot_street FAIL
+[zone] shots: requested C:/Users/rtcru/OneDrive/Documents/Unreal Projects/COHREBORN/Saved/Screenshots/WindowsEditor/GalaxyCity_street at <Struct 'Vector' (0x00000269AD892270) {x: -9410.700000, y: 16893.545000, z: 250.000000}>
+2026-11-11 18:05:17 shot_street FAIL
+[zone] shots: requested C:/Users/rtcru/OneDrive/Documents/Unreal Projects/COHREBORN/Saved/Screenshots/WindowsEditor/GalaxyCity_street at <Struct 'Vector' (0x00000269AD891500) {x: -9410.700000, y: 16893.545000, z: 250.000000}>
