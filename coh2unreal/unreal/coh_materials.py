@@ -482,18 +482,37 @@ def signal_collection():
     return mpc
 
 
+def _step(msg):
+    """Checkpoint that survives an editor crash: appended and fsync'd to
+    <Saved>/Logs/coh_build_signal.txt (and the Output Log)."""
+    import os
+    unreal.log("build_signal: " + msg)
+    try:
+        path = os.path.join(unreal.Paths.project_log_dir(), "coh_build_signal.txt")
+        with open(path, "a") as f:
+            f.write(msg + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception:
+        pass
+
+
 def build_signal():
     """Traffic and pedestrian signals (traffic_light.tga,
     traffic_light_pedestrian.tga): the original texture, with the lit lamp
     glowing and cycling green, amber, red. Pedestrian = 1 for the walk/hand
     panel. Opaque, so it works on Nanite tiles and instanced props alike."""
+    _step("start")
     m = _new("M_CoH_TrafficSignal", unreal.BlendMode.BLEND_OPAQUE)
+    _step("material created")
     for flag in ("used_with_nanite", "used_with_instanced_static_meshes"):
         try:
             m.set_editor_property(flag, True)
         except Exception:
             pass
+    _step("usage flags set")
     uv = _uv(m, "BaseColorTexture", -1500, -400)
+    _step("uv")
     tex = _node(m, unreal.MaterialExpressionTextureSampleParameter2D, -1300,
                 -400, parameter_name="BaseColorTexture",
                 texture=unreal.load_asset(
@@ -505,11 +524,18 @@ def build_signal():
     col = _node(m, unreal.MaterialExpressionMultiply, -1050, -400)
     mel.connect_material_expressions(tex, "RGB", col, "A")
     mel.connect_material_expressions(fac, "", col, "B")
+    _step("base colour")
     nrm = _node(m, unreal.MaterialExpressionVertexNormalWS, -1050, -50)
+    _step("normal ws")
     clk = _node(m, unreal.MaterialExpressionCollectionParameter, -1050, 50)
-    clk.set_editor_property("collection", signal_collection())
+    mpc = signal_collection()
+    _step("mpc loaded")
+    clk.set_editor_property("collection", mpc)
+    _step("clock collection set")
     clk.set_editor_property("parameter_name", "SignalClock")
+    _step("clock parameter set")
     gt = _node(m, unreal.MaterialExpressionTime, -1050, 150)
+    _step("time")
     params = {"Cycle": 40.0, "Amber": 3.0, "Pedestrian": 0.0, "LensU": 0.795,
               "RedV": 0.18, "AmberV": 0.50, "GreenV": 0.82, "Radius": 0.125,
               "Soft": 0.02, "Glow": 40.0, "Dim": 0.7}
@@ -520,24 +546,31 @@ def build_signal():
         srcs[name] = (_scalar(m, "Signal" + name if name not in (
             "Pedestrian",) else name, default, -1050, y), "")
         y += 90
+    _step("scalar parameters")
     outs = []
     for mode, (x, yy) in enumerate(((-500, -300), (-500, 300))):
-        c = _node(m, unreal.MaterialExpressionCustom, x, yy, code=SIGNAL_HLSL,
-                  output_type=unreal.CustomMaterialOutputType.CMOT_FLOAT3,
-                  description="Signal" + ("Glow" if mode == 0 else "Base"))
+        c = _node(m, unreal.MaterialExpressionCustom, x, yy)
+        _step("custom %d created" % mode)
+        c.set_editor_property("description", "Signal" + ("Glow" if mode == 0 else "Base"))
+        c.set_editor_property("output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3)
+        c.set_editor_property("code", SIGNAL_HLSL)
+        _step("custom %d code set" % mode)
         ins = []
         for n in SIGNAL_INPUTS:
             ci = unreal.CustomInput()
             ci.set_editor_property("input_name", n)
             ins.append(ci)
         c.set_editor_property("inputs", ins)
+        _step("custom %d inputs set" % mode)
         for n in SIGNAL_INPUTS[:-1]:
             e, o = srcs[n]
             mel.connect_material_expressions(e, o, c, n)
+            _step("custom %d <- %s" % (mode, n))
         mel.connect_material_expressions(
             _node(m, unreal.MaterialExpressionConstant, x - 200, yy + 200,
                   r=float(mode)), "", c, "Mode")
         outs.append(c)
+    _step("customs wired")
     mel.connect_material_property(outs[0], "",
                                   unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(outs[1], "",
@@ -546,8 +579,11 @@ def build_signal():
                                   unreal.MaterialProperty.MP_NORMAL)
     mel.connect_material_property(_scalar(m, "RoughnessFactor", 0.45, 0, 900),
                                   "", unreal.MaterialProperty.MP_ROUGHNESS)
+    _step("outputs wired, recompiling")
     mel.recompile_material(m)
+    _step("recompiled")
     unreal.EditorAssetLibrary.save_loaded_asset(m, False)
+    _step("saved")
     return m
 
 
