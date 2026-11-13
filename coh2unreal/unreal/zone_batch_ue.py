@@ -429,7 +429,97 @@ def stage_stats():
     log("stats: %s" % json.dumps(stats))
 
 
-{"index": write_index, "level": stage_level, "meshes": stage_meshes, "mats": stage_mats,
+CELL_CM = 25600.0          # 256 m streaming chunks, same zone-local grid for every zone
+CLUTTER_RADIUS_CM = 150.0  # meshes smaller than this (bounding sphere) count as clutter
+CLUTTER_CULL_CM = 15000.0  # clutter disappears beyond 150 m
+
+
+def _load_all_actors():
+    """World Partition loads only some cells in the editor: load every actor of this level."""
+    wpl = unreal.WorldPartitionBlueprintLibrary
+    descs = wpl.get_actor_descs()
+    guids = [d.guid for d in descs]
+    if guids:
+        wpl.load_actors(guids)
+    return len(guids)
+
+
+def _small(mesh):
+    try:
+        return mesh.get_bounds().sphere_radius < CLUTTER_RADIUS_CM
+    except Exception:
+        return False
+
+
+def _instances(comp):
+    out = []
+    for i in range(comp.get_instance_count()):
+        t = comp.get_instance_transform(i, True)
+        if isinstance(t, tuple):
+            t = t[-1]
+        out.append(t)
+    return out
+
+
+def stage_split():
+    """Split whole-zone instance actors into 256 m chunks (ISM_<model>_<cx>_<cy>) and cull small clutter."""
+    assert world_path().startswith(level_path()), "zone level not open"
+    t0 = time.time()
+    n_descs = _load_all_actors()
+    acts = asub.get_all_level_actors()
+    big = [a for a in acts if isinstance(a, unreal.CoHInstances)
+           and not a.get_actor_label().startswith("ISM_")]
+    singles = [a for a in acts if isinstance(a, unreal.StaticMeshActor)
+               and str(a.get_folder_path()).startswith("Zone")]
+    before = len(acts)
+    del acts
+    chunks = culled = 0
+    with unreal.ScopedSlowTask(len(big), "Splitting " + CFG["zone"]) as task:
+        task.make_dialog(False)
+        for a in big:
+            task.enter_progress_frame(1)
+            comp = a.get_component_by_class(unreal.HierarchicalInstancedStaticMeshComponent) or \
+                a.get_component_by_class(unreal.InstancedStaticMeshComponent)
+            mesh = comp.get_editor_property("static_mesh") if comp else None
+            if mesh is None:
+                continue
+            cells = collections.defaultdict(list)
+            for t in _instances(comp):
+                l = t.translation
+                cells[(int(l.x // CELL_CM), int(l.y // CELL_CM))].append(t)
+            label = re.sub(r"_x\d+$", "", a.get_actor_label())
+            label = label[3:] if label.startswith("SM_") else label
+            folder = a.get_folder_path()
+            small = _small(mesh)
+            for (cx, cy), ts in cells.items():
+                c = asub.spawn_actor_from_class(unreal.CoHInstances, unreal.Vector(0, 0, 0))
+                c.set_instances(mesh, ts)
+                c.set_actor_label("ISM_%s_%d_%d" % (label, cx, cy))
+                c.set_folder_path(folder)
+                if small:
+                    ic = c.get_component_by_class(unreal.InstancedStaticMeshComponent)
+                    ic.set_editor_property("instance_start_cull_distance", int(CLUTTER_CULL_CM * 0.8))
+                    ic.set_editor_property("instance_end_cull_distance", int(CLUTTER_CULL_CM))
+                    culled += 1
+                chunks += 1
+            asub.destroy_actor(a)
+    single_culled = 0
+    for a in singles:
+        sc = a.static_mesh_component
+        m = sc.get_editor_property("static_mesh")
+        if m and _small(m):
+            sc.set_editor_property("ld_max_draw_distance", CLUTTER_CULL_CM)
+            single_culled += 1
+    del big, singles
+    after = len(asub.get_all_level_actors())
+    json.dump({"actors_before": before, "actors_after": after, "chunks": chunks,
+               "clutter_chunks_culled": culled, "clutter_singles_culled": single_culled},
+              open(CFG["split_out"], "w"))
+    log("split: %d actor descs loaded; actors %d -> %d; %d chunks (%d clutter-culled), %d small singles culled (%.0fs)"
+        % (n_descs, before, after, chunks, culled, single_culled, time.time() - t0))
+
+
+{"split": stage_split, "index": write_index, "level": stage_level, "meshes": stage_meshes, "mats": stage_mats,
  "link": stage_link, "place": stage_place, "sky": stage_sky, "save": save_ours,
  "shots": stage_shots, "stats": stage_stats}[STAGE]()
 clear_python_refs()
