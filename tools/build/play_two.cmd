@@ -22,11 +22,11 @@ set "COMMON=-game -windowed -ResX=1280 -ResY=720 -log -NOSTEAM -nosplash"
 if /i "%~1"=="direct" (
   if exist "%~dp0play_A.log" del "%~dp0play_A.log"
   start "CoH A (host)" "%EXE%" "%UPROJECT%" "%COH_MAP%?listen" %COMMON% -WinX=0 -WinY=40 -Hero=TestA -abslog="%~dp0play_A.log"
-  rem wait for the host to finish loading the zone: "listening on port" in its log, at most 5 minutes
+  rem wait for the host to finish loading the zone: its status beacon line in the log, at most 8 minutes
   rem powershell, not timeout: timeout fails when there is no console window
   echo Waiting for the host to load the zone...
-  powershell -NoProfile -Command "$log='%~dp0play_A.log'; for($i=0;$i -lt 300;$i+=2){ Start-Sleep 2; if((Test-Path $log) -and (Select-String -Path $log -Pattern 'listening on port' -Quiet)){ Start-Sleep 5; exit 0 } }; exit 1"
-  if errorlevel 1 echo Host not listening after 5 minutes, starting the client anyway
+  powershell -NoProfile -Command "$log='%~dp0play_A.log'; for($i=0;$i -lt 480;$i+=2){ Start-Sleep 2; if((Test-Path $log) -and (Select-String -Path $log -Pattern 'status beacon listening' -SimpleMatch -Quiet)){ Start-Sleep 5; exit 0 } }; exit 1"
+  if errorlevel 1 echo Host not ready after 8 minutes, starting the client anyway
   start "CoH B (client)" "%EXE%" "%UPROJECT%" 127.0.0.1 %COMMON% -WinX=1290 -WinY=40 -Hero=TestB -abslog="%~dp0play_B.log"
 ) else (
   start "CoH A" "%EXE%" "%UPROJECT%" %COMMON% -WinX=0 -WinY=40 -abslog="%~dp0play_A.log"

@@ -16,6 +16,7 @@
 #include "Engine/GameViewportClient.h"
 #include "Engine/Texture2D.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/GameSession.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
@@ -620,10 +621,25 @@ FString UCoHFrontend::InternetStatus() const
 		CoHLobby::DefaultGamePort, CoHLobby::DefaultGamePort + CoHLobby::BeaconOffset, PortsLanIp.IsEmpty() ? TEXT("this PC") : *PortsLanIp);
 }
 
+// Leaving or quitting from the menu: the host saves every hero, a player their own (the
+// window's own close button skips this; the 60 s autosave covers that).
+static void SaveHeroesBeforeLeaving(UWorld* World)
+{
+	if (!World) return;
+	const bool bHost = World->GetNetMode() != NM_Client;
+	for (TActorIterator<ACoHHeroCharacter> It(World); It; ++It)
+		if (UCoHHeroProgress* P = UCoHHeroProgress::Of(*It); P && P->bHasRecord)
+		{
+			if (bHost) P->Save();
+			else if (It->IsLocallyControlled()) P->SaveLocal();
+		}
+}
+
 void UCoHFrontend::ReturnToHQ()
 {
 	UWorld* World = GetGameInstance()->GetWorld();
 	if (!World) return;
+	SaveHeroesBeforeLeaving(World);
 	bLeaving = true;
 	ActiveName.Reset();
 	ActivePassword.Reset();
@@ -638,6 +654,7 @@ void UCoHFrontend::ReturnToHQ()
 void UCoHFrontend::QuitGame()
 {
 	UWorld* World = GetGameInstance()->GetWorld();
+	SaveHeroesBeforeLeaving(World);
 	UKismetSystemLibrary::QuitGame(World, World ? GetGameInstance()->GetFirstLocalPlayerController(World) : nullptr, EQuitPreference::Quit, false);
 }
 

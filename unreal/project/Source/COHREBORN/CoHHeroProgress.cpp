@@ -253,16 +253,29 @@ void UCoHHeroProgress::Save()
 	// the player's own PC keeps the hero (a Client call runs locally for the host's own hero)
 	ClientSaveHero(Json);
 	// the host keeps a backup per player, in case a PC loses its file
-	FString Player = TEXT("Player");
-	if (const APawn* Pawn = Cast<APawn>(GetOwner()))
-		if (const APlayerState* PS = Pawn->GetPlayerState()) Player = PS->GetPlayerName();
+	// by the player's hero file (TestA, Robert...), else their name in game
+	FString Player = BackupName.IsEmpty() ? FString(TEXT("Player")) : BackupName;
+	if (BackupName.IsEmpty())
+		if (const APawn* Pawn = Cast<APawn>(GetOwner()))
+			if (const APlayerState* PS = Pawn->GetPlayerState()) Player = PS->GetPlayerName();
 	const FString Backup = FPaths::ProjectSavedDir() / TEXT("HeroBackups") / FPaths::MakeValidFileName(Player) / FPaths::MakeValidFileName(Out.Name) + TEXT(".json");
 	FFileHelper::SaveStringToFile(Json, *Backup);
+}
+
+void UCoHHeroProgress::SaveLocal()
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!R || !bHasRecord || SaveFile.IsEmpty()) return;
+	FCoHHeroRecord Out = Hero;
+	Out.Looks = LooksFromStyles();
+	ClientSaveHero_Implementation(R->HeroToJson(Out));
 }
 
 void UCoHHeroProgress::ClientSaveHero_Implementation(const FString& Json)
 {
 	if (SaveFile.IsEmpty()) return;
+	// a player who already left: the host runs this itself, and the file isn't the host's
+	if (const APawn* Pawn = Cast<APawn>(GetOwner()); Pawn && !Pawn->IsLocallyControlled()) return;
 	const FString Path = LocalHeroDir() / SaveFile;
 	if (FFileHelper::SaveStringToFile(Json, *Path)) { UE_LOG(LogTemp, Log, TEXT("CoH hero saved: %s"), *Path); }
 	else { UE_LOG(LogTemp, Warning, TEXT("CoH hero: could not save %s"), *Path); }

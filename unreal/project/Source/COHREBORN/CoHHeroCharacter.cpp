@@ -266,7 +266,10 @@ void ACoHHeroCharacter::ToggleLeaveMenu()
 void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
     // leaving or quitting: one last save (the host's backup always gets it)
+    // (a player who leaves has no PlayerState by now: the backup is named by their hero file)
     if (HasAuthority() && !bShowcase && Progress && Progress->bHasRecord) Progress->Save();
+    // a player's own PC writes its file too: the host's last save can't reach a PC that left
+    else if (!HasAuthority() && IsLocallyControlled() && Progress && Progress->bHasRecord) Progress->SaveLocal();
     if (UWorld* W = GetWorld()) { W->GetTimerManager().ClearTimer(AutoSaveTimer); W->GetTimerManager().ClearTimer(DayNightTimer); }
     if (GraphicsMenu) GraphicsMenu->Close();
     if (Hud) { Hud->RemoveFromParent(); Hud = nullptr; }
@@ -1194,7 +1197,7 @@ void ACoHHeroCharacter::SendLocalHero()
 	FString SaveAs;
 	const FString Json = ReadHeroJson(Name, SaveAs);
 	Progress->SaveFile = SaveAs;
-	if (!Json.IsEmpty()) ServerSubmitHero(Json);
+	if (!Json.IsEmpty()) ServerSubmitHero(Json, FPaths::GetBaseFilename(SaveAs));
 }
 
 FString ACoHHeroCharacter::ReadHeroJson(const FString& HeroName, FString& OutSaveFile) const
@@ -1242,7 +1245,7 @@ bool ACoHHeroCharacter::ShowcaseHero(const FString& HeroName)
 	return true;
 }
 
-void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
+void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json, const FString& HeroFileName)
 {
 	// one hero per visit; the record then lives on the host until the player leaves
 	if (!Progress || Progress->bHasRecord) return;
@@ -1254,6 +1257,7 @@ void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
 		return;
 	}
 	Progress->LoadHeroRecord(H);
+	Progress->BackupName = FPaths::MakeValidFileName(HeroFileName);
 	ApplyCoHBody();
 	// the lobby's server list shows who is on by hero name
 	if (APlayerState* PS = GetPlayerState(); PS && !H.Name.IsEmpty()) PS->SetPlayerName(H.Name);

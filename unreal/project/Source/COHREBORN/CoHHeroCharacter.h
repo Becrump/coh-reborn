@@ -224,7 +224,7 @@ public:
 
 	/** A player's PC sends its hero file (the JSON text) to the host on joining. */
 	UFUNCTION(Server, Reliable)
-	void ServerSubmitHero(const FString& Json);
+	void ServerSubmitHero(const FString& Json, const FString& HeroFileName);
 	/** A player's PC changed travel power or climb: the host follows. */
 	UFUNCTION(Server, Reliable)
 	void ServerSetTravel(const FCoHTravelState& State);
