@@ -67,6 +67,9 @@ public:
 	/** The host saved: write the hero file on the owning player's PC. */
 	UFUNCTION(Client, Reliable) void ClientSaveHero(const FString& Json);
 
+	/** Host: writes the hero to the owning player's PC (ClientSaveHero) and the host's backup. */
+	void Save();
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 	static UCoHHeroProgress* Of(const AActor* A);
 	/** Server: a villain was defeated: XP and influence to the heroes who
@@ -77,7 +80,6 @@ public:
 private:
 	UCoHPowerComponent* Powers() const;
 	void Say(const FString& Text, FLinearColor Colour) const;
-	void Save();
 	UFUNCTION() void OnRep_Hero();
 	/** The power component's styles as saved looks, and back. */
 	TArray<FCoHPowerLook> LooksFromStyles() const;
