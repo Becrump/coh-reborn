@@ -15,6 +15,8 @@ Env:
 
 Run once in the editor (never re-send after a lost connection):
   python unreal/scripts/ue_exec.py - < unreal/scripts/signals/light_signals.py
+Re-running is safe: instances already on the master get the master's Signal* defaults again and are saved
+(repairs instances whose values were zeroed by an older run).
 Rollback: re-parent an original to the parent of its OriginalBackup copy.
 """
 import os
@@ -59,6 +61,14 @@ if not DRY and found:
     for p, ped in found:
         mi = unreal.load_asset(p)
         if mi.get_editor_property("parent") == signal:
+            # repair: older runs zeroed Signal* overrides; reset them to the master defaults and save
+            for n in cm.mel.get_scalar_parameter_names(signal):
+                if str(n).startswith("Signal"):
+                    cm.mel.set_material_instance_scalar_parameter_value(
+                        mi, n, cm.mel.get_material_default_scalar_parameter_value(signal, n))
+            cm.mel.set_material_instance_scalar_parameter_value(mi, "Pedestrian", ped)
+            cm.mel.update_material_instance(mi)
+            to_save.append(mi.get_package())
             already += 1
             continue
         dst = BACKUP + p[len("/Game"):]
@@ -70,7 +80,7 @@ if not DRY and found:
         done += 1
     if to_save:
         unreal.EditorLoadingAndSavingUtils.save_packages(to_save, True)
-    print("re-parented", done, "already", already, "backups", len(to_save))
+    print("re-parented", done, "already (defaults re-applied and saved)", already, "packages saved", len(to_save))
 
 if os.environ.get("SIGNAL_LIFE") == "1" and not DRY:
     mpc = cm.signal_collection()
