@@ -27,6 +27,11 @@
 #include "NavigationInvokerComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "LevelSequence.h"
+#include "GameFramework/GameStateBase.h"
+#include "TimerManager.h"
 
 #include "Animation/AnimSequenceBase.h"
 #include "CoHLifeManager.h"
@@ -260,6 +265,9 @@ void ACoHHeroCharacter::ToggleLeaveMenu()
 
 void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
+    // leaving or quitting: one last save (the host's backup always gets it)
+    if (HasAuthority() && !bShowcase && Progress && Progress->bHasRecord) Progress->Save();
+    if (UWorld* W = GetWorld()) { W->GetTimerManager().ClearTimer(AutoSaveTimer); W->GetTimerManager().ClearTimer(DayNightTimer); }
     if (GraphicsMenu) GraphicsMenu->Close();
     if (Hud) { Hud->RemoveFromParent(); Hud = nullptr; }
     Super::EndPlay(Reason);
@@ -722,7 +730,12 @@ void ACoHHeroCharacter::StopClimb()
 void ACoHHeroCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if (!bHeroSent && Controller && IsLocallyControlled()) { bHeroSent = true; SendLocalHero(); }
+	if (!bHeroSent && Controller && IsLocallyControlled())
+	{
+		bHeroSent = true; SendLocalHero();
+		SyncDayNight();
+		GetWorldTimerManager().SetTimer(DayNightTimer, this, &ACoHHeroCharacter::SyncDayNight, 30.f, true);
+	}
 	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
 	// the Sprint and Climb toggles change speeds: follow them
@@ -1210,6 +1223,7 @@ bool ACoHHeroCharacter::ShowcaseHero(const FString& HeroName)
 {
 	// a display hero: never sends a file to a host, never moves
 	bHeroSent = true;
+	bShowcase = true;
 	GetCharacterMovement()->DisableMovement();
 	const UCoHGameRules* R = UCoHGameRules::Get(this);
 	if (!Progress || !R || !R->HasHeroRules() || !HasAuthority()) return false;
@@ -1243,6 +1257,44 @@ void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
 	ApplyCoHBody();
 	// the lobby's server list shows who is on by hero name
 	if (APlayerState* PS = GetPlayerState(); PS && !H.Name.IsEmpty()) PS->SetPlayerName(H.Name);
+	// saved at once (the player's PC and the host's backup), then every minute
+	Progress->Save();
+	GetWorldTimerManager().SetTimer(AutoSaveTimer, this, &ACoHHeroCharacter::AutoSaveHero, 60.f, true);
+}
+
+void ACoHHeroCharacter::AutoSaveHero()
+{
+	if (HasAuthority() && !bShowcase && Progress && Progress->bHasRecord) Progress->Save();
+}
+
+void ACoHHeroCharacter::SyncDayNight()
+{
+	// The day/night cycle is a looping Level Sequence placed in the map. Each copy of the
+	// game plays its own, so put every copy at the host's clock: the GameState's server
+	// time is the same on every PC, so the cycle position is server time mod its length.
+	// Late joiners land on the same hour; small drift is fixed on the next pass.
+	const UWorld* W = GetWorld();
+	const AGameStateBase* GS = W ? W->GetGameState() : nullptr;
+	if (!GS) return;
+	const double Now = GS->GetServerWorldTimeSeconds();
+	for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
+	{
+		ULevelSequencePlayer* P = It->GetSequencePlayer();
+		if (!P || !It->GetSequence() || !It->GetSequence()->GetName().Contains(TEXT("DayNight"))) continue;
+		const double Length = P->GetDuration().AsSeconds();
+		const double Rate = FMath::Max(0.01, (double)P->GetPlayRate());
+		if (Length <= 1.0) continue;
+		const FFrameRate Fps = P->GetFrameRate();
+		const FFrameTime Start = P->GetStartTime().Time;
+		const double Want = FMath::Fmod(Now * Rate, Length);
+		const double Have = Fps.AsSeconds(P->GetCurrentTime().Time - Start);
+		double Off = FMath::Abs(Want - Have);
+		Off = FMath::Min(Off, Length - Off);
+		if (Off < 2.0 && P->IsPlaying()) continue;
+		P->SetPlaybackPosition(FMovieSceneSequencePlaybackParams(Start + Fps.AsFrameTime(Want), EUpdatePositionMethod::Jump));
+		if (!P->IsPlaying()) P->Play();
+		UE_LOG(LogTemp, Log, TEXT("CoH day/night: %s set to %.0f s of %.0f (host clock)"), *It->GetSequence()->GetName(), Want, Length);
+	}
 }
 
 FCoHTravelState ACoHHeroCharacter::TravelState() const

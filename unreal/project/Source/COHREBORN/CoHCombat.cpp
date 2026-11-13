@@ -1269,17 +1269,35 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
   return false;
  };
  TArray<const FCoHEncounter*> Pool; int32 Total=0;
+ // the level gap of an encounter (0 = in its range, give or take one level)
+ auto Gap=[Level](const FCoHEncounter& E){ return FMath::Max(0,FMath::Max(E.MinLevel-1-Level,Level-E.MaxLevel-1)); };
+ int32 Fits=0, BestGap=MAX_int32;
  for(const FCoHEncounter& E:GR->Encounters)
  {
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
   if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
   if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
-  if(Level<E.MinLevel-1 || Level>E.MaxLevel+1) continue;
-  Pool.Add(&E); Total+=E.Spots;
+  ++Fits; BestGap=FMath::Min(BestGap,Gap(E));
  }
- if(Pool.Num()==0){ UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for %s %s at level %d"),*Group,*Kind,Level); return false; }
- int32 Roll=FMath::RandRange(0,Total-1); const FCoHEncounter* Enc=Pool.Last();
- for(const FCoHEncounter* E:Pool){ if((Roll-=E->Spots)<0){ Enc=E; break; } }
+ // none at this level: the nearest levels instead (the encounter's own level is clamped below)
+ for(const FCoHEncounter& E:GR->Encounters)
+ {
+  if(Fits==0) break;
+  if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
+  if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
+  if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
+  if(Gap(E)!=BestGap) continue;
+  Pool.Add(&E); Total+=FMath::Max(0,E.Spots);
+ }
+ if(Pool.Num()==0)
+ {
+  UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for group '%s' kind '%s' at level %d (%d encounter definitions loaded)"),
+   Group.IsEmpty()?TEXT("any"):*Group,Kind.IsEmpty()?TEXT("any"):*Kind,Level,GR->Encounters.Num());
+  return false;
+ }
+ if(BestGap>0) UE_LOG(LogTemp,Log,TEXT("CoH encounters: nothing at level %d, using the nearest (%d levels off)"),Level,BestGap);
+ const FCoHEncounter* Enc=Pool[FMath::RandRange(0,Pool.Num()-1)];
+ if(Total>0){ int32 Roll=FMath::RandRange(0,Total-1); for(const FCoHEncounter* E:Pool){ if((Roll-=FMath::Max(0,E->Spots))<0){ Enc=E; break; } } }
  // a spot: open ground at the distance asked (the new map's layout differs
  // from the original, so spots are placed around the players)
  FVector Center; bool bFound=false;

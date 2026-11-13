@@ -85,7 +85,7 @@ struct FCoHHeroCard
 	FString Secondary;
 	int32 Level = 1;
 	FString ArchetypeName() const;   // "Blaster"
-	FString SetsLine() const;        // "Fire Blast · Fire Manipulation"
+	FString SetsLine() const;        // "Fire Blast | Fire Manipulation"
 };
 
 /** One rival from Saved/Heroes/<hero>.rivals.json (the Nemesis system,
