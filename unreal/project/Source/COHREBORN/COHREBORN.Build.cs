@@ -9,11 +9,11 @@ public class COHREBORN : ModuleRules
 			"Core", "CoreUObject", "Engine", "PhysicsCore", "Json", "JsonUtilities",
 			"EnhancedInput", "InputCore", "AIModule", "NavigationSystem",
 			"MoviePlayer", "Slate", "SlateCore", "UMG", "AssetRegistry", "ProceduralMeshComponent",
-			"Sockets", "Networking", "ApplicationCore", "HTTP",
+			"Sockets", "Networking", "ApplicationCore", "HTTP", "RHI",
 			"LevelSequence", "MovieScene"
 		});
         // UPnP router port opening for the HQ lobby (CoHPortMapper)
-        if (Target.Platform == UnrealTargetPlatform.Win64) PublicSystemLibraries.AddRange(new string[] { "ole32.lib", "oleaut32.lib" });
+        if (Target.Platform == UnrealTargetPlatform.Win64) PublicSystemLibraries.AddRange(new string[] { "ole32.lib", "oleaut32.lib", "dxgi.lib" });   // dxgi: video memory readout (CoHPerformance)
         if (Target.bBuildEditor) PrivateDependencyModuleNames.AddRange(new string[] { "PhysicsUtilities", "AssetRegistry" });
 	}
 }

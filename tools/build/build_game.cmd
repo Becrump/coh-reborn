@@ -67,6 +67,7 @@ if /i "%~1"=="sync" (
   robocopy "!REPO!\unreal\project\Source" "%COH_PROJECT%\Source" /E /NFL /NDL /NJH /NJS >nul
   copy /y "!REPO!\unreal\project\Config\DefaultGame.ini" "%COH_PROJECT%\Config\DefaultGame.ini" >nul
   copy /y "!REPO!\unreal\project\Config\DefaultEngine.ini" "%COH_PROJECT%\Config\DefaultEngine.ini" >nul
+  if exist "!REPO!\unreal\project\Config\DefaultScalability.ini" copy /y "!REPO!\unreal\project\Config\DefaultScalability.ini" "%COH_PROJECT%\Config\DefaultScalability.ini" >nul
   rem the HQ lobby backdrop (read at runtime, not an asset)
   robocopy "!REPO!\unreal\project\Content\Frontend" "%COH_PROJECT%\Content\Frontend" /E /NFL /NDL /NJH /NJS >nul
 )
