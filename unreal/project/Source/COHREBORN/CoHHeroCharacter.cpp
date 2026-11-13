@@ -861,20 +861,24 @@ void ACoHGameMode::StartPlay()
 
 AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	if (UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail"))
+	// Arrive=Monorail: inside the waiting train. Otherwise never there: the
+	// MonorailArrival starts sit in the closed station room (playtests 1 and 3
+	// put the host in it, walled in), so a normal join uses the other starts.
+	const bool bByMonorail = UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail");
+	TArray<APlayerStart*> Starts;
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 	{
-		TArray<APlayerStart*> Starts;
-		for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+		if ((It->PlayerStartTag == TEXT("MonorailArrival")) == bByMonorail)
 		{
-			if (It->PlayerStartTag == TEXT("MonorailArrival"))
-			{
-				Starts.Add(*It);
-			}
+			Starts.Add(*It);
 		}
-		if (Starts.Num())
-		{
-			return Starts[FMath::RandRange(0, Starts.Num() - 1)];
-		}
+	}
+	if (Starts.Num())
+	{
+		APlayerStart* Pick = Starts[FMath::RandRange(0, Starts.Num() - 1)];
+		UE_LOG(LogTemp, Log, TEXT("CoH start: %s at %s (%d %s starts)"), *Pick->GetName(), *Pick->GetActorLocation().ToCompactString(),
+			Starts.Num(), bByMonorail ? TEXT("monorail") : TEXT("street"));
+		return Pick;
 	}
 	return Super::ChoosePlayerStart_Implementation(Player);
 }
