@@ -77,6 +77,9 @@ static void CoHPerfApplyCodeCVars()
 		V->Set(PixelsPerEdge[FMath::Clamp(S->GetViewDistanceQuality(), 0, 4)], ECVF_SetByGameSetting);
 	if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("r.RayTracing.Enable")))
 		V->Set(S->GetGlobalIlluminationQuality() >= 4 ? 1 : 0, ECVF_SetByGameSetting);
+	UE_LOG(LogTemp, Display, TEXT("CoH graphics: view distance %d, lighting %d -> r.Nanite.MaxPixelsPerEdge %d, r.RayTracing.Enable %d"),
+		S->GetViewDistanceQuality(), S->GetGlobalIlluminationQuality(),
+		PixelsPerEdge[FMath::Clamp(S->GetViewDistanceQuality(), 0, 4)], S->GetGlobalIlluminationQuality() >= 4 ? 1 : 0);
 }
 
 /** lamps, trees and city life that go with a quality level */

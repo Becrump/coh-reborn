@@ -23,8 +23,9 @@ editor closed, 1920x1080, camera turning a full circle for 60 s (`bench_lowend.c
   (GPU only 6-14 ms), and uses about 18.6 GB of RAM. Part of that is the editor binary; a
   packaged build is the real test.
 - First run: `r.Nanite.MaxPixelsPerEdge` and `r.RayTracing.Enable` were ignored in
-  Scalability.ini (not scalability variables); they are now set in code, so Low should
-  gain a little more after the next run.
+  Scalability.ini (not scalability variables); they are now set in code. Rerun after the
+  fix: city Low 207 FPS / 1.5 GB, High 90 FPS / 3.1 GB; Atlas Park Low at 720p went from
+  42 FPS with an 11 FPS stutter to a steady 55 FPS (1% low 48), 2.8 GB VRAM.
 
 The spec table below is still an estimate for weaker hardware, scaled from these numbers.
 
