@@ -155,7 +155,34 @@ def frame_camera(cam, shot, head_z=1.7, char_h=1.85, yaw_deg=35, center_x=0.0, h
     cam.rotation_euler = (target - pos).to_track_quat("-Z", "Y").to_euler()
 
 
+HOLD_DIR = "C:/Users/rtcru/ClaudeProjects/COHReborn"
+_quiet_ok = [0.0]
+
+
+def unreal_game_running():
+    import subprocess
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-Command",
+                            "(Get-CimInstance Win32_Process -Filter \"Name like 'Unreal%'\" | Where-Object { $_.CommandLine -match '-game' }).Count"],
+                           capture_output=True, text=True, timeout=30)
+        return r.stdout.strip() not in ("", "0")
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def wait_cpu_quiet(poll=60):
+    """Pause CPU-heavy rendering while CPU_HOLD.txt exists or an Unreal -game copy runs (checked at most every 15 s)."""
+    import time
+    if time.time() - _quiet_ok[0] < 15:
+        return
+    while os.path.exists(HOLD_DIR + "/CPU_HOLD.txt") or unreal_game_running():
+        print("CPU hold: waiting (CPU_HOLD.txt or Unreal -game running)", flush=True)
+        time.sleep(poll)
+    _quiet_ok[0] = time.time()
+
+
 def render(path):
+    wait_cpu_quiet()
     os.makedirs(os.path.dirname(path), exist_ok=True)
     bpy.context.scene.render.filepath = path
     bpy.ops.render.render(write_still=True)

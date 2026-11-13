@@ -88,6 +88,7 @@ for s in "lr":
         mh_len = (S.rest_pos(jb) - S.rest_pos(ja)).length
         pa, pb_ = oa.pose.bones[T.name(ja)], oa.pose.bones[T.name(jb)]
         cur = (pb_.head - pa.head).length * oa.matrix_world.to_scale()[0]
+        print("STRETCH", T.name(ja), round(mh_len, 4), round(cur, 4))
         if cur > 1e-4:
             k = mh_len / cur
             if 0.6 < k < 1.6:

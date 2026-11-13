@@ -38,6 +38,8 @@ DEFAULT_CFG = {
     "gpu_free_mb_preview": 1500,
     "wait_poll_s": 180,
     "faces": 40000,
+    # while this file exists every GPU step waits (another thread owns the GPU / editor window)
+    "gpu_hold_file": "C:/Users/rtcru/ClaudeProjects/COHReborn/GPU_HOLD.txt",
 }
 VIEWS = ("front", "left", "back", "right")
 IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
@@ -69,7 +71,8 @@ def unreal_running():
         return []
     names = []
     for row in csv.reader(io.StringIO(r.stdout)):
-        if row and row[0].lower().startswith("unrealeditor"):
+        n = row[0].lower() if row else ""
+        if n.startswith(("unrealeditor", "unrealbuildtool", "unrealgame")) or (n.endswith(".exe") and "-cmd" in n and "unreal" in n):
             names.append(row[0])
     return sorted(set(names))
 
@@ -85,11 +88,17 @@ def gpu_free_mb():
 
 def gpu_guard(cfg, need_mb, wait, out, char, step):
     while True:
+        hold = cfg.get("gpu_hold_file")
+        held = bool(hold) and os.path.exists(hold)
         ue = unreal_running()
         free = gpu_free_mb()
-        if not ue and (free < 0 or free >= need_mb):
+        if not held and not ue and (free < 0 or free >= need_mb):
             return
-        why = ("Unreal is running (%s)" % ", ".join(ue)) if ue else "only %d MB VRAM free, need %d" % (free, need_mb)
+        if held:
+            note = open(hold, encoding="utf-8", errors="replace").read().strip()[:120]
+            why = "GPU hold file %s exists (%s)" % (hold, note)
+        else:
+            why = ("Unreal is running (%s)" % ", ".join(ue)) if ue else "only %d MB VRAM free, need %d" % (free, need_mb)
         if not wait:
             log(out, char, step, "WAIT", why + " - not starting GPU work. Rerun later or add --wait. The editor is never closed.")
             raise SystemExit(3)

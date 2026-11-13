@@ -45,6 +45,9 @@ for o in (body, head):
     o.hide_viewport = False
     if o.data.users > 1:
         o.data = o.data.copy()
+    if o.data.shape_keys:  # facial blendshapes keep a cm basis; CoH needs no facial animation
+        bpy.context.view_layer.objects.active = o
+        o.shape_key_clear()
     mw = o.matrix_world.copy()
     o.parent = None
     o.matrix_world = mw
