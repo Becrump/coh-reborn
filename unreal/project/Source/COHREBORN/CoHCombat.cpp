@@ -26,6 +26,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "TimerManager.h"
+#include "HAL/IConsoleManager.h"
 #include "Net/UnrealNetwork.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #if WITH_EDITOR
@@ -1396,3 +1397,23 @@ void ACoHCombatEnemy::OnRep_State()
 {
  if(!bRagdoll) PlayStateClip(State);
 }
+
+// Test command for the host (press ~ in game): "coh.SpawnNear [group]" puts an
+// original encounter about 15 m in front of the host's hero, so a playtest can
+// see villains up close and try hits without hunting for a spawn. Normal spawns
+// land 35-110 m away, and never in the City Hall plaza.
+static FAutoConsoleCommandWithWorldAndArgs GCoHSpawnNearCommand(
+	TEXT("coh.SpawnNear"),
+	TEXT("Host only: spawn an original encounter about 15 m in front of your hero. Optional: a group name, e.g. Hellions."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		if (!World || World->GetNetMode() == NM_Client) { UE_LOG(LogTemp, Warning, TEXT("coh.SpawnNear: only the host can spawn")); return; }
+		APlayerController* LocalPC = World->GetFirstPlayerController();
+		APawn* Hero = LocalPC ? LocalPC->GetPawn() : nullptr;
+		TActorIterator<ACoHEnemySpawner> Spawner(World);
+		if (!Hero || !Spawner) { UE_LOG(LogTemp, Warning, TEXT("coh.SpawnNear: no hero or no enemy spawner in this map")); return; }
+		const UCoHPowerComponent* HeroPowers = UCoHPowerComponent::Of(Hero);
+		const FString Group = Args.Num() > 0 ? Args[0] : FString();
+		const bool bOk = Spawner->SpawnEncounter(Hero, Group, FString(), HeroPowers ? HeroPowers->Level : 1, 1500.f);
+		UE_LOG(LogTemp, Log, TEXT("coh.SpawnNear: %s"), bOk ? TEXT("spawned") : TEXT("no spot (inside the City Hall no-spawn circle? step out of the plaza) or no encounter for that group"));
+	}));
