@@ -28,6 +28,13 @@ SKELETONS = {
               "uleg_l": "LeftUpLeg", "lleg_l": "LeftLeg", "foot_l": "LeftFoot", "toe_l": "LeftToeBase",
               "clav_r": "RightShoulder", "uarm_r": "RightArm", "larm_r": "RightForeArm", "hand_r": "RightHand", "hand_end_r": "RightHand:tail",
               "uleg_r": "RightUpLeg", "lleg_r": "RightLeg", "foot_r": "RightFoot", "toe_r": "RightToeBase"},
+    # Unreal 5 / MetaHuman skeleton (spine_04 and metacarpals are carried by their parents)
+    "mh": {"hips": "pelvis", "spine1": "spine_02", "spine2": "spine_03", "chest": "spine_05", "neck": "neck_01", "head": "head",
+           "clav_l": "clavicle_l", "uarm_l": "upperarm_l", "larm_l": "lowerarm_l", "hand_l": "hand_l", "hand_end_l": "middle_01_l",
+           "uleg_l": "thigh_l", "lleg_l": "calf_l", "foot_l": "foot_l", "toe_l": "ball_l",
+           "clav_r": "clavicle_r", "uarm_r": "upperarm_r", "larm_r": "lowerarm_r", "hand_r": "hand_r", "hand_end_r": "middle_01_r",
+           "uleg_r": "thigh_r", "lleg_r": "calf_r", "foot_r": "foot_r", "toe_r": "ball_r",
+           "thumb_l": "thumb_01_l", "thumb_r": "thumb_01_r"},
 }
 TORSO = ["hips", "spine1", "spine2", "chest", "neck", "head"]
 LIMBS = []  # (joint, parent joint, end joint, bend partner)
@@ -137,6 +144,7 @@ def retarget(src_arm, src_family, tgt_arm, tgt_family, name, frames=None, bend_f
                 rec["p"][j] = S.pose_pos(j)
                 if not S.name(j).endswith(":tail"):
                     rec["q"][j] = S.pose_q(j)
+        rec["curl"] = source_curl(src_arm, src_family) if src_family == "coh" else None
         recs.append(rec)
 
     # bake
@@ -259,9 +267,103 @@ def retarget(src_arm, src_family, tgt_arm, tgt_family, name, frames=None, bend_f
             if pb:
                 pb.rotation_quaternion = Quaternion((1, 0, 0), math.radians(70 * fist))
                 pb.keyframe_insert("rotation_quaternion", frame=i)
+        key_finger_chains(tgt_arm, rec["curl"], fist, i)
     log.update(log_twist)
     log = {k: round(v, 3) for k, v in log.items()}
     return new, log
+
+
+FINGER_NAMES = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+
+
+def source_curl(arm, family):
+    """Per-side finger curl (degrees) of a CoH pose: knuckle (HAND->RING vs RING->F2),
+    middle (RING->F2 vs F2->F1), thumb (T3->T2 vs T2->T1). CoH animates all four fingers
+    as one chain, so the same curl drives index..pinky."""
+    W = arm.matrix_world
+    P = arm.pose.bones
+    out = {}
+    for s, S in (("L", "Left"), ("R", "Right")):
+        need = ["HAND" + s, "RING" + s, "F2_" + s, "F1_" + s, "T3_" + s, "T2_" + s, "T1_" + s]
+        if not all(n in P for n in need):
+            continue
+        p = {n: W @ P[n].head for n in need}
+
+        def ang(a, b):
+            return math.degrees(a.angle(b)) if a.length > 1e-6 and b.length > 1e-6 else 0.0
+        out[S] = (ang(p["RING" + s] - p["HAND" + s], p["F2_" + s] - p["RING" + s]),
+                  ang(p["F2_" + s] - p["RING" + s], p["F1_" + s] - p["F2_" + s]),
+                  ang(p["T2_" + s] - p["T3_" + s], p["T1_" + s] - p["T2_" + s]))
+    return out
+
+
+def finger_chains(arm):
+    """[(side, finger, [bone names root->tip])] for Meshy-added (LeftIndex1..3) or UE/MetaHuman (index_01_l..03_l) fingers."""
+    B = arm.data.bones
+    out = []
+    for S, s_ in (("Left", "l"), ("Right", "r")):
+        for F in FINGER_NAMES:
+            a = ["%s%s%d" % (S, F, j) for j in (1, 2, 3)]
+            b = ["%s_%02d_%s" % (F.lower(), j, s_) for j in (1, 2, 3)]
+            for names in (a, b):
+                if all(n in B for n in names):
+                    out.append((S, F, names))
+    return out
+
+
+def _hand_frame(arm, S):
+    """Rest palm normal (armature space) from wrist, index and pinky knuckles, pointing to the thumb/palm side."""
+    B = arm.data.bones
+    s_ = S[0].lower()
+    hand = B.get(S + "Hand") or B.get("hand_" + s_)
+    idx = B.get(S + "Index1") or B.get("index_01_" + s_)
+    pky = B.get(S + "Pinky1") or B.get("pinky_01_" + s_)
+    th = B.get(S + "Thumb3") or B.get("thumb_03_" + s_)
+    if not (hand and idx and pky):
+        return None
+    n = (idx.head_local - hand.head_local).cross(pky.head_local - hand.head_local)
+    if n.length < 1e-8:
+        return None
+    n.normalize()
+    if th and n.dot(th.head_local - hand.head_local) < 0:
+        n = -n
+    return n
+
+
+def key_finger_chains(tgt_arm, curl, fist, frame):
+    """Key finger curls on any finger rig: each bone rotates about cross(bone dir, palm normal) in its rest
+    frame, so positive angles fold toward the palm. curl: per-side (knuckle, middle, thumb) degrees
+    from a CoH clip, or None -> constant fist (0 open .. 1 full fist)."""
+    chains = finger_chains(tgt_arm)
+    if not chains:
+        return
+    B, PB = tgt_arm.data.bones, tgt_arm.pose.bones
+    normals = {S: _hand_frame(tgt_arm, S) for S in ("Left", "Right")}
+    for S, F, names in chains:
+        n = normals.get(S)
+        if n is None:
+            continue
+        if curl and S in curl:
+            k, m, t = curl[S]
+        else:
+            k, m, t = 80 * fist, 90 * fist, 60 * fist
+        k, m = min(k, 95), min(m, 100)
+        angs = (t * 0.25, t * 0.5, t * 0.5) if F == "Thumb" else (k, m * 0.85, m * 0.7)
+        for jj, nm in enumerate(names):
+            bone = B[nm]
+            nxt = B[names[jj + 1]].head_local if jj < 2 else bone.head_local + (bone.head_local - B[names[1]].head_local)
+            d = nxt - bone.head_local
+            if d.length < 1e-6:
+                continue
+            axis = d.normalized().cross(n)
+            if axis.length < 1e-6:
+                continue
+            R = bone.matrix_local.to_3x3().normalized()
+            ax_local = R.inverted() @ axis.normalized()
+            pb = PB[nm]
+            pb.rotation_mode = "QUATERNION"
+            pb.rotation_quaternion = Quaternion(ax_local, math.radians(angs[jj]))
+            pb.keyframe_insert("rotation_quaternion", frame=frame)
 
 
 def impact_frame(rig_arm, family, frames):
