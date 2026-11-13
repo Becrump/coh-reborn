@@ -266,7 +266,10 @@ void ACoHHeroCharacter::ToggleLeaveMenu()
 void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
     // leaving or quitting: one last save (the host's backup always gets it)
+    // (a player who leaves has no PlayerState by now: the backup is named by their hero file)
     if (HasAuthority() && !bShowcase && Progress && Progress->bHasRecord) Progress->Save();
+    // a player's own PC writes its file too: the host's last save can't reach a PC that left
+    else if (!HasAuthority() && IsLocallyControlled() && Progress && Progress->bHasRecord) Progress->SaveLocal();
     if (UWorld* W = GetWorld()) { W->GetTimerManager().ClearTimer(AutoSaveTimer); W->GetTimerManager().ClearTimer(DayNightTimer); }
     if (GraphicsMenu) GraphicsMenu->Close();
     if (Hud) { Hud->RemoveFromParent(); Hud = nullptr; }
@@ -858,20 +861,24 @@ void ACoHGameMode::StartPlay()
 
 AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	if (UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail"))
+	// Arrive=Monorail: inside the waiting train. Otherwise never there: the
+	// MonorailArrival starts sit in the closed station room (playtests 1 and 3
+	// put the host in it, walled in), so a normal join uses the other starts.
+	const bool bByMonorail = UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail");
+	TArray<APlayerStart*> Starts;
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 	{
-		TArray<APlayerStart*> Starts;
-		for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+		if ((It->PlayerStartTag == TEXT("MonorailArrival")) == bByMonorail)
 		{
-			if (It->PlayerStartTag == TEXT("MonorailArrival"))
-			{
-				Starts.Add(*It);
-			}
+			Starts.Add(*It);
 		}
-		if (Starts.Num())
-		{
-			return Starts[FMath::RandRange(0, Starts.Num() - 1)];
-		}
+	}
+	if (Starts.Num())
+	{
+		APlayerStart* Pick = Starts[FMath::RandRange(0, Starts.Num() - 1)];
+		UE_LOG(LogTemp, Log, TEXT("CoH start: %s at %s (%d %s starts)"), *Pick->GetName(), *Pick->GetActorLocation().ToCompactString(),
+			Starts.Num(), bByMonorail ? TEXT("monorail") : TEXT("street"));
+		return Pick;
 	}
 	return Super::ChoosePlayerStart_Implementation(Player);
 }
@@ -1194,7 +1201,7 @@ void ACoHHeroCharacter::SendLocalHero()
 	FString SaveAs;
 	const FString Json = ReadHeroJson(Name, SaveAs);
 	Progress->SaveFile = SaveAs;
-	if (!Json.IsEmpty()) ServerSubmitHero(Json);
+	if (!Json.IsEmpty()) ServerSubmitHero(Json, FPaths::GetBaseFilename(SaveAs));
 }
 
 FString ACoHHeroCharacter::ReadHeroJson(const FString& HeroName, FString& OutSaveFile) const
@@ -1242,7 +1249,7 @@ bool ACoHHeroCharacter::ShowcaseHero(const FString& HeroName)
 	return true;
 }
 
-void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
+void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json, const FString& HeroFileName)
 {
 	// one hero per visit; the record then lives on the host until the player leaves
 	if (!Progress || Progress->bHasRecord) return;
@@ -1254,6 +1261,7 @@ void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
 		return;
 	}
 	Progress->LoadHeroRecord(H);
+	Progress->BackupName = FPaths::MakeValidFileName(HeroFileName);
 	ApplyCoHBody();
 	// the lobby's server list shows who is on by hero name
 	if (APlayerState* PS = GetPlayerState(); PS && !H.Name.IsEmpty()) PS->SetPlayerName(H.Name);
