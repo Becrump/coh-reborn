@@ -26,6 +26,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "TimerManager.h"
+#include "HAL/IConsoleManager.h"
 #include "Net/UnrealNetwork.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #if WITH_EDITOR
@@ -1269,17 +1270,35 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
   return false;
  };
  TArray<const FCoHEncounter*> Pool; int32 Total=0;
+ // the level gap of an encounter (0 = in its range, give or take one level)
+ auto Gap=[Level](const FCoHEncounter& E){ return FMath::Max(0,FMath::Max(E.MinLevel-1-Level,Level-E.MaxLevel-1)); };
+ int32 Fits=0, BestGap=MAX_int32;
  for(const FCoHEncounter& E:GR->Encounters)
  {
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
   if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
   if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
-  if(Level<E.MinLevel-1 || Level>E.MaxLevel+1) continue;
-  Pool.Add(&E); Total+=E.Spots;
+  ++Fits; BestGap=FMath::Min(BestGap,Gap(E));
  }
- if(Pool.Num()==0){ UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for %s %s at level %d"),*Group,*Kind,Level); return false; }
- int32 Roll=FMath::RandRange(0,Total-1); const FCoHEncounter* Enc=Pool.Last();
- for(const FCoHEncounter* E:Pool){ if((Roll-=E->Spots)<0){ Enc=E; break; } }
+ // none at this level: the nearest levels instead (the encounter's own level is clamped below)
+ for(const FCoHEncounter& E:GR->Encounters)
+ {
+  if(Fits==0) break;
+  if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
+  if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
+  if(!Kind.IsEmpty() ? !E.Kind.Equals(Kind,ESearchCase::IgnoreCase) : (E.Kind.Contains(TEXT("/")) || E.Kind.StartsWith(TEXT("mission")))) continue;
+  if(Gap(E)!=BestGap) continue;
+  Pool.Add(&E); Total+=FMath::Max(0,E.Spots);
+ }
+ if(Pool.Num()==0)
+ {
+  UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for group '%s' kind '%s' at level %d (%d encounter definitions loaded)"),
+   Group.IsEmpty()?TEXT("any"):*Group,Kind.IsEmpty()?TEXT("any"):*Kind,Level,GR->Encounters.Num());
+  return false;
+ }
+ if(BestGap>0) UE_LOG(LogTemp,Log,TEXT("CoH encounters: nothing at level %d, using the nearest (%d levels off)"),Level,BestGap);
+ const FCoHEncounter* Enc=Pool[FMath::RandRange(0,Pool.Num()-1)];
+ if(Total>0){ int32 Roll=FMath::RandRange(0,Total-1); for(const FCoHEncounter* E:Pool){ if((Roll-=FMath::Max(0,E->Spots))<0){ Enc=E; break; } } }
  // a spot: open ground at the distance asked (the new map's layout differs
  // from the original, so spots are placed around the players)
  FVector Center; bool bFound=false;
@@ -1378,3 +1397,23 @@ void ACoHCombatEnemy::OnRep_State()
 {
  if(!bRagdoll) PlayStateClip(State);
 }
+
+// Test command for the host (press ~ in game): "coh.SpawnNear [group]" puts an
+// original encounter about 15 m in front of the host's hero, so a playtest can
+// see villains up close and try hits without hunting for a spawn. Normal spawns
+// land 35-110 m away, and never in the City Hall plaza.
+static FAutoConsoleCommandWithWorldAndArgs GCoHSpawnNearCommand(
+	TEXT("coh.SpawnNear"),
+	TEXT("Host only: spawn an original encounter about 15 m in front of your hero. Optional: a group name, e.g. Hellions."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		if (!World || World->GetNetMode() == NM_Client) { UE_LOG(LogTemp, Warning, TEXT("coh.SpawnNear: only the host can spawn")); return; }
+		APlayerController* LocalPC = World->GetFirstPlayerController();
+		APawn* Hero = LocalPC ? LocalPC->GetPawn() : nullptr;
+		TActorIterator<ACoHEnemySpawner> Spawner(World);
+		if (!Hero || !Spawner) { UE_LOG(LogTemp, Warning, TEXT("coh.SpawnNear: no hero or no enemy spawner in this map")); return; }
+		const UCoHPowerComponent* HeroPowers = UCoHPowerComponent::Of(Hero);
+		const FString Group = Args.Num() > 0 ? Args[0] : FString();
+		const bool bOk = Spawner->SpawnEncounter(Hero, Group, FString(), HeroPowers ? HeroPowers->Level : 1, 1500.f);
+		UE_LOG(LogTemp, Log, TEXT("coh.SpawnNear: %s"), bOk ? TEXT("spawned") : TEXT("no spot (inside the City Hall no-spawn circle? step out of the plaza) or no encounter for that group"));
+	}));

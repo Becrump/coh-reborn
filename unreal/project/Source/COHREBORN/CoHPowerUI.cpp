@@ -66,7 +66,7 @@ void SCoHHud::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot().AutoHeight()
 					[
 						SNew(STextBlock).Font(Font(13, "Bold")).ColorAndOpacity(Gold)
-						.Text_Lambda([this] { const UCoHPowerComponent* C = Me(); return C ? FText::FromString(FString::Printf(TEXT("%s  ·  Level %d"), *C->DisplayName, C->Level)) : FText(); })
+						.Text_Lambda([this] { const UCoHPowerComponent* C = Me(); return C ? FText::FromString(FString::Printf(TEXT("%s  |  Level %d"), *C->DisplayName, C->Level)) : FText(); })
 					]
 					+ SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
 					[ MakeBar([this] { const UCoHPowerComponent* C = Me(); return C && C->MaxHealth > 0 ? C->Health / C->MaxHealth : 0.f; }, FLinearColor(0.15f, 0.8f, 0.25f),
@@ -407,7 +407,7 @@ void SCoHHud::ShowPowers(const FString& SetId)
 		if (S) for (const auto& E : S->Powers) if (E.Key == PowerId) Avail = E.Value;
 		if (!P) continue;
 		const FName Id = P->Id;
-		const FString Info = FString::Printf(TEXT("Lvl %d · %s · %.1fs cast · %.0fs recharge · %.1f end · %.0f ft"), Avail,
+		const FString Info = FString::Printf(TEXT("Lvl %d | %s | %.1fs cast | %.0fs recharge | %.1f end | %.0f ft"), Avail,
 			P->Type == TEXT("kToggle") ? TEXT("Toggle") : (P->Type == TEXT("kAuto") ? TEXT("Auto") : TEXT("Click")), P->Activate, P->Recharge, P->EndCost, P->Range);
 		PowerList->AddSlot().Padding(0, 1)
 		[

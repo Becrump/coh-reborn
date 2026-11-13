@@ -30,7 +30,7 @@ SETUP_LEVEL = os.path.join(REPO, "coh2unreal", "unreal", "setup_level.py")
 SETUP_TREES = os.path.join(REPO, "coh2unreal", "unreal", "setup_trees.py")
 TREE_TABLE = os.path.join(REPO, "docs", "zones", "tree_replacement.json")
 GLAZE_PATHS = {"GalaxyCity": "/Game/Zones/GalaxyCity"}   # Galaxy's materials predate the library
-OPTIONAL = {"props", "trees", "shot_street"}   # a failure here is logged, the zone carries on
+OPTIONAL = {"props", "trees", "shot_overview", "shot_street"}   # a failure here is logged, the zone carries on
 OUT = os.path.join(REPO, "docs", "zones", "import")
 WORK = os.path.join(os.environ.get("TEMP", "."), "coh_zone_batch")
 SHOT_DIR = r"C:\Users\rtcru\OneDrive\Documents\Unreal Projects\COHREBORN\Saved\Screenshots\WindowsEditor"
@@ -300,16 +300,64 @@ def run_zone(zid, name, zone, st, dry=False):
     return "ok"
 
 
+def run_split(zid, name, zone, st):
+    """level -> split (256 m chunks + clutter cull) -> save, resumable via st[zone]['split_done']"""
+    zs = st.get(zone, {})
+    if "stats" not in zs.get("done", []):
+        return "skip"
+    if "save" in zs.get("split_done", []):
+        return "done"
+    rdir = os.path.join(OUT, zone)
+    cfg = {"zone": zone, "name": name, "split_out": os.path.join(rdir, "split.json")}
+    t0 = time.time()
+    for stage in ("level", "split", "save"):
+        if stage in zs.setdefault("split_done", []) and stage != "level":
+            continue
+        print("[%s] %s ..." % (zone, stage), flush=True)
+        ok, out = ue(stage_code(cfg, stage), 14400)
+        lines = [l for l in out.splitlines() if l.startswith(("[zone]", "[Error]"))]
+        with open(os.path.join(rdir, "report.txt"), "a", encoding="utf-8") as f:
+            f.write("%s split:%s %s\n%s\n" % (now(), stage, "OK" if ok else "FAIL", "\n".join(lines) or out[-1500:]))
+        if not ok:
+            save_state(st)
+            logline("SPLIT FAIL %-16s stage %s: %s" % (zone, stage, (out.strip().splitlines() or ["?"])[-1][:200]))
+            return "fail"
+        zs["split_done"].append(stage)
+        save_state(st)
+    s = json.load(open(cfg["split_out"]))
+    logline("SPLIT OK   %-16s loaded actors %d -> %d, %d chunks of 256 m (%d clutter culled at 150 m), "
+            "%d small single props culled, %.0f min" % (zone, s["actors_before"], s["actors_after"], s["chunks"],
+                                                        s["clutter_chunks_culled"], s["clutter_singles_culled"],
+                                                        (time.time() - t0) / 60))
+    return "ok"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--zones", default="")
     ap.add_argument("--one", action="store_true", help="stop after one zone (finished or failed)")
     ap.add_argument("--dry", action="store_true", help="only index + filter, no editor changes")
+    ap.add_argument("--all", action="store_true", help="also the separate levels (trials, Shadow Shards, Pocket D...)")
+    ap.add_argument("--split", action="store_true", help="split imported zones' instance actors into 256 m chunks")
     a = ap.parse_args()
     want = set(a.zones.split(",")) if a.zones else None
     st = load_state()
+    # by default only zones that join the city map (docs/zones/zone_offsets.json); --all for the separate levels
+    on_map = set(json.load(open(os.path.join(REPO, "docs", "zones", "zone_offsets.json")))["zones"])
     for zid, name, zone in ORDER:
         if want and zone not in want and zid not in want:
+            continue
+        if not want and not a.all and zid not in on_map:
+            continue
+        if a.split:
+            zs = st.get(zone, {})
+            if "stats" not in zs.get("done", []) or "save" in zs.get("split_done", []):
+                continue
+            if not wait_free():
+                return 2
+            r = run_split(zid, name, zone, st)
+            if a.one and r in ("ok", "fail"):
+                return 0 if r == "ok" else 1
             continue
         if "stats" in st.get(zone, {}).get("done", []):
             continue

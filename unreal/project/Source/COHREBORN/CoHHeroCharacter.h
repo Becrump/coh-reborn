@@ -117,6 +117,16 @@ public:
 	virtual void Jump() override;
 	UFUNCTION(BlueprintCallable, Category="CoH|Settings")
 	void ToggleGraphicsMenu();
+	/** The HQ terminal's pedestal (ACoHHeroStage): load this hero file
+	 *  (Saved/Heroes/<Name>.json; empty = the default hero) on a hero no one
+	 *  controls, standing still and idling. Standalone only (needs authority). */
+	bool ShowcaseHero(const FString& HeroName);
+	/** The hero file text for a hero name: the PC's own Saved/Heroes file,
+	 *  else the starter (HeroFile). OutSaveFile: the file name it saves to. */
+	FString ReadHeroJson(const FString& HeroName, FString& OutSaveFile) const;
+	/** Esc: Return to HQ / Keep playing / Quit (UCoHFrontend). */
+	UFUNCTION(BlueprintCallable, Category="CoH|Lobby")
+	void ToggleLeaveMenu();
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 	UPROPERTY(Transient)
 	TObjectPtr<class UCoHGraphicsMenu> GraphicsMenu;
@@ -214,7 +224,7 @@ public:
 
 	/** A player's PC sends its hero file (the JSON text) to the host on joining. */
 	UFUNCTION(Server, Reliable)
-	void ServerSubmitHero(const FString& Json);
+	void ServerSubmitHero(const FString& Json, const FString& HeroFileName);
 	/** A player's PC changed travel power or climb: the host follows. */
 	UFUNCTION(Server, Reliable)
 	void ServerSetTravel(const FCoHTravelState& State);
@@ -267,6 +277,14 @@ private:
 	/** The owning PC: read this player's hero from Saved/Heroes and send it to the host. */
 	void SendLocalHero();
 	bool bHeroSent = false;
+	/** The HQ pedestal's display hero: never saved. */
+	bool bShowcase = false;
+	/** Host: saves the player's hero every minute while they play. */
+	FTimerHandle AutoSaveTimer;
+	void AutoSaveHero();
+	/** Every PC: puts the map's day/night sequence at the host's clock. */
+	FTimerHandle DayNightTimer;
+	void SyncDayNight();
 	UPROPERTY(ReplicatedUsing = OnRep_Travel) FCoHTravelState NetTravel;
 	UFUNCTION() void OnRep_Travel();
 	FCoHTravelState TravelState() const;
@@ -355,4 +373,17 @@ public:
 	/** Maps with no enemy spawner placed (or not in the loaded cells) get one,
 	 *  so the original encounters and wandering gangs run everywhere. */
 	virtual void StartPlay() override;
+
+	/** Reads ServerName= and Password= from the host's URL (set by the HQ
+	 *  lobby, docs/lobby.md); kept across monorail travel. */
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	/** Turns a joining player away when the password doesn't match. */
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+	/** No hero on the HQ frontend map (if it ever runs with this mode). */
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+
+	/** Shown in the lobby's server list. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "CoH|Lobby") FString ServerName;
+	/** Empty: anyone may join. */
+	UPROPERTY(Transient) FString ServerPassword;
 };

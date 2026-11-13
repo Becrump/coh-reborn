@@ -26,6 +26,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Hero, Category = "CoH|Hero") FCoHHeroRecord Hero;
 	/** The owning player's PC: the hero file in Saved/Heroes the host's saves go to; empty: never saved. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Hero") FString SaveFile;
+	/** Host: the player's hero file name (sent on joining); names the host's backup folder. */
+	UPROPERTY(Transient) FString BackupName;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CoH|Hero") bool bHasRecord = false;
 
 	/** Server: load a hero file and grant its powers. */
@@ -67,6 +69,11 @@ public:
 	/** The host saved: write the hero file on the owning player's PC. */
 	UFUNCTION(Client, Reliable) void ClientSaveHero(const FString& Json);
 
+	/** Host: writes the hero to the owning player's PC (ClientSaveHero) and the host's backup. */
+	void Save();
+	/** A player's own PC: writes its copy of the hero (replicated from the host) to Saved/Heroes. */
+	void SaveLocal();
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 	static UCoHHeroProgress* Of(const AActor* A);
 	/** Server: a villain was defeated: XP and influence to the heroes who
@@ -77,7 +84,6 @@ public:
 private:
 	UCoHPowerComponent* Powers() const;
 	void Say(const FString& Text, FLinearColor Colour) const;
-	void Save();
 	UFUNCTION() void OnRep_Hero();
 	/** The power component's styles as saved looks, and back. */
 	TArray<FCoHPowerLook> LooksFromStyles() const;

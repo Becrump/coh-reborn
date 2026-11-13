@@ -18,6 +18,7 @@
 #include "Framework/Commands/InputChord.h"
 #include "CoHCombat.h"
 #include "CoHGraphicsMenu.h"
+#include "CoHFrontend.h"
 #include "RebornMonorail.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
@@ -26,6 +27,11 @@
 #include "NavigationInvokerComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "LevelSequence.h"
+#include "GameFramework/GameStateBase.h"
+#include "TimerManager.h"
 
 #include "Animation/AnimSequenceBase.h"
 #include "CoHLifeManager.h"
@@ -37,6 +43,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
@@ -129,6 +136,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
 	Input->BindKey(EKeys::F10, IE_Pressed, this, &ACoHHeroCharacter::ToggleGraphicsMenu);
+	// Esc: back to the HQ lobby (in the editor's Play-In-Editor, Esc stops play first)
+	Input->BindKey(EKeys::Escape, IE_Pressed, this, &ACoHHeroCharacter::ToggleLeaveMenu);
 	// power tray: 1..0 fire the slot once; Ctrl + 1..0 locks that power as
 	// the auto attack (Ctrl + the same number again unlocks). Each press is
 	// logged ("CoH key ...") so a test shows which key did what.
@@ -248,8 +257,20 @@ void ACoHHeroCharacter::ToggleGraphicsMenu()
     GraphicsMenu->Toggle(Cast<APlayerController>(GetController()));
 }
 
+void ACoHHeroCharacter::ToggleLeaveMenu()
+{
+	if (UCoHFrontend* Front = UCoHFrontend::Get(this))
+		Front->ToggleLeaveMenu(Cast<APlayerController>(GetController()));
+}
+
 void ACoHHeroCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
+    // leaving or quitting: one last save (the host's backup always gets it)
+    // (a player who leaves has no PlayerState by now: the backup is named by their hero file)
+    if (HasAuthority() && !bShowcase && Progress && Progress->bHasRecord) Progress->Save();
+    // a player's own PC writes its file too: the host's last save can't reach a PC that left
+    else if (!HasAuthority() && IsLocallyControlled() && Progress && Progress->bHasRecord) Progress->SaveLocal();
+    if (UWorld* W = GetWorld()) { W->GetTimerManager().ClearTimer(AutoSaveTimer); W->GetTimerManager().ClearTimer(DayNightTimer); }
     if (GraphicsMenu) GraphicsMenu->Close();
     if (Hud) { Hud->RemoveFromParent(); Hud = nullptr; }
     Super::EndPlay(Reason);
@@ -712,7 +733,12 @@ void ACoHHeroCharacter::StopClimb()
 void ACoHHeroCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if (!bHeroSent && Controller && IsLocallyControlled()) { bHeroSent = true; SendLocalHero(); }
+	if (!bHeroSent && Controller && IsLocallyControlled())
+	{
+		bHeroSent = true; SendLocalHero();
+		SyncDayNight();
+		GetWorldTimerManager().SetTimer(DayNightTimer, this, &ACoHHeroCharacter::SyncDayNight, 30.f, true);
+	}
 	if (!bBodyApplied && Progress && Progress->bHasRecord) ApplyCoHBody();
 	ClimbCooldown = FMath::Max(0.f, ClimbCooldown - DeltaSeconds);
 	// the Sprint and Climb toggles change speeds: follow them
@@ -787,10 +813,45 @@ ACoHGameMode::ACoHGameMode()
 	bUseSeamlessTravel = true;
 }
 
+void ACoHGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	UCoHFrontend* Front = UCoHFrontend::Get(this);
+	ServerName = UGameplayStatics::HasOption(Options, TEXT("ServerName"))
+		? CoHLobby::DecodeOption(UGameplayStatics::ParseOption(Options, TEXT("ServerName")))
+		: Front ? Front->HostedName() : FString();
+	ServerPassword = UGameplayStatics::HasOption(Options, TEXT("Password"))
+		? CoHLobby::DecodeOption(UGameplayStatics::ParseOption(Options, TEXT("Password")))
+		: Front ? Front->HostedPassword() : FString();
+	if (Front) Front->RememberHosted(ServerName, ServerPassword);
+}
+
+void ACoHGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
+{
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+	if (!ErrorMessage.IsEmpty() || ServerPassword.IsEmpty()) return;
+	const FString Given = CoHLobby::DecodeOption(UGameplayStatics::ParseOption(Options, TEXT("Password")));
+	if (Given != ServerPassword)
+	{
+		// the lobby turns this code into "Wrong password"
+		ErrorMessage = TEXT("WRONG_PASSWORD");
+		UE_LOG(LogTemp, Log, TEXT("CoH lobby: turned away %s (wrong password)"), *Address);
+	}
+}
+
+UClass* ACoHGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	const UCoHFrontend* Front = UCoHFrontend::Get(this);
+	if (Front && Front->IsFrontendMap(GetWorld())) return nullptr;
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
 void ACoHGameMode::StartPlay()
 {
 	Super::StartPlay();
 	UWorld* W = GetWorld();
+	const UCoHFrontend* Front = UCoHFrontend::Get(this);
+	if (Front && Front->IsFrontendMap(W)) return;   // the HQ lobby: no villains
 	if (W && !TActorIterator<ACoHEnemySpawner>(W))
 	{
 		W->SpawnActor<ACoHEnemySpawner>(ACoHEnemySpawner::StaticClass(), FTransform::Identity);
@@ -800,20 +861,24 @@ void ACoHGameMode::StartPlay()
 
 AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	if (UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail"))
+	// Arrive=Monorail: inside the waiting train. Otherwise never there: the
+	// MonorailArrival starts sit in the closed station room (playtests 1 and 3
+	// put the host in it, walled in), so a normal join uses the other starts.
+	const bool bByMonorail = UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail");
+	TArray<APlayerStart*> Starts;
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 	{
-		TArray<APlayerStart*> Starts;
-		for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+		if ((It->PlayerStartTag == TEXT("MonorailArrival")) == bByMonorail)
 		{
-			if (It->PlayerStartTag == TEXT("MonorailArrival"))
-			{
-				Starts.Add(*It);
-			}
+			Starts.Add(*It);
 		}
-		if (Starts.Num())
-		{
-			return Starts[FMath::RandRange(0, Starts.Num() - 1)];
-		}
+	}
+	if (Starts.Num())
+	{
+		APlayerStart* Pick = Starts[FMath::RandRange(0, Starts.Num() - 1)];
+		UE_LOG(LogTemp, Log, TEXT("CoH start: %s at %s (%d %s starts)"), *Pick->GetName(), *Pick->GetActorLocation().ToCompactString(),
+			Starts.Num(), bByMonorail ? TEXT("monorail") : TEXT("street"));
+		return Pick;
 	}
 	return Super::ChoosePlayerStart_Implementation(Player);
 }
@@ -1124,20 +1189,30 @@ void ACoHHeroCharacter::SendLocalHero()
 {
 	if (!Progress) return;
 	// which hero: -Hero=<name>, else the starter's name (+ _P<n> for extra PIE players)
+	// the hero picked in the HQ lobby, else -Hero=<name>, else the starter's name
 	FString Name;
-	if (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name) || Name.IsEmpty())
+	if (const UCoHFrontend* Front = UCoHFrontend::Get(this)) Name = Front->ChosenHero();
+	if (Name.IsEmpty() && (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name) || Name.IsEmpty()))
 	{
 		Name = HeroFile.IsEmpty() ? FString(TEXT("Hero")) : FPaths::GetBaseFilename(HeroFile);
 		const FWorldContext* WC = GEngine ? GEngine->GetWorldContextFromWorld(GetWorld()) : nullptr;
 		if (WC && WC->PIEInstance > 0) Name += FString::Printf(TEXT("_P%d"), WC->PIEInstance);
 	}
-	Name = FPaths::MakeValidFileName(Name);
-	Progress->SaveFile = Name + TEXT(".json");
-	const FString Mine = UCoHHeroProgress::LocalHeroDir() / Progress->SaveFile;
+	FString SaveAs;
+	const FString Json = ReadHeroJson(Name, SaveAs);
+	Progress->SaveFile = SaveAs;
+	if (!Json.IsEmpty()) ServerSubmitHero(Json, FPaths::GetBaseFilename(SaveAs));
+}
+
+FString ACoHHeroCharacter::ReadHeroJson(const FString& HeroName, FString& OutSaveFile) const
+{
+	const FString Name = FPaths::MakeValidFileName(HeroName);
+	OutSaveFile = Name + TEXT(".json");
+	const FString Mine = UCoHHeroProgress::LocalHeroDir() / OutSaveFile;
 	FString Json;
 	if (FFileHelper::LoadFileToString(Json, *Mine))
 	{
-		UE_LOG(LogTemp, Log, TEXT("CoH hero: sending %s to the host"), *Mine);
+		UE_LOG(LogTemp, Log, TEXT("CoH hero: read %s"), *Mine);
 	}
 	else if (const UCoHGameRules* R = UCoHGameRules::Get(this); R && !HeroFile.IsEmpty())
 	{
@@ -1148,10 +1223,33 @@ void ACoHHeroCharacter::SendLocalHero()
 			FFileHelper::LoadFileToString(Json, *(R->HeroesDir / HeroFile));
 		UE_LOG(LogTemp, Log, TEXT("CoH hero: no %s yet, starting from %s"), *Mine, Json.IsEmpty() ? TEXT("the test hero") : *HeroFile);
 	}
-	if (!Json.IsEmpty()) ServerSubmitHero(Json);
+	return Json;
 }
 
-void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
+bool ACoHHeroCharacter::ShowcaseHero(const FString& HeroName)
+{
+	// a display hero: never sends a file to a host, never moves
+	bHeroSent = true;
+	bShowcase = true;
+	GetCharacterMovement()->DisableMovement();
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!Progress || !R || !R->HasHeroRules() || !HasAuthority()) return false;
+	const FString Name = HeroName.IsEmpty() ? (HeroFile.IsEmpty() ? FString(TEXT("Hero")) : FPaths::GetBaseFilename(HeroFile)) : HeroName;
+	FString SaveAs;
+	const FString Json = ReadHeroJson(Name, SaveAs);
+	FCoHHeroRecord H;
+	if (Json.IsEmpty() || !R->HeroFromJson(Json, H))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CoH terminal: hero %s could not be read"), *Name);
+		return false;
+	}
+	Progress->SaveFile = SaveAs;
+	Progress->LoadHeroRecord(H);
+	ApplyCoHBody();
+	return true;
+}
+
+void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json, const FString& HeroFileName)
 {
 	// one hero per visit; the record then lives on the host until the player leaves
 	if (!Progress || Progress->bHasRecord) return;
@@ -1163,7 +1261,48 @@ void ACoHHeroCharacter::ServerSubmitHero_Implementation(const FString& Json)
 		return;
 	}
 	Progress->LoadHeroRecord(H);
+	Progress->BackupName = FPaths::MakeValidFileName(HeroFileName);
 	ApplyCoHBody();
+	// the lobby's server list shows who is on by hero name
+	if (APlayerState* PS = GetPlayerState(); PS && !H.Name.IsEmpty()) PS->SetPlayerName(H.Name);
+	// saved at once (the player's PC and the host's backup), then every minute
+	Progress->Save();
+	GetWorldTimerManager().SetTimer(AutoSaveTimer, this, &ACoHHeroCharacter::AutoSaveHero, 60.f, true);
+}
+
+void ACoHHeroCharacter::AutoSaveHero()
+{
+	if (HasAuthority() && !bShowcase && Progress && Progress->bHasRecord) Progress->Save();
+}
+
+void ACoHHeroCharacter::SyncDayNight()
+{
+	// The day/night cycle is a looping Level Sequence placed in the map. Each copy of the
+	// game plays its own, so put every copy at the host's clock: the GameState's server
+	// time is the same on every PC, so the cycle position is server time mod its length.
+	// Late joiners land on the same hour; small drift is fixed on the next pass.
+	const UWorld* W = GetWorld();
+	const AGameStateBase* GS = W ? W->GetGameState() : nullptr;
+	if (!GS) return;
+	const double Now = GS->GetServerWorldTimeSeconds();
+	for (TActorIterator<ALevelSequenceActor> It(GetWorld()); It; ++It)
+	{
+		ULevelSequencePlayer* P = It->GetSequencePlayer();
+		if (!P || !It->GetSequence() || !It->GetSequence()->GetName().Contains(TEXT("DayNight"))) continue;
+		const double Length = P->GetDuration().AsSeconds();
+		const double Rate = FMath::Max(0.01, (double)P->GetPlayRate());
+		if (Length <= 1.0) continue;
+		const FFrameRate Fps = P->GetFrameRate();
+		const FFrameTime Start = P->GetStartTime().Time;
+		const double Want = FMath::Fmod(Now * Rate, Length);
+		const double Have = Fps.AsSeconds(P->GetCurrentTime().Time - Start);
+		double Off = FMath::Abs(Want - Have);
+		Off = FMath::Min(Off, Length - Off);
+		if (Off < 2.0 && P->IsPlaying()) continue;
+		P->SetPlaybackPosition(FMovieSceneSequencePlaybackParams(Start + Fps.AsFrameTime(Want), EUpdatePositionMethod::Jump));
+		if (!P->IsPlaying()) P->Play();
+		UE_LOG(LogTemp, Log, TEXT("CoH day/night: %s set to %.0f s of %.0f (host clock)"), *It->GetSequence()->GetName(), Want, Length);
+	}
 }
 
 FCoHTravelState ACoHHeroCharacter::TravelState() const
