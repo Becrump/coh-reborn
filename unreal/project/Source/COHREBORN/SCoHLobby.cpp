@@ -91,7 +91,7 @@ void SCoHLobby::Construct(const FArguments& InArgs)
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot().FillWidth(.64f)
 			[
-				Panel(
+				GlassPanel(
 					SNew(SVerticalBox)
 					// error banner
 					+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 14)
@@ -229,7 +229,7 @@ int32 SCoHLobby::OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, cons
 		{
 			const FVector2f Size(110.f, S.Y * .75f);
 			const FVector2f Pos(S.X * B.X - Size.X * .5f, S.Y * .5f - Size.Y);
-			const float Swing = (float)FMath::Sin((T + B.Phase) * TWO_PI / B.Period);
+			const float Swing = (float)FMath::Sin((T + B.Phase) * UE_TWO_PI / B.Period);
 			FSlateDrawElement::MakeRotatedBox(Out, L + 2, Geometry.ToPaintGeometry(Size, FSlateLayoutTransform(Pos)), &BeamBrush,
 				ESlateDrawEffect::None, FMath::DegreesToRadians(-2.f + Swing * 13.f),
 				TOptional<FVector2f>(FVector2f(Size.X * .5f, Size.Y)), FSlateDrawElement::RelativeToElement, B.Col);
@@ -467,15 +467,15 @@ namespace
 		}
 	}
 
-	float Pulse(double Speed = 3.5) { return .65f + .35f * (float)FMath::Sin(FSlateApplication::Get().GetCurrentTime() * Speed); }
+	float LobbyPulse(double Speed = 3.5) { return .65f + .35f * (float)FMath::Sin(FSlateApplication::Get().GetCurrentTime() * Speed); }
 
 	/** Status light, player pips and ping bars shared by saved and LAN rows. */
-	TSharedRef<SWidget> Dot(TFunction<FLinearColor()> Color, TFunction<bool()> Pulsing)
+	TSharedRef<SWidget> LobbyDot(TFunction<FLinearColor()> Color, TFunction<bool()> Pulsing)
 	{
 		return SNew(SBox).WidthOverride(14).HeightOverride(14).VAlign(VAlign_Center)
 			[
 				SNew(SImage).Image(HQ::Box(FLinearColor::White, HQ::Clear(), 7.f, 0.f))
-				.ColorAndOpacity_Lambda([Color, Pulsing] { FLinearColor C = Color(); if (Pulsing()) C.A = Pulse(); return FSlateColor(C); })
+				.ColorAndOpacity_Lambda([Color, Pulsing] { FLinearColor C = Color(); if (Pulsing()) C.A = LobbyPulse(); return FSlateColor(C); })
 			];
 	}
 
@@ -530,7 +530,7 @@ TSharedRef<SWidget> SCoHLobby::MakeServerRow(int32 Index)
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 18, 0)
 			[
-				Dot([E] { const FCoHServerEntry* S = E(); return S ? StateColor(*S) : HQ::Grey(); },
+				LobbyDot([E] { const FCoHServerEntry* S = E(); return S ? StateColor(*S) : HQ::Grey(); },
 					[E] { const FCoHServerEntry* S = E(); return S && S->State != FCoHServerEntry::EState::Offline; })
 			]
 			// name, address, who's on
@@ -675,7 +675,7 @@ TSharedRef<SWidget> SCoHLobby::MakeLanRow(int32 Index)
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 18, 0)
 			[
-				Dot([] { return HQ::Green(); }, [] { return true; })
+				LobbyDot([] { return HQ::Green(); }, [] { return true; })
 			]
 			+ SHorizontalBox::Slot().FillWidth(1.6f).VAlign(VAlign_Center)
 			[
@@ -1011,26 +1011,26 @@ TSharedRef<SWidget> SCoHLobby::MakeRightColumn()
 		const float R = FMath::Min(S.X, S.Y) * .5f - 10.f;
 		if (GlowBrush.GetResourceObject())
 			HQ::Rect(Out, L, G, C - FVector2f(R, R) * 1.15f, FVector2f(R, R) * 2.3f, &GlowBrush, HQ::Blue(.22f));
-		HQ::Arc(Out, L + 1, G, C, R, 0, TWO_PI, HQ::Sky(.35f), 1.f);
+		HQ::Arc(Out, L + 1, G, C, R, 0, UE_TWO_PI, HQ::Sky(.35f), 1.f);
 		// dashed ring, slow turn
-		const float Spin = (float)FMath::Fmod(T * TWO_PI / 30.0, (double)TWO_PI);
+		const float Spin = (float)FMath::Fmod(T * UE_TWO_PI / 30.0, (double)UE_TWO_PI);
 		for (int32 i = 0; i < 48; ++i)
 		{
-			const float A = Spin + i * TWO_PI / 48.f;
-			HQ::Arc(Out, L + 1, G, C, R * .9f, A, A + TWO_PI / 48.f * .5f, HQ::Sky(.55f), 2.f);
+			const float A = Spin + i * UE_TWO_PI / 48.f;
+			HQ::Arc(Out, L + 1, G, C, R * .9f, A, A + UE_TWO_PI / 48.f * .5f, HQ::Sky(.55f), 2.f);
 		}
 		// scanner arc, fast the other way
-		const float Back = -(float)FMath::Fmod(T * TWO_PI / 6.0, (double)TWO_PI);
-		HQ::Arc(Out, L + 2, G, C, R * .77f, Back, Back + PI * .5f, HQ::Blue(), 3.f);
-		HQ::Arc(Out, L + 1, G, C, R * .77f, Back + PI * .5f, Back + PI, HQ::Blue(.35f), 3.f);
+		const float Back = -(float)FMath::Fmod(T * UE_TWO_PI / 6.0, (double)UE_TWO_PI);
+		HQ::Arc(Out, L + 2, G, C, R * .77f, Back, Back + UE_PI * .5f, HQ::Blue(), 3.f);
+		HQ::Arc(Out, L + 1, G, C, R * .77f, Back + UE_PI * .5f, Back + UE_PI, HQ::Blue(.35f), 3.f);
 		// gold ring
-		const float Gs = (float)FMath::Fmod(T * TWO_PI / 9.0, (double)TWO_PI);
-		HQ::Arc(Out, L + 1, G, C, R * .63f, 0, TWO_PI, HQ::Gold(.25f), 1.f);
-		HQ::Arc(Out, L + 2, G, C, R * .63f, Gs, Gs + PI * .35f, HQ::Gold(), 2.f);
+		const float Gs = (float)FMath::Fmod(T * UE_TWO_PI / 9.0, (double)UE_TWO_PI);
+		HQ::Arc(Out, L + 1, G, C, R * .63f, 0, UE_TWO_PI, HQ::Gold(.25f), 1.f);
+		HQ::Arc(Out, L + 2, G, C, R * .63f, Gs, Gs + UE_PI * .35f, HQ::Gold(), 2.f);
 		// tick marks
 		for (int32 i = 0; i < 12; ++i)
 		{
-			const float A = i * TWO_PI / 12.f;
+			const float A = i * UE_TWO_PI / 12.f;
 			const FVector2f D(FMath::Cos(A), FMath::Sin(A));
 			HQ::Lines(Out, L + 1, G, {C + D * (R + 2.f), C + D * (R + 10.f)}, HQ::Sky(.6f), 1.5f);
 		}
@@ -1111,7 +1111,7 @@ TSharedRef<SWidget> SCoHLobby::MakeConnecting()
 			+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 10, 0, 0)
 			[
 				SNew(STextBlock).Font(HQ::Body(16))
-				.ColorAndOpacity_Lambda([] { return FSlateColor(HQ::Muted().CopyWithNewOpacity(Pulse(4.0))); })
+				.ColorAndOpacity_Lambda([] { return FSlateColor(HQ::Muted().CopyWithNewOpacity(LobbyPulse(4.0))); })
 				.Text(FText::FromString(TEXT("Contacting the server, sending your hero, loading the zone")))
 			]
 			+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 22, 0, 0)
@@ -1267,7 +1267,12 @@ void SCoHLobby::OpenPassword(int32 Index, bool bLan)
 		}
 		return FReply::Handled();
 	};
-	Pw->SetOnTextCommitted(FOnTextCommitted::CreateLambda([Go](const FText&, ETextCommit::Type T) { if (T == ETextCommit::OnEnter) Go(); }));
+	// SEditableTextBox has no public OnTextCommitted setter in UE 5.8: catch Enter on key down instead
+	Pw->SetOnKeyDownHandler(FOnKeyDown::CreateLambda([Go](const FGeometry&, const FKeyEvent& E)
+	{
+		if (E.GetKey() == EKeys::Enter) return Go();
+		return FReply::Unhandled();
+	}));
 
 	TSharedRef<SVerticalBox> Body = SNew(SVerticalBox)
 		+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 14)[HQ::Field(TEXT("PASSWORD"), Pw)];
@@ -1452,7 +1457,7 @@ TSharedRef<SWidget> SCoHLobby::MakeLeaveMenu(bool bHost, FSimpleDelegate OnHQ, F
 		[
 			SNew(SBox).WidthOverride(460)
 			[
-				Panel(
+				GlassPanel(
 					SNew(SVerticalBox)
 					+ SVerticalBox::Slot().AutoHeight()[HQ::Text(TEXT("PARAGON HQ"), HQ::Label(12), HQ::Sky())]
 					+ SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 10)[HQ::Text(TEXT("Leave the city?"), HQ::Title(30), HQ::Ink())]

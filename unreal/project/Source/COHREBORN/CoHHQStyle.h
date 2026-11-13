@@ -238,7 +238,7 @@ namespace HQ
 	inline void Arc(FSlateWindowElementList& Out, int32 Layer, const FGeometry& G, FVector2f Center, float R, float A0, float A1, const FLinearColor& Col, float Thick)
 	{
 		TArray<FVector2f> P;
-		const int32 Seg = FMath::Max(2, FMath::CeilToInt(FMath::Abs(A1 - A0) / (PI / 32.f)));
+		const int32 Seg = FMath::Max(2, FMath::CeilToInt(FMath::Abs(A1 - A0) / (UE_PI / 32.f)));
 		for (int32 i = 0; i <= Seg; ++i)
 		{
 			const float A = FMath::Lerp(A0, A1, (float)i / Seg);
@@ -313,7 +313,7 @@ inline TSharedRef<SWidget> Corners()
 }
 
 /** Glass console panel with the blue corner brackets. */
-inline TSharedRef<SWidget> Panel(TSharedRef<SWidget> Content, FMargin Pad, const FLinearColor& Fill = HQ::C(0x061020, .80f))
+inline TSharedRef<SWidget> GlassPanel(TSharedRef<SWidget> Content, FMargin Pad, const FLinearColor& Fill = HQ::C(0x061020, .80f))
 {
 	return SNew(SOverlay)
 		+ SOverlay::Slot()
@@ -338,7 +338,7 @@ inline TSharedRef<SWidget> Emblem(float Scale = 1.f)
 		TArray<FVector2f> Star;
 		for (int32 i = 0; i <= 10; ++i)
 		{
-			const float A = -HALF_PI + i * PI / 5.f;
+			const float A = -UE_HALF_PI + i * UE_PI / 5.f;
 			const float R = (i % 2 ? 4.5f : 11.f) * Scale;
 			Star.Add(P(20, 21) + FVector2f(FMath::Cos(A), FMath::Sin(A)) * R);
 		}
@@ -353,11 +353,11 @@ inline TSharedRef<SWidget> Spinner(float Size)
 		const FVector2f S = FVector2f(G.GetLocalSize());
 		const FVector2f C = S * .5f;
 		const float R = S.X * .5f - 4.f;
-		HQ::Arc(Out, L, G, C, R, 0, TWO_PI, HQ::Blue(.2f), 4.f);
-		const float A = (float)FMath::Fmod(T * 5.5, (double)TWO_PI);
-		HQ::Arc(Out, L + 1, G, C, R, A, A + PI * .55f, HQ::Blue(), 4.f);
-		const float B = -(float)FMath::Fmod(T * 3.9, (double)TWO_PI);
-		HQ::Arc(Out, L + 1, G, C, R - 18.f, B, B + PI * .45f, HQ::Gold(), 3.f);
+		HQ::Arc(Out, L, G, C, R, 0, UE_TWO_PI, HQ::Blue(.2f), 4.f);
+		const float A = (float)FMath::Fmod(T * 5.5, (double)UE_TWO_PI);
+		HQ::Arc(Out, L + 1, G, C, R, A, A + UE_PI * .55f, HQ::Blue(), 4.f);
+		const float B = -(float)FMath::Fmod(T * 3.9, (double)UE_TWO_PI);
+		HQ::Arc(Out, L + 1, G, C, R - 18.f, B, B + UE_PI * .45f, HQ::Gold(), 3.f);
 	});
 }
 

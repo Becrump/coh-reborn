@@ -51,7 +51,7 @@ FString CoHLobby::DecodeOption(const FString& Value)
 	return UTF8_TO_TCHAR((const ANSICHAR*)Bytes.GetData());
 }
 
-static ISocketSubsystem* Sockets() { return ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM); }
+static ISocketSubsystem* LobbySockets() { return ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM); }
 
 static void SendText(FSocket* Socket, const FString& Text, const FInternetAddr& To)
 {
@@ -130,7 +130,7 @@ void FCoHBeaconHost::Stop()
 	if (Socket)
 	{
 		Socket->Close();
-		Sockets()->DestroySocket(Socket);
+		LobbySockets()->DestroySocket(Socket);
 		Socket = nullptr;
 	}
 }
@@ -138,7 +138,7 @@ void FCoHBeaconHost::Stop()
 void FCoHBeaconHost::Poll(TFunctionRef<FCoHServerInfo()> MakeInfo, bool bAnswerLan)
 {
 	if (!Socket) return;
-	TSharedRef<FInternetAddr> From = Sockets()->CreateInternetAddr();
+	TSharedRef<FInternetAddr> From = LobbySockets()->CreateInternetAddr();
 	FString Msg, Cached;
 	for (int32 Guard = 0; Guard < 64 && ReceiveText(Socket, Msg, *From); ++Guard)
 	{
@@ -168,7 +168,7 @@ void FCoHBeaconClient::Stop()
 	if (Socket)
 	{
 		Socket->Close();
-		Sockets()->DestroySocket(Socket);
+		LobbySockets()->DestroySocket(Socket);
 		Socket = nullptr;
 	}
 	SentAt.Reset();
@@ -188,7 +188,7 @@ uint32 FCoHBeaconClient::Query(const FInternetAddr& BeaconAddr) { return Send(Be
 
 uint32 FCoHBeaconClient::Broadcast(int32 BeaconPort)
 {
-	TSharedRef<FInternetAddr> All = Sockets()->CreateInternetAddr();
+	TSharedRef<FInternetAddr> All = LobbySockets()->CreateInternetAddr();
 	All->SetBroadcastAddress();
 	All->SetPort(BeaconPort);
 	return Send(*All, TEXT("lan"));
@@ -198,7 +198,7 @@ void FCoHBeaconClient::Poll(TArray<FReply>& Out)
 {
 	if (!Socket) return;
 	const double Now = FPlatformTime::Seconds();
-	TSharedRef<FInternetAddr> From = Sockets()->CreateInternetAddr();
+	TSharedRef<FInternetAddr> From = LobbySockets()->CreateInternetAddr();
 	FString Msg;
 	for (int32 Guard = 0; Guard < 64 && ReceiveText(Socket, Msg, *From); ++Guard)
 	{

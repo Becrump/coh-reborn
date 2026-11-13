@@ -171,7 +171,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeTopBar()
 // =================================================================== roster (left)
 TSharedRef<SWidget> SCoHTerminal::MakeRoster()
 {
-	return Panel(
+	return GlassPanel(
 		SNew(SVerticalBox)
 		+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 14)[HQ::Text(TEXT("YOUR HEROES"), HQ::Label(13), HQ::Sky())]
 		+ SVerticalBox::Slot().FillHeight(1)
@@ -266,7 +266,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeFile()
 		];
 	}
 
-	return Panel(
+	return GlassPanel(
 		SNew(SVerticalBox)
 		+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 18)[Tabs]
 		+ SVerticalBox::Slot().FillHeight(1)
