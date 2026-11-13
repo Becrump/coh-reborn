@@ -1,8 +1,10 @@
 """Night lights for the monorail stations: ACoHStationLamp downlights under the station roof.
 
 The original stations have no lamp material and were lit only by baked light, so at night they are dark.
-This places a grid of ACoHStationLamp actors (warm downlight cones, shadows off, on only at night via
-MPC_CoH.Night) under the roof of the station in the open level.
+If the level already has lights at the station (Atlas Park has 12 spotlights on the original lamp spots, but
+with uneven 160-2010 cd and a 10 m reach), those are evened out instead: NL_EXISTING_CD candelas and a reach of
+the roof height + 4 m. Only a station with no lights gets a grid of ACoHStationLamp actors (warm downlight
+cones, shadows off, on only at night via MPC_CoH.Night) under its roof.
 
 Where: the zone's monorail arrival point (docs/zones/stations.json, zone-local game metres) converted to this
 level's Unreal frame (x, -z, y in cm, as the converter does), plus NL_OFFSET_CM for a level placed at an offset.
@@ -16,6 +18,7 @@ Env:
   NL_CENTER_CM   "x,y,z" use this point instead of stations.json
   NL_RADIUS_M    search radius (default 30)
   NL_SPACING_M   grid spacing (default 6)
+  NL_EXISTING_CD candelas for existing station lights (default 3000)
   NL_DRY=1       report only
   NL_SAVE=1      save the level's changed actor packages (default 0: leave dirty for a look first)
 
@@ -76,6 +79,30 @@ for i in range(-n, n + 1):
             continue
         spots.append((unreal.Vector(x, y, roof.z - 30), roof.z - floor.z))
 print("lamp spots", len(spots))
+
+# existing lights at the station (not ours)
+existing = []
+for a in asub.get_all_level_actors():
+    if str(a.get_folder_path()) == FOLDER:
+        continue
+    for cls in (unreal.SpotLightComponent, unreal.PointLightComponent, unreal.RectLightComponent):
+        c = a.get_component_by_class(cls)
+        if c and (a.get_actor_location() - center).length() < RADIUS:
+            existing.append((a, c))
+            break
+print("existing station lights", len(existing),
+      [round(c.get_editor_property("intensity")) for _, c in existing])
+if existing:
+    roof_h = max([h for _, h in spots] or [800.0])
+    cd = float(os.environ.get("NL_EXISTING_CD", "3000"))
+    if not DRY:
+        for a, c in existing:
+            c.set_editor_property("intensity_units", unreal.LightUnits.CANDELAS)
+            c.set_intensity(cd)
+            c.set_attenuation_radius(roof_h + 400)
+            a.modify()
+        print("evened out", len(existing), "lights:", cd, "cd, reach", roof_h + 400)
+    spots = []
 
 if not DRY:
     for a in asub.get_all_level_actors():
