@@ -599,31 +599,41 @@ def signal_kind(name):
     return SIGNAL_MATERIALS.get(re.sub(r"^x_", "", n))
 
 
-def _snapshot(mi, parent):
-    """Values the instance has for every parameter the new parent uses."""
+def _snapshot(mi, parent, only_known=False):
+    """Values the instance has for every parameter the new parent uses.
+    only_known: skip parameters the instance's current parent doesn't have
+    (reading those gives 0, which would override the new master's defaults)."""
+    old = mi.get_editor_property("parent") if only_known else None
+
+    def names(getter):
+        new = getter(parent)
+        if old is None:
+            return new
+        have = {str(n) for n in getter(old)}
+        return [n for n in new if str(n) in have]
     vals = []
-    for n in mel.get_texture_parameter_names(parent):
+    for n in names(mel.get_texture_parameter_names):
         v = mel.get_material_instance_texture_parameter_value(mi, n)
         if v:
             vals.append(("tex", n, v))
-    for n in mel.get_vector_parameter_names(parent):
+    for n in names(mel.get_vector_parameter_names):
         vals.append(("vec", n,
                      mel.get_material_instance_vector_parameter_value(mi, n)))
-    for n in mel.get_scalar_parameter_names(parent):
+    for n in names(mel.get_scalar_parameter_names):
         vals.append(("scalar", n,
                      mel.get_material_instance_scalar_parameter_value(mi, n)))
-    for n in mel.get_static_switch_parameter_names(parent):
+    for n in names(mel.get_static_switch_parameter_names):
         vals.append(("switch", n,
                      mel.get_material_instance_static_switch_parameter_value(
                          mi, n)))
     return vals
 
 
-def reparent(mi, parent, extra=None):
+def reparent(mi, parent, extra=None, only_known=False):
     """Moves an instance onto `parent`, keeping its textures and values.
     `extra` maps parameter -> value to set afterwards (e.g. copy the base
     colour texture into EmissiveTexture)."""
-    vals = _snapshot(mi, parent)
+    vals = _snapshot(mi, parent, only_known)
     mel.set_material_instance_parent(mi, parent)
     for kind, n, v in vals:
         if kind == "tex":

@@ -66,7 +66,7 @@ if not DRY and found:
             dup = EAL.duplicate_asset(p, dst)
             if dup:
                 to_save.append(dup.get_package())
-        cm.reparent(mi, signal, {"Pedestrian": ped})   # saves the instance itself
+        cm.reparent(mi, signal, {"Pedestrian": ped}, only_known=True)   # saves the instance itself
         done += 1
     if to_save:
         unreal.EditorLoadingAndSavingUtils.save_packages(to_save, True)

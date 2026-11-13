@@ -175,7 +175,7 @@ def tune_materials(folder):
         if ped is not None:
             mi = d.get_asset()
             if mi.parent != signal:
-                cm.reparent(mi, signal, {"Pedestrian": ped})
+                cm.reparent(mi, signal, {"Pedestrian": ped}, only_known=True)
             stats["signals"] += 1
     for n in ROAD_LINES:
         mi, tex = get(n + "_tga"), unreal.load_asset("%s/%s" % (textures, n))
