@@ -5,9 +5,28 @@ that fits it. The city as built is tuned for looks (Lumen lighting, hardware ray
 Virtual Shadow Maps, 3,000+ street lamp lights). Those features are what overran Robert's
 8 GB card, and they are exactly what the Low and Medium presets switch off.
 
-The spec numbers below are estimates from what Unreal 5 needs for these features and from
-the editor measurements so far. They become real numbers once `tools/build/bench_lowend.cmd`
-has run on Robert's PC (and, ideally, on one weaker friend PC).
+## Measured (2026-11-13, Robert's PC)
+
+RTX 3070 (8 GB), Ryzen 7 3700X, 64 GB RAM. One game copy through `UnrealEditor.exe -game`,
+editor closed, 1920x1080, camera turning a full circle for 60 s (`bench_lowend.cmd`).
+
+| Preset (render scale) | L_ParagonCity FPS (1% low) | GPU ms | VRAM peak | RAM | Atlas Park dressing study FPS | VRAM peak |
+|---|---|---|---|---|---|---|
+| Low (50%) | 206 (160) | 3.3 | 1.5 GB | 8.3 GB | 54 (42) | 3.1 GB |
+| Medium (71%) | 127 (105) | 7.0 | 2.2 GB | 10.1 GB | 52 (46) | 3.7 GB |
+| High (87%) | 91 (78) | 10.3 | 3.1 GB | 10.3 GB | 48 (42) | 4.9 GB |
+| Epic (100%) | 71 (54) | 13.4 | 3.9 GB | 10.3 GB | 46 (40) | 5.6 GB |
+
+- The one-world city scales cleanly; Low needs about 1.5 GB of video memory, so 2-4 GB cards
+  are in range.
+- The Atlas Park dressing study is held near 50 FPS by the processor, not the graphics card
+  (GPU only 6-14 ms), and uses about 18.6 GB of RAM. Part of that is the editor binary; a
+  packaged build is the real test.
+- First run: `r.Nanite.MaxPixelsPerEdge` and `r.RayTracing.Enable` were ignored in
+  Scalability.ini (not scalability variables); they are now set in code, so Low should
+  gain a little more after the next run.
+
+The spec table below is still an estimate for weaker hardware, scaled from these numbers.
 
 ## Estimated specs
 

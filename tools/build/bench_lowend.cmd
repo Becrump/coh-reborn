@@ -9,7 +9,7 @@ rem
 rem Each run waits 20 s for the city to stream in, then turns the camera a full circle
 rem for 60 s and quits. Results are appended, one line per run, to bench_results.txt next
 rem to this file: average FPS, 1%% low, GPU ms, video memory (now / peak / card size) and RAM.
-rem Logs: bench_<preset>.log. Memory detail: <project>\Saved\Profiling\MemReports.
+rem Logs: bench_<preset>_<atlas|city>.log. Memory detail: <project>\Saved\Profiling\MemReports.
 rem
 rem The Unreal editor and any other game copies must be closed: they share the graphics
 rem card's memory, which is what this measures. The script stops if one is running.
@@ -32,6 +32,8 @@ set "WHICH=%~1"
 if "%WHICH%"=="" set "WHICH=all"
 set "MAPKEY=%~2"
 if /i "%WHICH%"=="city" ( set "WHICH=all" & set "MAPKEY=city" )
+set "MAPTAG=atlas"
+if /i "%MAPKEY%"=="city" set "MAPTAG=city"
 if not defined COH_MAP (
   if /i "%MAPKEY%"=="city" ( set "COH_MAP=/Game/Zones/L_ParagonCity" ) else ( set "COH_MAP=/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite" )
 )
@@ -74,6 +76,6 @@ if /i "%~1"=="lowend" ( set "Q=0" & set "RES=1280x720" & set "EXTRA=-ExecCmds="r
 if not defined Q ( echo Unknown preset %~1 & exit /b 1 )
 for /f "tokens=1,2 delims=x" %%a in ("%RES%") do ( set "RX=%%a" & set "RY=%%b" )
 echo %date% %time% running %~1 on %COH_MAP% at %RES% ...
-echo --- %~1 at %RES% --->> "%OUT%"
-start "CoH bench %~1" /wait "%EXE%" "%UPROJECT%" "%COH_MAP%" -game -windowed -ResX=%RX% -ResY=%RY% -WinX=0 -WinY=0 -NOSTEAM -nosplash -log -Hero=Bench -cohquality=%Q% -cohbench=%COH_SECONDS% -cohbenchout="%OUT%" %EXTRA% -abslog="%~dp0bench_%~1.log"
+echo --- %~1 at %RES% on %COH_MAP% --->> "%OUT%"
+start "CoH bench %~1" /wait "%EXE%" "%UPROJECT%" "%COH_MAP%" -game -windowed -ResX=%RX% -ResY=%RY% -WinX=0 -WinY=0 -NOSTEAM -nosplash -log -Hero=Bench -cohquality=%Q% -cohbench=%COH_SECONDS% -cohbenchout="%OUT%" %EXTRA% -abslog="%~dp0bench_%~1_!MAPTAG!.log"
 exit /b 0

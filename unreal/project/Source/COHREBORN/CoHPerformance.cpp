@@ -66,6 +66,19 @@ static void CoHPerfSetDensity(UWorld* World, float Crowd, float Traffic)
 	GConfig->SetFloat(CoHPerfSection, TEXT("TrafficDensity"), Traffic, GGameUserSettingsIni);
 }
 
+/** settings Unreal will not take from Scalability.ini, set from the chosen levels:
+ *  Nanite detail follows view distance, the ray tracing scene only at Cinematic lighting */
+static void CoHPerfApplyCodeCVars()
+{
+	UGameUserSettings* S = UGameUserSettings::GetGameUserSettings();
+	if (!S) return;
+	static const int32 PixelsPerEdge[] = {4, 2, 1, 1, 1};
+	if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Nanite.MaxPixelsPerEdge")))
+		V->Set(PixelsPerEdge[FMath::Clamp(S->GetViewDistanceQuality(), 0, 4)], ECVF_SetByGameSetting);
+	if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("r.RayTracing.Enable")))
+		V->Set(S->GetGlobalIlluminationQuality() >= 4 ? 1 : 0, ECVF_SetByGameSetting);
+}
+
 /** lamps, trees and city life that go with a quality level */
 static void CoHPerfApplyDerived(UWorld* World, int32 Quality)
 {
@@ -74,6 +87,7 @@ static void CoHPerfApplyDerived(UWorld* World, int32 Quality)
 	static const int32 Lamps[] = {1, 1, 2, 3};
 	static const int32 Props[] = {0, 1, 2, 3};
 	Quality = FMath::Clamp(Quality, 0, 3);
+	CoHPerfApplyCodeCVars();
 	CoHPerfSetDensity(World, Crowd[Quality], Traffic[Quality]);
 	GConfig->SetInt(CoHPerfSection, TEXT("LampLights"), Lamps[Quality], GGameUserSettingsIni);
 	GConfig->SetInt(CoHPerfSection, TEXT("PropDistance"), Props[Quality], GGameUserSettingsIni);
@@ -213,6 +227,8 @@ void UCoHPerformance::OnWorldBeginPlay(UWorld& InWorld)
 		else if (UGameUserSettings* S = UGameUserSettings::GetGameUserSettings())
 			if (S->GetLastCPUBenchmarkResult() < 0.f)       // never measured: first start on this PC
 				AutoDetect(World);
+			else
+				CoHPerfApplyCodeCVars();                     // saved settings: Nanite / ray tracing to match
 	}
 
 	if (!LevelAddedHandle.IsValid())
