@@ -202,6 +202,16 @@ void UCoHFrontend::TickFrontend(UWorld* World, double Now)
 	// replies
 	TArray<FCoHBeaconClient::FReply> Replies;
 	Client.Poll(Replies);
+	// the same server seen twice (a saved entry, e.g. 127.0.0.1, and the LAN scan's
+	// 192.168.x.x): one server, so the LAN row is dropped
+	auto SavedOnline = [this](const FString& InIp, const FString& InName, int32 InPort)
+	{
+		return ServerList.ContainsByPredicate([&](const FCoHServerEntry& E)
+		{
+			return E.ResolvedIp == InIp || (E.State == FCoHServerEntry::EState::Online && !InName.IsEmpty()
+				&& E.Info.Name == InName && E.Info.GamePort == InPort);
+		});
+	};
 	for (FCoHBeaconClient::FReply& R : Replies)
 	{
 		bool bSaved = false;
@@ -217,7 +227,7 @@ void UCoHFrontend::TickFrontend(UWorld* World, double Now)
 			E.LastSeen = FDateTime::UtcNow();
 			bSaved = true;
 		}
-		if (bSaved || R.Nonce != LanNonce) continue;
+		if (bSaved || R.Nonce != LanNonce || SavedOnline(R.Ip, R.Info.Name, R.Info.GamePort)) continue;
 		FCoHLanServer* L = LanList.FindByPredicate([&](const FCoHLanServer& X) { return X.Ip == R.Ip; });
 		if (!L) { L = &LanList.AddDefaulted_GetRef(); L->Ip = R.Ip; ++Revision; }
 		L->Info = R.Info;
@@ -259,8 +269,7 @@ void UCoHFrontend::TickFrontend(UWorld* World, double Now)
 	const int32 Before = LanList.Num();
 	LanList.RemoveAll([&](const FCoHLanServer& L)
 	{
-		return Now - L.LastReply > Fresh
-			|| ServerList.ContainsByPredicate([&](const FCoHServerEntry& E) { return E.ResolvedIp == L.Ip; });
+		return Now - L.LastReply > Fresh || SavedOnline(L.Ip, L.Info.Name, L.Info.GamePort);
 	});
 	if (LanList.Num() != Before) ++Revision;
 }

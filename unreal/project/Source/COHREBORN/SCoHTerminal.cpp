@@ -131,7 +131,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeTopBar()
 						+ SVerticalBox::Slot().AutoHeight()[HQ::Text(TEXT("HERO CORPS TERMINAL"), HQ::Title(28), HQ::Ink())]
 						+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 0)
 						[
-							HQ::Text(TEXT("FREEDOM CORPS NETWORK  ·  PARAGON CITY  ·  SECURE LINK"), HQ::Label(11), HQ::Sky())
+							HQ::Text(TEXT("FREEDOM CORPS NETWORK  |  PARAGON CITY  |  SECURE LINK"), HQ::Label(11), HQ::Sky())
 						]
 					]
 					+ SHorizontalBox::Slot().FillWidth(1)
@@ -148,7 +148,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeTopBar()
 						{
 							int32 N = 0;
 							if (F.IsValid()) for (const FCoHServerEntry& E : F->Servers()) N += E.State == FCoHServerEntry::EState::Online;
-							return FText::FromString(N == 1 ? FString(TEXT("●  1 ALLIED SERVER ONLINE")) : FString::Printf(TEXT("●  %d ALLIED SERVERS ONLINE"), N));
+							return FText::FromString(N == 1 ? FString(TEXT("1 ALLIED SERVER ONLINE")) : FString::Printf(TEXT("%d ALLIED SERVERS ONLINE"), N));
 						})
 					]
 					+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 10, 0)
@@ -198,7 +198,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeCenter()
 		+ SOverlay::Slot().VAlign(VAlign_Top).HAlign(HAlign_Center).Padding(0, 6, 0, 0)
 		[
 			SNew(STextBlock).Visibility(EVisibility::HitTestInvisible).Font(HQ::Label(11)).ColorAndOpacity(FSlateColor(HQ::Sky(.7f)))
-			.Text(FText::FromString(TEXT("DRAG TO TURN  ·  DOUBLE-CLICK TO FACE FRONT")))
+			.Text(FText::FromString(TEXT("DRAG TO TURN  |  DOUBLE-CLICK TO FACE FRONT")))
 		]
 		+ SOverlay::Slot().VAlign(VAlign_Bottom).HAlign(HAlign_Center).Padding(0, 0, 0, 10)
 		[
@@ -220,7 +220,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeCenter()
 					const FCoHHeroRecord& R = H->Progress->Hero;
 					FCoHHeroCard C; C.Class = R.Class;
 					FString Line = FString::Printf(TEXT("LEVEL %d  %s"), R.Level, *C.ArchetypeName().ToUpper());
-					if (!R.Origin.IsEmpty()) Line += TEXT("  ·  ") + R.Origin.ToUpper();
+					if (!R.Origin.IsEmpty()) Line += TEXT("  |  ") + R.Origin.ToUpper();
 					return FText::FromString(Line);
 				})
 			]
@@ -354,7 +354,7 @@ TSharedRef<SWidget> SCoHTerminal::MakeProfile()
 					if (!H || !H->Progress || !H->Progress->bHasRecord) return FText::GetEmpty();
 					const int32 Open = H->Progress->PicksOpen();
 					FString S = Open > 0 ? FString::Printf(TEXT("%d power pick%s waiting: choose in game with P"), Open, Open == 1 ? TEXT("") : TEXT("s")) : FString(TEXT("No power picks waiting"));
-					if (H->Progress->CanTrain()) S += TEXT("  ·  Ready to train (L in game)");
+					if (H->Progress->CanTrain()) S += TEXT("  |  Ready to train (L in game)");
 					return FText::FromString(S);
 				})
 			]
@@ -610,8 +610,8 @@ void SCoHTerminal::RebuildNemesis()
 	}
 
 	FString Sub = N.Faction;
-	if (!N.Rank.IsEmpty()) Sub += TEXT("  ·  ") + N.Rank;
-	Sub += FString::Printf(TEXT("  ·  Level %d"), N.Level);
+	if (!N.Rank.IsEmpty()) Sub += TEXT("  |  ") + N.Rank;
+	Sub += FString::Printf(TEXT("  |  Level %d"), N.Level);
 	NemesisBox->AddSlot().AutoHeight()[HQ::Text(N.bNemesis ? TEXT("NEMESIS FILE") : TEXT("RIVAL FILE"), HQ::Label(12), HQ::Red())];
 	NemesisBox->AddSlot().AutoHeight().Padding(0, 8, 0, 0)[HQ::Text(N.Name, HQ::Title(36), HQ::Ink())];
 	NemesisBox->AddSlot().AutoHeight().Padding(0, 2, 0, 0)[HQ::Text(Sub, HQ::Body(15), HQ::Muted())];
@@ -619,7 +619,7 @@ void SCoHTerminal::RebuildNemesis()
 	NemesisBox->AddSlot().AutoHeight()[Track];
 	NemesisBox->AddSlot().AutoHeight().Padding(0, 18, 0, 0)
 	[
-		HQ::Text(FString::Printf(TEXT("Grudge %d / 10   ·   %d arrest%s   ·   %s"), N.Grudge, N.Arrests, N.Arrests == 1 ? TEXT("") : TEXT("s"),
+		HQ::Text(FString::Printf(TEXT("Grudge %d / 10   |   %d arrest%s   |   %s"), N.Grudge, N.Arrests, N.Arrests == 1 ? TEXT("") : TEXT("s"),
 			N.Status.IsEmpty() ? TEXT("at large") : *N.Status), HQ::Bold(15), HQ::Ink())
 	];
 	if (N.History.Num())
@@ -718,7 +718,7 @@ void SCoHTerminal::Rebuild()
 			];
 		};
 		for (const FCoHHeroCard& C : F->Heroes())
-			Row(C.File, C.Name, C.Class, FString::Printf(TEXT("Level %d %s"), C.Level, *C.ArchetypeName()) + (C.Origin.IsEmpty() ? FString() : TEXT(" · ") + C.Origin));
+			Row(C.File, C.Name, C.Class, FString::Printf(TEXT("Level %d %s"), C.Level, *C.ArchetypeName()) + (C.Origin.IsEmpty() ? FString() : TEXT(" | ") + C.Origin));
 		Row(FString(), TEXT("Starter hero"), TEXT("Class_Blaster"), TEXT("The test hero from the rules data"));
 	}
 	RebuildPowers();

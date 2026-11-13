@@ -277,6 +277,14 @@ private:
 	/** The owning PC: read this player's hero from Saved/Heroes and send it to the host. */
 	void SendLocalHero();
 	bool bHeroSent = false;
+	/** The HQ pedestal's display hero: never saved. */
+	bool bShowcase = false;
+	/** Host: saves the player's hero every minute while they play. */
+	FTimerHandle AutoSaveTimer;
+	void AutoSaveHero();
+	/** Every PC: puts the map's day/night sequence at the host's clock. */
+	FTimerHandle DayNightTimer;
+	void SyncDayNight();
 	UPROPERTY(ReplicatedUsing = OnRep_Travel) FCoHTravelState NetTravel;
 	UFUNCTION() void OnRep_Travel();
 	FCoHTravelState TravelState() const;
