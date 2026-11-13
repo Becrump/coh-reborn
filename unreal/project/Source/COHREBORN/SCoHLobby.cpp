@@ -1267,7 +1267,12 @@ void SCoHLobby::OpenPassword(int32 Index, bool bLan)
 		}
 		return FReply::Handled();
 	};
-	Pw->SetOnTextCommitted(FOnTextCommitted::CreateLambda([Go](const FText&, ETextCommit::Type T) { if (T == ETextCommit::OnEnter) Go(); }));
+	// SEditableTextBox has no public OnTextCommitted setter in UE 5.8: catch Enter on key down instead
+	Pw->SetOnKeyDownHandler(FOnKeyDown::CreateLambda([Go](const FGeometry&, const FKeyEvent& E)
+	{
+		if (E.GetKey() == EKeys::Enter) return Go();
+		return FReply::Unhandled();
+	}));
 
 	TSharedRef<SVerticalBox> Body = SNew(SVerticalBox)
 		+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 14)[HQ::Field(TEXT("PASSWORD"), Pw)];
