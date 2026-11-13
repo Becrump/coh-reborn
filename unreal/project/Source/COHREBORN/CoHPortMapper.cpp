@@ -14,7 +14,7 @@ namespace
 {
 #if PLATFORM_WINDOWS
 	/** The router's static port mapping list, or null when it has no UPnP. */
-	IStaticPortMappingCollection* Mappings(IUPnPNAT*& OutNat)
+	IStaticPortMappingCollection* UPnPMappings(IUPnPNAT*& OutNat)
 	{
 		OutNat = nullptr;
 		IStaticPortMappingCollection* Coll = nullptr;
@@ -33,7 +33,7 @@ void CoHPortMapper::OpenPorts(const TArray<int32>& Ports, const FString& LocalIp
 #if PLATFORM_WINDOWS
 		const HRESULT Init = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		IUPnPNAT* Nat = nullptr;
-		if (IStaticPortMappingCollection* Coll = Mappings(Nat))
+		if (IStaticPortMappingCollection* Coll = UPnPMappings(Nat))
 		{
 			BSTR Udp = SysAllocString(L"UDP");
 			BSTR Client = SysAllocString(TCHAR_TO_WCHAR(*LocalIp));
@@ -83,7 +83,7 @@ void CoHPortMapper::ClosePorts(const TArray<int32>& Ports)
 #if PLATFORM_WINDOWS
 	const HRESULT Init = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	IUPnPNAT* Nat = nullptr;
-	if (IStaticPortMappingCollection* Coll = Mappings(Nat))
+	if (IStaticPortMappingCollection* Coll = UPnPMappings(Nat))
 	{
 		BSTR Udp = SysAllocString(L"UDP");
 		for (const int32 Port : Ports) Coll->Remove(Port, Udp);

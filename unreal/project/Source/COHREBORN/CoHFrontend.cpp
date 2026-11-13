@@ -34,7 +34,7 @@
 #include "SocketSubsystem.h"
 
 // ------------------------------------------------------------------ hero card
-static FString Pretty(const FString& Id)
+static FString HeroCardPretty(const FString& Id)
 {
 	FString S = Id;
 	int32 Dot;
@@ -43,12 +43,12 @@ static FString Pretty(const FString& Id)
 	return S.Replace(TEXT("_"), TEXT(" "));
 }
 
-FString FCoHHeroCard::ArchetypeName() const { return Pretty(Class); }
+FString FCoHHeroCard::ArchetypeName() const { return HeroCardPretty(Class); }
 
 FString FCoHHeroCard::SetsLine() const
 {
-	if (Primary.IsEmpty()) return Secondary.IsEmpty() ? FString() : Pretty(Secondary);
-	return Secondary.IsEmpty() ? Pretty(Primary) : Pretty(Primary) + TEXT("  /  ") + Pretty(Secondary);
+	if (Primary.IsEmpty()) return Secondary.IsEmpty() ? FString() : HeroCardPretty(Secondary);
+	return Secondary.IsEmpty() ? HeroCardPretty(Primary) : HeroCardPretty(Primary) + TEXT("  /  ") + HeroCardPretty(Secondary);
 }
 
 // ------------------------------------------------------------------ game mode
