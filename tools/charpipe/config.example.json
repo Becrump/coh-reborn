@@ -1,0 +1,11 @@
+{
+  "blender": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
+  "hy3d_python": "C:/Users/rtcru/hy3d/venv/Scripts/python.exe",
+  "coh_clip_character": "C:/Users/rtcru/CoHReborn/out/characters/hellions/Thug_Hellion_01/Thug_Hellion_01.gltf",
+  "coh_brawl_chunk": "C:/Users/rtcru/CoHReborn/out/player/anims/male/male_anims_01.gltf",
+  "gpu_free_mb_shape": 6000,
+  "gpu_free_mb_texture": 6000,
+  "gpu_free_mb_preview": 1500,
+  "wait_poll_s": 180,
+  "faces": 40000
+}
