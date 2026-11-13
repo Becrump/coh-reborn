@@ -640,6 +640,15 @@ void UCoHFrontend::ReturnToHQ()
 	UWorld* World = GetGameInstance()->GetWorld();
 	if (!World) return;
 	SaveHeroesBeforeLeaving(World);
+	// back at HQ the hero card shows the hero just played (also when it came from -Hero=)
+	for (TActorIterator<ACoHHeroCharacter> It(World); It; ++It)
+		if (It->IsLocallyControlled())
+			if (const UCoHHeroProgress* P = UCoHHeroProgress::Of(*It); P && P->bHasRecord && !P->SaveFile.IsEmpty())
+			{
+				SelectedHero = FPaths::GetBaseFilename(P->SaveFile);
+				Save();
+				break;
+			}
 	bLeaving = true;
 	ActiveName.Reset();
 	ActivePassword.Reset();

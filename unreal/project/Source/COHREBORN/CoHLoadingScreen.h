@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Containers/Ticker.h"
 #include "CoHLoadingScreen.generated.h"
 
 struct FSlateDynamicImageBrush;
@@ -30,8 +31,23 @@ public:
 	UPROPERTY(Config)
 	float MinimumDisplaySeconds = 2.f;
 
+	/** After the map loads, the city streams in around the player (World
+	 *  Partition): the art stays up until that is done, at most this long. */
+	UPROPERTY(Config)
+	float MaxStreamingWaitSeconds = 240.f;
+
 private:
 	void HandlePreLoadMap(const FString& MapName);
+	void HandlePostLoadMap(UWorld* World);
+	bool TickStreaming(float DeltaTime);
+	void HideStreamingCover();
+	TSharedRef<SWidget> MakeScreen(const FText& Label) const;
+
+	FDelegateHandle PostLoadMapHandle;
+	FTSTicker::FDelegateHandle StreamingTicker;
+	TSharedPtr<SWidget> StreamingCover;
+	TWeakObjectPtr<UWorld> StreamingWorld;
+	double StreamingStart = 0.0;
 
 	TSharedPtr<FSlateDynamicImageBrush> Brush;
 	FDelegateHandle PreLoadMapHandle;

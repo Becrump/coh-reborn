@@ -883,6 +883,53 @@ AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	return Super::ChoosePlayerStart_Implementation(Player);
 }
 
+APawn* ACoHGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
+{
+	UWorld* World = GetWorld();
+	UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer);
+	if (!World || !StartSpot || !PawnClass) return Super::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
+	float Radius = 42.f, HalfHeight = 96.f;
+	if (const ACharacter* Def = Cast<ACharacter>(PawnClass->GetDefaultObject()); Def && Def->GetCapsuleComponent())
+		Def->GetCapsuleComponent()->GetUnscaledCapsuleSize(Radius, HalfHeight);
+	const FVector Origin = StartSpot->GetActorLocation();
+	// players already standing near this start
+	int32 Near = 0;
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+		if (const APawn* P = It->Get() ? It->Get()->GetPawn() : nullptr; P && FVector::Dist2D(P->GetActorLocation(), Origin) < 1200.f) ++Near;
+	FTransform Where = StartSpot->GetActorTransform();
+	Where.SetScale3D(FVector::OneVector);
+	if (Near > 0)
+	{
+		FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHSpawnSpread), false, StartSpot);
+		const FCollisionShape Capsule = FCollisionShape::MakeCapsule(Radius, HalfHeight);
+		// rings of 6, 8, 10 spots at 2.5, 4 and 5.5 m: the first open one (spots taken by a hero fail the overlap test)
+		bool bPlaced = false;
+		for (int32 Ring = 0; Ring < 3 && !bPlaced; ++Ring)
+		{
+			const int32 Spots = 6 + Ring * 2;
+			const float Dist = 250.f + Ring * 150.f;
+			for (int32 i = 0; i < Spots && !bPlaced; ++i)
+			{
+				const float Angle = (2.f * UE_PI * i) / Spots + Ring * 0.4f;
+				const FVector Flat = Origin + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Dist;
+				FHitResult Floor, Wall;
+				if (World->LineTraceSingleByChannel(Wall, Origin, Flat, ECC_Visibility, Q)) continue;          // behind a wall
+				if (!World->LineTraceSingleByChannel(Floor, Flat + FVector(0, 0, 150.f), Flat - FVector(0, 0, 400.f), ECC_Visibility, Q)) continue; // no floor
+				const FVector Stand = Floor.ImpactPoint + FVector(0, 0, HalfHeight + 5.f);
+				if (World->OverlapBlockingTestByChannel(Stand, FQuat::Identity, ECC_Pawn, Capsule, Q)) continue; // someone or something there
+				Where.SetLocation(Stand);
+				bPlaced = true;
+			}
+		}
+		UE_LOG(LogTemp, Log, TEXT("CoH start: player %d at this start, %s"), Near + 1, bPlaced ? *Where.GetLocation().ToCompactString() : TEXT("no open spot, on the start itself"));
+	}
+	FActorSpawnParameters Params;
+	Params.Instigator = GetInstigator();
+	Params.ObjectFlags |= RF_Transient;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	return World->SpawnActor<APawn>(PawnClass, Where, Params);
+}
+
 void ACoHHeroCharacter::ServerChooseMonorailDestination_Implementation(ARebornMonorail* Train, int32 Destination)
 {
 	if (Train)
