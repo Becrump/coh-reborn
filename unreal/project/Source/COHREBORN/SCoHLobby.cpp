@@ -46,7 +46,7 @@ void SCoHLobby::Construct(const FArguments& InArgs)
 	{
 		FString Line;
 		if (F.IsValid())
-			for (const FString& N : F->NewsLines) Line += N + TEXT("     ·     ");
+			for (const FString& N : F->NewsLines) Line += N + TEXT("     |     ");
 		if (Line.IsEmpty()) return;
 		const FSlateFontInfo Font = HQ::Body(15);
 		const float W = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Line, Font).X;
@@ -340,7 +340,7 @@ TSharedRef<SWidget> SCoHLobby::MakeTopBar()
 				SNew(STextBlock).Font(HQ::Body(13)).ColorAndOpacity(FSlateColor(HQ::C(0xffd38a))).Text_Lambda([this]
 				{
 					const FCoHHeroCard* C = F.IsValid() ? F->ChosenHeroCard() : nullptr;
-					return FText::FromString(C ? FString::Printf(TEXT("Level %d %s"), C->Level, *C->ArchetypeName()) : FString(TEXT("Pick one in the Hero Roster")));
+					return FText::FromString(C ? FString::Printf(TEXT("Level %d %s"), C->Level, *C->ArchetypeName()) : FString(TEXT("Default test hero, change in Hero Roster")));
 				})
 			]
 		],
@@ -362,7 +362,7 @@ TSharedRef<SWidget> SCoHLobby::MakeTopBar()
 					[
 						SNew(SVerticalBox)
 						+ SVerticalBox::Slot().AutoHeight()[HQ::Text(TEXT("PARAGON HQ"), HQ::Title(28), HQ::Ink())]
-						+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 0)[HQ::Text(TEXT("MISSION CONTROL  ·  CITY OF HEROES REBORN"), HQ::Label(11), HQ::Sky())]
+						+ SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 0)[HQ::Text(TEXT("MISSION CONTROL  |  CITY OF HEROES REBORN"), HQ::Label(11), HQ::Sky())]
 					]
 					+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(48, 0, 0, 0)[Tabs]
 					+ SHorizontalBox::Slot().FillWidth(1)
@@ -872,7 +872,7 @@ TSharedRef<SWidget> SCoHLobby::MakeHostPage()
 					+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 6)
 					[
 						SNew(STextBlock).Font(HQ::Label(12)).ColorAndOpacity(FSlateColor(HQ::Muted()))
-						.Text_Lambda([this] { return FText::FromString(FString::Printf(TEXT("MAX HEROES  ·  %d"), F.IsValid() ? F->HostSettings().MaxPlayers : 7)); })
+						.Text_Lambda([this] { return FText::FromString(FString::Printf(TEXT("MAX HEROES  |  %d"), F.IsValid() ? F->HostSettings().MaxPlayers : 7)); })
 					]
 					+ SVerticalBox::Slot().AutoHeight()[Max]
 				]
