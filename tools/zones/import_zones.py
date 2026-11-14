@@ -332,6 +332,91 @@ def run_split(zid, name, zone, st):
     return "ok"
 
 
+def run_fix(zid, name, zone, st):
+    """level -> fix (sky out, Far/Ground grids) -> trees (re-planted as 256 m chunks) -> save"""
+    zs = st.get(zone, {})
+    if "stats" not in zs.get("done", []):
+        return "skip"
+    if "save" in zs.get("fix_done", []):
+        return "done"
+    zdir = os.path.join(EXPORTS, "%s_%s" % (zid, name))
+    rdir = os.path.join(OUT, zone)
+    os.makedirs(rdir, exist_ok=True)
+    cfg = {"zone": zone, "name": name, "fix_out": os.path.join(rdir, "fix.json")}
+    t0 = time.time()
+    notes = []
+    for stage in ("level", "fix", "trees", "save"):
+        if stage in zs.setdefault("fix_done", []) and stage != "level":
+            continue
+        print("[%s] fix:%s ..." % (zone, stage), flush=True)
+        if stage == "trees":
+            code = ("import sys\nsys.argv=['setup_trees.py',r%r,r%r]\n__file__=r%r\n"
+                    % (zdir, TREE_TABLE, SETUP_TREES)) + open(SETUP_TREES).read()
+            ok, out = ue(code, 3600)
+            m = re.findall(r"\[CoH trees\] (.*)", out)
+            notes.append("trees: " + ("; ".join(m[-2:]) if ok else "FAILED"))
+        else:
+            ok, out = ue(stage_code(cfg, stage), 14400)
+        lines = [l for l in out.splitlines() if l.startswith(("[zone]", "[Error]", "[CoH trees]"))]
+        with open(os.path.join(rdir, "report.txt"), "a", encoding="utf-8") as f:
+            f.write("%s fix:%s %s\n%s\n" % (now(), stage, "OK" if ok else "FAIL", "\n".join(lines) or out[-1500:]))
+        if not ok:
+            save_state(st)
+            logline("FIX FAIL   %-16s stage %s: %s" % (zone, stage, (out.strip().splitlines() or ["?"])[-1][:200]))
+            return "fail"
+        zs["fix_done"].append(stage)
+        save_state(st)
+    s = json.load(open(cfg["fix_out"]))
+    logline("FIX OK     %-16s actors %d -> %d, sky actors removed %d, grid Far %d / Ground %d%s; %s; %.0f min"
+            % (zone, s["actors_before"], s["actors_after"], s["sky_removed"], s["far"], s["ground"],
+               " (GRID NOT SET: %s)" % s["grid_error"] if s.get("grid_error") else "", "; ".join(notes),
+               (time.time() - t0) / 60))
+    return "ok"
+
+
+def run_world(st):
+    """L_ParagonCity: the game's day/night sky (setup_level daynight, own sequence) + a PlayerStart."""
+    ws = st.setdefault("_world", {"done": []})
+    if "save" in ws["done"]:
+        return "done"
+    offs = json.load(open(os.path.join(REPO, "docs", "zones", "zone_offsets.json")))["zones"]
+    g = offs["city_01_03"]
+    gx0, gz0, gx1, gz1 = g["world_rect_m"]
+    cx, cz = (gx0 + gx1) / 2, (gz0 + gz1) / 2
+    gate = g["gates_world_m"].get("HAZARD_PEREZPARK") or list(g["gates_world_m"].values())[0]
+    px, pz = gate[0] + 0.12 * (cx - gate[0]), gate[1] + 0.12 * (cz - gate[1])   # a little inside, on the gate street
+    import math
+    yaw = math.degrees(math.atan2(-(cz - pz), cx - px))
+    cfg = {"zone": "ParagonCity", "name": "galaxy_city", "level": "/Game/Zones/L_ParagonCity",
+           "player_start": [px * 100, -pz * 100, 500.0], "player_yaw": yaw,
+           "save_prefixes": ["/Game/Zones/L_ParagonCity", "/Game/__ExternalActors__/Zones/L_ParagonCity",
+                             "/Game/__ExternalObjects__/Zones/L_ParagonCity", "/Game/CoH/"]}
+    gdir = os.path.join(EXPORTS, "city_01_03_galaxy_city")
+    for stage in ("level", "daynight", "world", "save"):
+        if stage in ws["done"] and stage != "level":
+            continue
+        print("[world] %s ..." % stage, flush=True)
+        if stage == "daynight":
+            src = open(SETUP_LEVEL).read().replace('SEQ_NAME = "DayNight"', 'SEQ_NAME = "DayNight_ParagonCity"')
+            code = ("import sys\nsys.argv=['setup_level.py','--only','daynight']\n__file__=r%r\n"
+                    % os.path.join(gdir, "setup_level.py")) + src
+            ok, out = ue(code, 3600)
+        else:
+            ok, out = ue(stage_code(cfg, stage), 3600)
+        os.makedirs(os.path.join(OUT, "ParagonCity"), exist_ok=True)
+        with open(os.path.join(OUT, "ParagonCity", "report.txt"), "a", encoding="utf-8") as f:
+            f.write("%s world:%s %s\n%s\n" % (now(), stage, "OK" if ok else "FAIL", out[-2000:]))
+        if not ok:
+            save_state(st)
+            logline("WORLD FAIL stage %s: %s" % (stage, (out.strip().splitlines() or ["?"])[-1][:200]))
+            return "fail"
+        ws["done"].append(stage)
+        save_state(st)
+    logline("WORLD OK   L_ParagonCity: day/night sky (sequence /Game/CoH/DayNight_ParagonCity), "
+            "PlayerStart in Galaxy City at X %.0f m, Y %.0f m" % (px, -pz))
+    return "ok"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--zones", default="")
@@ -339,6 +424,7 @@ def main():
     ap.add_argument("--dry", action="store_true", help="only index + filter, no editor changes")
     ap.add_argument("--all", action="store_true", help="also the separate levels (trials, Shadow Shards, Pocket D...)")
     ap.add_argument("--split", action="store_true", help="split imported zones' instance actors into 256 m chunks")
+    ap.add_argument("--fix", action="store_true", help="one-world fixes: per-zone sky out, Far/Ground grids, chunked trees, world sky + PlayerStart")
     a = ap.parse_args()
     want = set(a.zones.split(",")) if a.zones else None
     st = load_state()
@@ -348,6 +434,16 @@ def main():
         if want and zone not in want and zid not in want:
             continue
         if not want and not a.all and zid not in on_map:
+            continue
+        if a.fix:
+            zs = st.get(zone, {})
+            if "stats" not in zs.get("done", []) or "save" in zs.get("fix_done", []):
+                continue
+            if not wait_free():
+                return 2
+            r = run_fix(zid, name, zone, st)
+            if a.one and r in ("ok", "fail"):
+                return 0 if r == "ok" else 1
             continue
         if a.split:
             zs = st.get(zone, {})
@@ -366,6 +462,10 @@ def main():
         r = run_zone(zid, name, zone, st, a.dry)
         if a.one and r in ("ok", "fail"):
             return 0 if r == "ok" else 1
+    if a.fix and not want:
+        if not wait_free():
+            return 2
+        run_world(st)
     return 0
 
 

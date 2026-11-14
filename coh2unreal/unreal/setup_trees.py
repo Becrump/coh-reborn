@@ -8,8 +8,8 @@ on in Project Settings), after `python -m coh2unreal.trees`:
    trees (<name>_trees.json "materials") get the invisible material.
 2. Plants one Megaplant tree per CoH tree: species by the old tree's kind,
    a random A-D variant, random turn, scaled to the old tree's height.
-   Each mesh variant is one instanced component on a single CoHTrees actor,
-   so a thousand trees cost a few dozen draw groups.
+   One actor per species variant per 256 m cell (CoHTrees_<species>_<variant>_<cx>_<cy>),
+   each an instanced component, drawn out to 500 m, so trees stream with their streets.
 Safe to run again (replaces CoHTrees, re-hides).
 
 Instanced zones (import_instanced.py / the zone batch, no tile actors): pass
@@ -41,6 +41,8 @@ VARIANTS = "ABCD"
 SCALE_RANGE = (0.45, 1.6)
 INVISIBLE = "/Game/CoH/Materials/M_Invisible"
 LABEL = "CoHTrees"
+CELL_CM = 25600.0      # trees go in 256 m chunk actors (same grid as the zone batch's instance split)
+TREE_CULL_CM = 50000.0  # trees are not drawn beyond 500 m
 
 asub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 
@@ -140,7 +142,7 @@ def main():
         remove_instanced(m for m, v in tab.items() if v["action"] == "replace")
     seen = set()
     for a in asub.get_all_level_actors():
-        if a.get_actor_label() == LABEL:
+        if a.get_actor_label() == LABEL or a.get_actor_label().startswith(LABEL + "_"):
             asub.destroy_actor(a)
     tops = {}
     groups = {}
@@ -176,21 +178,28 @@ def main():
         xf = unreal.Transform(unreal.Vector(*t["p"]),
                               unreal.Rotator(0, 0, rng.uniform(0, 360)),
                               unreal.Vector(s, s, s))
-        groups.setdefault(key, []).append(xf)
-    actor = asub.spawn_actor_from_class(unreal.Actor, unreal.Vector(0, 0, 0))
-    actor.set_actor_label(LABEL)
-    actor.set_folder_path("CoH")
+        cx, cy = int(t["p"][0] // CELL_CM), int(t["p"][1] // CELL_CM)
+        groups.setdefault(key + (cx, cy), []).append(xf)
+    # one actor per species/variant per 256 m cell, so World Partition streams
+    # trees with the streets around them instead of a whole zone at once
     total = 0
     with unreal.ScopedSlowTask(len(groups), "Planting trees") as task:
         task.make_dialog(False)
-        for (species, variant), xfs in sorted(groups.items()):
+        for (species, variant, cx, cy), xfs in sorted(groups.items()):
             task.enter_progress_frame(1, "%s %s" % (species, variant))
+            actor = asub.spawn_actor_from_class(unreal.Actor, unreal.Vector(0, 0, 0))
+            actor.set_actor_label("%s_%s_%s_%d_%d" % (LABEL, species, variant, cx, cy))
+            actor.set_folder_path("CoH/Trees")
             comp = add_component(actor, "%s_%s" % (species, variant))
             comp.set_editor_property("skinned_asset", tops[(species,
                                                             variant)][0])
             comp.add_instances(xfs, [0] * len(xfs), False, True)
+            try:
+                comp.set_editor_property("ld_max_draw_distance", TREE_CULL_CM)
+            except Exception as e:
+                unreal.log_warning("[CoH trees] no draw distance on %s: %s" % (comp.get_name(), e))
             total += len(xfs)
-    log("planted %d trees in %d groups%s" % (
+    log("planted %d trees in %d chunk actors%s" % (
         total, len(groups),
         "; missing meshes: %s" % sorted(missing) if missing else ""))
     if tab is None:
