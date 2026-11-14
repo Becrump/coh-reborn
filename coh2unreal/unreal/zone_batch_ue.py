@@ -63,7 +63,7 @@ def zone_root():
 
 
 def level_path():
-    return zone_root() + "/L_" + CFG["zone"]
+    return CFG.get("level") or zone_root() + "/L_" + CFG["zone"]
 
 
 def world_path():
@@ -102,6 +102,8 @@ def write_index():
 
 
 def ours(name):
+    if any(name.startswith(x) for x in CFG.get("save_prefixes", [])):
+        return True
     z = "Zones/" + CFG["zone"]
     return (name.startswith("/Game/" + z) or name.startswith(LIB) or name.startswith("/Game/CoH/Props") or
             name.startswith("/Game/__ExternalActors__/" + z) or name.startswith("/Game/__ExternalObjects__/" + z))
@@ -519,7 +521,70 @@ def stage_split():
         % (n_descs, before, after, chunks, culled, single_culled, time.time() - t0))
 
 
-{"split": stage_split, "index": write_index, "level": stage_level, "meshes": stage_meshes, "mats": stage_mats,
+SKY_CLASSES = {"DirectionalLight", "SkyLight", "SkyAtmosphere", "ExponentialHeightFog", "VolumetricCloud",
+               "PostProcessVolume", "WorldPartitionMiniMap"}
+GROUND_NAME = re.compile(r"grnd|ground|street|lane|road|sidewalk|plaza|curb|walkway|pavement|asphalt|grass|dirt|"
+                         r"terrain|tile|floor|blk_|block|turf", re.I)
+
+
+def stage_fix():
+    """One-world fixes for a zone level: remove the per-zone sky set (the world has one),
+    put actors wider than 256 m on the "Far" runtime grid and flat ground pieces on "Ground"."""
+    assert world_path().startswith(level_path()), "zone level not open"
+    t0 = time.time()
+    _load_all_actors()
+    acts = asub.get_all_level_actors()
+    before = len(acts)
+    sky = far = ground = 0
+    grid_error = None
+    for a in acts:
+        cls = a.get_class().get_name()
+        if cls in SKY_CLASSES:
+            asub.destroy_actor(a)
+            sky += 1
+            continue
+        if not isinstance(a, (unreal.StaticMeshActor, unreal.CoHInstances)):
+            continue
+        origin, ext = a.get_actor_bounds(False)
+        width, height = 2 * max(ext.x, ext.y), 2 * ext.z
+        grid = None
+        if width > CELL_CM:
+            grid = "Far"
+        elif height < 600 and width >= 2000 and (GROUND_NAME.search(a.get_actor_label()) or width >= 6000):
+            grid = "Ground"
+        if grid and grid_error is None:
+            try:
+                a.set_editor_property("runtime_grid", grid)
+                if grid == "Far":
+                    far += 1
+                else:
+                    ground += 1
+            except Exception as e:
+                grid_error = str(e)
+    del acts
+    after = len(asub.get_all_level_actors())
+    json.dump({"actors_before": before, "actors_after": after, "sky_removed": sky, "far": far,
+               "ground": ground, "grid_error": grid_error}, open(CFG["fix_out"], "w"))
+    log("fix: actors %d -> %d; sky actors removed %d; runtime grid Far %d, Ground %d%s (%.0fs)"
+        % (before, after, sky, far, ground, "; GRID NOT SET: " + grid_error if grid_error else "",
+           time.time() - t0))
+
+
+def stage_world():
+    """L_ParagonCity: one PlayerStart on a Galaxy City street (until Atlas Park is placed)."""
+    assert world_path().startswith(level_path()), "world level not open"
+    for a in asub.get_all_level_actors():
+        if isinstance(a, unreal.PlayerStart):
+            log("world: PlayerStart already at %s" % a.get_actor_location())
+            return
+    loc = unreal.Vector(*CFG["player_start"])
+    ps = asub.spawn_actor_from_class(unreal.PlayerStart, loc, unreal.Rotator(0, 0, CFG.get("player_yaw", 0)))
+    ps.set_actor_label("PlayerStart_GalaxyCity")
+    ps.set_folder_path("Game")
+    log("world: PlayerStart added at %s" % loc)
+
+
+{"fix": stage_fix, "world": stage_world, "split": stage_split, "index": write_index, "level": stage_level, "meshes": stage_meshes, "mats": stage_mats,
  "link": stage_link, "place": stage_place, "sky": stage_sky, "save": save_ours,
  "shots": stage_shots, "stats": stage_stats}[STAGE]()
 clear_python_refs()
