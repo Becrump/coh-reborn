@@ -14,7 +14,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 if not defined COH_PROJECT set "COH_PROJECT=%USERPROFILE%\OneDrive\Documents\Unreal Projects\COHREBORN"
 if not defined UE_ROOT (
-  for /f "tokens=2,*" %%a in ('reg query "HKLM\SOFTWARE\EpicGames\Unreal Engine\5.8" /v InstalledDirectory 2^>nul ^| find "InstalledDirectory"') do set "UE_ROOT=%%b"
+  for /f "tokens=2,*" %%a in ('reg query "HKLM\SOFTWARE\EpicGames\Unreal Engine\5.8" /v InstalledDirectory 2^>nul ^| %SystemRoot%\System32\find.exe "InstalledDirectory"') do set "UE_ROOT=%%b"
 )
 if not defined UE_ROOT set "UE_ROOT=C:\Program Files\Epic Games\UE_5.8"
 if not defined COH_OUT set "COH_OUT=C:\CoHBuilds\city"
@@ -26,7 +26,7 @@ set "PATHFILE=%~dp0flythrough_city.txt"
 
 if /i "%~1"=="flyonly" goto fly
 
-tasklist /fi "imagename eq UnrealEditor.exe" 2>nul | find /i "UnrealEditor.exe" >nul
+tasklist /fi "imagename eq UnrealEditor.exe" 2>nul | %SystemRoot%\System32\find.exe /i "UnrealEditor.exe" >nul
 if not errorlevel 1 (
   echo %date% %time% EDITOR OPEN: close every Unreal editor and game copy, then run this again > "%STATUS%"
   type "%STATUS%"
@@ -59,13 +59,24 @@ type "%STATUS%"
 if /i not "%~1"=="fly" exit /b 0
 
 :fly
+rem ---- clean numbers: wait until the character thread's hy3d GPU jobs are done
+:waitflyhy3d
+powershell -NoProfile -c "if (Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | ? { $_.CommandLine -match 'hy3d' -or $_.ExecutablePath -match 'hy3d' }) { exit 1 } else { exit 0 }"
+if errorlevel 1 (
+  echo %date% %time% fly-through waiting for the hy3d GPU jobs ...
+  timeout /t 120 /nobreak >nul
+  goto waitflyhy3d
+)
+set "HOLD=C:\Users\rtcru\ClaudeProjects\COHReborn\CPU_HOLD.txt"
+echo packaged fly-through %date% %time% - pause Blender renders until this file is gone> "%HOLD%"
 set "GAMEDIR=%COH_OUT%"
 if /i "%~1"=="flyonly" if not "%~2"=="" set "GAMEDIR=%~2"
 set "EXE="
 for /f "delims=" %%e in ('dir /s /b "%GAMEDIR%\COHREBORN.exe" 2^>nul') do if not defined EXE set "EXE=%%e"
-if not defined EXE ( echo no COHREBORN.exe under %GAMEDIR% & exit /b 3 )
+if not defined EXE ( del "%HOLD%" 2>nul & echo no COHREBORN.exe under %GAMEDIR% & exit /b 3 )
 if not exist "%PATHFILE%" python "%~dp0..\zones\flythrough_path.py" "%PATHFILE%"
 echo Flying the packaged game from %GAMEDIR% ...
 start "CoH packaged flythrough" /wait "%EXE%" /Game/Zones/L_ParagonCity -windowed -ResX=1920 -ResY=1080 -WinX=0 -WinY=0 -NOSTEAM -nosplash -log -Hero=Bench -cohquality=2 -cohflythrough="%PATHFILE%" -cohflyspeed=3000 -cohflyout="%RESULTS%" -abslog="%~dp0flythrough_packaged.log"
+del "%HOLD%" 2>nul
 findstr /c:"FLYTHROUGH" "%RESULTS%"
 endlocal
