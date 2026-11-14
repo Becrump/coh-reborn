@@ -17,6 +17,23 @@ head_n = args[args.index("--head") + 1] if "--head" in args else "MHC_Base_Male_
 skin = tuple(float(v) for v in (args[args.index("--skin") + 1] if "--skin" in args else "0.62,0.45,0.36").split(",")) + (1,)
 body, head = bpy.data.objects[body_n], bpy.data.objects[head_n]
 arm = body.parent
+# the MetaHuman armature can sit under a 0.01 parent (cm skeleton): bake its world transform first
+sc0 = bpy.context.scene
+if arm.name not in sc0.collection.objects:
+    sc0.collection.objects.link(arm)
+arm.hide_set(False)
+arm.hide_viewport = False
+for o in (body, head):
+    mw = o.matrix_world.copy()
+    o.parent = None
+    o.matrix_world = mw
+amw = arm.matrix_world.copy()
+arm.parent = None
+arm.matrix_world = amw
+bpy.ops.object.select_all(action="DESELECT")
+arm.select_set(True)
+bpy.context.view_layer.objects.active = arm
+bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 keep = {arm, body, head}
 for o in list(bpy.data.objects):
     if o not in keep:

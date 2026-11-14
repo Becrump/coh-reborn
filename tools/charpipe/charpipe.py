@@ -64,7 +64,7 @@ def log(out, char, step, status, msg=""):
 
 
 # ------------------------------------------------------------------ GPU guard
-def unreal_running():
+def unreal_running(ignore_cmd=False):
     try:
         r = subprocess.run(["tasklist", "/FO", "CSV", "/NH"], capture_output=True, text=True, timeout=30)
     except Exception:  # noqa: BLE001
@@ -72,6 +72,8 @@ def unreal_running():
     names = []
     for row in csv.reader(io.StringIO(r.stdout)):
         n = row[0].lower() if row else ""
+        if ignore_cmd and ("-cmd" in n or n.startswith(("unrealbuildtool", "automationtool"))):
+            continue  # headless cook/build: CPU/RAM only, the VRAM check below still applies
         if n.startswith(("unrealeditor", "unrealbuildtool", "unrealgame")) or (n.endswith(".exe") and "-cmd" in n and "unreal" in n):
             names.append(row[0])
     return sorted(set(names))
@@ -90,7 +92,7 @@ def gpu_guard(cfg, need_mb, wait, out, char, step):
     while True:
         hold = cfg.get("gpu_hold_file")
         held = bool(hold) and os.path.exists(hold)
-        ue = unreal_running()
+        ue = unreal_running(cfg.get("gpu_ignore_headless_unreal") or os.environ.get("CHARPIPE_IGNORE_HEADLESS") == "1")
         free = gpu_free_mb()
         if not held and not ue and (free < 0 or free >= need_mb):
             return

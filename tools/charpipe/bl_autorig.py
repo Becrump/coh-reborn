@@ -167,21 +167,58 @@ for S in ("Left", "Right"):
     bone(S + "ToeBase", S + "toe", S + "toe_end", S + "Foot")
 bpy.ops.object.mode_set(mode="OBJECT")
 
+# Heat weighting needs a connected surface: textured meshes are split at UV seams, so weight a
+# welded proxy and transfer the weights to the textured mesh (nearest face, interpolated).
+proxy = body.copy()
+proxy.data = body.data.copy()
+bpy.context.scene.collection.objects.link(proxy)
 bpy.ops.object.select_all(action="DESELECT")
-body.select_set(True)
+proxy.select_set(True)
+bpy.context.view_layer.objects.active = proxy
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.0005)
+bpy.ops.object.mode_set(mode="OBJECT")
+rep["proxy_vertices"] = len(proxy.data.vertices)
+bpy.ops.object.select_all(action="DESELECT")
+proxy.select_set(True)
 arm.select_set(True)
 bpy.context.view_layer.objects.active = arm
-rep["weights"] = "heat"
+rep["weights"] = "heat (welded proxy)"
 try:
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
-    if len(body.vertex_groups) < 10:
-        raise RuntimeError("heat weighting produced too few groups")
+    nz = sum(1 for v in proxy.data.vertices if any(g.weight > 0 for g in v.groups))
+    rep["proxy_weighted_vertices"] = nz
+    if nz < 0.5 * len(proxy.data.vertices):
+        raise RuntimeError("heat weighting left %d of %d vertices unweighted" % (len(proxy.data.vertices) - nz, len(proxy.data.vertices)))
 except Exception as e:  # noqa: BLE001
     rep["weights"] = "envelope (heat failed: %s)" % str(e)[:100]
-    for md in list(body.modifiers):
-        body.modifiers.remove(md)
-    body.vertex_groups.clear()
+    for md in list(proxy.modifiers):
+        proxy.modifiers.remove(md)
+    proxy.vertex_groups.clear()
     bpy.ops.object.parent_set(type="ARMATURE_ENVELOPE")
+for g in proxy.vertex_groups:
+    if g.name not in body.vertex_groups:
+        body.vertex_groups.new(name=g.name)
+dt = body.modifiers.new("wt", "DATA_TRANSFER")
+dt.object = proxy
+dt.use_vert_data = True
+dt.data_types_verts = {"VGROUP_WEIGHTS"}
+dt.vert_mapping = "POLYINTERP_NEAREST"
+dt.layers_vgroup_select_src = "ALL"
+dt.layers_vgroup_select_dst = "NAME"
+bpy.ops.object.select_all(action="DESELECT")
+body.select_set(True)
+bpy.context.view_layer.objects.active = body
+bpy.ops.object.modifier_apply(modifier="wt")
+bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+bpy.data.objects.remove(proxy, do_unlink=True)
+md = body.modifiers.new("Armature", "ARMATURE")
+md.object = arm
+body.parent = arm
+rep["weighted_vertices"] = sum(1 for v in body.data.vertices if any(g.weight > 0 for g in v.groups))
+mods = [(m.type, m.object.name if getattr(m, "object", None) else None) for m in body.modifiers]
+rep["modifiers"] = [(m.type, m.object.name if getattr(m, "object", None) else None) for m in body.modifiers]
 rep["vertex_groups"] = len(body.vertex_groups)
 rep["vertices"] = len(body.data.vertices)
 bpy.ops.object.select_all(action="DESELECT")
