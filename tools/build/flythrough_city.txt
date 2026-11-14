@@ -1,0 +1,8 @@
+# coh.flythrough path (X,Y,Z cm): Atlas Park -> Galaxy City -> Perez Park -> Kings Row -> Steel Canyon -> Skyway City -> Talos Island
+15605,21460,6000  # Atlas Park
+251705,68275,6000  # Galaxy City
+142255,39980,6000  # Perez Park
+185865,-183245,6000  # Kings Row
+73945,209225,6000  # Steel Canyon
+33165,-153985,6000  # Skyway City
+-383565,-217790,6000  # Talos Island

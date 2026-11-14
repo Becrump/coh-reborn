@@ -119,3 +119,14 @@ below); the packaged game takes the same `-cohquality=0 -cohbench=60` options.
    for the far city cut host memory. Set per grid in World Settings once the map is final.
 4. Street lamps: 3,302 spot lights is a lot even with distance limits. Baking the lamp glow
    into the street material and keeping real lights only near players would save more.
+
+## Fly-through across zone borders
+
+`tools/build/flythrough_city.cmd [preset]` (editor and game copies closed) starts L_ParagonCity
+as a game, waits 20 s, then flies the path in `tools/build/flythrough_city.txt` (Atlas Park side,
+Galaxy City, Perez Park, Kings Row, Steel Canyon, Skyway City, Talos Island; 60 m up, 30 m/s;
+regenerate with `python tools/zones/flythrough_path.py`). It appends a FLYTHROUGH line to
+`bench_results.txt` (FPS, 1% low, worst frame, hitches over 50 ms, share of frames where World
+Partition streaming was behind, most cells loaded, VRAM and RAM peaks) and writes every frame to
+`Saved/Logs/coh_flythrough.csv`, hitches with their position to `coh_flythrough_hitches.txt`.
+In a running game or PIE: `coh.flythrough <path file> [cm/s] [quit]`.
