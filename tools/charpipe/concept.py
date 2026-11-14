@@ -29,13 +29,17 @@ STYLE = (", full body character, standing in a relaxed A-pose, arms slightly awa
          "realistic modern video game character, highly detailed")
 
 
-def graph(prompt, seed, prefix):
+PORTRAIT = (", head and neck portrait, front view facing the camera, neutral expression, symmetrical, whole head and neck visible, "
+            "plain light grey background, studio lighting, realistic modern video game character, highly detailed face")
+
+
+def graph(prompt, seed, prefix, style=STYLE):
     return {
         "1": {"class_type": "UnetLoaderGGUF", "inputs": {"unet_name": "z_image_turbo-Q4_K_M.gguf"}},
         "2": {"class_type": "CLIPLoaderGGUF", "inputs": {"clip_name": "Qwen3-4B-Q4_K_M.gguf", "type": "lumina2"}},
         "3": {"class_type": "VAELoader", "inputs": {"vae_name": "ae.safetensors"}},
         "4": {"class_type": "ModelSamplingAuraFlow", "inputs": {"model": ["1", 0], "shift": 3.0}},
-        "5": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": prompt + STYLE}},
+        "5": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": prompt + style}},
         "6": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["5", 0]}},
         "7": {"class_type": "EmptySD3LatentImage", "inputs": {"width": 1024, "height": 1024, "batch_size": 1}},
         "8": {"class_type": "KSampler", "inputs": {"model": ["4", 0], "positive": ["5", 0], "negative": ["6", 0],
@@ -67,10 +71,11 @@ def main():
                          "  text_encoders: text_encoders\n  clip: text_encoders\n  vae: vae\n" % MODELS)
     outdir = os.path.join(out, "_comfy_out")
     t0 = time.time()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")  # ComfyUI prints emoji; cp1252 crashes it
     proc = subprocess.Popen([PY, MAIN, "--listen", "127.0.0.1", "--port", "8189", "--lowvram", "--disable-auto-launch",
                              "--extra-model-paths-config", yml, "--output-directory", outdir],
                             stdout=open(os.path.join(out, "comfy_concept.log"), "w"), stderr=subprocess.STDOUT,
-                            cwd=os.path.dirname(MAIN))
+                            cwd=os.path.dirname(MAIN), env=env)
     try:
         for _ in range(180):
             try:
@@ -80,7 +85,8 @@ def main():
                 time.sleep(2)
         else:
             raise SystemExit("ComfyUI did not start (see comfy_concept.log)")
-        pid = call("/prompt", {"prompt": graph(prompt, seed, "charpipe_" + name)})["prompt_id"]
+        style = PORTRAIT if "--portrait" in sys.argv else STYLE
+        pid = call("/prompt", {"prompt": graph(prompt, seed, "charpipe_" + name, style)})["prompt_id"]
         while True:
             h = call("/history/" + pid)
             if pid in h:
@@ -94,7 +100,7 @@ def main():
                     break
             time.sleep(2)
         CP.log(out, name, "concept", "OK", "%.0fs Z-Image Turbo Q4, seed %d" % (time.time() - t0, seed))
-        open(os.path.join(cdir, "prompt.txt"), "w").write(prompt + STYLE + "\nseed %d\n" % seed)
+        open(os.path.join(cdir, "prompt.txt"), "w").write(prompt + (PORTRAIT if "--portrait" in sys.argv else STYLE) + "\nseed %d\n" % seed)
     finally:
         proc.terminate()
         try:
