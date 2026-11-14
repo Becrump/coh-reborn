@@ -1,0 +1,226 @@
+{
+ "map": "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite",
+ "passes": {
+  "enemies": {
+   "runtime_skeletal_before": 4666,
+   "runtime_skeletal_after": 20,
+   "made_editor_only": 4646,
+   "per_faction": {
+    "Hellions": 2604,
+    "Clockwork": 938,
+    "Vahzilok": 464,
+    "Arachnos": 204,
+    "Skulls": 167,
+    "ParagonPolice": 139,
+    "FreedomCorps": 90,
+    "PraetorianAngryCitizens": 27,
+    "Infected": 13
+   }
+  },
+  "trees": {
+   "tree_actors_before": 1,
+   "tree_chunk_actors_after": 403
+  },
+  "grids": {
+   "far": 217,
+   "ground": 165,
+   "wider_than_256m": [
+    [
+     1770,
+     "Far",
+     "AtlasPass2_Apron_West"
+    ],
+    [
+     1770,
+     "Far",
+     "AtlasPass2_Apron_East"
+    ],
+    [
+     1650,
+     "Ground",
+     "AtlasPass2_Apron_TopRoad"
+    ],
+    [
+     1460,
+     "Far",
+     "AtlasPass2_Apron_Top"
+    ],
+    [
+     1250,
+     "Ground",
+     "AtlasPass2_Apron_WestRoad"
+    ],
+    [
+     1250,
+     "Ground",
+     "AtlasPass2_Apron_EastRoad"
+    ],
+    [
+     1009,
+     "Far",
+     "AtlasPass2_Backdrop_20_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_21_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_19_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_18_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_17_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_15_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_14_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_12_east"
+    ],
+    [
+     1000,
+     "Far",
+     "AtlasPass2_Backdrop_11_east"
+    ],
+    [
+     995,
+     "Far",
+     "AtlasPass2_Backdrop_16_east"
+    ],
+    [
+     995,
+     "Far",
+     "AtlasPass2_Backdrop_13_east"
+    ],
+    [
+     947,
+     "Far",
+     "AtlasPass2_Backdrop_29_top"
+    ],
+    [
+     947,
+     "Far",
+     "AtlasPass2_Backdrop_26_top"
+    ],
+    [
+     945,
+     "Far",
+     "AtlasPass2_Backdrop_32_top"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_041_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_039_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_037_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_035_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_033_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_031_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_029_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_027_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_025_East"
+    ],
+    [
+     943,
+     "Far",
+     "AtlasPass2_Frontage_023_East"
+    ]
+   ]
+  },
+  "skylayer": {
+   "actors": [
+    "CoHLifeManager:CoHLife",
+    "DirectionalLight:Moon",
+    "DirectionalLight:Sun",
+    "ExponentialHeightFog:HeightFog",
+    "LevelSequenceActor:DayNightCycle",
+    "PlayerStart:PlayerStart",
+    "PlayerStart:PlayerStart2",
+    "PlayerStart:PlayerStart3",
+    "PlayerStart:PlayerStart4",
+    "PlayerStart:PlayerStart5",
+    "PlayerStart:PlayerStart6",
+    "PlayerStart:PlayerStart7",
+    "PlayerStart:PlayerStart8",
+    "PlayerStart:PlayerStart9",
+    "PlayerStart:PlayerStart_AtlasPlaza",
+    "PostProcessVolume:PostProcess",
+    "SkyAtmosphere:SkyAtmosphere",
+    "SkyLight:SkyLight",
+    "StaticMeshActor:StarDome",
+    "VolumetricCloud:Clouds"
+   ],
+   "data_layer": "/Game/AtlasPark4/DataLayers/DL_AtlasStandaloneSky",
+   "added": true,
+   "count": 20
+  },
+  "report": {
+   "car_actors_by_class": {
+    "StaticMeshActor": 454
+   },
+   "light_components": {
+    "DirectionalLightComponent": 2,
+    "SpotLightComponent": 802,
+    "PointLightComponent": 6
+   },
+   "light_max_draw_distance": {
+    "none": 810
+   }
+  }
+ },
+ "actors_before": 8157,
+ "actors_after": 8559,
+ "saved_packages": 5455,
+ "other_dirty_not_saved": [],
+ "minutes": 4.6
+}
