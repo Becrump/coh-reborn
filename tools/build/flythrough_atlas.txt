@@ -1,0 +1,8 @@
+# coh.flythrough path (X,Y,Z cm): Atlas Park loop over plaza, west/bay side, north, east, back
+0,0,6000
+110000,-30000,6000
+130000,60000,6000
+40000,90000,6000
+-60000,60000,6000
+-60000,-40000,6000
+0,0,6000

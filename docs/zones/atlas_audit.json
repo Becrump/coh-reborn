@@ -1,0 +1,482 @@
+{
+ "wp": true,
+ "descs": 8157,
+ "by_class": [
+  [
+   "SkeletalMeshActor",
+   4666
+  ],
+  [
+   "StaticMeshActor",
+   2308
+  ],
+  [
+   "SpotLight",
+   802
+  ],
+  [
+   "PackedLevelActor",
+   256
+  ],
+  [
+   "NiagaraActor",
+   62
+  ],
+  [
+   "Actor",
+   26
+  ],
+  [
+   "PlayerStart",
+   10
+  ],
+  [
+   "PointLight",
+   6
+  ],
+  [
+   "Emitter",
+   6
+  ],
+  [
+   "CoHCombatEnemy",
+   3
+  ],
+  [
+   "DirectionalLight",
+   2
+  ],
+  [
+   "PostProcessVolume",
+   1
+  ],
+  [
+   "CoHLifeManager",
+   1
+  ],
+  [
+   "WorldDataLayers",
+   1
+  ],
+  [
+   "RebornMonorail",
+   1
+  ],
+  [
+   "SkyLight",
+   1
+  ],
+  [
+   "SkyAtmosphere",
+   1
+  ],
+  [
+   "VolumetricCloud",
+   1
+  ],
+  [
+   "ExponentialHeightFog",
+   1
+  ],
+  [
+   "LevelSequenceActor",
+   1
+  ],
+  [
+   "WorldPartitionMiniMap",
+   1
+  ]
+ ],
+ "not_spatial": [
+  [
+   "PlayerStart",
+   "PlayerStart2"
+  ],
+  [
+   "PostProcessVolume",
+   "PostProcess"
+  ],
+  [
+   "CoHLifeManager",
+   "CoHLife"
+  ],
+  [
+   "WorldDataLayers",
+   "WorldDataLayers"
+  ],
+  [
+   "DirectionalLight",
+   "Moon"
+  ],
+  [
+   "SkyLight",
+   "SkyLight"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart5"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart9"
+  ],
+  [
+   "SkyAtmosphere",
+   "SkyAtmosphere"
+  ],
+  [
+   "DirectionalLight",
+   "Sun"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart7"
+  ],
+  [
+   "VolumetricCloud",
+   "Clouds"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart_AtlasPlaza"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart6"
+  ],
+  [
+   "ExponentialHeightFog",
+   "HeightFog"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart4"
+  ],
+  [
+   "LevelSequenceActor",
+   "DayNightCycle"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart3"
+  ],
+  [
+   "PlayerStart",
+   "PlayerStart8"
+  ],
+  [
+   "WorldPartitionMiniMap",
+   "WorldPartitionMiniMap"
+  ]
+ ],
+ "runtime_grids": {
+  "None": 8157
+ },
+ "data_layers": {},
+ "wider_than_256m": {
+  "count": 55,
+  "top": [
+   [
+    40000,
+    "StaticMeshActor",
+    "StarDome"
+   ],
+   [
+    1770,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_West"
+   ],
+   [
+    1770,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_East"
+   ],
+   [
+    1650,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_TopRoad"
+   ],
+   [
+    1460,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_Top"
+   ],
+   [
+    1413,
+    "Actor",
+    "CoHTrees"
+   ],
+   [
+    1250,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_WestRoad"
+   ],
+   [
+    1250,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_EastRoad"
+   ],
+   [
+    1004,
+    "Actor",
+    "Monorail_Track"
+   ],
+   [
+    720,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_BottomLeftRoad"
+   ],
+   [
+    680,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_BottomLeft"
+   ],
+   [
+    514,
+    "StaticMeshActor",
+    "tile_-1_-2"
+   ],
+   [
+    514,
+    "StaticMeshActor",
+    "Nanite_tile_-1_-2_Solid_03"
+   ],
+   [
+    500,
+    "StaticMeshActor",
+    "AtlasPass2_Apron_BottomRightRoad"
+   ],
+   [
+    452,
+    "StaticMeshActor",
+    "Nanite_tile_-1_-2_Solid_01"
+   ],
+   [
+    431,
+    "StaticMeshActor",
+    "tile_4_1"
+   ],
+   [
+    431,
+    "StaticMeshActor",
+    "Nanite_tile_4_1_Solid_00"
+   ],
+   [
+    391,
+    "StaticMeshActor",
+    "tile_0_1"
+   ],
+   [
+    391,
+    "StaticMeshActor",
+    "Nanite_tile_0_1_Solid_00"
+   ],
+   [
+    375,
+    "StaticMeshActor",
+    "tile_-4_-1"
+   ],
+   [
+    375,
+    "StaticMeshActor",
+    "Nanite_tile_-4_-1_Solid_01"
+   ],
+   [
+    374,
+    "StaticMeshActor",
+    "Nanite_tile_-4_-1_Solid_00"
+   ],
+   [
+    363,
+    "StaticMeshActor",
+    "tile_3_-3"
+   ],
+   [
+    363,
+    "StaticMeshActor",
+    "Nanite_tile_3_-3_Solid_00"
+   ],
+   [
+    361,
+    "StaticMeshActor",
+    "Nanite_tile_3_-3_Solid_01"
+   ]
+  ]
+ },
+ "loaded_actors": 8157,
+ "per_cell": {
+  "actors": {
+   "max": 810,
+   "median": 103,
+   "cells": 51
+  },
+  "lights": {
+   "max": 61,
+   "median": 6,
+   "cells": 51
+  },
+  "instances": {
+   "max": 41436,
+   "median": 6220,
+   "cells": 51
+  },
+  "trees": {
+   "max": 1,
+   "median": 0,
+   "cells": 51
+  }
+ },
+ "densest_cells": [
+  {
+   "cell": [
+    0,
+    0
+   ],
+   "x_m": 0,
+   "y_m": 0,
+   "actors": 810,
+   "lights": 61,
+   "instances": 0,
+   "trees": 1
+  },
+  {
+   "cell": [
+    2,
+    1
+   ],
+   "x_m": 512,
+   "y_m": 256,
+   "actors": 399,
+   "lights": 17,
+   "instances": 24504,
+   "trees": 0
+  },
+  {
+   "cell": [
+    -2,
+    1
+   ],
+   "x_m": -512,
+   "y_m": 256,
+   "actors": 384,
+   "lights": 52,
+   "instances": 41436,
+   "trees": 0
+  },
+  {
+   "cell": [
+    2,
+    2
+   ],
+   "x_m": 512,
+   "y_m": 512,
+   "actors": 376,
+   "lights": 37,
+   "instances": 2353,
+   "trees": 0
+  },
+  {
+   "cell": [
+    1,
+    -1
+   ],
+   "x_m": 256,
+   "y_m": -256,
+   "actors": 371,
+   "lights": 48,
+   "instances": 26784,
+   "trees": 0
+  },
+  {
+   "cell": [
+    2,
+    -1
+   ],
+   "x_m": 512,
+   "y_m": -256,
+   "actors": 368,
+   "lights": 19,
+   "instances": 11461,
+   "trees": 0
+  },
+  {
+   "cell": [
+    -2,
+    0
+   ],
+   "x_m": -512,
+   "y_m": 0,
+   "actors": 361,
+   "lights": 34,
+   "instances": 2971,
+   "trees": 0
+  },
+  {
+   "cell": [
+    -2,
+    -1
+   ],
+   "x_m": -512,
+   "y_m": -256,
+   "actors": 353,
+   "lights": 21,
+   "instances": 30620,
+   "trees": 0
+  },
+  {
+   "cell": [
+    2,
+    0
+   ],
+   "x_m": 512,
+   "y_m": 0,
+   "actors": 349,
+   "lights": 21,
+   "instances": 40287,
+   "trees": 0
+  },
+  {
+   "cell": [
+    1,
+    2
+   ],
+   "x_m": 256,
+   "y_m": 512,
+   "actors": 305,
+   "lights": 46,
+   "instances": 26533,
+   "trees": 0
+  }
+ ],
+ "ticking_by_class": [
+  [
+   "CoHCombatEnemy",
+   3
+  ],
+  [
+   "CoHLifeManager",
+   1
+  ],
+  [
+   "VolumetricCloud",
+   1
+  ],
+  [
+   "RebornMonorail",
+   1
+  ]
+ ],
+ "special_counts": {
+  "Life": 1,
+  "Vehicle": 454,
+  "Car": 454,
+  "Tile": 567,
+  "Glass": 62,
+  "Water": 27,
+  "Monorail": 2
+ }
+}
