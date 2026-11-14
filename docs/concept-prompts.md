@@ -1,27 +1,53 @@
 # Concept prompt kit (Gemini) for City of Heroes Reborn enemies
 
-Goal: concept images in the same style as `full hellion1.jpg` / `Headless hellion1.jpg`, which work very well for 3D generation (local Hunyuan3D, Tripo, Meshy). One character = 2 images (full + headless), optionally side and back for multi-view.
+Goal: concept images in the same style as `full hellion1.jpg` / `Headless hellion1.jpg`, which work very well for 3D generation (local Hunyuan3D, Tripo, Meshy). Default deliverable per character: a **headless, bare-handed body** in the MetaHuman A-pose (faces come from MetaHuman), plus left/back/right views for multi-view. Headwear, face coverings and weapons are separate gear pieces: the character lines below still describe the full look, the style block strips the gear, and the gear prompts make it separately.
 
 ## How to use
 
-1. Start a new Gemini chat and attach `full hellion1.jpg` as the style reference.
+1. Start a new Gemini chat. Attach `full hellion1.jpg` as the style reference and, for the pose, one of the original-costume A-pose renders from `model-upgrade-samples/gemini_refs/hellions/` (e.g. `hellions_minion_01_front.png`; the `nogear/` copies have the cap/goggles removed).
 2. Paste the **style block**, then one **character line** from below.
-3. When it looks right, ask for the **headless follow-up** in the same chat (keeps the same character).
-4. Optional for better 3D: ask for the **side** and **back** follow-ups.
-5. Save as `<group>_<tier>_<n>_full.jpg`, `..._headless.jpg` (`_side`, `_back`) and drop them in `C:\Users\rtcru\charpipe_test\in\<group>_<tier>_<n>\` (rename full to `front.jpg`).
+3. Ask for the **headless** follow-up in the same chat. **Headless is the default deliverable**: faces come from MetaHuman Creator (or a separate head generation), so the body image is what goes to Tripo / Hunyuan3D.
+4. For multi-view 3D (Tripo front/left/back/right), ask for the **left**, **back** and **right** follow-ups.
+5. Gear (bandanas, hats, masks, goggles, helmets, weapons) is generated separately with the **gear prompts** below and attached as rigid pieces.
+6. Save as `<group>_<tier>_<n>_headless.jpg` (`_full`, `_left`, `_back`, `_right`) in `C:\Users\rtcru\charpipe_test\in\<group>_<tier>_<n>\`.
 
-Tips: keep each prompt to one character. If Gemini adds a weapon in the hand, say "empty hands, no props" (weapons and gear are generated separately and attached in the pipeline). If arms come out too close to the body, repeat "arms 30 degrees away from the body, hands not touching anything".
+Tips: keep each prompt to one character. If Gemini adds a weapon, a hat or a mask, repeat "bare face, empty hands, no props, no headwear". If the arms come out too close to the body or the palms face forward, repeat "MetaHuman A-pose: upper arms about 40 degrees out from the body, palms facing down and inward toward the thighs".
 
 ## Style block (paste first, every time)
 
-> Use the attached image as the style reference. Create a NEW character in exactly this style: photoreal modern video game character render (Unreal Engine 5 quality), full body from the top of the head to the soles of the boots, front view facing the camera, neutral relaxed A-pose with both arms held about 30 degrees away from the body, hands open with the fingers slightly spread and not touching the body or clothing, feet shoulder-width apart, plain flat mid-grey background, soft even studio lighting, no shadows on the background, no text, no logo watermark, empty hands with no weapons or props, realistic adult proportions (about 7.5 heads tall). The character:
+> Use the attached images as references: the first for the rendering style, the second for the exact pose. Create a NEW character in exactly this style: photoreal modern video game character render (Unreal Engine 5 quality), full body from the top of the head to the soles of the boots, front view facing the camera, straight-on camera at chest height. Pose: the standard MetaHuman bind A-pose, both upper arms lowered about 52 degrees below horizontal (about 38-40 degrees out from the body), elbows almost straight, palms facing down and slightly inward toward the thighs, fingers relaxed and slightly spread and not touching the body or clothing, legs straight and slightly apart (feet a little wider than the hips). Bare face, no headwear, masks, bandanas, goggles, helmets or face coverings; hair visible. No weapons or held items, empty hands. Keep all clothing, gloves and boots. Plain flat mid-grey background, soft even studio lighting, no shadows on the background, no text, no logo watermark, realistic adult proportions (about 7.5 heads tall). The character:
 
 ## Follow-ups (same chat)
 
-- **Headless:** "Now the exact same character, same pose, clothing and lighting, but without the head: show a clean neck stump at the collar, nothing above the neck. Keep everything else identical."
-- **Side:** "Now the exact same character from the left side (90 degrees), same pose, clothing and lighting, plain mid-grey background."
-- **Back:** "Now the exact same character from behind (back view), same pose, clothing and lighting, plain mid-grey background."
-- **Head close-up (for separate head generation):** "Now a head-and-shoulders portrait of the same character, front view, neutral expression, plain mid-grey background, same lighting."
+- **Headless (default):** "Now the exact same character, same pose, clothing and lighting, but without the head: show a clean neck stump at the collar, nothing above the neck. Keep everything else identical."
+- **Left:** "Now the exact same character seen from its left side (camera rotated 90 degrees), same A-pose, clothing and lighting, plain mid-grey background, same framing and height."
+- **Back:** "Now the exact same character from behind (back view), same A-pose, clothing and lighting, plain mid-grey background, same framing and height."
+- **Right:** "Now the exact same character seen from its right side (camera rotated 90 degrees the other way), same A-pose, clothing and lighting, plain mid-grey background, same framing and height."
+- **Head close-up (only if not using MetaHuman faces):** "Now a head-and-shoulders portrait of the same character, front view, bare face, neutral expression, plain mid-grey background, same lighting."
+
+## Gear prompts (separate rigid pieces)
+
+Paste once: "Isolated single object, product shot, three-quarter view, plain flat mid-grey background, soft even studio lighting, photoreal Unreal Engine 5 game asset, no person, no mannequin, no text. The object:" then one line:
+
+- Hellions: red-and-white paisley bandana tied as a face mask (lower face) / worn red baseball cap / black leather biker cap / red horned leather demon mask / flame-painted metal shoulder pad.
+- Skulls: white bone skull mask / skull-faced helmet.
+- Outcasts: knitted beanie / elemental goggles.
+- Family: grey fedora.
+- Tsoo: carved red demon mask / painted opera mask.
+- Freakshow: welding-style goggles / metal jaw piece.
+- Council: helmet with visor / officer beret.
+- Circle of Thorns: black leather face mask / tall horned headdress.
+- Vahzilok: white plague-doctor mask / surgical goggles mask.
+- Banished Pantheon: carved wooden tribal mask.
+- Warriors: crested bronze helmet.
+- Sky Raiders: flight goggles / helmet with visor.
+- Nemesis: spiked Prussian helmet with gas mask.
+- Crey: tactical visor helmet.
+- Carnival of Shadows: white porcelain mask / mirror mask / top hat.
+- Malta: balaclava / helmet with night-vision goggles.
+- Arachnos: full-face helmet with red lenses.
+- 5th Column: steel helmet with gas mask.
+- Weapons (all groups): baseball bat / fire axe / sledgehammer / combat knife / pump shotgun / compact submachine gun / pistol.
 
 ## Character lines
 
@@ -144,6 +170,6 @@ Each group keeps its original 2004 colours and motifs, updated to how the gang w
 
 ## Notes
 
-- Keep the same grey background and A-pose for every image so the 3D generator and the auto-rig behave the same for all characters.
+- Keep the same grey background and MetaHuman A-pose for every image so the 3D generator and the auto-rig behave the same for all characters.
 - The headless image plus a separate head close-up gives the best faces (the pipeline attaches the head at the neck).
-- Gear, weapons, hats and masks are best generated separately ("isolated object, plain grey background, product shot") and attached as rigid pieces.
+- Gear, weapons, hats and masks are generated separately with the gear prompts and attached as rigid pieces (charpipe `bl_accessory.py`: head / hand_r / belt sockets).

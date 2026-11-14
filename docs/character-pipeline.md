@@ -32,6 +32,8 @@ tools\charpipe\charpipe.cmd <in_dir> <out_dir> [--only NAME] [--parts] [--wait] 
 
 - `<in_dir>/<character>/front.png` is required. Add `left.png`, `back.png` and `right.png` for multi-view (better proportions). Any single image works as the front. An optional `height.txt` sets the height in metres.
 - Make the inputs from an original CoH model: `blender -b --factory-startup -P tools/charpipe/bl_refviews.py -- <character.gltf> <in_dir>/<name>`, which renders the 4 orthographic T-pose views + `height.txt`. Concept art, Meshy renders or photos also work, best with a T-pose and plain background.
+- For Gemini / Tripo multi-view references in the MetaHuman A-pose (upper arms 52 deg below horizontal, legs 4 deg apart, 1024x1536, mid-grey, same ortho framing for front/left/back/right): `blender -b --factory-startup -P tools/charpipe/bl_refviews_apose.py -- <character.gltf> <out_dir> <name> [--nogear]`. `--nogear` hides the Hair and EyeDetail parts (CoH caps, hats, goggles, masks); bandanas baked into the Head texture stay.
+- MetaHuman Creator conform input from a rigged charpipe/Tripo character: `blender -b --factory-startup -P tools/charpipe/bl_mh_conform_prep.py -- <rigged.glb> <out_dir> <name>` writes a cm-scale, feet-at-origin, A-posed static FBX/OBJ with texture, plus a headless body-only variant.
 - Copy `config.example.json` to `config.json` to change paths, VRAM thresholds or the face budget.
 
 Per character, in `<out_dir>/<character>/`:
@@ -85,6 +87,9 @@ Weights come from Blender's automatic (heat) weighting, with envelope weights as
 | `charpipe.py` / `charpipe.cmd` | system Python | orchestration, resume, GPU guard, log |
 | `hy3d_gen.py` | hy3d venv | Hunyuan3D shape / texture |
 | `bl_refviews.py` | Blender | reference views from an original CoH model |
+| `bl_refviews_apose.py` | Blender | MetaHuman A-pose 4-view references (Gemini/Tripo), optional gear hidden |
+| `bl_mh_conform_prep.py` | Blender | A-posed cm-scale FBX/OBJ (+ headless) for MetaHuman Creator conform |
+| `bl_decimate.py` | Blender | weld + decimate dense generated meshes (Tripo) before rigging |
 | `bl_autorig.py` | Blender | skeleton fit + weights |
 | `rig_cleanup.py` | Blender | scale / facing / ground / weight fixes (also for Meshy rigs) |
 | `bl_export.py` | Blender | FBX for Unreal + part slots |

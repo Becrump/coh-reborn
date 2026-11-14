@@ -185,18 +185,51 @@ proxy.select_set(True)
 arm.select_set(True)
 bpy.context.view_layer.objects.active = arm
 rep["weights"] = "heat (welded proxy)"
-try:
+
+
+def heat(px):
+    bpy.ops.object.select_all(action="DESELECT")
+    px.select_set(True)
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
-    nz = sum(1 for v in proxy.data.vertices if any(g.weight > 0 for g in v.groups))
-    rep["proxy_weighted_vertices"] = nz
-    if nz < 0.5 * len(proxy.data.vertices):
-        raise RuntimeError("heat weighting left %d of %d vertices unweighted" % (len(proxy.data.vertices) - nz, len(proxy.data.vertices)))
-except Exception as e:  # noqa: BLE001
-    rep["weights"] = "envelope (heat failed: %s)" % str(e)[:100]
+    return sum(1 for v in px.data.vertices if any(g.weight > 0 for g in v.groups))
+
+
+nz = 0
+try:
+    nz = heat(proxy)
+except Exception:  # noqa: BLE001
+    nz = 0
+rep["proxy_weighted_vertices"] = nz
+if nz < 0.5 * len(proxy.data.vertices):
+    # generated meshes often carry hidden inner shells / open edges that break heat weighting:
+    # rebuild a watertight voxel proxy, weight that, and transfer
     for md in list(proxy.modifiers):
         proxy.modifiers.remove(md)
     proxy.vertex_groups.clear()
-    bpy.ops.object.parent_set(type="ARMATURE_ENVELOPE")
+    proxy.parent = None
+    bpy.ops.object.select_all(action="DESELECT")
+    proxy.select_set(True)
+    bpy.context.view_layer.objects.active = proxy
+    proxy.data.remesh_voxel_size = 0.012 * H / 1.8
+    bpy.ops.object.voxel_remesh()
+    rep["weights"] = "heat (voxel proxy, %d verts)" % len(proxy.data.vertices)
+    try:
+        nz = heat(proxy)
+    except Exception:  # noqa: BLE001
+        nz = 0
+    rep["proxy_weighted_vertices"] = nz
+    if nz < 0.5 * len(proxy.data.vertices):
+        rep["weights"] = "envelope (heat failed twice)"
+        for md in list(proxy.modifiers):
+            proxy.modifiers.remove(md)
+        proxy.vertex_groups.clear()
+        bpy.ops.object.select_all(action="DESELECT")
+        proxy.select_set(True)
+        arm.select_set(True)
+        bpy.context.view_layer.objects.active = arm
+        bpy.ops.object.parent_set(type="ARMATURE_ENVELOPE")
 for g in proxy.vertex_groups:
     if g.name not in body.vertex_groups:
         body.vertex_groups.new(name=g.name)

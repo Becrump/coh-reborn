@@ -82,8 +82,11 @@ for slot, path in items.items():
         hp = body_pts({"Head", "head_end", "headfront"})
         hlo = Vector([min(q[i] for q in hp) for i in range(3)])
         hhi = Vector([max(q[i] for q in hp) for i in range(3)])
-        k = (hhi.x - hlo.x) * 1.08 / size.x
-        M = Matrix.Translation(Vector(((hlo.x + hhi.x) / 2, (hlo.y + hhi.y) / 2, hhi.z - 0.55 * size.z * k))) @ Matrix.Scale(k, 4) @ Matrix.Translation(-ctr)
+        # size to the skull (head width x 1.04) and sit the cap's rim at brow height (~38% down from the crown)
+        k = (hhi.x - hlo.x) * 1.04 / size.x
+        brow_z = hhi.z - 0.38 * (hhi.z - hlo.z)
+        bottom_c = Vector((ctr.x, ctr.y, lo.z))
+        M = Matrix.Translation(Vector(((hlo.x + hhi.x) / 2, (hlo.y + hhi.y) / 2 + 0.01, brow_z))) @ Matrix.Scale(k, 4) @ Matrix.Translation(-bottom_c)
         bone = "Head"
     elif slot == "hand_r":
         ax = max(range(3), key=lambda i: size[i])
