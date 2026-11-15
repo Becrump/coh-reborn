@@ -1,0 +1,5 @@
+# playtest path: Atlas plaza -> Galaxy City -> Kings Row -> Skyway City, 20 m up (X,Y,Z cm)
+4068,7512,2000
+311705,68275,2000
+185865,-183245,2000
+33165,-173985,2000
