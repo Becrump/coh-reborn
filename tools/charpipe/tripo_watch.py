@@ -2,6 +2,7 @@
 
     python tools/charpipe/tripo_watch.py            (process what is new, then keep watching; Ctrl+C to stop)
     python tools/charpipe/tripo_watch.py --once     (process what is new and exit)
+    python tools/charpipe/tripo_watch.py --dry-run  (only list + classify everything, see tripo_catalog.py)
 
 Folders (drop .glb / .gltf / .fbx / .obj from the Tripo website or bridge):
   C:/Users/rtcru/charpipe_test/tripo/in/                                  bodies and heads
@@ -119,10 +120,10 @@ def process(src):
         " headless" if headless else "", time.time() - t0, UE, base, ("preview " + prev) if prev else ""))
 
 
-def process_gear(src):
-    base = os.path.splitext(os.path.basename(src))[0].lower().replace(" ", "_")
+def process_gear(src, name=None):
+    base = name or os.path.splitext(os.path.basename(src))[0].lower().replace(" ", "_")
     body = WARDROBE + "/body/base.glb"
-    r = bl(os.path.join(HERE, "bl_gear_item.py"), body, src, WARDROBE)
+    r = bl(os.path.join(HERE, "bl_gear_item.py"), body, src, WARDROBE, "--name", base)
     log("OK gear %s %s" % (base, " ".join(x for x in r if "GEAR_ITEM_OK" in x)[:200]))
 
 
@@ -169,8 +170,41 @@ def kind(folder, f):
 
 def scan(state):
     done, gear_done = 0, 0
+    if "--dry-run" in sys.argv:
+        import tripo_catalog as TC
+        TC.main()
+        return 0
     files = []
-    for folder in (EXPORTS, IN, PARTS, INCOMING):
+    # Robert's export tree: classified by folder path (tripo_catalog), zips extracted to the _unzipped cache
+    import tripo_catalog as TC
+    groups = {}
+    for r in TC.catalogue(EXPORTS, do_extract=True):
+        if r.get("duplicate_of_loose"):
+            continue
+        key = "exports:" + r["rel"]
+        st_ = os.stat(TC.lp(r["path"]))
+        sig = "%d:%d" % (st_.st_size, int(st_.st_mtime))
+        if state.get(key) == sig or time.time() - st_.st_mtime < 20:
+            continue
+        name = (r["character"] + "_" + r["piece"]).lower().replace(" ", "_").replace("/", "_").replace("#", "")
+        try:
+            if r["type"] == "body":
+                log("NEW body %s -> rig" % r["rel"])
+                process(r["path"])
+            elif r["type"] == "gear":
+                log("NEW gear %s" % r["rel"])
+                process_gear(r["path"], name)
+                gear_done += 1
+            else:  # cloth / setpart / head / ?: grouped per character for the kitbash / set-assembly flow
+                groups.setdefault((r["character"], r["type"]), []).append(r["rel"])
+            state[key] = sig
+        except Exception as e:  # noqa: BLE001
+            log("FAIL %s: %s" % (r["rel"], e))
+            state[key] = sig + ":failed"
+        json.dump(state, open(ROOT + "/watch_state.json", "w"), indent=1)
+    for (ch, t), rels in sorted(groups.items()):
+        log("  %s %s x%d waiting for the %s flow: %s" % (ch, t, len(rels), "kitbash" if t == "cloth" else "set assembly" if t == "setpart" else "manual", "; ".join(rels[:6])))
+    for folder in (IN, PARTS, INCOMING):
         if not os.path.isdir(folder):
             continue
         for dp, _, fs in os.walk(folder):
@@ -213,7 +247,7 @@ def main():
     sp = ROOT + "/watch_state.json"
     state = json.load(open(sp)) if os.path.exists(sp) else {}
     n = scan(state)
-    if "--once" in sys.argv:
+    if "--once" in sys.argv or "--dry-run" in sys.argv:
         log("once: %d file(s) processed" % n)
         return
     log("watching %s, %s, %s (Ctrl+C to stop)" % (IN, PARTS, INCOMING))
