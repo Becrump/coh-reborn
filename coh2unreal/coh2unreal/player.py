@@ -246,7 +246,13 @@ def main(argv=None):
                 npc = costume_npc(spec)
                 gd.npcs()[npc.args[0].lower()] = npc
                 npc_name = npc.args[0]
-            body = _body_of(gd.npcs()[npc_name.lower()])
+            npc_def = gd.npcs().get(npc_name.lower())
+            if npc_def is None:
+                print("  %s: no NPC costume of that name" % npc_name)
+                continue
+            if any(i["name"].lower() == npc_name.lower() for i in index):
+                continue
+            body = _body_of(npc_def)
             out_dir = os.path.join(args.out, "models", body or "other",
                                    npc_name)
             os.makedirs(os.path.join(out_dir, "textures"), exist_ok=True)

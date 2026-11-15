@@ -144,11 +144,13 @@ def main(argv=None):
     ap.add_argument("--villain", action="append", default=[])
     ap.add_argument("--all-costumes", action="store_true")
     ap.add_argument("--no-models", action="store_true")
+    ap.add_argument("--encounters", help="encounters file for the idle "
+                    "behaviors (default <out>/encounters.json)")
     args = ap.parse_args(argv)
 
     with open(os.path.join(args.out, "roster.json")) as f:
         roster = json.load(f)
-    enc_path = os.path.join(args.out, "encounters.json")
+    enc_path = args.encounters or os.path.join(args.out, "encounters.json")
     encounters = {}
     if os.path.exists(enc_path):
         with open(enc_path) as f:
@@ -189,7 +191,11 @@ def main(argv=None):
         if npc is None:
             print("%s: no costume" % name)
             continue
-        ent_name, _prefix, _parts = resolve_costume(gd, npc, lambda *a: None)
+        try:
+            ent_name, _prefix, _parts = resolve_costume(gd, npc, lambda *a: None)
+        except ValueError as e:  # e.g. an NPC def with no Costume block
+            print("%s: %s" % (name, e))
+            continue
         et = gd.ent_type(ent_name)
         seq_file = (et.get("sequencer") or ["player.txt"])[0]
         # no SequencerType: the sequencer's file name (seqtype.c)

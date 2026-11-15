@@ -10,7 +10,7 @@ import json
 import os
 import unreal
 
-OUT = r"C:\Users\rtcru\CoHReborn\out\enemies"
+OUT = globals().get("GS_OUT") or r"C:\Users\rtcru\CoHReborn\out\enemies"
 ROOT = "/Game/CoH/Enemies"
 el = unreal.EditorAssetLibrary
 reg = unreal.AssetRegistryHelpers.get_asset_registry()

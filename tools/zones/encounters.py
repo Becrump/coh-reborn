@@ -164,11 +164,12 @@ def build_encounters(index, roller, villains, refs):
                 continue
             rolls = {}
             if act.get("villain"):
-                v = act["villain"]
-                rolls = {str(l): [v] for l in range(max(sd["min_level"], 1),
-                                                    max(sd["max_level"], 1) + 1)}
-                if v in villains:
-                    groups.add(villains[v].get("VillainGroup"))
+                vs = act.get("villain_choices") or [act["villain"]]
+                rolls = {str(l): list(vs) for l in range(max(sd["min_level"], 1),
+                                                         max(sd["max_level"], 1) + 1)}
+                for v in vs:
+                    if v in villains:
+                        groups.add(villains[v].get("VillainGroup"))
             elif act.get("group") and act.get("rank"):
                 groups.add(act["group"])
                 lo = max(sd["min_level"], 1)

@@ -137,12 +137,47 @@ if step == "base":
         print("SKELETON", body, body_skeleton(body))
 
 elif step == "presets":
+    # GS_PRESETS: list of names, or 'all' (every model on a player body in
+    # models.json: the hero presets and contact NPCs); GS_LIMIT new imports
     ms = models()
-    for name in globals().get("GS_PRESETS", []):
+    names = globals().get("GS_PRESETS", [])
+    if names == "all":
+        names = sorted(n for n, m in ms.items() if m.get("body") in BASE)
+    limit = int(globals().get("GS_LIMIT") or 0)
+    done = 0
+    for name in names:
         body = ms[name]["body"]
         if body not in bodies:
             continue
+        if assets_in("%s/Presets/%s/%s" % (ROOT, body, name), "SkeletalMesh"):
+            continue
+        if limit and done >= limit:
+            break
         import_preset(body, name, body_skeleton(body))
+        done += 1
+    left = sum(1 for n in names if ms[n]["body"] in bodies and not
+               assets_in("%s/Presets/%s/%s" % (ROOT, ms[n]["body"], n), "SkeletalMesh"))
+    print("PRESETS LEFT", left)
+
+elif step == "npcs":
+    # models on no player body (contacts' own rigs, creatures): each on its
+    # own skeleton under /Game/CoH/NPCs/<name>; GS_LIMIT new imports per call
+    ms = models()
+    limit = int(globals().get("GS_LIMIT") or 0)
+    todo = sorted(n for n, m in ms.items() if not m.get("body"))
+    done = 0
+    for name in todo:
+        dest = "/Game/CoH/NPCs/%s" % name
+        if assets_in(dest, "SkeletalMesh"):
+            continue
+        if limit and done >= limit:
+            break
+        ok = run_import(os.path.join(OUT, ms[name]["gltf"]), dest, pipeline())
+        rename_clips(dest)
+        save(dest)
+        done += 1
+        print("NPC", name, "ok" if ok and assets_in(dest, "SkeletalMesh") else "FAILED")
+    print("NPCS LEFT", sum(1 for n in todo if not assets_in("/Game/CoH/NPCs/%s" % n, "SkeletalMesh")))
 
 elif step == "anims":
     lib = {b["body"]: b for b in json.load(open(os.path.join(OUT, "anims.json")))}
