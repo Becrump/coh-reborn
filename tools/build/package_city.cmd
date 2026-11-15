@@ -40,7 +40,7 @@ rem ---- wait while the character thread's Hunyuan3D GPU jobs (python from C:\Us
 powershell -NoProfile -c "if (Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | ? { $_.CommandLine -match 'hy3d' -or $_.ExecutablePath -match 'hy3d' }) { exit 1 } else { exit 0 }"
 if errorlevel 1 (
   echo %date% %time% waiting for the hy3d GPU jobs to finish ...
-  timeout /t 180 /nobreak >nul
+  ping -n 181 127.0.0.1 >nul
   goto waithy3d
 )
 
@@ -66,7 +66,7 @@ rem ---- clean numbers: wait until the character thread's hy3d GPU jobs are done
 powershell -NoProfile -c "if (Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | ? { $_.CommandLine -match 'hy3d' -or $_.ExecutablePath -match 'hy3d' }) { exit 1 } else { exit 0 }"
 if errorlevel 1 (
   echo %date% %time% fly-through waiting for the hy3d GPU jobs ...
-  timeout /t 120 /nobreak >nul
+  ping -n 121 127.0.0.1 >nul
   goto waitflyhy3d
 )
 set "HOLD=C:\Users\rtcru\ClaudeProjects\COHReborn\CPU_HOLD.txt"

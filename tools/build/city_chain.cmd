@@ -24,7 +24,7 @@ tasklist /fi "imagename eq UnrealEditor-Cmd.exe" 2>nul | %SystemRoot%\System32\f
 if exist "%HOLDDIR%\CPU_HOLD.txt" set "BUSY=CPU_HOLD"
 if exist "%HOLDDIR%\GPU_HOLD.txt" set "BUSY=GPU_HOLD"
 if defined BUSY (
-  timeout /t 120 /nobreak >nul
+  ping -n 121 127.0.0.1 >nul
   goto wait
 )
 echo %date% %time% editor free, no holds: starting >> "%LOG%"
