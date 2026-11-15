@@ -3,7 +3,15 @@
     python tools/charpipe/tripo_watch.py            (process what is new, then keep watching; Ctrl+C to stop)
     python tools/charpipe/tripo_watch.py --once     (process what is new and exit)
 
-Folder: C:/Users/rtcru/charpipe_test/tripo/in/  (drop .glb / .gltf / .fbx / .obj from the Tripo website or bridge)
+Folders (drop .glb / .gltf / .fbx / .obj from the Tripo website or bridge):
+  C:/Users/rtcru/charpipe_test/tripo/in/                                  bodies and heads
+  C:/Users/rtcru/ClaudeProjects/COHReborn/model-upgrade-samples/parts/hellions/   pieces / accessories (primary)
+  C:/Users/rtcru/charpipe_test/tripo/incoming/                            treated like parts/hellions
+Pieces: gear (cap, mask, goggles, bandana, chain, bat, pipe, gun, wallet, ...) -> bl_gear_item.py: sized by name,
+socket/slot from the name, saved into the Hellion wardrobe (charpipe_test/wardrobe/hellions/<slot>/gear_<item>.glb +
+wardrobe.json); after a batch a gear sheet is rendered on the test Hellion (tripo/ue_ready/previews/gear_sheet.jpg).
+Clothing pieces (vest, shirt, jeans, boots, gloves, jacket...) need the base body they were exported with (Tripo
+part export): they are logged and left for the kitbash flow (bl_kitbash_tuck/export + bl_wardrobe_make).
 Per new file (name = character name; height and headless come from the name, see bl_tripo_clean.py:
 kid/lean 172, veteran 178, average 180, heavy/brawler 183, big/biker 193, default 182; "headless"):
   clean (weld, floaters, normals, 50k tris, 2K textures, size) -> proxy head if headless -> autorig
@@ -22,6 +30,14 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = "C:/Users/rtcru/charpipe_test/tripo"
 IN, WORK, UE = ROOT + "/in", ROOT + "/work", ROOT + "/ue_ready"
+PARTS = "C:/Users/rtcru/ClaudeProjects/COHReborn/model-upgrade-samples/parts/hellions"
+INCOMING = ROOT + "/incoming"
+EXPORTS = ROOT + "/Tripo Exports"  # Robert's single drop folder (searched recursively; originals are never moved or deleted)
+WARDROBE = "C:/Users/rtcru/charpipe_test/wardrobe/hellions"
+GEAR_WORDS = ("cap", "hat", "beanie", "helmet", "hood", "mask", "goggle", "glasses", "visor", "respirator", "bandana", "scarf",
+              "chain", "necklace", "bat", "pipe", "axe", "knife", "gun", "pistol", "shotgun", "smg", "sledge", "crowbar",
+              "wrench", "machete", "weapon", "club", "hammer", "wallet", "pouch", "holster", "belt", "gear")
+CLOTH_WORDS = ("vest", "shirt", "tee", "jeans", "pants", "trousers", "boots", "shoes", "gloves", "jacket", "hoodie", "coat")
 HOLDS = ["C:/Users/rtcru/ClaudeProjects/COHReborn/CPU_HOLD.txt", "C:/Users/rtcru/ClaudeProjects/COHReborn/GPU_HOLD.txt"]
 BLENDER = "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe"
 RENDER = "C:/Users/rtcru/ClaudeProjects/COHReborn/model-upgrade-samples/scripts/rig_test_render.py"
@@ -103,30 +119,96 @@ def process(src):
         " headless" if headless else "", time.time() - t0, UE, base, ("preview " + prev) if prev else ""))
 
 
+def process_gear(src):
+    base = os.path.splitext(os.path.basename(src))[0].lower().replace(" ", "_")
+    body = WARDROBE + "/body/base.glb"
+    r = bl(os.path.join(HERE, "bl_gear_item.py"), body, src, WARDROBE)
+    log("OK gear %s %s" % (base, " ".join(x for x in r if "GEAR_ITEM_OK" in x)[:200]))
+
+
+def gear_sheet():
+    """render every gear item on the test Hellion (base body + tee + jeans + boots): idle front + Brawl"""
+    try:
+        wd = json.load(open(WARDROBE + "/wardrobe.json"))
+    except Exception:  # noqa: BLE001
+        return
+    gear = [k for k in wd.get("items", {}) if k.startswith("gear_")]
+    if not gear or not os.path.exists(RENDER):
+        return
+    from PIL import Image, ImageDraw
+    base = [WARDROBE + "/" + wd["items"][k]["file"] for k in ("tee", "jeans", "boots") if k in wd.get("items", {})]
+    sheet = Image.new("RGB", (len(gear) * 2 * 200, 330), (40, 40, 40))
+    d = ImageDraw.Draw(sheet)
+    env = dict(os.environ, RT_QUICK="1")
+    for i, g in enumerate(gear):
+        hold_wait()
+        subprocess.run([BLENDER, "-b", "--factory-startup", "-P", RENDER, "--", WARDROBE + "/body/base.glb", g, *base,
+                        WARDROBE + "/" + wd["items"][g]["file"]], capture_output=True, env=env)
+        for j, v in enumerate(("idle_front", "brawl")):
+            p = "%s/RT_%s_%s.png" % (RENDERS, g, v)
+            if os.path.exists(p):
+                sheet.paste(Image.open(p).convert("RGB").resize((200, 300)), ((2 * i + j) * 200, 0))
+        d.text((i * 400 + 6, 306), "%s (%s)" % (g, wd["items"][g]["slot"]), fill=(230, 230, 230))
+    os.makedirs(UE + "/previews", exist_ok=True)
+    sheet.save(UE + "/previews/gear_sheet.jpg", quality=86)
+    log("gear sheet: %s (%d items)" % (UE + "/previews/gear_sheet.jpg", len(gear)))
+
+
+def kind(folder, f):
+    low = f.lower()
+    if folder == IN:
+        return "gear" if low.startswith("gear_") else "body"
+    if "hair" in low:
+        return "gear"
+    if any(w in low for w in ("headless", "hellion_", "body", "full")) and not low.startswith("gear_"):
+        return "body"
+    if any(w in low for w in CLOTH_WORDS) and not any(w in low for w in GEAR_WORDS):
+        return "cloth"
+    return "gear"
+
+
 def scan(state):
-    done = 0
-    for f in sorted(os.listdir(IN)):
-        if not f.lower().endswith(EXTS):
+    done, gear_done = 0, 0
+    files = []
+    for folder in (EXPORTS, IN, PARTS, INCOMING):
+        if not os.path.isdir(folder):
             continue
-        p = os.path.join(IN, f).replace("\\", "/")
-        st = os.stat(p)
-        sig = "%d:%d" % (st.st_size, int(st.st_mtime))
-        if state.get(f) == sig or time.time() - st.st_mtime < 20:
-            continue
-        log("NEW %s" % f)
-        try:
-            process(p)
-            state[f] = sig
-        except Exception as e:  # noqa: BLE001
-            log("FAIL %s: %s" % (f, e))
-            state[f] = sig + ":failed"
-        json.dump(state, open(ROOT + "/watch_state.json", "w"), indent=1)
-        done += 1
+        for dp, _, fs in os.walk(folder):
+            for f in sorted(fs):
+                if f.lower().endswith(EXTS) and ".fbm" not in dp:
+                    files.append((folder, dp, f))
+    for folder, dp, f in files:
+        if True:
+            p = os.path.join(dp, f).replace("\\", "/")
+            f = os.path.basename(dp) + "_" + f if folder == EXPORTS and dp != folder else f
+            st = os.stat(p)
+            sig = "%d:%d" % (st.st_size, int(st.st_mtime))
+            key = p if folder != IN else f
+            if state.get(key) == sig or time.time() - st.st_mtime < 20:
+                continue
+            k = kind(folder, f)
+            log("NEW %s (%s)" % (p, k))
+            try:
+                if k == "body":
+                    process(p)
+                elif k == "gear":
+                    process_gear(p)
+                    gear_done += 1
+                else:
+                    log("  clothing piece: needs the base body it was exported with (kitbash flow), not processed")
+                state[key] = sig
+            except Exception as e:  # noqa: BLE001
+                log("FAIL %s: %s" % (f, e))
+                state[key] = sig + ":failed"
+            json.dump(state, open(ROOT + "/watch_state.json", "w"), indent=1)
+            done += 1
+    if gear_done:
+        gear_sheet()
     return done
 
 
 def main():
-    for d in (IN, WORK, UE):
+    for d in (IN, WORK, UE, PARTS, INCOMING, EXPORTS):
         os.makedirs(d, exist_ok=True)
     sp = ROOT + "/watch_state.json"
     state = json.load(open(sp)) if os.path.exists(sp) else {}
@@ -134,7 +216,7 @@ def main():
     if "--once" in sys.argv:
         log("once: %d file(s) processed" % n)
         return
-    log("watching %s (Ctrl+C to stop)" % IN)
+    log("watching %s, %s, %s (Ctrl+C to stop)" % (IN, PARTS, INCOMING))
     while True:
         time.sleep(30)
         scan(state)
