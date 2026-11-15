@@ -1,0 +1,37 @@
+{
+ "moved": [
+  "city_01_03 -> X 3215 m, Y 507 m",
+  "hazard_01_01 -> X 2434 m, Y 975 m",
+  "hazard_01_02 -> X -1644 m, Y -530 m",
+  "hazard_03_01 -> X -7653 m, Y -2103 m",
+  "city_02_02 -> X 156 m, Y -2910 m",
+  "city_03_01 -> X -3383 m, Y -1066 m"
+ ],
+ "removed_old": 1,
+ "materials": {
+  "water": "/Game/atlas_park/Materials/calmwater_1_tga.calmwater_1_tga",
+  "ground": "/Game/atlas_park/Materials/concrete_dirty_tga.concrete_dirty_tga",
+  "road": "/Game/atlas_park/Materials/4lane_2to4_tga.4lane_2to4_tga"
+ },
+ "base": {
+  "cells": {
+   "water": 565,
+   "ground": 1874
+  },
+  "actors": 247
+ },
+ "corridors": [
+  "Galaxy City HAZARD_PEREZPARK <-> Perez Park HAZARD_GALAXYCITY: 61 m",
+  "Perez Park HAZARD_ATLASPARK <-> Atlas Park HAZARD_PEREZPARK: 661 m",
+  "Perez Park HAZARD_STEELCANYON <-> Steel Canyon HAZARD_PEREZPARK: 1054 m",
+  "Perez Park HAZARD_SKYWAYCITY <-> Skyway City HAZARD_PEREZPARK: 1198 m"
+ ],
+ "player_start": [
+  4068.0,
+  7512.0,
+  5904.0
+ ],
+ "saved_packages": 261,
+ "other_dirty": [],
+ "minutes": 1.1
+}

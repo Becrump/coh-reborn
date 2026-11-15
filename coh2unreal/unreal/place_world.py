@@ -25,7 +25,7 @@ import sys
 import unreal
 
 ROOT = "/Game/Zones"
-ATLAS_LEVEL = ""          # e.g. "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite"
+ATLAS_LEVEL = "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite"          # e.g. "/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite"
 LABEL = "ZoneInstance_%s"
 asub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 
@@ -87,6 +87,7 @@ def main():
             a.set_actor_label(label)
             a.set_folder_path("Zones")
         else:
+            a.modify()      # record the move so the actor's package is saved
             a.set_actor_location(loc, False, False)
         a.set_editor_property("world_asset", unreal.load_asset(pkg))
         try:
