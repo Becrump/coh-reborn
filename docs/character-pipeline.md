@@ -34,6 +34,7 @@ tools\charpipe\charpipe.cmd <in_dir> <out_dir> [--only NAME] [--parts] [--wait] 
 - Make the inputs from an original CoH model: `blender -b --factory-startup -P tools/charpipe/bl_refviews.py -- <character.gltf> <in_dir>/<name>`, which renders the 4 orthographic T-pose views + `height.txt`. Concept art, Meshy renders or photos also work, best with a T-pose and plain background.
 - For Gemini / Tripo multi-view references in the MetaHuman A-pose (upper arms 52 deg below horizontal, legs 4 deg apart, 1024x1536, mid-grey, same ortho framing for front/left/back/right): `blender -b --factory-startup -P tools/charpipe/bl_refviews_apose.py -- <character.gltf> <out_dir> <name> [--nogear]`. `--nogear` hides the Hair and EyeDetail parts (CoH caps, hats, goggles, masks); bandanas baked into the Head texture stay.
 - MetaHuman Creator conform input from a rigged charpipe/Tripo character: `blender -b --factory-startup -P tools/charpipe/bl_mh_conform_prep.py -- <rigged.glb> <out_dir> <name>` writes a cm-scale, feet-at-origin, A-posed static FBX/OBJ with texture, plus a headless body-only variant.
+- Tripo downloads come out about 1 unit tall. Drop them in `C:\Users\rtcru\charpipe_test\tripo\in\` and double-click `tools/charpipe/tripo_normalize.cmd` (optional height argument, default 182 cm). File names pick the height: kid/lean 172, veteran 178, average 180, heavy/brawler 183, big/biker 193; `headless` puts the neck at 0.87 x height; gear names (bandana, cap, bat, shotgun...) get a typical real size. Output: `tripo\mh_ready\*.fbx` plus `normalize_log.txt`.
 - Copy `config.example.json` to `config.json` to change paths, VRAM thresholds or the face budget.
 
 Per character, in `<out_dir>/<character>/`:
@@ -89,6 +90,7 @@ Weights come from Blender's automatic (heat) weighting, with envelope weights as
 | `bl_refviews.py` | Blender | reference views from an original CoH model |
 | `bl_refviews_apose.py` | Blender | MetaHuman A-pose 4-view references (Gemini/Tripo), optional gear hidden |
 | `bl_mh_conform_prep.py` | Blender | A-posed cm-scale FBX/OBJ (+ headless) for MetaHuman Creator conform |
+| `bl_tripo_normalize.py` + `tripo_normalize.cmd` | Blender | batch: Tripo downloads (1 unit tall) -> MetaHuman-scale FBX in cm, feet at origin, +Y facing, A-pose if rigged; heights per build from the file name |
 | `bl_decimate.py` | Blender | weld + decimate dense generated meshes (Tripo) before rigging |
 | `bl_autorig.py` | Blender | skeleton fit + weights |
 | `rig_cleanup.py` | Blender | scale / facing / ground / weight fixes (also for Meshy rigs) |
