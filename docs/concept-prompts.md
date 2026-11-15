@@ -239,3 +239,46 @@ Keep to the Hellion colours. Each piece gets 3-4 tints plus wear:
 ### Variety maths
 
 5 builds × 6-8 outfits (or about 10 tops × 7 bottoms × 4 footwear) × 4 palettes × MetaHuman heads × gear gives hundreds of distinct Hellions from about 20-25 generated pieces. Recommended first batch: B2, B3, B4 × O1, O2, O3, O7 (12 headless images), then split and mix.
+
+## Head library (swappable heads)
+
+Bodies are generated **headless**; heads come from this library and are attached with `tools/charpipe/bl_head_swap.py` (sized to the neck ring, weighted neck to Head). Skin tone is NOT baked into the choice of head: `bl_skin_tone.py` finds the skin and re-tints body and head with one SkinTone colour, so any head works on any body. Make each head once, reuse it everywhere.
+
+**Head style block (paste first, every time):**
+
+> Use the attached image as the style reference. Create a head-and-neck bust of a NEW character in exactly this style: photoreal modern video game character (Unreal Engine 5 quality), head and neck down to the collarbones, front view, looking straight at the camera, straight-on camera at eye height, neutral-to-tough expression with the mouth closed, bare head or hair only (no hats, caps, hoods, masks, bandanas, goggles, glasses or face coverings), no clothing visible except a plain grey crew-neck collar at the very bottom, plain flat mid-grey background, soft even studio lighting, no text, no watermark, realistic adult proportions. The character:
+
+**Side follow-up (same chat):** "Now the exact same head from its left side (profile, camera rotated 90 degrees), same lighting, same framing and height, plain mid-grey background."
+(Optional back: "Now the exact same head from behind, same framing.")
+
+Save as `heads/<id>_front.png` (and `_left.png`). Tripo: upload the front (and side) image, texture + PBR, no rig.
+
+| # | Character line |
+|---|---|
+| H01 | Hispanic man, mid-20s, buzz cut, thin moustache, small scar through the left eyebrow |
+| H02 | Black man, early 30s, short dreadlocks tied back, trimmed beard |
+| H03 | White man, late 40s, shaved bald head, heavy grey stubble, broken nose |
+| H04 | East Asian man, early 20s, bleached mohawk with shaved sides, ear piercings |
+| H05 | Middle Eastern man, mid-30s, short wavy black hair, full black beard, neck tattoo of flames |
+| H06 | White man, early 20s, ginger buzz cut, freckles, split lip scar |
+| H07 | Black man, late 40s, bald, grey goatee, deep forehead lines |
+| H08 | South Asian man, late 20s, slicked-back black hair, sharp jawline, faint stubble |
+| H09 | Native American man, mid-30s, long black braids, stern expression |
+| H10 | White man, mid-30s, shaved head with a red pentagram tattoo behind the ear, blond beard |
+| H11 | Pacific Islander man, early 30s, curly hair in a top knot, broad face, chin tattoo lines |
+| H12 | Hispanic man, late 40s, grey-streaked slicked hair, scar across the cheek, moustache |
+| H13 | Black man, early 20s, high-top fade, small diamond stud earring |
+| H14 | White man, early 50s, receding long grey hair, long biker beard |
+| H15 | East Asian man, mid-30s, undercut with a long top, thin scar on the chin |
+| H16 | Mixed-race man, late 20s, short twists, light beard, demon-horn tattoo on the temple |
+| H17 | White man, late 20s, black mohawk, eyebrow piercings, sunken tired eyes |
+| H18 | Middle Eastern man, early 40s, buzz cut, heavy brow, salt-and-pepper beard |
+| H19 | Black man, mid-30s, long dreadlocks to the shoulders, full beard |
+| H20 | Hispanic man, early 20s, shaved head, teardrop tattoo under the eye |
+| H21 | White man, mid-40s, messy shoulder-length brown hair, bags under the eyes, scar on the nose |
+| H22 | South Asian man, early 50s, bald with a grey horseshoe of hair, thick grey moustache |
+| H23 | East Asian man, late 40s, short grey crew cut, scarred knuckle-like brow, hard stare |
+| H24 | Mixed-race man, mid-20s, cornrows, thin chin-strap beard |
+| HF1-HF6 | Female heads: pending Robert's decision on female Hellions (same style block; vary ethnicity, age 20s-40s, hair: buzz, undercut, braids, long, mohawk) |
+
+Tips: keep the expression neutral-to-tough with the mouth closed (open mouths and smiles generate badly and look wrong on idle animations). Ask again if Gemini adds a hat, hood or glasses. Ethnicity is in the face shape and hair; the final skin colour comes from the SkinTone parameter, so you can also reuse a head with several tones.

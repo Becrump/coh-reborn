@@ -121,3 +121,16 @@ on the same skeleton (Leader Pose in Unreal). The interior-face removal in the c
    clean -> (proxy head) -> autorig -> cleanup -> fingers -> polish -> FBX -> CoH clip test renders.
    Output `tripo\ue_ready\<name>.fbx` + `ue_ready\previews\<name>.jpg`; log `tripo\watch_log.txt`; already
    processed files are skipped (`watch_state.json`); waits while CPU_HOLD.txt / GPU_HOLD.txt exist.
+
+## Heads and skin tone
+
+- `bl_head_swap.py <headless_rigged.glb> <head.glb> <out.glb>`: puts a library head on a headless body (neck =
+  narrowest slab of the head mesh, busts are cut there; sized from 3 cm inside the collar to the full height,
+  centred on the stump ring; weights neck -> Head). Test: Tripo head + 2 local heads, all play idle/Brawl/hit.
+- `bl_skin_tone.py <rigged.glb> <out_dir> <name> [--tones ...] [--de 16]`: skin mask per mesh = skin-likely
+  regions (arms, hands, shoulders, neck, head) AND skin colour (YCbCr) AND close (Lab) to the body's own bare
+  forearm colour; detail = luminance / median skin luminance. Writes `<name>_<mesh>_skinmask.png`
+  (R = mask, G = detail * 0.5) and tinted GLBs per tone. Unreal: one Material Instance parameter SkinTone
+  (Vector) shared by body and head materials: `BaseColor = lerp(Tex.rgb, SkinTone.rgb * (Mask.G * 2), Mask.R)`.
+  Known limits: blond/light-brown hair close to skin colour gets tinted; very dark tones show light halos at
+  the mask edge (needs a wider feather or edge darkening).
