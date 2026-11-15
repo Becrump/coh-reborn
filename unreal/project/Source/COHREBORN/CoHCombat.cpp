@@ -1257,6 +1257,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  const UCoHGameRules* GR=UCoHGameRules::Get(this);
  UWorld* W=GetWorld();
  if(!GR || !Near || !W) return false;
+ const TArray<FCoHEncounter>& EncList=GR->EncountersAt(W,Near->GetActorLocation());   // the zone the player is in
  // spawn definitions of the group / kind at this level, weighted by the
  // number of spots in the zone's layers that use them (mission and named
  // spawns are left to their own systems)
@@ -1273,7 +1274,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  // the level gap of an encounter (0 = in its range, give or take one level)
  auto Gap=[Level](const FCoHEncounter& E){ return FMath::Max(0,FMath::Max(E.MinLevel-1-Level,Level-E.MaxLevel-1)); };
  int32 Fits=0, BestGap=MAX_int32;
- for(const FCoHEncounter& E:GR->Encounters)
+ for(const FCoHEncounter& E:EncList)
  {
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
   if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
@@ -1281,7 +1282,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
   ++Fits; BestGap=FMath::Min(BestGap,Gap(E));
  }
  // none at this level: the nearest levels instead (the encounter's own level is clamped below)
- for(const FCoHEncounter& E:GR->Encounters)
+ for(const FCoHEncounter& E:EncList)
  {
   if(Fits==0) break;
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
@@ -1293,7 +1294,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  if(Pool.Num()==0)
  {
   UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for group '%s' kind '%s' at level %d (%d encounter definitions loaded)"),
-   Group.IsEmpty()?TEXT("any"):*Group,Kind.IsEmpty()?TEXT("any"):*Kind,Level,GR->Encounters.Num());
+   Group.IsEmpty()?TEXT("any"):*Group,Kind.IsEmpty()?TEXT("any"):*Kind,Level,EncList.Num());
   return false;
  }
  if(BestGap>0) UE_LOG(LogTemp,Log,TEXT("CoH encounters: nothing at level %d, using the nearest (%d levels off)"),Level,BestGap);

@@ -1,4 +1,5 @@
 #include "CoHGameRules.h"
+#include "HAL/FileManager.h"
 #include "CoHPowers.h"
 #include "Animation/AnimSequenceBase.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -255,6 +256,7 @@ void UCoHGameRules::Initialize(FSubsystemCollectionBase& Collection)
 	LoadHeroRules(HeroRulesDir / TEXT("hero_rules.json"));
 	LoadRewards(HeroRulesDir / TEXT("rewards.json"));
 	LoadEnemies(EnemyDir);
+	LoadZoneEncounters(Out / TEXT("zone_encounters"));
 	UE_LOG(LogTemp, Log, TEXT("CoH game rules: %d power anims, %d archetypes, %d sets, XP table %d, %d reward ranks, %d kit villains, %d encounters (%.1f s)"),
 		PowerAnims.Num(), Classes.Num(), Sets.Num(), XPForLevel.Num(), Tables.Num(), Villains.Num(), Encounters.Num(), FPlatformTime::Seconds() - T0);
 }
@@ -918,7 +920,13 @@ void UCoHGameRules::LoadEnemies(const FString& Dir)
 				for (const auto& BL : (*Lists)->Values) V.BehaviorLists.Add(FString(BL.Key), Tokens(BL.Value));
 			Villains.Add(V.Name, MoveTemp(V));
 		}
-	if (ReadJson(Dir / TEXT("encounters.json"), Root) && Root->AsObject().IsValid())
+	LoadEncountersFile(Dir / TEXT("encounters.json"), Encounters);
+}
+
+void UCoHGameRules::LoadEncountersFile(const FString& File, TArray<FCoHEncounter>& Out)
+{
+	TSharedPtr<FJsonValue> Root;
+	if (ReadJson(File, Root) && Root->AsObject().IsValid())
 	{
 		const TSharedPtr<FJsonObject>* EncO;
 		if (Root->AsObject()->TryGetObjectField(TEXT("encounters"), EncO))
@@ -952,7 +960,55 @@ void UCoHGameRules::LoadEnemies(const FString& Dir)
 							for (const auto& R : (*Rolls)->Values) Act.Rolls.Add(FCString::Atoi(*R.Key), Tokens(R.Value));
 						Enc.Actors.Add(MoveTemp(Act));
 					}
-				if (Enc.Actors.Num()) Encounters.Add(MoveTemp(Enc));
+				if (Enc.Actors.Num()) Out.Add(MoveTemp(Enc));
 			}
 	}
+}
+
+void UCoHGameRules::LoadZoneEncounters(const FString& Dir)
+{
+	TArray<FString> Zones;
+	IFileManager::Get().FindFiles(Zones, *(Dir / TEXT("*")), false, true);
+	int32 Defs = 0;
+	for (const FString& Z : Zones)
+	{
+		TArray<FCoHEncounter> List;
+		LoadEncountersFile(Dir / Z / TEXT("encounters.json"), List);
+		Defs += List.Num();
+		if (List.Num()) ZoneEncounters.Add(Z, MoveTemp(List));
+	}
+	TSharedPtr<FJsonValue> Root;
+	if (ReadJson(Dir / TEXT("zone_offsets.json"), Root) && Root->AsObject().IsValid())
+	{
+		const TSharedPtr<FJsonObject>* ZonesO;
+		const TArray<TSharedPtr<FJsonValue>>* Atlas = nullptr;
+		Root->AsObject()->TryGetArrayField(TEXT("atlas_rebuilt_rect_m"), Atlas);
+		if (Root->AsObject()->TryGetObjectField(TEXT("zones"), ZonesO))
+			for (const auto& KV : (*ZonesO)->Values)
+			{
+				const TArray<TSharedPtr<FJsonValue>>* R = nullptr;
+				if (KV.Key == TEXT("city_01_01") && Atlas && Atlas->Num() == 4) R = Atlas;
+				else if (const auto ZO = KV.Value->AsObject()) ZO->TryGetArrayField(TEXT("world_rect_m"), R);
+				if (!R || R->Num() != 4) continue;
+				// game metres (x, z) -> Unreal cm: X = x, Y = -z (place_world.py)
+				const double X0 = (*R)[0]->AsNumber() * 100.0, Z0 = (*R)[1]->AsNumber() * 100.0;
+				const double X1 = (*R)[2]->AsNumber() * 100.0, Z1 = (*R)[3]->AsNumber() * 100.0;
+				ZoneRects.Add(TPair<FString, FBox2D>(FString(KV.Key), FBox2D(FVector2D(X0, -Z1), FVector2D(X1, -Z0))));
+			}
+	}
+	UE_LOG(LogTemp, Log, TEXT("CoH encounters: %d zones with their own lists (%d definitions), %d zone rectangles"),
+		ZoneEncounters.Num(), Defs, ZoneRects.Num());
+}
+
+const TArray<FCoHEncounter>& UCoHGameRules::EncountersAt(const UWorld* World, const FVector& Pos) const
+{
+	// zone-local maps (a zone played on its own) keep the global list; the one-world map picks by position
+	if (World && ZoneRects.Num() && World->GetMapName().Contains(TEXT("ParagonCity")))
+		for (const auto& R : ZoneRects)
+			if (R.Value.IsInside(FVector2D(Pos.X, Pos.Y)))
+			{
+				if (const TArray<FCoHEncounter>* Found = ZoneEncounters.Find(R.Key)) if (Found->Num()) return *Found;
+				break;
+			}
+	return Encounters;
 }
