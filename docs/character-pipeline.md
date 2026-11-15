@@ -111,3 +111,13 @@ spread over the distal forearm, shoulder smoothing, max 4 influences) -> `bl_exp
 Gear: `bl_gear_fit.py <rigged.glb> <gear.glb> <out.glb> neck|head` fits a piece as its own skinned mesh
 on the same skeleton (Leader Pose in Unreal). The interior-face removal in the clean step is opt-in
 (`--interior`): on thin low-poly shells it punched holes.
+
+### Tripo website plan workflow (no API spend)
+
+1. Concepts go in `C:\Users\rtcru\charpipe_test\tripo\upload\<group>_<build>_<outfit>\` (see `UPLOAD.md` there).
+2. Generate on tripo3d.ai with the plan credits (HD, texture + PBR, no rig), save the GLB as `<folder name>.glb`
+   into `tripo\in\` (or send via the Blender bridge and save it from Blender).
+3. `tools/charpipe/tripo_watch.cmd` (or `python tools/charpipe/tripo_watch.py --once`) picks up each new file:
+   clean -> (proxy head) -> autorig -> cleanup -> fingers -> polish -> FBX -> CoH clip test renders.
+   Output `tripo\ue_ready\<name>.fbx` + `ue_ready\previews\<name>.jpg`; log `tripo\watch_log.txt`; already
+   processed files are skipped (`watch_state.json`); waits while CPU_HOLD.txt / GPU_HOLD.txt exist.
