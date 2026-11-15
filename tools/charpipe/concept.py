@@ -39,6 +39,10 @@ VIEWS = {
     "arm": (", a single right arm only, isolated, hanging straight down: shoulder at the top of the image, clenched fist at "
             "the bottom, seen from the front, no torso, no head, plain light grey background, studio lighting, realistic modern "
             "video game asset, highly detailed"),
+    "apose_headless": (", full body character standing in a MetaHuman A-pose: upper arms about 40 degrees out from the body, "
+                       "palms facing down toward the thighs, legs straight and slightly apart; bare-handed, no hat, no mask, "
+                       "front view facing the camera, whole figure from neck to boots visible, plain mid-grey background, "
+                       "soft even studio lighting, realistic modern video game character, highly detailed"),
     "prop": (", a single isolated object only, product shot, centred, whole object visible, plain light grey background, "
              "studio lighting, realistic modern video game prop, highly detailed"),
     "legs": (", lower body only from the waist down, both legs slightly apart, standing straight, seen from the front, "

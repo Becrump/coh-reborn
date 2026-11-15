@@ -97,3 +97,17 @@ Weights come from Blender's automatic (heat) weighting, with envelope weights as
 | `bl_export.py` | Blender | FBX for Unreal + part slots |
 | `bl_preview.py`, `common.py`, `retarget2.py` | Blender | CoH clip retarget + preview renders |
 | `install/install_hy3d.sh`, `install/setup_cuda.sh`, `install/build_rasterizer.cmd` | bash / cmd | one-time install |
+
+## Tripo downloads -> rigged, Unreal-ready (cleanup + rig)
+
+`bash tools/charpipe/tripo_rig.sh <download.glb|fbx> <work_dir> <name> [--headless] [--height-cm 182]`
+runs: `bl_tripo_clean.py` (join, weld seams, drop floaters < 0.3 %, outward normals, decimate to 50k tris,
+2K textures, size from the build, feet at origin) -> `bl_proxy_head.py` (headless bodies get a temporary
+head so the autorig fits neck/head; removed again later) -> `bl_autorig.py` -> `rig_cleanup.py` ->
+`bl_fingers.py` (30 finger bones; every finger joint now blends 50/50 with a smoothstep instead of hard
+steps, so fists fold round) -> `bl_weight_polish.py` (cut the proxy head, keep the stump collar on the
+chest, fix vertices the autorig left unweighted, 3 smoothing passes on hand/finger weights, wrist twist
+spread over the distal forearm, shoulder smoothing, max 4 influences) -> `bl_export.py` (FBX, cm).
+Gear: `bl_gear_fit.py <rigged.glb> <gear.glb> <out.glb> neck|head` fits a piece as its own skinned mesh
+on the same skeleton (Leader Pose in Unreal). The interior-face removal in the clean step is opt-in
+(`--interior`): on thin low-poly shells it punched holes.

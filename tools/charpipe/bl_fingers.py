@@ -158,16 +158,24 @@ for S, p in plan.items():
             continue
         n = names[best[r]]
         h, t, _, F, j = segs[n]
-        if j == 0:  # blend into the hand over the first 40% of the base segment
-            _, tt = segdist(P[r:r + 1], h, t)
-            s = float(np.clip(tt[0] / 0.4, 0, 1))
+        _, tt = segdist(P[r:r + 1], h, t)
+        tt = float(tt[0])
+        wh = p["wh"][vi]
+        # smooth blends across every joint (knuckle and finger joints) instead of hard steps:
+        # the first 35% of a segment shares weight with its parent (hand for the base segment),
+        # rising along a smoothstep from 50/50 at the joint
+        parent = hand_vg.name if j == 0 else "%s%s%d" % (S, F, j)
+        if tt < 0.35:
+            x = tt / 0.35
+            s = 0.5 + 0.5 * (x * x * (3 - 2 * x))
         else:
             s = 1.0
+        if j == 0 and tt < 0.35:
+            s = float(np.clip(tt / 0.35, 0, 1)) ** 1.5  # base segment: from 0 at the knuckle line
         if s <= 0:
             continue
-        wh = p["wh"][vi]
         body.vertex_groups[n].add([int(vi)], wh * s, "REPLACE")
-        hand_vg.add([int(vi)], wh * (1 - s), "REPLACE")
+        body.vertex_groups[parent].add([int(vi)], wh * (1 - s), "REPLACE")
         moved += 1
     rep["hands"][S]["finger_weighted_verts"] = moved
 
