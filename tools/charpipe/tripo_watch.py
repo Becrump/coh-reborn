@@ -37,9 +37,18 @@ def log(msg):
         f.write(line + "\n")
 
 
+def editor_running():
+    try:
+        r = subprocess.run(["tasklist", "/FI", "IMAGENAME eq UnrealEditor.exe", "/NH"], capture_output=True, text=True)
+        return "UnrealEditor.exe" in r.stdout
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def hold_wait():
-    while any(os.path.exists(h) for h in HOLDS):
-        log("hold file present, waiting")
+    # yield to hold files and to the shared Unreal editor (its GPU/RAM use comes first)
+    while any(os.path.exists(h) for h in HOLDS) or editor_running():
+        log("hold file present or Unreal editor running, waiting")
         time.sleep(60)
 
 
