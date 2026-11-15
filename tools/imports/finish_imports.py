@@ -164,7 +164,18 @@ def convert(stage, data, piggs):
 
 
 def ue(code, timeout):
-    return run([PY, UE_EXEC, code, "--timeout", str(timeout)], timeout=timeout + 120)
+    """Run code in the editor. After a big save the editor can take minutes
+    to answer remote execution again (ue_exec gives up after 10 s), so retry
+    "no Unreal editor found" for up to 15 minutes while the editor runs."""
+    t0 = time.time()
+    while True:
+        p = run([PY, UE_EXEC, code, "--timeout", str(timeout)], timeout=timeout + 120)
+        if "no Unreal editor found" not in (p.stdout + p.stderr):
+            return p
+        tl = subprocess.run(["tasklist"], capture_output=True, text=True).stdout.lower()
+        if "unrealeditor.exe" not in tl or time.time() - t0 > 900:
+            return p
+        time.sleep(30)
 
 
 def editor_free():
