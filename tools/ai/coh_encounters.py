@@ -71,9 +71,13 @@ def _int(s, default=0):
 def parse_spawndef(path):
     with open(path, encoding="latin-1") as f:
         text = f.read()
+    # var NAME [volatile] = a, b, <<c>>: one of the list is picked per spawn
+    # (volatile: re-picked every time); <<x>> is a plain villain name
     variables = {}
-    for m in re.finditer(r"(?m)^\s*var\s+(\w+)\s*=\s*(\S+)", text):
-        variables[m.group(1)] = m.group(2)
+    for m in re.finditer(r"(?m)^\s*var\s+(\w+)(?:\s+volatile)?\s*=\s*(.+?)\s*(?://.*)?$",
+                         text):
+        vals = [v.strip().strip("<>").strip() for v in m.group(2).split(",")]
+        variables[m.group(1)] = [v for v in vals if v]
     text = re.sub(r"(?m)^\s*var\s+.*$", "", text)
     nodes = [n for n in parse_braces(text) if n.key.lower() == "spawndef"]
     if not nodes:
@@ -120,7 +124,14 @@ def parse_spawndef(path):
                        ("vision_phase", "ExclusiveVisionPhase")):
             v = _val(a, key)
             if v is not None:
-                act[k] = variables.get(v, v)
+                v = variables.get(v, v)
+                if isinstance(v, list):
+                    if k == "villain" and len(v) > 1:
+                        act["villain_choices"] = v
+                    v = v[0] if v else None
+                if isinstance(v, str) and v.startswith("<<") and v.endswith(">>"):
+                    v = v[2:-2]
+                act[k] = v
         sd["actors"].append(act)
     return sd
 
@@ -205,11 +216,12 @@ def build(data):
                 continue
             rolls = {}
             if act.get("villain"):
-                v = act["villain"]
-                rolls = {str(l): [v] for l in range(sd["min_level"],
-                                                     sd["max_level"] + 1)}
-                if v in villains:
-                    groups.add(villains[v].get("VillainGroup"))
+                vs = act.get("villain_choices") or [act["villain"]]
+                rolls = {str(l): list(vs) for l in range(sd["min_level"],
+                                                         sd["max_level"] + 1)}
+                for v in vs:
+                    if v in villains:
+                        groups.add(villains[v].get("VillainGroup"))
             elif act.get("group") and act.get("rank"):
                 groups.add(act["group"])
                 lo = max(sd["min_level"], 1)
