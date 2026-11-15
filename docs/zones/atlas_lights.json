@@ -1,0 +1,36 @@
+{
+ "plaza_centre": "<Struct 'Vector' (0x000002460B413940) {x: 3967.711297, y: 7511.729355, z: 5904.358728}>",
+ "changed": 790,
+ "skipped_station": [
+  "SpotLight11",
+  "SpotLight3",
+  "SpotLight7",
+  "Lamp_Light_591",
+  "SpotLight8",
+  "Lamp_Light_363",
+  "SpotLight2",
+  "Lamp_Light_370",
+  "Lamp_Light_54",
+  "SpotLight12",
+  "Lamp_Light_367",
+  "SpotLight4",
+  "SpotLight9",
+  "Lamp_Light_560",
+  "SpotLight6",
+  "SpotLight10",
+  "SpotLight",
+  "SpotLight5"
+ ],
+ "kept_shadows": [],
+ "by_class": {
+  "SpotLightComponent": 784,
+  "PointLightComponent": 6
+ },
+ "before": {
+  "no_shadows": 776,
+  "shadows": 32
+ },
+ "saved_packages": 790,
+ "minutes": 3.4,
+ "dry": false
+}

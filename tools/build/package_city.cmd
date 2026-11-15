@@ -22,7 +22,9 @@ set "UPROJECT=%COH_PROJECT%\COHREBORN.uproject"
 set "LOG=%~dp0build_city_log.txt"
 set "STATUS=%~dp0package_status.txt"
 set "RESULTS=%~dp0bench_results.txt"
-set "PATHFILE=%~dp0flythrough_city.txt"
+if not defined COH_MAP set "COH_MAP=/Game/Zones/L_ParagonCity"
+if not defined COH_PATH set "COH_PATH=%~dp0flythrough_city.txt"
+set "PATHFILE=%COH_PATH%"
 
 if /i "%~1"=="flyonly" goto fly
 
@@ -46,7 +48,7 @@ echo %date% %time% packaging to %COH_OUT% (log: %LOG%)
 set "T0=%time%"
 call "%UE_ROOT%\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun -project="%UPROJECT%" -noP4 -utf8output ^
   -platform=Win64 -clientconfig=Development -build -cook -stage -pak -iostore -compressed -prereqs ^
-  -map=/Engine/Maps/Entry+/Game/Zones/L_ParagonCity ^
+  -map=/Engine/Maps/Entry+%COH_MAP% ^
   -archive -archivedirectory="%COH_OUT%" -nocompileeditor > "%LOG%" 2>&1
 if errorlevel 1 (
   echo %date% %time% PACKAGE FAILED, see build_city_log.txt > "%STATUS%"
@@ -76,7 +78,7 @@ for /f "delims=" %%e in ('dir /s /b "%GAMEDIR%\COHREBORN.exe" 2^>nul') do if not
 if not defined EXE ( del "%HOLD%" 2>nul & echo no COHREBORN.exe under %GAMEDIR% & exit /b 3 )
 if not exist "%PATHFILE%" python "%~dp0..\zones\flythrough_path.py" "%PATHFILE%"
 echo Flying the packaged game from %GAMEDIR% ...
-start "CoH packaged flythrough" /wait "%EXE%" /Game/Zones/L_ParagonCity -windowed -ResX=1920 -ResY=1080 -WinX=0 -WinY=0 -NOSTEAM -nosplash -log -Hero=Bench -cohquality=2 -cohflythrough="%PATHFILE%" -cohflyspeed=3000 -cohflyout="%RESULTS%" -abslog="%~dp0flythrough_packaged.log"
+start "CoH packaged flythrough" /wait "%EXE%" %COH_MAP% -windowed -ResX=1920 -ResY=1080 -WinX=0 -WinY=0 -NOSTEAM -nosplash -log -Hero=Bench -cohquality=2 -cohflythrough="%PATHFILE%" -cohflyspeed=3000 -cohflyout="%RESULTS%" -abslog="%~dp0flythrough_packaged.log"
 del "%HOLD%" 2>nul
 findstr /c:"FLYTHROUGH" "%RESULTS%"
 endlocal
