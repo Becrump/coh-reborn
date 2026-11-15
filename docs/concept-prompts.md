@@ -173,3 +173,69 @@ Each group keeps its original 2004 colours and motifs, updated to how the gang w
 - Keep the same grey background and MetaHuman A-pose for every image so the 3D generator and the auto-rig behave the same for all characters.
 - The headless image plus a separate head close-up gives the best faces (the pipeline attaches the head at the neck).
 - Gear, weapons, hats and masks are generated separately with the gear prompts and attached as rigid pieces (charpipe `bl_accessory.py`: head / hand_r / belt sockets).
+
+## Hellion variations
+
+The 2004 Hellions are one outfit template with skin and head swaps. This section builds variety in layers that mix freely on one skeleton: **build × outfit pieces × palette × MetaHuman head × gear × idle**. Use the style block above (bare face, no headwear or weapons, MetaHuman A-pose, mid-grey). Ask for the **headless** follow-up by default, plus left/back/right for multi-view.
+
+Identity to keep in every line: Atlas Park street gang of demon-worshipping wannabes; ochre/mustard, blood red and black; flame motifs; the red goat-head (Baphomet-style) emblem and pentagram sigils; worn, cheap, DIY street clothes rather than real armour.
+
+### Body builds (one generation each, reused under many outfits)
+
+Paste after the style block: "Plain base outfit for a body-shape reference: grey fitted tank top, grey fitted jeans, black boots. The character: ..." (the base build is what the outfit pieces are fitted to).
+
+- **B1 lean street kid:** 19-year-old, wiry and thin, narrow shoulders, slightly hunched, about 1.75 m.
+- **B2 average thug:** mid-20s, medium athletic build, about 1.80 m.
+- **B3 heavy brawler:** stocky and broad, thick neck and arms, beer belly over strong muscle, about 1.82 m.
+- **B4 big biker:** tall and massive, very broad shoulders, heavy forearms, about 1.92 m.
+- **B5 wiry veteran:** late 40s, lean and sinewy, weathered skin, about 1.78 m.
+- **BF1 / BF2 female builds (pending Robert's decision; do not generate yet):** BF1 lean, athletic, about 1.68 m; BF2 strong and solid, broad shoulders, about 1.72 m.
+
+### Role-tied outfits (full looks; also the source of the per-slot pieces)
+
+Paste after the style block: "The character: a Hellion street-gang member, [build], wearing ..."
+
+- **O1 Brawler (minion, melee):** open ochre leather biker vest over a white tank top printed with the red goat-head emblem, red camo cargo pants, worn black combat boots, fingerless black gloves.
+- **O2 Gunner (minion, ranged):** black zip hoodie with a red pentagram printed on the back, sleeves pushed up, olive cargo pants with knee patches, high-top sneakers, black tactical gloves.
+- **O3 Fire-blaster (minion/lieutenant, fire powers):** long dark brown leather trench coat with scorched hem and orange flame decals rising from the bottom, black tank top, black jeans, steel-toe boots, heat-scorched leather gloves.
+- **O4 Wrench (minion, melee):** grease-stained red mechanic coverall with the top half tied around the waist, black ribbed tank top, a hand-painted goat-head patch on the chest pocket, work boots, rubber work gloves.
+- **O5 Street punk (minion):** sleeveless red-and-black flannel shirt, open over a black band T-shirt with a flaming skull print, ripped black jeans, studded belt, scuffed biker boots.
+- **O6 Ink-sleeve thug (minion):** bare chest under an open black denim vest, full arm and chest tattoos of flames and demon sigils, red cargo shorts over black leggings, combat boots.
+- **O7 Lieutenant enforcer:** black leather biker jacket with orange flame decals and a large red goat-head back patch, studded leather shoulder guards, black jeans with a chain, heavy biker boots, studded gloves.
+- **O8 Boss armoured-spiked:** sleeveless black leather vest with flame-painted metal shoulder plates and spikes, red demon-sigil tattoos on the arms, chains across the chest, black leather pants, heavy buckled boots, spiked bracers.
+
+### Per-slot pieces (swap with `bl_split_by_texture.py`; same skeleton)
+
+Generate a piece by asking for the outfit with the other slots in plain grey ("...; everything else plain grey: grey tank top, grey jeans, black boots"), then split.
+
+- **Tops:** open ochre biker vest / sleeveless denim vest / black leather jacket / zip hoodie / sleeveless flannel / mechanic coverall top / trench coat / bare chest with tattoos / goat-head print tank / flaming-skull band T-shirt.
+- **Bottoms:** red camo cargos / ripped jeans / black biker leathers / track pants with a red stripe / olive work cargos / coverall bottom / cargo shorts over leggings.
+- **Footwear:** combat boots / high-top sneakers / biker boots with buckles / steel-toe work boots.
+- **Hands:** fingerless gloves / tactical gloves / rubber work gloves / studded gloves / spiked bracers / bare hands with knuckle tattoos.
+
+### Palette swaps (in-engine material parameters, no new generation)
+
+Keep to the Hellion colours. Each piece gets 3-4 tints plus wear:
+- **Ochre/mustard** (classic vest), **blood red** (camo, coveralls), **black** (leather, denim), **charcoal** (hoodies), **olive** (cargos, accent only).
+- **Flames:** orange-to-yellow decals; variants: none, hem flames, sleeve flames, full back piece.
+- **Sigils:** red goat-head emblem; pentagram; demon-horn skull; hand-painted vs printed vs patch.
+- **Wear:** new, faded, grease-stained, scorched (fire-blasters only).
+
+### Gear (rigid pieces on sockets; gear prompts section)
+
+- **Minion:** paisley bandana (face mask or neck), red baseball cap (forward or backward), black beanie, wallet chain, wristbands; weapons: baseball bat, fire axe, lead pipe, combat knife, sledgehammer.
+- **Lieutenant:** biker cap, chain over the shoulder, studded belt, goggles on the forehead; weapons: pump shotgun, compact submachine gun, pistol.
+- **Boss:** horned leather demon mask, spiked shoulder plate, chains, a large goat-skull belt buckle; weapons: heavy chain, flame-painted shotgun.
+
+### Idle personality per build (CoH idle replaced per build)
+
+- **B1 lean kid:** twitchy, weight shifting, glancing around, bouncing on the toes.
+- **B2 average thug:** cocky slouch, cracking the neck, rolling the shoulders.
+- **B3 heavy brawler:** slow heavy sway, cracking the knuckles, chest out.
+- **B4 big biker:** still and planted, arms crossed or thumbs in the belt, slow head turns.
+- **B5 wiry veteran:** relaxed lean, smoking gesture, unimpressed.
+- **Fire-blasters (any build):** idle with small hand flame flicks (VFX, not mesh).
+
+### Variety maths
+
+5 builds × 6-8 outfits (or about 10 tops × 7 bottoms × 4 footwear) × 4 palettes × MetaHuman heads × gear gives hundreds of distinct Hellions from about 20-25 generated pieces. Recommended first batch: B2, B3, B4 × O1, O2, O3, O7 (12 headless images), then split and mix.
