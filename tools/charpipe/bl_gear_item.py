@@ -93,15 +93,18 @@ hi = Vector([max(p[i] for p in vs) for i in range(3)])
 size, ctr = hi - lo, (lo + hi) / 2
 bv = body.matrix_world
 gname = {g.index: g.name for g in body.vertex_groups}
+SKIN_MESHES = [o for o in bpy.data.objects if o.type == "MESH" and o is not G and o.vertex_groups]  # body + separate head
 
 
 def body_pts(bones):
     out = []
-    for v in body.data.vertices:
-        tot = sum(g.weight for g in v.groups)
-        w = sum(g.weight for g in v.groups if gname[g.group] in bones)
-        if tot > 0 and w / tot > 0.5:
-            out.append(bv @ v.co)
+    for o in SKIN_MESHES:
+        gn = {g.index: g.name for g in o.vertex_groups}
+        for v in o.data.vertices:
+            tot = sum(g.weight for g in v.groups)
+            w = sum(g.weight for g in v.groups if gn[g.group] in bones)
+            if tot > 0 and w / tot > 0.5:
+                out.append(o.matrix_world @ v.co)
     return out
 
 
@@ -127,7 +130,7 @@ if SLOT in ("head", "face"):
     bone = "Head"
 elif SLOT == "neck":
     nb, hb = jp("neck"), jp("Head")
-    sl = [p for p in (bv @ v.co for v in body.data.vertices) if nb.z - 0.01 < p.z < nb.z + 0.03 and abs(p.x - nb.x) < 0.12]
+    sl = [p for o in SKIN_MESHES for p in (o.matrix_world @ v.co for v in o.data.vertices) if nb.z - 0.01 < p.z < nb.z + 0.03 and abs(p.x - nb.x) < 0.12]
     nw = (max(p.x for p in sl) - min(p.x for p in sl)) if sl else 0.14
     ny = sum(p.y for p in sl) / len(sl) if sl else nb.y
     top = [p for p in vs if p.z > hi.z - 0.1 * size.z]
@@ -173,7 +176,8 @@ if not any(m and m.use_nodes and any(n.type == "TEX_IMAGE" for n in m.node_tree.
     rep["untextured"] = True
 G.parent = arm
 G.modifiers.new("Armature", "ARMATURE").object = arm
-bpy.data.objects.remove(body, do_unlink=True)
+for o in SKIN_MESHES:
+    bpy.data.objects.remove(o, do_unlink=True)
 for x in bpy.data.objects:
     x.select_set(x is arm or x is G)
 out = os.path.join(WDIR, SLOT, NAME + ".glb")

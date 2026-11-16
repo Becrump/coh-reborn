@@ -36,7 +36,7 @@ def bl(script, *args, env=None):
         time.sleep(60)
     r = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", script, "--", *args], capture_output=True, text=True,
                        encoding="utf-8", errors="replace", env=env)
-    tail = [l for l in r.stdout.splitlines() if "_OK" in l or "Error" in l or "Traceback" in l]
+    tail = [l for l in (r.stdout + chr(10) + r.stderr).splitlines() if "_OK" in l or "Error" in l or "Traceback" in l]
     if not any("_OK" in l for l in tail) and any("Error" in l or "Traceback" in l for l in tail):
         raise RuntimeError("%s: %s" % (os.path.basename(script), tail[-1][:200]))
     return tail

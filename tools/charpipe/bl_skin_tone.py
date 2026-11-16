@@ -32,7 +32,8 @@ RES = int(opt("--res", 2048))
 OUTFIT_TINT = [float(x) for x in opt("--outfit-tint").split(":")] if opt("--outfit-tint") else None  # hue_deg:sat_mul:val_mul
 OUTFIT_MESHES = set((opt("--outfit-meshes") or "Body").split(","))
 os.makedirs(out, exist_ok=True)
-SKIN_BONES = ("Arm", "ForeArm", "Hand", "Thumb", "Index", "Middle", "Ring", "Pinky", "Shoulder", "neck", "Head", "head")
+SKIN_BONES = ("Arm", "ForeArm", "Hand", "Thumb", "Index", "Middle", "Ring", "Pinky", "Shoulder", "neck", "Head", "head",
+              "UpLeg", "Leg", "Foot", "Spine", "Hips")  # colour gating keeps clothing out; bare legs / chests are skin
 
 
 def load():
