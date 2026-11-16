@@ -167,6 +167,22 @@ def score(piece, body):
 
 
 def cloth_fit(piece, body, slot):
+    # glTF splits vertices at UV seams; welded, the cloth is one sheet instead of islands that fly apart
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(piece.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+    bm.to_mesh(piece.data)
+    bm.free()
+    piece.data.update()
+    # start outside the target: bodies that are already clothed (Tripo full / headless / LT) would otherwise
+    # begin deep inside the collision surface and the cloth solver explodes
+    t = body_tree(body)
+    for v in piece.data.vertices:
+        loc, n, fi, d = t.find_nearest(v.co)
+        if loc is not None and d < 0.10 and (v.co - loc).dot(n) < 0.008:
+            v.co = loc + n * 0.008
+    piece.data.update()
     co = np.array([v.co[:] for v in piece.data.vertices])
     z = co[:, 2]
     zt, zb = z.max(), z.min()
@@ -183,10 +199,11 @@ def cloth_fit(piece, body, slot):
     body.collision.thickness_inner = 0.01
     cl = piece.modifiers.new("cloth", "CLOTH")
     s = cl.settings
-    s.quality = 6
+    s.quality = 10
     s.mass = 0.3
-    s.tension_stiffness = s.compression_stiffness = 20
-    s.bending_stiffness = 2
+    s.air_damping = 5.0
+    s.tension_stiffness = s.compression_stiffness = s.shear_stiffness = 40
+    s.bending_stiffness = 5
     s.shrink_min = 0.03
     s.vertex_group_mass = "pin"
     s.effector_weights.gravity = 0.0
@@ -194,11 +211,21 @@ def cloth_fit(piece, body, slot):
     cl.collision_settings.distance_min = 0.004
     cl.point_cache.frame_start = 1
     cl.point_cache.frame_end = FRAMES
+    pre = np.array([v.co[:] for v in piece.data.vertices])
     sc = bpy.context.scene
     for f in range(1, FRAMES + 1):
         sc.frame_set(f)
     bake_mesh(piece)
     body.modifiers.remove(col)
+    # safety: the solver can fling single vertices on clothed bodies; limit every vertex to 3 cm of travel
+    post = np.array([v.co[:] for v in piece.data.vertices])
+    if post.shape == pre.shape:
+        d = post - pre
+        n = np.linalg.norm(d, axis=1, keepdims=True)
+        post = pre + d * np.minimum(1.0, 0.03 / np.maximum(n, 1e-9))
+        for v, p in zip(piece.data.vertices, post):
+            v.co = Vector(p)
+        piece.data.update()
 
 
 def reskin(piece, body, arm, slot=""):
