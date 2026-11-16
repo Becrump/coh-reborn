@@ -1,6 +1,6 @@
 """Skin-tone system: find the skin in a character's textures and re-tint it with one SkinTone colour (Blender).
 
-    blender -b --factory-startup -P bl_skin_tone.py -- <rigged.glb> <out_dir> <name> [--tones name=r,g,b;name=r,g,b] [--res 2048]
+    blender -b --factory-startup -P bl_skin_tone.py -- <rigged.glb> <out_dir> <name> [--tones name=r,g,b;name=r,g,b] [--res 2048] [--outfit-tint h:s:v] [--outfit-meshes Body]
 
 Per mesh (body and head):
  * region mask: UV areas of faces whose dominant bone is skin-likely (arms, forearms, hands, fingers,
@@ -29,6 +29,8 @@ for kv in (opt("--tones") or "light=0.86,0.67,0.56;medium=0.64,0.45,0.32;dark=0.
     k, v = kv.split("=")
     TONES[k] = np.array([float(x) for x in v.split(",")])
 RES = int(opt("--res", 2048))
+OUTFIT_TINT = [float(x) for x in opt("--outfit-tint").split(":")] if opt("--outfit-tint") else None  # hue_deg:sat_mul:val_mul
+OUTFIT_MESHES = set((opt("--outfit-meshes") or "Body").split(","))
 os.makedirs(out, exist_ok=True)
 SKIN_BONES = ("Arm", "ForeArm", "Hand", "Thumb", "Index", "Middle", "Ring", "Pinky", "Shoulder", "neck", "Head", "head")
 
@@ -198,7 +200,26 @@ for tone, col in TONES.items():
             continue
         rgb, m, detail = data[o.name]
         tint = (col * 255)[None, None, :] * detail[..., None]
-        outc = rgb * (1 - m[..., None]) + tint * m[..., None]
+        base = rgb
+        if OUTFIT_TINT and not o.name.lower().startswith("head"):  # outfit palette swap on the non-skin texels (HSV)
+            hd, sm, vm = OUTFIT_TINT
+            c = base / 255.0
+            mx, mn = c.max(-1), c.min(-1)
+            v_ = mx
+            s_ = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-9), 0)
+            rc, gc, bc_ = [(mx - c[..., i]) / np.maximum(mx - mn, 1e-9) for i in range(3)]
+            h_ = (np.select([mx == c[..., 0], mx == c[..., 1]], [bc_ - gc, 2 + rc - bc_], 4 + gc - rc) / 6.0 + hd / 360.0) % 1.0
+            s_ = np.clip(s_ * sm, 0, 1)
+            v_ = np.clip(v_ * vm, 0, 1)
+            i_ = (h_ * 6).astype(int) % 6
+            f_ = h_ * 6 - np.floor(h_ * 6)
+            p_, q_, t_ = v_ * (1 - s_), v_ * (1 - f_ * s_), v_ * (1 - (1 - f_) * s_)
+            cand = [np.stack(x, -1) for x in ((v_, t_, p_), (q_, v_, p_), (p_, v_, t_), (p_, q_, v_), (t_, p_, v_), (v_, p_, q_))]
+            out_ = np.zeros_like(c)
+            for k_ in range(6):
+                out_ = np.where((i_ == k_)[..., None], cand[k_], out_)
+            base = out_ * 255
+        outc = base * (1 - m[..., None]) + tint * m[..., None]
         lin = (np.clip(outc / 255.0, 0, 1) ** 2.2)[::-1]
         im = tex_of(o)
         im.scale(RES, RES)

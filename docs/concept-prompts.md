@@ -2,6 +2,29 @@
 
 Goal: concept images in the same style as `full hellion1.jpg` / `Headless hellion1.jpg`, which work very well for 3D generation (local Hunyuan3D, Tripo, Meshy). Default deliverable per character: a **headless, bare-handed body** in the MetaHuman A-pose (faces come from MetaHuman), plus left/back/right views for multi-view. Headwear, face coverings and weapons are separate gear pieces: the character lines below still describe the full look, the style block strips the gear, and the gear prompts make it separately.
 
+## MAIN ROUTE (decided 2026-11-16): outfit bodies + swappable heads
+
+Separate clothing pieces did not fit reliably on other bodies (fit report: 34/66 pass, jackets worst), so the
+production route is:
+
+1. **Outfit bodies**: one **headless, fully dressed** Tripo export per outfit x build (clothes baked in, so they
+   always fit). Gemini: style block + character line from the variation sheet + the **headless** follow-up.
+   Name the download after its line, e.g. `hellions_heavy_trench_headless.glb`, drop it in `Tripo Exports\Hellions\`.
+2. **Heads**: the **head library** (24 bust prompts). Name downloads `head_<id>.glb` (e.g. `head_H07.glb`) in
+   `Tripo Exports\Heads\`. Attached at the neck by `bl_head_swap.py`.
+3. **Skin tone**: one SkinTone colour for body + head (`bl_skin_tone.py`), so any head works on any body.
+4. **Gear**: rigid socket items only (caps, masks, face/neck bandanas, hair, chains, weapons): `gear_<item>.glb`.
+5. **Free variety**: outfit palette tints on the non-skin texture (`--outfit-tint h:s:v`), later bone-scale
+   heavier/thinner variants.
+
+`tripo_watch` rigs bodies (fingers, CoH tests, `ue_ready`), files heads into the head library and gear into the
+gear list, all registered in `charpipe_test/characters_lib.json`; `random_character.py <lib> <out> --count N
+--render` assembles random characters (body + head + tone + tint + gear) with idle/Brawl previews.
+
+Experimental / shelved (kept in the repo): `bl_cloth_autofit.py`, `bl_fit_report.py`, `bl_wardrobe_make.py`,
+`bl_wardrobe_assemble.py`, `bl_wardrobe_to_mh.py`, `bl_kitbash_*`: separate clothing pieces. `tripo_watch` logs and
+skips clothing pieces.
+
 ## How to use
 
 1. Start a new Gemini chat. Attach `full hellion1.jpg` as the style reference and, for the pose, one of the original-costume A-pose renders from `model-upgrade-samples/gemini_refs/hellions/` (e.g. `hellions_minion_01_front.png`; the `nogear/` copies have the cap/goggles removed).
@@ -283,7 +306,7 @@ Save as `heads/<id>_front.png` (and `_left.png`). Tripo: upload the front (and s
 
 Tips: keep the expression neutral-to-tough with the mouth closed (open mouths and smiles generate badly and look wrong on idle animations). Ask again if Gemini adds a hat, hood or glasses. Ethnicity is in the face shape and hair; the final skin colour comes from the SkinTone parameter, so you can also reuse a head with several tones.
 
-## Garment-on-base-body (generate-on-body route)
+## Garment-on-base-body (experimental, shelved with the clothing-piece route)
 
 Garments generated alone come out at their own size and pose and have to be fitted afterwards (fitting is the weak
 spot, worst for jackets). The more reliable route: generate the garment **already worn by our base body**, in the

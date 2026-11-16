@@ -134,3 +134,26 @@ on the same skeleton (Leader Pose in Unreal). The interior-face removal in the c
   (Vector) shared by body and head materials: `BaseColor = lerp(Tex.rgb, SkinTone.rgb * (Mask.G * 2), Mask.R)`.
   Known limits: blond/light-brown hair close to skin colour gets tinted; very dark tones show light halos at
   the mask edge (needs a wider feather or edge darkening).
+
+## MAIN ROUTE (decided 2026-11-16): outfit bodies + swappable heads
+
+Separate clothing pieces did not fit reliably on other bodies (fit report: 34/66 pass, jackets worst), so the
+production route is:
+
+1. **Outfit bodies**: one **headless, fully dressed** Tripo export per outfit x build (clothes baked in, so they
+   always fit). Gemini: style block + character line from the variation sheet + the **headless** follow-up.
+   Name the download after its line, e.g. `hellions_heavy_trench_headless.glb`, drop it in `Tripo Exports\Hellions\`.
+2. **Heads**: the **head library** (24 bust prompts). Name downloads `head_<id>.glb` (e.g. `head_H07.glb`) in
+   `Tripo Exports\Heads\`. Attached at the neck by `bl_head_swap.py`.
+3. **Skin tone**: one SkinTone colour for body + head (`bl_skin_tone.py`), so any head works on any body.
+4. **Gear**: rigid socket items only (caps, masks, face/neck bandanas, hair, chains, weapons): `gear_<item>.glb`.
+5. **Free variety**: outfit palette tints on the non-skin texture (`--outfit-tint h:s:v`), later bone-scale
+   heavier/thinner variants.
+
+`tripo_watch` rigs bodies (fingers, CoH tests, `ue_ready`), files heads into the head library and gear into the
+gear list, all registered in `charpipe_test/characters_lib.json`; `random_character.py <lib> <out> --count N
+--render` assembles random characters (body + head + tone + tint + gear) with idle/Brawl previews.
+
+Experimental / shelved (kept in the repo): `bl_cloth_autofit.py`, `bl_fit_report.py`, `bl_wardrobe_make.py`,
+`bl_wardrobe_assemble.py`, `bl_wardrobe_to_mh.py`, `bl_kitbash_*`: separate clothing pieces. `tripo_watch` logs and
+skips clothing pieces.

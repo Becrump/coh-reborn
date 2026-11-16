@@ -11,8 +11,10 @@ Folders (drop .glb / .gltf / .fbx / .obj from the Tripo website or bridge):
 Pieces: gear (cap, mask, goggles, bandana, chain, bat, pipe, gun, wallet, ...) -> bl_gear_item.py: sized by name,
 socket/slot from the name, saved into the Hellion wardrobe (charpipe_test/wardrobe/hellions/<slot>/gear_<item>.glb +
 wardrobe.json); after a batch a gear sheet is rendered on the test Hellion (tripo/ue_ready/previews/gear_sheet.jpg).
-Clothing pieces (vest, shirt, jeans, boots, gloves, jacket...) need the base body they were exported with (Tripo
-part export): they are logged and left for the kitbash flow (bl_kitbash_tuck/export + bl_wardrobe_make).
+MAIN ROUTE (2026-11-16): full headless outfit bodies + library heads + skin tone + socket gear + outfit tints.
+Rigged bodies, heads and gear are registered in charpipe_test/characters_lib.json for random_character.py.
+Separate clothing pieces (vest, shirt, jeans, boots, gloves, jacket...) are SHELVED: logged and skipped (the
+wardrobe / fitter tools stay in the repo as experimental).
 Per new file (name = character name; height and headless come from the name, see bl_tripo_clean.py:
 kid/lean 172, veteran 178, average 180, heavy/brawler 183, big/biker 193, default 182; "headless"):
   clean (weld, floaters, normals, 50k tris, 2K textures, size) -> proxy head if headless -> autorig
@@ -35,6 +37,16 @@ PARTS = "C:/Users/rtcru/ClaudeProjects/COHReborn/model-upgrade-samples/parts/hel
 INCOMING = ROOT + "/incoming"
 EXPORTS = ROOT + "/Tripo Exports"  # Robert's single drop folder (searched recursively; originals are never moved or deleted)
 WARDROBE = "C:/Users/rtcru/charpipe_test/wardrobe/hellions"
+LIBRARY = "C:/Users/rtcru/charpipe_test/characters_lib.json"  # bodies / heads / gear for random_character.py
+HEADS = "C:/Users/rtcru/charpipe_test/heads/library"
+
+
+def lib_add(kind, name, entry):
+    lib = json.load(open(LIBRARY)) if os.path.exists(LIBRARY) else {"bodies": {}, "heads": {}, "gear": {}, "tones": {
+        "light": [0.86, 0.67, 0.56], "medium": [0.64, 0.45, 0.32], "dark": [0.36, 0.23, 0.16]},
+        "tints": [[0, 1, 1], [25, 1.15, 1.0], [180, 0.7, 0.9], [-20, 1.2, 0.8], [0, 0.2, 0.6]], "gear_chance": 0.5}
+    lib.setdefault(kind, {})[name] = entry
+    json.dump(lib, open(LIBRARY, "w"), indent=1)
 GEAR_WORDS = ("cap", "hat", "beanie", "helmet", "hood", "mask", "goggle", "glasses", "visor", "respirator", "bandana", "scarf",
               "chain", "necklace", "bat", "pipe", "axe", "knife", "gun", "pistol", "shotgun", "smg", "sledge", "crowbar",
               "wrench", "machete", "weapon", "club", "hammer", "wallet", "pouch", "holster", "belt", "gear")
@@ -191,11 +203,27 @@ def scan(state):
             if r["type"] == "body":
                 log("NEW body %s -> rig" % r["rel"])
                 process(r["path"])
+                b = os.path.splitext(os.path.basename(r["path"]))[0]
+                lib_add("bodies", name, {"file": os.path.join(WORK, b, b + ".glb").replace("\\", "/"),
+                                         "headless": "headless" in (r["rel"] + name).lower()})
             elif r["type"] == "gear":
                 log("NEW gear %s" % r["rel"])
                 process_gear(r["path"], name)
+                import re as _re
+                slot = next((sl for sl, rx in (("face", r"mask|goggle|glasses|visor|bandana_?face"), ("head", r"cap|hat|beanie|helmet|hood|hair"),
+                                               ("belt", r"wallet|pouch|holster|belt|hip"), ("hand_r", r"bat|pipe|axe|knife|gun|pistol|shotgun|smg|sledge|crowbar|wrench|machete|weapon|club|hammer"),
+                                               ("neck", r"bandana|scarf|necklace|chain")) if _re.search(rx, name)), "belt")
+                lib_add("gear", name, {"file": r["path"], "slot": slot})
                 gear_done += 1
-            else:  # cloth / setpart / head / ?: grouped per character for the kitbash / set-assembly flow
+            elif r["type"] == "head":
+                os.makedirs(HEADS, exist_ok=True)
+                dst = os.path.join(HEADS, name + ".glb").replace("\\", "/")
+                bl(os.path.join(HERE, "bl_to_glb.py"), r["path"], dst)
+                lib_add("heads", name, dst)
+                log("OK head %s -> head library %s" % (r["rel"], dst))
+            elif r["type"] == "cloth":
+                log("SKIP clothing piece %s (separate clothing is shelved: use full outfit bodies)" % r["rel"])
+            else:  # setpart / ?: grouped for the set-assembly flow / manual check
                 groups.setdefault((r["character"], r["type"]), []).append(r["rel"])
             state[key] = sig
         except Exception as e:  # noqa: BLE001
