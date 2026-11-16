@@ -202,6 +202,29 @@ def scan(state):
             log("FAIL %s: %s" % (r["rel"], e))
             state[key] = sig + ":failed"
         json.dump(state, open(ROOT + "/watch_state.json", "w"), indent=1)
+    # part sets with a full reference model: register the parts onto it and rebuild the robot
+    refs = [r for r in TC.catalogue(EXPORTS) if r["type"] == "reference" and not r.get("duplicate_of_loose")]
+    for r in refs:
+        set_name = os.path.basename(os.path.dirname(r["path"])).lower()
+        pj = "C:/Users/rtcru/charpipe_test/robots/%s.json" % set_name
+        key = "reference:" + r["rel"]
+        st_ = os.stat(TC.lp(r["path"]))
+        sig = "%d:%d" % (st_.st_size, int(st_.st_mtime))
+        if state.get(key) == sig or not os.path.exists(pj):
+            if not os.path.exists(pj):
+                log("  reference %s found but no parts map %s (roles per part) yet" % (r["rel"], pj))
+            continue
+        try:
+            log("NEW reference %s -> register %s" % (r["rel"], set_name))
+            out = "C:/Users/rtcru/charpipe_test/robots/%s_registered.glb" % set_name
+            bl(os.path.join(HERE, "bl_robot_assemble.py"), "C:/Users/rtcru/charpipe_test/tripo/rig2/hellion_full.glb", pj, out, "--reference", r["path"])
+            bl(os.path.join(HERE, "bl_export.py"), out, UE, set_name)
+            if os.path.exists(RENDER):
+                bl(RENDER, out, set_name + "_registered")
+            state[key] = sig
+        except Exception as e:  # noqa: BLE001
+            log("FAIL reference %s: %s" % (r["rel"], e))
+        json.dump(state, open(ROOT + "/watch_state.json", "w"), indent=1)
     for (ch, t), rels in sorted(groups.items()):
         log("  %s %s x%d waiting for the %s flow: %s" % (ch, t, len(rels), "kitbash" if t == "cloth" else "set assembly" if t == "setpart" else "manual", "; ".join(rels[:6])))
     for folder in (IN, PARTS, INCOMING):

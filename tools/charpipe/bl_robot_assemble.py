@@ -1,6 +1,11 @@
 """Assemble a robot / construct from separately exported Tripo parts onto the shared humanoid skeleton (Blender).
 
-    blender -b --factory-startup -P bl_robot_assemble.py -- <rigged_template.glb> <parts.json> <out.glb> [--height 1.82]
+    blender -b --factory-startup -P bl_robot_assemble.py -- <rigged_template.glb> <parts.json> <out.glb> [--reference full.glb]
+
+--reference: a whole (unsplit) export of the same model. It is scaled to the template height, feet at 0, centred;
+each part is first placed from the skeleton (below) and then refined onto the reference surface with a scaled ICP
+(nearest-surface correspondences, Umeyama similarity, 40 iterations, outliers > 3x median dropped), which restores
+the original sizes and positions.
 
 Tripo part exports are each normalised to 1 unit, so their original placement is lost. This rebuilds it
 from the template skeleton (any charpipe rig; only its bones are used, the body mesh is dropped).
@@ -24,6 +29,7 @@ from mathutils import Matrix, Vector
 
 a = sys.argv[sys.argv.index("--") + 1:]
 TPL, PJ, OUT = a[0], a[1], a[2]
+REF = a[a.index("--reference") + 1] if "--reference" in a else None
 parts = json.load(open(PJ))
 base_dir = os.path.dirname(os.path.abspath(PJ))
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -44,6 +50,42 @@ LIMB = {"arm_l": ("Left", ["LeftArm", "LeftForeArm", "LeftHand"], (0.4, 0.4, 0.2
         "leg_l": ("Left", ["LeftUpLeg", "LeftLeg", "LeftFoot"], (0.45, 0.45, 0.1)),
         "leg_r": ("Right", ["RightUpLeg", "RightLeg", "RightFoot"], (0.45, 0.45, 0.1))}
 rep = {}
+
+
+def umeyama(src, dst):
+    ms, md = src.mean(0), dst.mean(0)
+    A, B = src - ms, dst - md
+    U, S, Vt = np.linalg.svd(B.T @ A / len(src))
+    D = np.eye(3)
+    if np.linalg.det(U @ Vt) < 0:
+        D[2, 2] = -1
+    R = U @ D @ Vt
+    sc = np.trace(np.diag(S) @ D) / max((A ** 2).sum() / len(src), 1e-12)
+    return sc, R, md - sc * R @ ms
+
+
+def icp(P, tree, iters=40):
+    """refine part P (mesh) onto the reference BVH with a similarity transform; returns mean distance (m)"""
+    co = np.array([v.co[:] for v in P.data.vertices])
+    idx = np.random.default_rng(0).choice(len(co), min(len(co), 1500), replace=False)
+    pts = co[idx]
+    Mtot = np.eye(4)
+    d_mean = None
+    for _ in range(iters):
+        near = [tree.find_nearest(Vector(p)) for p in pts]
+        q = np.array([n[0][:] if n[0] is not None else p for n, p in zip(near, pts)])
+        d = np.linalg.norm(q - pts, axis=1)
+        keep = d < max(np.median(d) * 3, 1e-4)
+        sc, R, t = umeyama(pts[keep], q[keep])
+        sc = float(np.clip(sc, 0.9, 1.1))  # small steps
+        pts = (sc * (R @ pts.T)).T + t
+        M = np.eye(4)
+        M[:3, :3] = sc * R
+        M[:3, 3] = t
+        Mtot = M @ Mtot
+        d_mean = float(d[keep].mean())
+    P.data.transform(Matrix(Mtot.tolist()))
+    return d_mean
 
 
 def imp(path):
@@ -73,6 +115,17 @@ def imp(path):
     return bpy.context.view_layer.objects.active
 
 
+REFTREE = None
+if REF:
+    R_ = imp(REF)
+    rc = np.array([v.co[:] for v in R_.data.vertices])
+    H = (J("head_end", tail=True)[2] if "head_end" in arm.data.bones else J("Head")[2] + 0.25)
+    k_ = H / np.ptp(rc[:, 2])
+    lo_ = rc.min(0)
+    R_.data.transform(Matrix.Translation(Vector((-(rc[:, 0].min() + rc[:, 0].max()) / 2 * k_, -(rc[:, 1].min() + rc[:, 1].max()) / 2 * k_, -lo_[2] * k_))) @ Matrix.Scale(k_, 4))
+    from mathutils.bvhtree import BVHTree
+    REFTREE = BVHTree.FromPolygons([v.co.copy() for v in R_.data.vertices], [tuple(p.vertices) for p in R_.data.polygons])
+    bpy.data.objects.remove(R_, do_unlink=True)
 objs = []
 for f, role in parts.items():
     P = imp(f if os.path.isabs(f) else os.path.join(base_dir, f))
@@ -100,6 +153,8 @@ for f, role in parts.items():
         R = Vector(ax).rotation_difference(Vector(d)).to_matrix().to_4x4()
         M = Matrix.Translation(Vector(root)) @ R @ Matrix.Scale(k, 4) @ Matrix.Translation(Vector(-p0))
         P.data.transform(M)
+        if REFTREE is not None:
+            rep.setdefault("_icp", {})[f] = round(icp(P, REFTREE) * 100, 2)
         co2 = np.array([v.co[:] for v in P.data.vertices])
         u = ((co2 - root) @ d) / Lb
         g = [P.vertex_groups.new(name=b) for b in bones]
@@ -138,6 +193,8 @@ for f, role in parts.items():
         if role == "back":
             off[1] += 0.16  # behind the torso (characters face -Y)
         P.data.transform(Matrix.Translation(Vector(off)) @ Matrix.Scale(k, 4))
+        if REFTREE is not None:
+            rep.setdefault("_icp", {})[f] = round(icp(P, REFTREE) * 100, 2)
         P.vertex_groups.new(name=bone).add(list(range(len(P.data.vertices))), 1.0, "REPLACE")
     P.parent = arm
     P.modifiers.new("Armature", "ARMATURE").object = arm

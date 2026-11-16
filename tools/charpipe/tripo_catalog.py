@@ -14,6 +14,7 @@ Tree: <root>/<Character>/<piece folder>/.../<file>  (e.g. Tripo Exports/Hellions
              sneakers, gloves, jacket, longjacket, hoody, hoodie, coat, trench, sweater (exact words first)
       gear   hair, cap, hat, beanie, helmet, mask, goggles, bandana, chain, bat, pipe, axe, knife, gun, wallet,
              tool, belt... (also found inside compound words, e.g. "hipchainandtool")
+      reference  a file named full* / whole* (the unsplit model of a part set): used only as the placement guide
       setpart  unnamed parts (generic names only) inside a set folder (e.g. Clockwork/Clockwork1/Untitled #212.zip):
              Tripo part exports share one coordinate space, so a set is assembled as one character
       ?      anything else (reported, not processed)
@@ -69,6 +70,8 @@ def piece_name(parts, fname):
 
 
 def classify(character, piece, fname):
+    if re.match(r"^(full|whole)", os.path.splitext(fname)[0].lower()):
+        return "reference"
     ws = words(piece)
     joined = "".join(ws)
     cw = [w for w in ws if w.lower() != character.lower().rstrip("s")]
