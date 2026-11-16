@@ -11,10 +11,11 @@ Folders (drop .glb / .gltf / .fbx / .obj from the Tripo website or bridge):
 Pieces: gear (cap, mask, goggles, bandana, chain, bat, pipe, gun, wallet, ...) -> bl_gear_item.py: sized by name,
 socket/slot from the name, saved into the Hellion wardrobe (charpipe_test/wardrobe/hellions/<slot>/gear_<item>.glb +
 wardrobe.json); after a batch a gear sheet is rendered on the test Hellion (tripo/ue_ready/previews/gear_sheet.jpg).
-MAIN ROUTE (2026-11-16): full headless outfit bodies + library heads + skin tone + socket gear + outfit tints.
-Rigged bodies, heads and gear are registered in charpipe_test/characters_lib.json for random_character.py.
-Separate clothing pieces (vest, shirt, jeans, boots, gloves, jacket...) are SHELVED: logged and skipped (the
-wardrobe / fitter tools stay in the repo as experimental).
+MAIN ROUTE (2026-11-16, Robert): COMPLETE characters only: one Tripo export with head, outfit and integrated gear.
+By default only complete models are processed (clean, size, rig with fingers, CoH clip tests, ue_ready FBX).
+Headless bodies, heads, gear and clothing pieces are logged and SKIPPED; --all-types opts back in to the
+experimental assembly tools (head library, gear, character library for random_character.py), which all stay in
+the repo. Outfit colour tints are a manual step: bl_tint_preview.py.
 Per new file (name = character name; height and headless come from the name, see bl_tripo_clean.py:
 kid/lean 172, veteran 178, average 180, heavy/brawler 183, big/biker 193, default 182; "headless"):
   clean (weld, floaters, normals, 50k tris, 2K textures, size) -> proxy head if headless -> autorig
@@ -139,6 +140,33 @@ def process_gear(src, name=None):
     log("OK gear %s %s" % (base, " ".join(x for x in r if "GEAR_ITEM_OK" in x)[:200]))
 
 
+def process_rigged(src, name):
+    """Robert's own rigs (AccuRig 2 etc.): keep geometry, weights and skeleton exactly; copy the FBX to ue_ready,
+    check size / orientation / skeleton, retarget the CoH clips with the auto-detected bone map, render close-ups."""
+    import shutil
+    os.makedirs(UE, exist_ok=True)
+    ext = os.path.splitext(src)[1].lower()
+    shutil.copy(src, os.path.join(UE, name + ext))
+    chk = bl(os.path.join(HERE, "bl_rig_check.py"), src)
+    log("  check: %s" % " ".join(chk)[:300])
+    if os.path.exists(RENDER):
+        env = dict(os.environ, RT_FAMILY="auto")
+        r = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", RENDER, "--", src, name], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        sk = [l for l in r.stdout.splitlines() if l.startswith("SKELETON") or "RT_OK" in l or "Error" in l]
+        log("  tests: %s" % " | ".join(x[:160] for x in sk))
+        from PIL import Image
+        views = ["idle_front", "idle_side", "run", "brawl", "hit", "death", "face", "hands_l", "hands_r", "fist", "shoulders_brawl"]
+        sheet = Image.new("RGB", (len(views) * 200, 300), (40, 40, 40))
+        for i, v in enumerate(views):
+            p = "%s/RT_%s_%s.png" % (RENDERS, name, v)
+            if os.path.exists(p):
+                sheet.paste(Image.open(p).convert("RGB").resize((200, 300)), (i * 200, 0))
+        os.makedirs(UE + "/previews", exist_ok=True)
+        sheet.save(UE + "/previews/%s.jpg" % name, quality=88)
+        log("  preview %s/previews/%s.jpg (check close-ups before calling it good)" % (UE, name))
+
+
 def gear_sheet():
     """render every gear item on the test Hellion (base body + tee + jeans + boots): idle front + Brawl"""
     try:
@@ -200,7 +228,16 @@ def scan(state):
             continue
         name = (r["character"] + "_" + r["piece"]).lower().replace(" ", "_").replace("/", "_").replace("#", "")
         try:
-            if r["type"] == "body":
+            ALL = "--all-types" in sys.argv
+            if r["type"] == "rigged":
+                log("NEW rigged %s -> check + CoH clip tests (no re-rig)" % r["rel"])
+                process_rigged(r["path"], name)
+                state[key] = sig
+                json.dump(state, open(ROOT + "/watch_state.json", "w"), indent=1)
+                continue
+            if not ALL and (r["type"] in ("head", "gear", "cloth") or (r["type"] == "body" and "headless" in (r["rel"] + name).lower())):
+                log("SKIP %s %s (complete characters only; --all-types to include)" % (r["type"], r["rel"]))
+            elif r["type"] == "body":
                 log("NEW body %s -> rig" % r["rel"])
                 process(r["path"])
                 b = os.path.splitext(os.path.basename(r["path"]))[0]

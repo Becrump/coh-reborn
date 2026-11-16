@@ -2,7 +2,27 @@
 
 Goal: concept images in the same style as `full hellion1.jpg` / `Headless hellion1.jpg`, which work very well for 3D generation (local Hunyuan3D, Tripo, Meshy). Default deliverable per character: a **headless, bare-handed body** in the MetaHuman A-pose (faces come from MetaHuman), plus left/back/right views for multi-view. Headwear, face coverings and weapons are separate gear pieces: the character lines below still describe the full look, the style block strips the gear, and the gear prompts make it separately.
 
-## MAIN ROUTE (decided 2026-11-16): outfit bodies + swappable heads
+## MAIN ROUTE (16 Nov 2026, evening): COMPLETE characters only
+
+Supersedes the "outfit bodies + heads" route above: automatic assembly (head swap, auto gear, skin recolouring,
+random assembly) looked wrong at close range and is shelved as experimental (kept in the repo, off by default).
+
+1. **One complete Tripo character per variant**: head, outfit and integrated gear in one export; full body,
+   A-pose (MetaHuman bind pose), plain grey background. Gemini: the style block (with "bare face" removed if the
+   character should wear its mask / bandana / cap as part of the model) + one character line; no headless follow-up.
+2. **Rigging**: either Robert rigs in AccuRig 2 and exports FBX to `Tripo Exports\Rigged\` (never re-rigged:
+   `tripo_watch` only copies it to `ue_ready`, checks size / facing / skeleton with `bl_rig_check.py`, detects the
+   bone names with `skeleton_detect.py` (AccuRig CC_Base_, UE / MetaHuman, Mixamo, charpipe) and runs the CoH
+   clip tests + close-ups), or `tripo_watch` auto-rigs complete models dropped elsewhere in `Tripo Exports`.
+3. **Checks before anything is called good**: idle / run / Brawl / hit / death plus close-ups of the face, both
+   hands, the Brawl fist and the shoulders at Brawl (`ue_ready\previews\<name>.jpg`).
+4. **Variety**: more complete characters; optional manual colour tint per character with a before/after preview
+   (`bl_tint_preview.py --hue --sat --val [--protect-skin]`, only colours change); animation / idle sets.
+5. Gear: weapons on hand sockets set up once per character in Unreal; no automatic placement.
+
+`tripo_watch --all-types` re-enables the experimental head / gear / clothing processing.
+
+## Superseded: outfit bodies + swappable heads (shelved 16 Nov)
 
 Separate clothing pieces did not fit reliably on other bodies (fit report: 34/66 pass, jackets worst), so the
 production route is:

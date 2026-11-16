@@ -157,3 +157,23 @@ gear list, all registered in `charpipe_test/characters_lib.json`; `random_charac
 Experimental / shelved (kept in the repo): `bl_cloth_autofit.py`, `bl_fit_report.py`, `bl_wardrobe_make.py`,
 `bl_wardrobe_assemble.py`, `bl_wardrobe_to_mh.py`, `bl_kitbash_*`: separate clothing pieces. `tripo_watch` logs and
 skips clothing pieces.
+
+## MAIN ROUTE (16 Nov 2026, evening): COMPLETE characters only
+
+Supersedes the "outfit bodies + heads" route above: automatic assembly (head swap, auto gear, skin recolouring,
+random assembly) looked wrong at close range and is shelved as experimental (kept in the repo, off by default).
+
+1. **One complete Tripo character per variant**: head, outfit and integrated gear in one export; full body,
+   A-pose (MetaHuman bind pose), plain grey background. Gemini: the style block (with "bare face" removed if the
+   character should wear its mask / bandana / cap as part of the model) + one character line; no headless follow-up.
+2. **Rigging**: either Robert rigs in AccuRig 2 and exports FBX to `Tripo Exports\Rigged\` (never re-rigged:
+   `tripo_watch` only copies it to `ue_ready`, checks size / facing / skeleton with `bl_rig_check.py`, detects the
+   bone names with `skeleton_detect.py` (AccuRig CC_Base_, UE / MetaHuman, Mixamo, charpipe) and runs the CoH
+   clip tests + close-ups), or `tripo_watch` auto-rigs complete models dropped elsewhere in `Tripo Exports`.
+3. **Checks before anything is called good**: idle / run / Brawl / hit / death plus close-ups of the face, both
+   hands, the Brawl fist and the shoulders at Brawl (`ue_ready\previews\<name>.jpg`).
+4. **Variety**: more complete characters; optional manual colour tint per character with a before/after preview
+   (`bl_tint_preview.py --hue --sat --val [--protect-skin]`, only colours change); animation / idle sets.
+5. Gear: weapons on hand sockets set up once per character in Unreal; no automatic placement.
+
+`tripo_watch --all-types` re-enables the experimental head / gear / clothing processing.

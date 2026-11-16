@@ -308,6 +308,15 @@ def finger_chains(arm):
             for names in (a, b):
                 if all(n in B for n in names):
                     out.append((S, F, names))
+                    break
+            else:  # other conventions (AccuRig / CC_Base_, Mixamo): skeleton_detect.finger
+                try:
+                    import skeleton_detect as SD
+                    names = [SD.finger(arm, S, F, j) for j in (1, 2, 3)]
+                    if all(names):
+                        out.append((S, F, names))
+                except ImportError:
+                    pass
     return out
 
 
@@ -315,10 +324,16 @@ def _hand_frame(arm, S):
     """Rest palm normal (armature space) from wrist, index and pinky knuckles, pointing to the thumb/palm side."""
     B = arm.data.bones
     s_ = S[0].lower()
-    hand = B.get(S + "Hand") or B.get("hand_" + s_)
+    hand = B.get(S + "Hand") or B.get("hand_" + s_) or B.get("CC_Base_%s_Hand" % S[0]) or B.get("mixamorig:%sHand" % S)
     idx = B.get(S + "Index1") or B.get("index_01_" + s_)
     pky = B.get(S + "Pinky1") or B.get("pinky_01_" + s_)
     th = B.get(S + "Thumb3") or B.get("thumb_03_" + s_)
+    if not (idx and pky):
+        try:
+            import skeleton_detect as SD
+            idx, pky, th = (B.get(SD.finger(arm, S, F, j) or "") for F, j in (("Index", 1), ("Pinky", 1), ("Thumb", 3)))
+        except ImportError:
+            pass
     if not (hand and idx and pky):
         return None
     n = (idx.head_local - hand.head_local).cross(pky.head_local - hand.head_local)
