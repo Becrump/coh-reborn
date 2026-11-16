@@ -282,3 +282,39 @@ Save as `heads/<id>_front.png` (and `_left.png`). Tripo: upload the front (and s
 | HF1-HF6 | Female heads: pending Robert's decision on female Hellions (same style block; vary ethnicity, age 20s-40s, hair: buzz, undercut, braids, long, mohawk) |
 
 Tips: keep the expression neutral-to-tough with the mouth closed (open mouths and smiles generate badly and look wrong on idle animations). Ask again if Gemini adds a hat, hood or glasses. Ethnicity is in the face shape and hair; the final skin colour comes from the SkinTone parameter, so you can also reuse a head with several tones.
+
+## Garment-on-base-body (generate-on-body route)
+
+Garments generated alone come out at their own size and pose and have to be fitted afterwards (fitting is the weak
+spot, worst for jackets). The more reliable route: generate the garment **already worn by our base body**, in the
+same A-pose, so its size, sleeves and collar match the body from the start. Then Tripo-export it, split the garment
+off with `bl_split_by_texture.py` (or Tripo's part export) and it drops onto the base body with almost no fitting.
+
+**Attach two images:** the style reference (`full hellion1.jpg`) and the base body render
+(`model-upgrade-samples/gemini_refs/base_body_front.png`: the bare BaseHellion in grey underwear, A-pose).
+
+**Template (paste, then fill in the garment):**
+
+> Use the first attached image as the style reference and the second as the exact body and pose. Show this SAME man,
+> same body shape, same proportions, same MetaHuman A-pose (upper arms about 52 degrees below horizontal, palms
+> facing the thighs, legs slightly apart), same camera and framing, plain flat mid-grey background, soft even studio
+> lighting, now wearing ONLY this one garment over his plain grey underwear: [GARMENT]. Nothing else changes: no
+> other clothing, no shoes unless the garment is footwear, no hat, no mask, no jewellery, bare hands, bald head,
+> neutral face. The garment must fit his body naturally (sleeves following his arms, collar at his neck, hem at
+> the natural length), photoreal Unreal Engine 5 quality, front view, full body head to feet.
+
+**Follow-ups (same chat):** "Now the exact same image from behind (back view)." / "...from his left side."
+
+**Garment lines (Hellions):**
+- open black leather biker jacket with orange flame decals on the sleeves and a red goat-head patch on the back
+- long dark brown leather trench coat to the knees with scorched hem and flame decals, worn open
+- black zip hoodie, hood down, red pentagram on the chest, sleeves to the wrists
+- open ochre leather biker vest with studs
+- white sleeveless undershirt with a red goat-head print
+- olive cargo pants with knee pockets, belted
+- black ripped jeans with camo patches
+- black lace-up combat boots
+- fingerless black leather gloves with metal studs
+
+Save as `garments/<group>_<garment>_onbody_front.png` (+ `_back`, `_left`). Name the Tripo download the same; drop it in
+`Tripo Exports\<Group>\<garment>_onbody\`.
