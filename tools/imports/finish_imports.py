@@ -196,6 +196,7 @@ def unreal_stage(stage):
         p = ue(exec_file(os.path.join(GS, "import_fx.py"), {"GS_STEP": "assets", "GS_POWERS": None}), 4 * 3600)
         return "FX ASSETS imported" in p.stdout, last_line(p, "FX ASSETS")
     if stage == "ue_enemies":
+        last = None
         for _ in range(200):
             p = ue(exec_file(os.path.join(GS, "import_enemies.py"),
                              {"GS_LIMIT": 15, "GS_OUT": os.path.join(OUT, "enemies")}), 3600)
@@ -204,6 +205,13 @@ def unreal_stage(stage):
             parts = str(line).split()
             if len(parts) >= 4 and parts[0] == "ENEMIES" and parts[1] == parts[3]:
                 return True, line
+            # the rest are props/vehicles with no skeletal mesh (static
+            # meshes, PPD_SquadCar, Longbow_Skiff ...): a batch that adds
+            # nothing ends the stage instead of retrying them forever
+            if len(parts) >= 4 and parts[0] == "ENEMIES" and parts[1] == last:
+                return True, "%s (the rest have no skeletal mesh)" % line
+            if len(parts) >= 4 and parts[0] == "ENEMIES":
+                last = parts[1]
             if "ENEMIES" not in str(line):
                 return False, line
         return False, "gave up after 200 batches"
