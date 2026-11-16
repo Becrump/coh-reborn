@@ -1257,6 +1257,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  const UCoHGameRules* GR=UCoHGameRules::Get(this);
  UWorld* W=GetWorld();
  if(!GR || !Near || !W) return false;
+ const TArray<FCoHEncounter>& EncList=GR->EncountersAt(W,Near->GetActorLocation());   // the zone the player is in
  // spawn definitions of the group / kind at this level, weighted by the
  // number of spots in the zone's layers that use them (mission and named
  // spawns are left to their own systems)
@@ -1273,7 +1274,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  // the level gap of an encounter (0 = in its range, give or take one level)
  auto Gap=[Level](const FCoHEncounter& E){ return FMath::Max(0,FMath::Max(E.MinLevel-1-Level,Level-E.MaxLevel-1)); };
  int32 Fits=0, BestGap=MAX_int32;
- for(const FCoHEncounter& E:GR->Encounters)
+ for(const FCoHEncounter& E:EncList)
  {
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
   if(!E.Actors.ContainsByPredicate(ActorFoe)) continue;
@@ -1281,7 +1282,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
   ++Fits; BestGap=FMath::Min(BestGap,Gap(E));
  }
  // none at this level: the nearest levels instead (the encounter's own level is clamped below)
- for(const FCoHEncounter& E:GR->Encounters)
+ for(const FCoHEncounter& E:EncList)
  {
   if(Fits==0) break;
   if(!Group.IsEmpty() && !E.Groups().Contains(Group)) continue;
@@ -1293,11 +1294,13 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  if(Pool.Num()==0)
  {
   UE_LOG(LogTemp,Warning,TEXT("CoH encounters: none for group '%s' kind '%s' at level %d (%d encounter definitions loaded)"),
-   Group.IsEmpty()?TEXT("any"):*Group,Kind.IsEmpty()?TEXT("any"):*Kind,Level,GR->Encounters.Num());
+   Group.IsEmpty()?TEXT("any"):*Group,Kind.IsEmpty()?TEXT("any"):*Kind,Level,EncList.Num());
   return false;
  }
  if(BestGap>0) UE_LOG(LogTemp,Log,TEXT("CoH encounters: nothing at level %d, using the nearest (%d levels off)"),Level,BestGap);
  const FCoHEncounter* Enc=Pool[FMath::RandRange(0,Pool.Num()-1)];
+ UE_LOG(LogTemp,Log,TEXT("CoH encounters: spawning '%s' at X %.0f m Y %.0f m (list of %d)"),*Enc->Name,
+  Near->GetActorLocation().X/100.0,Near->GetActorLocation().Y/100.0,EncList.Num());
  if(Total>0){ int32 Roll=FMath::RandRange(0,Total-1); for(const FCoHEncounter* E:Pool){ if((Roll-=FMath::Max(0,E->Spots))<0){ Enc=E; break; } } }
  // a spot: open ground at the distance asked (the new map's layout differs
  // from the original, so spots are placed around the players)

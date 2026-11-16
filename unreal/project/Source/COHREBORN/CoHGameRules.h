@@ -233,6 +233,13 @@ public:
 	const FCoHKitVillain* Kit(const FString& Villain) const { return Villains.Find(Villain); }
 	const FCoHPowerAnim* VillainPowerAnim(const FString& Villain, FName Power) const;
 	TArray<FCoHEncounter> Encounters;
+	/** one world (L_ParagonCity): each zone's own encounter list (zone id -> list, from
+	 *  <out>/zone_encounters/<zone>/encounters.json) and the zones' rectangles in Unreal cm
+	 *  (<out>/zone_encounters/zone_offsets.json) */
+	TMap<FString, TArray<FCoHEncounter>> ZoneEncounters;
+	TArray<TPair<FString, FBox2D>> ZoneRects;
+	/** the encounter list for a world position: the zone's own list in the one-world map, else Encounters */
+	const TArray<FCoHEncounter>& EncountersAt(const UWorld* World, const FVector& Pos) const;
 	TMap<FString, FCoHKitVillain> Villains;
 
 private:
@@ -240,6 +247,8 @@ private:
 	void LoadHeroRules(const FString& File);
 	void LoadRewards(const FString& File);
 	void LoadEnemies(const FString& Dir);
+	void LoadEncountersFile(const FString& File, TArray<FCoHEncounter>& Out);
+	void LoadZoneEncounters(const FString& Dir);
 	void IndexClips(const FString& Root) const;
 	const FCoHRuleSet* Set(const FString& Id) const;
 	FString Kind(const FCoHHeroRecord& Hero, const FString& SetId) const;

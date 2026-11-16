@@ -864,11 +864,17 @@ AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	// Arrive=Monorail: inside the waiting train. Otherwise never there: the
 	// MonorailArrival starts sit in the closed station room (playtests 1 and 3
 	// put the host in it, walled in), so a normal join uses the other starts.
-	const bool bByMonorail = UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive")) == TEXT("Monorail");
+	const FString Arrive = UGameplayStatics::ParseOption(OptionsString, TEXT("Arrive"));
+	const bool bByMonorail = Arrive == TEXT("Monorail");
+	// Arrive=Gate_<zone>_<gate>: the one world's zone-gate starts (tagged Gate_...), never used otherwise
+	const bool bByGate = Arrive.StartsWith(TEXT("Gate_"));
 	TArray<APlayerStart*> Starts;
 	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 	{
-		if ((It->PlayerStartTag == TEXT("MonorailArrival")) == bByMonorail)
+		const FString Tag = It->PlayerStartTag.ToString();
+		const bool bGate = Tag.StartsWith(TEXT("Gate_"));
+		if (bByGate ? Tag.Equals(Arrive, ESearchCase::IgnoreCase)
+		            : (!bGate && (It->PlayerStartTag == TEXT("MonorailArrival")) == bByMonorail))
 		{
 			Starts.Add(*It);
 		}
@@ -877,7 +883,7 @@ AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	{
 		APlayerStart* Pick = Starts[FMath::RandRange(0, Starts.Num() - 1)];
 		UE_LOG(LogTemp, Log, TEXT("CoH start: %s at %s (%d %s starts)"), *Pick->GetName(), *Pick->GetActorLocation().ToCompactString(),
-			Starts.Num(), bByMonorail ? TEXT("monorail") : TEXT("street"));
+			Starts.Num(), bByMonorail ? TEXT("monorail") : bByGate ? TEXT("gate") : TEXT("street"));
 		return Pick;
 	}
 	return Super::ChoosePlayerStart_Implementation(Player);
