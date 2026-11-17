@@ -99,7 +99,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			const auto O = KV.Value->AsObject();
 			FCoHStoryContact C;
-			C.Id = KV.Key; C.Name = StoryStr(O, TEXT("name")); C.Profession = StoryStr(O, TEXT("profession"));
+			C.Id = FString(KV.Key); C.Name = StoryStr(O, TEXT("name")); C.Profession = StoryStr(O, TEXT("profession"));
 			C.Description = StoryStr(O, TEXT("description")); C.Location = StoryStr(O, TEXT("location"));
 			C.Zone = StoryStr(O, TEXT("zone")); C.Model = StoryStr(O, TEXT("model"));
 			C.Pos = StoryVec(O, TEXT("pos")); C.Yaw = (float)StoryNum(O, TEXT("yaw"));
@@ -118,7 +118,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			const auto O = KV.Value->AsObject();
 			FCoHStoryPerson P;
-			P.Id = KV.Key; P.Name = StoryStr(O, TEXT("name")); P.Zone = StoryStr(O, TEXT("zone")); P.Model = StoryStr(O, TEXT("model"));
+			P.Id = FString(KV.Key); P.Name = StoryStr(O, TEXT("name")); P.Zone = StoryStr(O, TEXT("zone")); P.Model = StoryStr(O, TEXT("model"));
 			P.Line = StoryStr(O, TEXT("line")); P.Pos = StoryVec(O, TEXT("pos")); P.Yaw = (float)StoryNum(O, TEXT("yaw"));
 			People.Add(P.Id, MoveTemp(P));
 		}
@@ -127,7 +127,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			const auto O = KV.Value->AsObject();
 			FCoHStoryTask T;
-			T.Id = KV.Key; T.Type = StoryStr(O, TEXT("type"));
+			T.Id = FString(KV.Key); T.Type = StoryStr(O, TEXT("type"));
 			T.Intro = StoryStr(O, TEXT("intro")); T.Accept = StoryStr(O, TEXT("accept")); T.SendOff = StoryStr(O, TEXT("sendoff"));
 			T.Active = StoryStr(O, TEXT("active")); T.Busy = StoryStr(O, TEXT("busy")); T.Title = StoryStr(O, TEXT("title"));
 			T.Begin = StoryStr(O, TEXT("begin")); T.Complete = StoryStr(O, TEXT("complete")); T.Return = StoryStr(O, TEXT("return"));
@@ -180,12 +180,12 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			FCoHStoryArc A;
 			A.Name = StoryStr(O, TEXT("name")); A.MinLevel = StoryInt(O, TEXT("min_level"), 1); A.MaxLevel = StoryInt(O, TEXT("max_level"), 54);
 			A.Episodes = StoryList(O, TEXT("episodes"));
-			Arcs.Add(KV.Key, MoveTemp(A));
+			Arcs.Add(FString(KV.Key), MoveTemp(A));
 		}
 	if (const auto Ds = StoryObj(Root, TEXT("doors")))
 		for (const auto& KV : Ds->Values)
 		{
-			TArray<FCoHStoryDoor>& List = Doors.FindOrAdd(KV.Key);
+			TArray<FCoHStoryDoor>& List = Doors.FindOrAdd(FString(KV.Key));
 			for (const auto& V : KV.Value->AsArray())
 			{
 				const auto O = V->AsObject();
@@ -196,13 +196,13 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 	if (const auto Vs = StoryObj(Root, TEXT("visits")))
 		for (const auto& KV : Vs->Values)
 		{
-			auto& List = Visits.FindOrAdd(KV.Key);
+			auto& List = Visits.FindOrAdd(FString(KV.Key));
 			for (const auto& V : KV.Value->AsArray()) { const auto O = V->AsObject(); List.Add({ StoryStr(O, TEXT("name")), StoryVec(O, TEXT("pos")) }); }
 		}
 	if (const auto Rs = StoryObj(Root, TEXT("rewards")))
 		for (const auto& KV : Rs->Values)
 		{
-			auto& Levels = Rewards.FindOrAdd(KV.Key.ToLower());
+			auto& Levels = Rewards.FindOrAdd(FString(KV.Key).ToLower());
 			for (const auto& L : KV.Value->AsObject()->Values)
 			{
 				const auto O = L.Value->AsObject();
@@ -216,7 +216,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 						TArray<FString> Sets; for (const auto& SV : DA[1]->AsArray()) Sets.Add(SV->AsString());
 						R.Drops.Add({ (float)DA[0]->AsNumber(), Sets });
 					}
-				Levels.Add(FCString::Atoi(*L.Key), R);
+				Levels.Add(FCString::Atoi(*FString(L.Key)), R);
 			}
 		}
 	UE_LOG(LogTemp, Log, TEXT("CoH story: %d contacts, %d people, %d tasks, %d arcs, %d reward tables (%.1f s)"),
@@ -424,9 +424,9 @@ ACoHStoryNPC::ACoHStoryNPC()
 	Label->SetTextRenderColor(FColor(255, 215, 90));
 }
 
-void ACoHStoryNPC::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const
+void ACoHStoryNPC::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(Out);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACoHStoryNPC, Key);
 	DOREPLIFETIME(ACoHStoryNPC, DisplayName);
 	DOREPLIFETIME(ACoHStoryNPC, Model);
@@ -501,9 +501,9 @@ ACoHMissionMarker::ACoHMissionMarker()
 	Label->SetWorldSize(30.f);
 }
 
-void ACoHMissionMarker::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const
+void ACoHMissionMarker::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(Out);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACoHMissionMarker, Kind);
 	DOREPLIFETIME(ACoHMissionMarker, Text);
 	DOREPLIFETIME(ACoHMissionMarker, ForHero);
