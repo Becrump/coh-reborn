@@ -11,6 +11,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "JsonObjectConverter.h"
 
 static constexpr int32 MaxLevel = 50;
 static constexpr float FeetToCm = 30.48f;
@@ -588,6 +589,9 @@ bool UCoHGameRules::HeroFromJson(const FString& Text, FCoHHeroRecord& H) const
 			}
 			if (!K.Power.IsNone()) H.Looks.Add(K);
 		}
+	const TSharedPtr<FJsonObject>* Story;
+	if (O->TryGetObjectField(TEXT("story"), Story))
+		FJsonObjectConverter::JsonObjectToUStruct((*Story).ToSharedRef(), &H.Story, 0, 0);
 	return true;
 }
 
@@ -652,6 +656,7 @@ FString UCoHGameRules::HeroToJson(const FCoHHeroRecord& H) const
 		LooksArr.Add(MakeShared<FJsonValueObject>(LO));
 	}
 	O->SetArrayField(TEXT("looks"), LooksArr);
+	if (TSharedPtr<FJsonObject> Story = FJsonObjectConverter::UStructToJsonObject(H.Story)) O->SetObjectField(TEXT("story"), Story);
 	if (H.Picks.Num() < SchedPicks.Num()) O->SetNumberField(TEXT("next_pick_level"), PickLevel(H.Picks.Num()));
 	FString Text;
 	const TSharedRef<TJsonWriter<>> W = TJsonWriterFactory<>::Create(&Text);

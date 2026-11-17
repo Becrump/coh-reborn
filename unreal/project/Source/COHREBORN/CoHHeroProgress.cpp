@@ -1,4 +1,5 @@
 #include "CoHHeroProgress.h"
+#include "CoHStory.h"
 #include "CoHPowers.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
@@ -302,6 +303,7 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 		UE_LOG(LogTemp, Log, TEXT("CoH reward: %s level %d %s defeated -> %s (%.0f%% damage): %d XP, %d influence"), *Group, Victim->Level, *Rank,
 			*H->Hero.Name, 100.f * KV.Value / Total, A[0].XP, A[0].Influence);
 		H->Award(A[0].XP, A[0].Influence);
+		UCoHStoryComponent::OnVillainDefeated(Who, Victim->GetOwner());      // defeat-X tasks
 		if (KV.Value > TopDamage) { TopDamage = KV.Value; Top = H; bTopItems = A[0].bItems; }
 	}
 	if (Top && bTopItems) Top->AddInspiration(R->RollDrop(Rank, Victim->Level - 1, Group));
