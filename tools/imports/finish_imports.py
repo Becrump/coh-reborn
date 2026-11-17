@@ -18,6 +18,11 @@ Convert stages (no editor needed; each takes seconds to a few minutes):
                dialog and the English text (tools/story/coh_story.py) -> out/story
   items        badges, enhancements, inventions, stores, rewards
                (tools/story/coh_items.py) -> out/items
+  story_game   what the game reads for contacts and missions: where contacts,
+               mission doors and visit spots are in the 19 zones
+               (tools/story/world_points.py) and the compiled contacts, tasks,
+               arcs and reward tables (tools/story/story_game.py)
+               -> out/story/story_game.json
   characters   the 120 hero presets and every contact/mission NPC model
                (coh2unreal.player models) -> out/player/models, models.json
 
@@ -58,7 +63,8 @@ UE_EXEC = os.path.join(REPO, "unreal", "scripts", "ue_exec.py")
 GS = os.path.join(REPO, "unreal", "scripts", "game_systems")
 NEEDED = ("texts/english", "scripts.loc/contacts", "scripts.loc/spawndefs",
           "maps/city_zones", "defs/powers", "sequencers", "aiscript", "menu")
-CONVERT = ["encounters", "enemies", "enemy_fx", "player_fx", "story", "items", "characters"]
+CONVERT = ["encounters", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
+           "characters"]
 UNREAL = ["ue_fx", "ue_enemies", "ue_presets", "ue_npcs"]
 
 
@@ -149,6 +155,12 @@ def convert(stage, data, piggs):
         p = run([PY, "tools/story/coh_items.py", data, o("items"), "--strings",
                  o("story", "strings.json")])
         return p.returncode == 0, last_line(p, "unresolved")
+    if stage == "story_game":
+        p = run([PY, "tools/story/world_points.py", data, o("story")])
+        if p.returncode != 0:
+            return False, last_line(p, "Error")
+        p = run([PY, "tools/story/story_game.py", o("story")])
+        return p.returncode == 0, last_line(p, "contacts placed")
     if stage == "characters":
         npcs = json.load(open(o("story", "npcs.json"), encoding="utf-8"))
         models = sorted({c["a"][0] for rel, t in npcs.items() for d in t

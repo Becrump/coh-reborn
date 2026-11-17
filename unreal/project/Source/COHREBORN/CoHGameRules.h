@@ -61,6 +61,44 @@ struct FCoHPowerLook
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Clip;
 };
 
+/** One task a hero carries (story progress, saved in the hero file). */
+USTRUCT(BlueprintType)
+struct FCoHTaskState
+{
+	GENERATED_BODY()
+	/** story_game.json task id: "<taskset file>#<name>" */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Task;
+	/** The contact who gave it (where it is turned in). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Contact;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Progress = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Needed = 0;
+	/** Done: go back to the contact (or, for a delivery, it was delivered). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bComplete = false;
+	/** Where to go (zero: anywhere, e.g. defeat-X tasks). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FVector Waypoint = FVector::ZeroVector;
+	/** The line the mission window shows. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Text;
+};
+
+/** A contact the hero has met: contact points decide friend / confidant. */
+USTRUCT(BlueprintType)
+struct FCoHContactState
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Contact;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Points = 0;
+};
+
+/** Contacts met, tasks in hand and tasks finished (CoHStory.h). */
+USTRUCT(BlueprintType)
+struct FCoHStoryProgress
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHContactState> Contacts;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHTaskState> Tasks;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Done;
+};
+
 /** A hero file, format 2 (docs/hero-build.md), plus the leveling fields. */
 USTRUCT(BlueprintType)
 struct FCoHHeroRecord
@@ -79,6 +117,8 @@ struct FCoHHeroRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHHeroPick> Picks;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> Inspirations;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHPowerLook> Looks;   // restyled powers (the customize panel)
+	/** Contacts, tasks and story arcs (CoHStory.h); "story" in the hero file. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FCoHStoryProgress Story;
 };
 
 struct FCoHRulePower

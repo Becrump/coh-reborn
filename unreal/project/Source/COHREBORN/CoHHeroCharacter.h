@@ -134,6 +134,11 @@ public:
 	/** The hero built by the original rules: archetype, picks, XP, debt. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
 	TObjectPtr<class UCoHHeroProgress> Progress;
+	/** Contacts, tasks and missions (CoHStory.h). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Story")
+	TObjectPtr<class UCoHStoryComponent> Story;
+	/** E: talk to the contact in front of the hero, or use a mission door / objective. */
+	void Interact();
 
 	/** Play as an original player body (a preset from the hero file) with
 	 *  the original power moves; false: the mesh above and its anim blueprint. */

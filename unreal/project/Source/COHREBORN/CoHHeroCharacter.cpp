@@ -1,4 +1,5 @@
 #include "CoHHeroCharacter.h"
+#include "CoHStory.h"
 #include "CoHActiveRagdoll.h"
 #include "Net/UnrealNetwork.h"
 #include "Misc/CommandLine.h"
@@ -83,6 +84,7 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 	Ragdoll = CreateDefaultSubobject<UCoHActiveRagdoll>(TEXT("ActiveRagdoll"));
 	Powers->bPlayerSide = true;
 	Progress = CreateDefaultSubobject<UCoHHeroProgress>(TEXT("Progress"));
+	Story = CreateDefaultSubobject<UCoHStoryComponent>(TEXT("Story"));
 }
 
 void ACoHHeroCharacter::BeginPlay()
@@ -169,6 +171,7 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	}
 	Input->BindKey(EKeys::Tab, IE_Pressed, this, &ACoHHeroCharacter::CycleTarget);
 	Input->BindKey(EKeys::P, IE_Pressed, this, &ACoHHeroCharacter::TogglePowerBrowser);
+	Input->BindKey(EKeys::E, IE_Pressed, this, &ACoHHeroCharacter::Interact);     // talk to a contact, use a mission door or objective
 	Input->BindKey(EKeys::V, IE_Pressed, this, &ACoHHeroCharacter::ToggleClimbPower);
 	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
 	// L: train to the next level (the original trainer step)
@@ -1144,6 +1147,11 @@ void ACoHHeroCharacter::PlayHitReaction(float Amount)
  bPunchLanded = true; bQueuedPunch = false;
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->DisableMovement();
+}
+
+void ACoHHeroCharacter::Interact()
+{
+	if (Story) Story->Interact();
 }
 
 void ACoHHeroCharacter::TogglePowerBrowser()
