@@ -1,5 +1,6 @@
 #include "CoHSocial.h"
 #include "CoHPowers.h"
+#include "CoHBadges.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -221,7 +222,7 @@ void UCoHSocial::Submit(const FString& Line)
 		else { Lines.Add({ ECoHChat::System, FString(), TEXT("Use /tell name, message") }); ++LinesVersion; }
 	}
 	else if (Cmd == TEXT("invite") || Cmd == TEXT("i") || Cmd == TEXT("accept") || Cmd == TEXT("decline") || Cmd == TEXT("leave")
-		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who"))
+		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges"))
 		ServerCommand(Cmd == TEXT("i") ? FString(TEXT("invite")) : Cmd, Rest);
 	else { Lines.Add({ ECoHChat::System, FString(), TEXT("Unknown command /") + Cmd }); ++LinesVersion; }
 }
@@ -317,6 +318,10 @@ void UCoHSocial::ServerCommand_Implementation(const FString& Command, const FStr
 		TArray<FString> Names;
 		for (APawn* P : TeamMembers()) if (const UCoHSocial* S = Of(P)) Names.Add(S->bLeader ? S->Name() + TEXT(" (leader)") : S->Name());
 		Tell(ECoHChat::System, FString(), TEXT("Team: ") + FString::Join(Names, TEXT(", ")));
+	}
+	else if (Command == TEXT("badges"))
+	{
+		if (const UCoHBadges* B = UCoHBadges::Get(this)) Tell(ECoHChat::System, FString(), B->Describe(GetOwner()));
 	}
 	else if (Command == TEXT("who"))
 	{

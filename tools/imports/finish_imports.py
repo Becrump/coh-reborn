@@ -23,6 +23,8 @@ Convert stages (no editor needed; each takes seconds to a few minutes):
                (tools/story/world_points.py) and the compiled contacts, tasks,
                arcs and reward tables (tools/story/story_game.py)
                -> out/story/story_game.json
+  badges_game  the original's badges and badge markers
+               (tools/badges/badges_game.py) -> out/badges/badges_game.json
   items_game   enhancements, stores and slot levels the game reads
                (tools/items/items_game.py) -> out/items/items_game.json
   missions     indoor mission maps the tasks use, 2 layouts per map set and
@@ -71,7 +73,7 @@ NEEDED = ("texts/english", "scripts.loc/contacts", "scripts.loc/spawndefs",
           "maps/city_zones", "maps/missions", "object_library", "defs/powers", "sequencers",
           "aiscript", "menu")
 CONVERT = ["encounters", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
-           "items_game", "missions", "characters"]
+           "items_game", "badges_game", "missions", "characters"]
 UNREAL = ["ue_fx", "ue_enemies", "ue_missions", "ue_presets", "ue_npcs"]
 
 
@@ -171,6 +173,9 @@ def convert(stage, data, piggs):
     if stage == "items_game":
         p = run([PY, "tools/items/items_game.py", OUT])
         return p.returncode == 0, last_line(p, "items_game.json")
+    if stage == "badges_game":
+        p = run([PY, "tools/badges/badges_game.py", data, OUT])
+        return p.returncode == 0, last_line(p, "badges_game.json")
     if stage == "missions":
         p = run([PY, "tools/missions/mission_maps.py", data, piggs, o("missions")])
         return p.returncode == 0, last_line(p, "missions.json")
