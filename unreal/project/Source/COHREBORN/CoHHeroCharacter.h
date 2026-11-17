@@ -140,6 +140,9 @@ public:
 	/** Enhancement slots, the tray of unslotted enhancements, stores (CoHItems.h). N: the window. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
 	TObjectPtr<class UCoHEnhancements> Enhancements;
+	/** Chat and teams (CoHSocial.h). Enter: chat. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
+	TObjectPtr<class UCoHSocial> Social;
 	/** E: talk to the contact in front of the hero, or use a mission door / objective. */
 	void Interact();
 

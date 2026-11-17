@@ -238,6 +238,9 @@ public:
 	void EnterMission(class UCoHStoryComponent* For, const FString& TaskId);
 	/** The hero used the exit inside: back to the door (the map unloads once the mission is over). */
 	void ExitMission(class UCoHStoryComponent* For, const FString& TaskId);
+	/** A teammate used the hero's mission door / exit (CoHSocial.h teams). */
+	void GuestEnter(class UCoHStoryComponent* OwnerStory, const FString& TaskId, APawn* Guest);
+	void GuestExit(class UCoHStoryComponent* OwnerStory, const FString& TaskId, APawn* Guest);
 	/** Is the hero inside this task's indoor map? */
 	bool IsInside(const class UCoHStoryComponent* For, const FString& TaskId) const
 	{
@@ -274,6 +277,8 @@ private:
 		bool bLoading = false, bInside = false, bFinished = false;
 		double ReadyAt = 0, LoadStarted = 0;
 		TWeakObjectPtr<ACoHMissionMarker> ExitMarker;
+		/** teammates inside the owner's map */
+		TArray<TWeakObjectPtr<APawn>> Guests;
 	};
 	TArray<FMission> Missions;
 	TMap<FString, TWeakObjectPtr<ACoHStoryNPC>> NPCs;
@@ -288,6 +293,7 @@ private:
 	void PopulateIndoor(FMission& M);
 	void SpawnOutdoor(FMission& M);
 	void TeleportHero(FMission& M, bool bIn);
+	void PutAtDoor(const FMission& M, APawn* Who) const;
 	void FreeMission(FMission& M);
 	int32 FreeSlot() const;
 	/** villain spawning shared by the door and indoor missions */

@@ -1,6 +1,7 @@
 #include "CoHHeroCharacter.h"
 #include "CoHStory.h"
 #include "CoHItems.h"
+#include "CoHSocial.h"
 #include "CoHActiveRagdoll.h"
 #include "Net/UnrealNetwork.h"
 #include "Misc/CommandLine.h"
@@ -87,6 +88,7 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 	Progress = CreateDefaultSubobject<UCoHHeroProgress>(TEXT("Progress"));
 	Story = CreateDefaultSubobject<UCoHStoryComponent>(TEXT("Story"));
 	Enhancements = CreateDefaultSubobject<UCoHEnhancements>(TEXT("Enhancements"));
+	Social = CreateDefaultSubobject<UCoHSocial>(TEXT("Social"));
 }
 
 void ACoHHeroCharacter::BeginPlay()
@@ -181,6 +183,12 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 		FInputKeyBinding Enh(FInputChord(EKeys::N), IE_Pressed);
 		Enh.KeyDelegate.GetDelegateForManualSet().BindLambda([this] { if (Enhancements) Enhancements->TogglePanel(); });
 		Input->KeyBindings.Add(Enh);
+	}
+	// Enter: the chat line
+	{
+		FInputKeyBinding Chat(FInputChord(EKeys::Enter), IE_Pressed);
+		Chat.KeyDelegate.GetDelegateForManualSet().BindLambda([this] { if (Social) Social->FocusChat(); });
+		Input->KeyBindings.Add(Chat);
 	}
 	// L: train to the next level (the original trainer step)
 	{

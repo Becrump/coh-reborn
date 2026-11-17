@@ -2,6 +2,7 @@
 #include "CoHCombat.h"
 #include "CoHHeroProgress.h"
 #include "CoHItems.h"
+#include "CoHSocial.h"
 #include "CoHPowers.h"
 #include "Animation/AnimSequenceBase.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -1100,11 +1101,44 @@ void ACoHStoryDirector::TeleportHero(FMission& M, bool bIn)
 	}
 	else
 	{
-		FVector At = M.Door + FVector(0, 0, 100.f);
-		FVector G; if (Ground(M.Door, G)) At = G + FVector(0, 0, 100.f);
-		Hero->TeleportTo(At, Hero->GetActorRotation());
+		PutAtDoor(M, Hero);
 		M.bInside = false;
 	}
+}
+
+void ACoHStoryDirector::PutAtDoor(const FMission& M, APawn* Who) const
+{
+	if (!Who) return;
+	FVector At = M.Door + FVector(0, 0, 100.f);
+	FVector G; if (Ground(M.Door, G)) At = G + FVector(0, 0, 100.f);
+	Who->TeleportTo(At, Who->GetActorRotation());
+}
+
+static void CoHGuestSay(APawn* Who, const FString& Text)
+{
+	if (UCoHPowerComponent* P = UCoHPowerComponent::Of(Who)) P->MulticastText(Text, FLinearColor(1.f, 0.85f, 0.4f));
+}
+
+void ACoHStoryDirector::GuestEnter(UCoHStoryComponent* OwnerStory, const FString& TaskId, APawn* Guest)
+{
+	FMission* M = Find(OwnerStory, TaskId);
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHMissionMap* Map = S && M ? S->Map(M->MapId) : nullptr;
+	if (!M || !Guest) return;
+	if (!M->bEntered) { CoHGuestSay(Guest, TEXT("Your teammate has to go in first")); return; }
+	if (!M->Map.IsValid()) { CoHGuestSay(Guest, TEXT("This mission is out here")); return; }
+	if (M->bLoading || !Map) { CoHGuestSay(Guest, TEXT("The mission is still loading")); return; }
+	if (M->bFinished) { CoHGuestSay(Guest, TEXT("This mission is complete")); return; }
+	Guest->TeleportTo(M->Origin + Map->Start + FVector(FMath::FRandRange(-150.f, 150.f), FMath::FRandRange(-150.f, 150.f), 100.f), FRotator(0.f, Map->StartYaw, 0.f));
+	M->Guests.AddUnique(Guest);
+}
+
+void ACoHStoryDirector::GuestExit(UCoHStoryComponent* OwnerStory, const FString& TaskId, APawn* Guest)
+{
+	FMission* M = Find(OwnerStory, TaskId);
+	if (!M || !Guest) return;
+	PutAtDoor(*M, Guest);
+	M->Guests.Remove(Guest);
 }
 void ACoHStoryDirector::UseObjective(UCoHStoryComponent* For, ACoHMissionMarker* Marker)
 {
@@ -1167,6 +1201,10 @@ void ACoHStoryDirector::ExitMission(UCoHStoryComponent* For, const FString& Task
 
 void ACoHStoryDirector::FreeMission(FMission& M)
 {
+	// teammates still inside come out at the door before the map goes
+	for (const TWeakObjectPtr<APawn>& G : M.Guests)
+		if (APawn* P = G.Get()) if (P->GetActorLocation().Z < -MissionDepth * 0.5f) PutAtDoor(M, P);
+	M.Guests.Reset();
 	for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
 	if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
 	if (M.ExitMarker.IsValid()) M.ExitMarker->Destroy();
@@ -1299,7 +1337,7 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 	}
 	for (TActorIterator<ACoHMissionMarker> It(GetWorld()); It; ++It)
 	{
-		if (It->ForHero.Get() != Me) continue;
+		if (It->ForHero.Get() != Me && !UCoHSocial::SameTeam(It->ForHero.Get(), Me)) continue;
 		const float D = FVector::Dist2D(It->GetActorLocation(), Me->GetActorLocation());
 		if (D < 600.f && D < BestD) { BestD = D; Best = *It; }
 	}
@@ -1313,6 +1351,16 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 		const UCoHStory* St = UCoHStory::Get(this);
 		const FCoHStoryTask* T = St ? St->Task(Mk->Task) : nullptr;
 		if (!D || !T) return;
+		// a teammate's mission
+		UCoHStoryComponent* OwnerStory = Mk->ForHero ? Mk->ForHero->FindComponentByClass<UCoHStoryComponent>() : nullptr;
+		if (OwnerStory && OwnerStory != this)
+		{
+			APawn* MePawn = Cast<APawn>(GetOwner());
+			if (Mk->Kind == ECoHMarkerKind::Door) D->GuestEnter(OwnerStory, Mk->Task, MePawn);
+			else if (Mk->Kind == ECoHMarkerKind::Objective) D->UseObjective(OwnerStory, Mk);
+			else if (Mk->Kind == ECoHMarkerKind::Exit) D->GuestExit(OwnerStory, Mk->Task, MePawn);
+			return;
+		}
 		if (Mk->Kind == ECoHMarkerKind::Door)
 		{
 			FCoHDialogPage P;

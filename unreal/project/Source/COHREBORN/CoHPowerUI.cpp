@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "CoHHeroProgress.h"
 #include "CoHItems.h"
+#include "CoHSocial.h"
 #include "CoHOriginalHud.h"
 #include "CoHUIArt.h"
 #include "Animation/AnimSequence.h"
@@ -169,8 +170,14 @@ void SCoHHud::Construct(const FArguments& InArgs)
 			.OnCommand([this](const FString& Command)
 			{
 				if (Command == TEXT("powers")) ToggleBrowser();
+				else if (Command == TEXT("chat"))
+				{
+					if (const APlayerController* PC = Player.Get()) if (UCoHSocial* So = UCoHSocial::Of(PC->GetPawn())) So->ToggleChat();
+				}
 				else if (Command == TEXT("enhancements"))
+				{
 					if (const APlayerController* PC = Player.Get()) if (UCoHEnhancements* E = UCoHEnhancements::Of(PC->GetPawn())) E->TogglePanel();
+				}
 			})
 		]
 		// power browser
