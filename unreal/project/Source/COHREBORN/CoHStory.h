@@ -122,6 +122,12 @@ public:
 	TMap<FString, FCoHStoryArc> Arcs;
 	TMap<FString, TArray<FCoHStoryDoor>> Doors;
 	TMap<FString, TArray<TPair<FString, FVector>>> Visits;
+	/** Hospital beds ("gurney" spawn points) by zone: where defeated heroes wake up. */
+	TMap<FString, TArray<FVector>> Gurneys;
+	/** Zones whose original hospital is gone (Atlas Park was rebuilt): heroes wake at the start point. */
+	UPROPERTY(Config) TArray<FString> NoHospitalZones = { TEXT("city_01_01") };
+	/** The nearest hospital bed; false: none (use the start point). */
+	bool NearestHospital(const FVector& From, FVector& Out) const;
 	TMap<FString, TMap<int32, FCoHStoryReward>> Rewards;
 	TMap<FString, FCoHMissionMap> Maps;
 	/** map set (lower case) -> length -> map ids */

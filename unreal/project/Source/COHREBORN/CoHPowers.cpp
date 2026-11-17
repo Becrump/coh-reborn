@@ -418,6 +418,8 @@ void UCoHPowerComponent::UseFreePower(FName Power)
 	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
 	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
 	AActor* Owner = GetOwner();
+	float Back = 0.f;
+	if (P && IsDefeated() && GetOwnerRole() == ROLE_Authority && RevivesSelf(Power, Back)) Revive(Back, Owner);
 	if (!P || !Owner || IsDefeated() || GetOwnerRole() != ROLE_Authority) return;
 	MulticastPlay(Power, Owner, Owner->GetActorLocation(), 0);
 	Execute(*P, Owner, Owner->GetActorLocation());
@@ -801,6 +803,8 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 	UWorld* W = GetWorld();
 	UE_LOG(LogTemp, Log, TEXT("CoH activate %s by %s (target %s): %s"), *Power.ToString(), *GetNameSafe(GetOwner()), *GetNameSafe(TargetActor),
 		!P ? TEXT("unknown power") : IsDefeated() ? TEXT("defeated") : Now0(W) < BusyUntil ? TEXT("busy") : RechargeLeft(Power) > 0.f ? TEXT("recharging") : TEXT("ok"));
+	float Back = 0.f;
+	if (P && W && IsDefeated() && RevivesSelf(Power, Back) && RechargeLeft(Power) <= 0.f) Revive(Back, GetOwner());     // self-rez powers work while down
 	if (!P || !W || IsDefeated()) return;
 	const float Now = W->GetTimeSeconds();
 	// toggles switch off at once, even while held
@@ -846,6 +850,14 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 		Location = TargetActor->GetActorLocation();
 	}
 	else if (P->Target == TEXT("kCaster")) { TargetActor = Owner; Location = Owner->GetActorLocation(); }
+	else if (P->Target.StartsWith(TEXT("kDead")))
+	{
+		// resurrect: a defeated ally in range
+		const UCoHPowerComponent* TC = Of(TargetActor);
+		if (!TC || !TC->IsDefeated() || IsFoe(TC)) { MulticastText(TEXT("Target a defeated ally"), FLinearColor(1, 1, 1)); return; }
+		if (FVector::Dist(Owner->GetActorLocation(), TargetActor->GetActorLocation()) > Reach) { MulticastText(TEXT("Out of range"), FLinearColor(1, 1, 1)); return; }
+		Location = TargetActor->GetActorLocation();
+	}
 
 	Endurance -= P->Type == TEXT("kToggle") ? 0.f : P->EndCost;
 	FCoHRecharge* R = Recharges.FindByPredicate([&](const FCoHRecharge& X) { return X.Power == Power; });
@@ -884,6 +896,15 @@ void UCoHPowerComponent::Release(FName Power, TWeakObjectPtr<AActor> TargetActor
 {
 	const FCoHPowerDef* P = Def(Power);
 	if (!P || IsDefeated()) return;
+	if (P->Target.StartsWith(TEXT("kDead")))
+	{
+		// the original's Resurrect and the like: back up with the heal's share (full by default)
+		float Frac = 1.f;
+		for (const FCoHMod& M : P->Mods)
+			if ((M.Attrib == TEXT("kHitPoints") || M.Attrib == TEXT("kHeal")) && M.Aspect == TEXT("kCur") && M.Scale > 0.f) { Frac = FMath::Clamp(M.Scale, 0.1f, 1.f); break; }
+		if (UCoHPowerComponent* TC = Of(TargetActor.Get())) if (TC->IsDefeated() && !IsFoe(TC)) TC->Revive(Frac, GetOwner());
+		return;
+	}
 	Execute(*P, TargetActor.Get(), Location);
 }
 
@@ -1152,6 +1173,27 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 		else MulticastHurt(Final);
 	}
 	return Final;
+}
+
+bool UCoHPowerComponent::RevivesSelf(FName Power, float& OutFraction)
+{
+	const FString N = Power.ToString();
+	if (N.Contains(TEXT("Restoration")) || N.Contains(TEXT("Rise_of_the_Phoenix"))) { OutFraction = 1.f; return true; }
+	if (N.Contains(TEXT("Bounce_Back"))) { OutFraction = 0.5f; return true; }
+	if (N.Contains(TEXT("Awaken"))) { OutFraction = 0.25f; return true; }
+	return false;
+}
+
+void UCoHPowerComponent::Revive(float Fraction, AActor* By)
+{
+	if (GetOwnerRole() != ROLE_Authority || !IsDefeated()) return;
+	Health = FMath::Max(1.f, MaxHealth * FMath::Clamp(Fraction, 0.f, 1.f));
+	Endurance = MaxEndurance * FMath::Clamp(Fraction, 0.f, 1.f);
+	Buffs.Reset();
+	MezUntil = 0;
+	DamageBy.Reset();
+	MulticastText(By && By != GetOwner() ? FString::Printf(TEXT("Resurrected by %s"), *(Of(By) ? Of(By)->DisplayName : GetNameSafe(By))) : FString(TEXT("Back on your feet")), FLinearColor(0.4f, 1.f, 0.5f));
+	if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(GetOwner())) H->OnRevived();
 }
 
 void UCoHPowerComponent::Heal(float Amount)

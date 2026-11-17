@@ -184,6 +184,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 		Enh.KeyDelegate.GetDelegateForManualSet().BindLambda([this] { if (Enhancements) Enhancements->TogglePanel(); });
 		Input->KeyBindings.Add(Enh);
 	}
+	// H: to the hospital while defeated
+	Input->BindKey(EKeys::H, IE_Pressed, this, &ACoHHeroCharacter::GoHospital);
 	// Enter: the chat line
 	{
 		FInputKeyBinding Chat(FInputChord(EKeys::Enter), IE_Pressed);
@@ -954,11 +956,65 @@ void ACoHHeroCharacter::OnDefeated()
  PushTravel();
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
- SetActorLocation(RespawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
- Powers->Reset();
  if (Progress) Progress->OnDefeatedByVillains();
- Health=Powers->Health; RestoreLocomotion();
- if (GEngine) GEngine->AddOnScreenDebugMessage(7120, 3.f, FColor::Cyan, TEXT("Defeated: back at the start point, fully healed"));
+ bDowned = true;
+ OnRep_Downed();
+ Powers->MulticastText(TEXT("Defeated! Press H to go to the hospital, or wait for a teammate"), FLinearColor(1.f, 0.4f, 0.35f));
+}
+
+void ACoHHeroCharacter::OnRep_Downed()
+{
+ // every PC: the body goes limp where it fell, and gets up again when revived
+ UCoHActiveRagdoll* Rag = UCoHActiveRagdoll::Of(this);
+ if (bDowned)
+ {
+  GetCharacterMovement()->StopMovementImmediately();
+  GetCharacterMovement()->DisableMovement();
+  if (!bDownedMeshSaved && !(Rag && Rag->IsPhysical())) { DownedMeshRel = GetMesh()->GetRelativeTransform(); bDownedMeshSaved = true; }
+  if (Rag) Rag->StartRagdoll(FVector::ZeroVector, true);
+ }
+ else
+ {
+  if (Rag && Rag->IsPhysical()) Rag->StopPhysics();
+  GetMesh()->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+  if (bDownedMeshSaved) { GetMesh()->SetRelativeTransform(DownedMeshRel); bDownedMeshSaved = false; }
+  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+  RestoreLocomotion();
+ }
+}
+
+void ACoHHeroCharacter::OnRevived()
+{
+ bDowned = false;
+ OnRep_Downed();
+ Health = Powers->Health;
+}
+
+void ACoHHeroCharacter::GoHospital()
+{
+ if (bDowned) ServerHospital();
+}
+
+void ACoHHeroCharacter::ServerHospital_Implementation()
+{
+ if (!bDowned || !Powers) return;
+ // the original: wake up in the nearest hospital, healed (the debt was taken at the defeat)
+ FVector At = RespawnLocation;
+ const UCoHStory* S = UCoHStory::Get(this);
+ FVector Bed;
+ if (S && S->NearestHospital(GetActorLocation(), Bed))
+ {
+  FHitResult Hit;
+  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHHospital), true, this);
+  At = GetWorld()->LineTraceSingleByObjectType(Hit, Bed + FVector(0, 0, 300.f), Bed - FVector(0, 0, 5000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q)
+   ? Hit.ImpactPoint + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f) : Bed + FVector(0, 0, 100.f);
+ }
+ Powers->Reset();
+ Health = Powers->Health;
+ bDowned = false;
+ OnRep_Downed();
+ SetActorLocation(At, false, nullptr, ETeleportType::TeleportPhysics);
+ Powers->MulticastText(TEXT("You wake up in the hospital"), FLinearColor(0.6f, 0.85f, 1.f));
 }
 
 void ACoHHeroCharacter::PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip)
@@ -1213,6 +1269,7 @@ void ACoHHeroCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACoHHeroCharacter, NetTravel);
+	DOREPLIFETIME(ACoHHeroCharacter, bDowned);
 }
 
 void ACoHHeroCharacter::SendLocalHero()

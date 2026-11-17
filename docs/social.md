@@ -32,3 +32,13 @@ A channel command with no text switches the default channel.
   mission's owner has entered; they can click objectives and use the exit. When
   the mission's map closes, teammates still inside come out at the door. The task
   completes for its owner.
+
+# Defeat, hospital and resurrection
+
+As the original: a defeated hero goes limp where it fell (debt is taken at the
+defeat, from level 10). **H** wakes it in the nearest hospital, healed (the
+"gurney" spawn points of the converted zones; Atlas Park was rebuilt, so heroes
+there wake at the start point until it has a hospital). A teammate's resurrect
+power (any power with a `kDead...` target, such as Empathy's Resurrect) or an
+Awaken / Bounce Back / Restoration inspiration (25 / 50 / 100%) brings the hero
+back up where it lies; so does Rise of the Phoenix.

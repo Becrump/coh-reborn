@@ -205,6 +205,17 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			auto& List = Visits.FindOrAdd(FString(KV.Key));
 			for (const auto& V : KV.Value->AsArray()) { const auto O = V->AsObject(); List.Add({ StoryStr(O, TEXT("name")), StoryVec(O, TEXT("pos")) }); }
 		}
+	if (const auto Sp = StoryObj(Root, TEXT("spawns")))
+		for (const auto& KV : Sp->Values)
+		{
+			const FString Zone = FString(KV.Key);
+			if (NoHospitalZones.Contains(Zone)) continue;
+			for (const auto& V : KV.Value->AsArray())
+			{
+				const auto O = V->AsObject();
+				if (O.IsValid() && StoryStr(O, TEXT("name")).Equals(TEXT("gurney"), ESearchCase::IgnoreCase)) Gurneys.FindOrAdd(Zone).Add(StoryVec(O, TEXT("pos")));
+			}
+		}
 	if (const auto Rs = StoryObj(Root, TEXT("rewards")))
 		for (const auto& KV : Rs->Values)
 		{
@@ -836,6 +847,18 @@ ACoHMissionMarker* ACoHStoryDirector::SpawnMarker(ECoHMarkerKind Kind, const FVe
 	Mk->Kind = Kind; Mk->Text = Text; Mk->ForHero = For; Mk->Task = Task;
 	Mk->OnRep_Marker();
 	return Mk;
+}
+
+bool UCoHStory::NearestHospital(const FVector& From, FVector& Out) const
+{
+	float Best = TNumericLimits<float>::Max();
+	for (const auto& KV : Gurneys)
+		for (const FVector& G : KV.Value)
+		{
+			const float D = FVector::DistSquared(G, From);
+			if (D < Best) { Best = D; Out = G; }
+		}
+	return Best < TNumericLimits<float>::Max();
 }
 
 ACoHStoryDirector::FMission* ACoHStoryDirector::Find(UCoHStoryComponent* For, const FString& TaskId)

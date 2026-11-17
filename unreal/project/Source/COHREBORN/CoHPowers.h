@@ -295,6 +295,10 @@ public:
 	float Defense(bool bMelee) const;
 	FString MezName() const;
 
+	/** Host: back on its feet with this share of health and endurance (resurrect powers, Awaken). */
+	void Revive(float Fraction, AActor* By);
+	/** Powers a defeated hero can still use on itself (Awaken, Bounce Back, Restoration, Rise of the Phoenix): how much they restore. */
+	static bool RevivesSelf(FName Power, float& OutFraction);
 	/** Damage from outside the power system (brawl, enemy swings). */
 	float ApplyDamage(float Amount, ECoHDamage Type, AActor* Causer);
 	void Heal(float Amount);
