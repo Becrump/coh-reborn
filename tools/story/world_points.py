@@ -11,7 +11,8 @@ Writes <out_dir>/story/world_points.json:
                   "world_cm": [...], "yaw_deg": 0}],
       "doors":  [{"lair": ["sewers", "ap_pp_sewers"], ...}],
       "visits": [{"name": "statue1", ...}],
-      "spawns": [{"name": "newplayer", ...}]}}}
+      "spawns": [{"name": "newplayer", ...}],
+      "badges": [{"name": "atlaspark1", ...}]}}}     exploration badges and history plaques
 
 world_cm = local_cm + the zone's offset (docs/zones/zone_offsets.json),
 X = game x, Y = -game z, as place_world.py places the zones. Atlas Park was
@@ -35,7 +36,7 @@ from coh2unreal.export import ue_transform  # noqa: E402
 from encounters import props_of  # noqa: E402
 
 KEYS = {"persistentnpc": "npcs", "lairtype": "doors", "visitlocation": "visits",
-        "spawnlocation": "spawns"}
+        "spawnlocation": "spawns", "namedvolume": "badges", "plaque": "badges"}
 SKIP_LAYER = re.compile(r"halloween|winter|valentine|rikti_?invasion|betaevent|"
                         r"shadowshardinvasion|zombie|pvp|event|gc_shutdown|i8_prep",
                         re.I)
@@ -121,9 +122,9 @@ def main():
             seen[r["npc"]] = r
         pts["npcs"] = list(seen.values())
         result["zones"][zone] = pts
-        print("%-13s npcs %3d  doors %3d  visits %3d  spawns %3d" % (
+        print("%-13s npcs %3d  doors %3d  visits %3d  spawns %3d  badges %3d" % (
             zone, len(pts["npcs"]), len(pts["doors"]), len(pts["visits"]),
-            len(pts["spawns"])), flush=True)
+            len(pts["spawns"]), len(pts["badges"])), flush=True)
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "world_points.json"), "w") as f:
         json.dump(result, f)

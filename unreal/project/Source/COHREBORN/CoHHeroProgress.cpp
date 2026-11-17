@@ -1,6 +1,8 @@
 #include "CoHHeroProgress.h"
 #include "CoHItems.h"
 #include "CoHSocial.h"
+#include "CoHBadges.h"
+#include "CoHCombat.h"
 #include "CoHStory.h"
 #include "CoHPowers.h"
 #include "Engine/World.h"
@@ -219,6 +221,7 @@ void UCoHHeroProgress::ServerTrain_Implementation()
 	FString Msg = FString::Printf(TEXT("Trained to level %d"), Hero.Level);
 	if (PicksOpen() > 0) Msg += TEXT(": choose a new power (P)");
 	Say(Msg, FLinearColor(1.f, 0.85f, 0.2f));
+	if (const UCoHBadges* B = UCoHBadges::Get(this)) B->Check(GetOwner());      // level badges
 	Save();
 }
 
@@ -320,6 +323,8 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 			*H->Hero.Name, 100.f * KV.Value / Total, A[0].XP, A[0].Influence);
 		H->Award(A[0].XP, A[0].Influence);
 		UCoHStoryComponent::OnVillainDefeated(Who, Victim->GetOwner());      // defeat-X tasks
+		const ACoHCombatEnemy* Foe = Cast<ACoHCombatEnemy>(Victim->GetOwner());
+		UCoHBadges::OnDefeat(Who, Group, Rank, Foe ? Foe->Villain : FString());      // defeat badges
 		const float Own = Victim->DamageBy.FindRef(Who);
 		if (Own > TopDamage) { TopDamage = Own; Top = H; bTopItems = A[0].bItems; }
 	}

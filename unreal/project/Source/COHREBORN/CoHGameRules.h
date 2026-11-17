@@ -109,6 +109,24 @@ struct FCoHPowerSlots
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Enh;
 };
 
+/** A counted stat for badges ("kills.hellions", "visits.atlaspark1"), lower case. */
+USTRUCT(BlueprintType)
+struct FCoHStat
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Key;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Value = 0;
+};
+
+/** Badges earned and the stats they count (CoHBadges.h). */
+USTRUCT(BlueprintType)
+struct FCoHBadgeState
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Owned;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHStat> Stats;
+};
+
 /** Slotted enhancements and the unslotted ones the hero carries (CoHItems.h). */
 USTRUCT(BlueprintType)
 struct FCoHBoostState
@@ -139,6 +157,7 @@ struct FCoHHeroRecord
 	/** Contacts, tasks and story arcs (CoHStory.h); "story" in the hero file. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FCoHStoryProgress Story;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FCoHBoostState Boosts;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FCoHBadgeState Badges;
 };
 
 struct FCoHRulePower

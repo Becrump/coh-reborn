@@ -595,6 +595,9 @@ bool UCoHGameRules::HeroFromJson(const FString& Text, FCoHHeroRecord& H) const
 	const TSharedPtr<FJsonObject>* Boosts;
 	if (O->TryGetObjectField(TEXT("enhancements"), Boosts))
 		FJsonObjectConverter::JsonObjectToUStruct((*Boosts).ToSharedRef(), &H.Boosts, 0, 0);
+	const TSharedPtr<FJsonObject>* BadgeObj;
+	if (O->TryGetObjectField(TEXT("badges"), BadgeObj))
+		FJsonObjectConverter::JsonObjectToUStruct((*BadgeObj).ToSharedRef(), &H.Badges, 0, 0);
 	return true;
 }
 
@@ -661,6 +664,7 @@ FString UCoHGameRules::HeroToJson(const FCoHHeroRecord& H) const
 	O->SetArrayField(TEXT("looks"), LooksArr);
 	if (TSharedPtr<FJsonObject> Story = FJsonObjectConverter::UStructToJsonObject(H.Story)) O->SetObjectField(TEXT("story"), Story);
 	if (TSharedPtr<FJsonObject> Boosts = FJsonObjectConverter::UStructToJsonObject(H.Boosts)) O->SetObjectField(TEXT("enhancements"), Boosts);
+	if (TSharedPtr<FJsonObject> BadgeObj = FJsonObjectConverter::UStructToJsonObject(H.Badges)) O->SetObjectField(TEXT("badges"), BadgeObj);
 	if (H.Picks.Num() < SchedPicks.Num()) O->SetNumberField(TEXT("next_pick_level"), PickLevel(H.Picks.Num()));
 	FString Text;
 	const TSharedRef<TJsonWriter<>> W = TJsonWriterFactory<>::Create(&Text);
