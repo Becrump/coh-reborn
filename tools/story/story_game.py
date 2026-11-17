@@ -159,6 +159,7 @@ def parse_mission(md, vars_):
                      "display": line(o, "ModelDisplayName", v),
                      "model": arg(o, "Model"),
                      "number": int(num) if num.isdigit() else 1,
+                     "location": arg(o, "Location", 0, "ItemFloor"),
                      "begin": line(o, "InteractBeginString", v),
                      "done": line(o, "InteractCompleteString", v),
                      "reward": line(kid(o, "Reward") or {}, "Dialog", v)})
@@ -478,7 +479,7 @@ def main():
             name = (nd.get("a") or [""])[0].lower()
             if name in people or (name not in targets and kid(nd, "DisplayName") is None):
                 continue
-            people[name] = {"name": line(nd, "DisplayName", None) or name, "zone": zone,
+            people[name] = {"name": line(nd, "DisplayName", None) or name, "zone": zone, "store": arg(nd, "Store"),
                             "model": arg(nd, "Model"), "pos": p["world_cm"], "yaw": p["yaw_deg"],
                             "line": line(nd, "Dialog", None), "npc": p["npc"]}
     result = {"contacts": out_contacts, "tasks": tasks, "people": people,

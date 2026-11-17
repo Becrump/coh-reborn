@@ -6,6 +6,8 @@
 #include "DrawDebugHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "CoHHeroProgress.h"
+#include "CoHItems.h"
+#include "CoHSocial.h"
 #include "CoHOriginalHud.h"
 #include "CoHUIArt.h"
 #include "Animation/AnimSequence.h"
@@ -165,7 +167,18 @@ void SCoHHud::Construct(const FArguments& InArgs)
 				if (IsBrowserOpen() || (Bench.IsValid() && Bench->GetVisibility() == EVisibility::Visible)) { SelectedSlot = Index; return; }
 				if (UCoHPowerComponent* C = Me()) { if (bCtrl) C->ToggleAutoSlot(Index); else C->ActivateSlot(Index); }
 			})
-			.OnCommand([this](const FString& Command) { if (Command == TEXT("powers")) ToggleBrowser(); })
+			.OnCommand([this](const FString& Command)
+			{
+				if (Command == TEXT("powers")) ToggleBrowser();
+				else if (Command == TEXT("chat"))
+				{
+					if (const APlayerController* PC = Player.Get()) if (UCoHSocial* So = UCoHSocial::Of(PC->GetPawn())) So->ToggleChat();
+				}
+				else if (Command == TEXT("enhancements"))
+				{
+					if (const APlayerController* PC = Player.Get()) if (UCoHEnhancements* E = UCoHEnhancements::Of(PC->GetPawn())) E->TogglePanel();
+				}
+			})
 		]
 		// power browser
 		+ SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)

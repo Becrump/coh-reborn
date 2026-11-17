@@ -137,6 +137,12 @@ public:
 	/** Contacts, tasks and missions (CoHStory.h). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Story")
 	TObjectPtr<class UCoHStoryComponent> Story;
+	/** Enhancement slots, the tray of unslotted enhancements, stores (CoHItems.h). N: the window. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
+	TObjectPtr<class UCoHEnhancements> Enhancements;
+	/** Chat and teams (CoHSocial.h). Enter: chat. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
+	TObjectPtr<class UCoHSocial> Social;
 	/** E: talk to the contact in front of the hero, or use a mission door / objective. */
 	void Interact();
 
@@ -216,8 +222,17 @@ public:
 	 *  left click selects, hold the right button to turn the camera. */
 	static void RestoreGameInput(APlayerController* PC);
 	UFUNCTION(BlueprintCallable, Category = "CoH|Animation") static bool AddSkeletonSocket(class USkeleton* Skeleton, FName Socket, FName Bone, FVector Location);
-	/** Health reached zero: back to the start point, healed. */
+	/** Health reached zero (host): the hero goes down where it stands, as the original:
+	 *  H (or /hospital) wakes it in the nearest hospital, or a teammate's resurrect
+	 *  power or an Awaken inspiration brings it back up. */
 	void OnDefeated();
+	/** Host: a resurrect power or Awaken brought the hero back. */
+	void OnRevived();
+	/** The player's own PC: H, go to the hospital while defeated. */
+	void GoHospital();
+	UFUNCTION(Server, Reliable) void ServerHospital();
+	UPROPERTY(ReplicatedUsing = OnRep_Downed, BlueprintReadOnly, Category = "CoH|Hero") bool bDowned = false;
+	UFUNCTION() void OnRep_Downed();
 	/** Tab: the nearest foe in view first, then the next nearest. */
 	void CycleTarget();
 	/** Left mouse: target whoever is under the cursor / crosshair. */
@@ -266,6 +281,9 @@ private:
  bool bUppercutPunch=false;
  double NextUppercutTime=0;
  FVector RespawnLocation;
+ /** the mesh's place on the capsule before it went limp (restored on getting up) */
+ FTransform DownedMeshRel;
+ bool bDownedMeshSaved = false;
  float PunchHitTimeLeft = 0.f;
  bool bPunchLanded = false;
 	void RestoreLocomotion();

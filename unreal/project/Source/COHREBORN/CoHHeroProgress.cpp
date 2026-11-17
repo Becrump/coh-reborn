@@ -1,4 +1,6 @@
 #include "CoHHeroProgress.h"
+#include "CoHItems.h"
+#include "CoHSocial.h"
 #include "CoHStory.h"
 #include "CoHPowers.h"
 #include "Engine/World.h"
@@ -124,6 +126,7 @@ void UCoHHeroProgress::Apply(bool bRefillTray)
 	for (const FName& A : R->AutoPowers(Hero)) Owned.AddUnique(A);
 	Owned.AddUnique(CoHTravel::Climb);
 	P->Owned = Owned;
+	P->SetBoosts(Hero.Boosts, Hero.Origin, Hero.Level);
 	// the tray: bought powers in order, then the inherent click / toggle powers
 	// (Brawl, Sprint, Rest); passives (Defiance, Fitness) run on their own
 	if (P->Tray.Num() < 10) P->Tray.SetNum(10);
@@ -291,9 +294,22 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 	if (Total <= 0.f) return;
 	const FVector Where = Victim->GetOwner()->GetActorLocation();
 	UCoHHeroProgress* Top = nullptr; float TopDamage = 0.f; bool bTopItems = false;
+	// teams share: each teammate in range gets the whole team's share of the defeat
+	TMap<int32, float> TeamDamage;
+	TMap<AActor*, float> Credit;
+	for (const auto& KV : Victim->DamageBy)
+		if (const UCoHSocial* So = UCoHSocial::Of(KV.Key.Get())) if (So->TeamId != 0) TeamDamage.FindOrAdd(So->TeamId) += KV.Value;
 	for (const auto& KV : Victim->DamageBy)
 	{
 		AActor* Who = KV.Key.Get();
+		if (!Who || KV.Value <= 0.f) continue;
+		const UCoHSocial* So = UCoHSocial::Of(Who);
+		if (!So || So->TeamId == 0) { Credit.FindOrAdd(Who) += KV.Value; continue; }
+		for (APawn* Mate : So->TeamMembers()) Credit.FindOrAdd(Mate) = TeamDamage.FindRef(So->TeamId);
+	}
+	for (const auto& KV : Credit)
+	{
+		AActor* Who = KV.Key;
 		UCoHHeroProgress* H = Of(Who);
 		if (!H || !H->bHasRecord || KV.Value <= 0.f) continue;
 		// no kill credit past 200 ft (DIST_FOR_KILL_CREDIT)
@@ -304,7 +320,9 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 			*H->Hero.Name, 100.f * KV.Value / Total, A[0].XP, A[0].Influence);
 		H->Award(A[0].XP, A[0].Influence);
 		UCoHStoryComponent::OnVillainDefeated(Who, Victim->GetOwner());      // defeat-X tasks
-		if (KV.Value > TopDamage) { TopDamage = KV.Value; Top = H; bTopItems = A[0].bItems; }
+		const float Own = Victim->DamageBy.FindRef(Who);
+		if (Own > TopDamage) { TopDamage = Own; Top = H; bTopItems = A[0].bItems; }
 	}
 	if (Top && bTopItems) Top->AddInspiration(R->RollDrop(Rank, Victim->Level - 1, Group));
+	if (Top && bTopItems) UCoHEnhancements::OnVillainDefeated(Top->GetOwner(), Victim->Level);      // and sometimes an enhancement
 }

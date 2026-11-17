@@ -21,6 +21,7 @@
 #include "CoHPowers.generated.h"
 
 class UAnimSequenceBase;
+struct FCoHBoostState;
 class UTexture2D;
 
 /** Travel powers every hero has (the tray's inherent powers). Climb is ours: the original game had none. */
@@ -45,6 +46,7 @@ struct FCoHMod
 	bool bDuration = false; // Type kDuration: duration from the table, magnitude fixed
 	float Scale = 0, Magnitude = 1, Duration = 0, Delay = 0, Period = 0, Chance = 1;
 	int32 Requires = 0;     // 0 any, 1 only critters, 2 only players, -1 never (other conditions)
+	bool bAllowStrength = true;   // enhancements may strengthen it
 };
 
 struct FCoHPowerDef
@@ -60,6 +62,7 @@ struct FCoHPowerDef
 	int32 MaxTargets = 0;
 	TArray<FCoHMod> Mods;
 	TArray<FString> AIGroups;   // how villain AI uses it: kBuff, kHealSelf, kHealAlly, kDebuff...
+	TArray<FString> BoostsAllowed;   // enhancement types it takes: kDamage_Boost, kAccuracy_Boost...
 	bool IsMelee() const;
 	bool IsHostile() const { return Target == TEXT("kFoe") || Affects == TEXT("kFoe"); }
 };
@@ -276,6 +279,10 @@ public:
 
 	// --- state -------------------------------------------------------------
 	UFUNCTION(BlueprintPure, Category = "CoH|Powers") float RechargeLeft(FName Power) const;
+	/** The power as this character uses it: with its slotted enhancements (CoHItems.h), else the database's. */
+	const FCoHPowerDef* Def(FName Power) const;
+	/** Host: rebuild the enhanced powers from the hero's slots. */
+	void SetBoosts(const FCoHBoostState& State, const FString& Origin, int32 HeroLevel);
 	float RechargeTotal(FName Power) const;
 	bool IsToggleOn(FName Power) const { return ActiveToggles.Contains(Power); }
 	UFUNCTION(BlueprintPure, Category = "CoH|Powers") bool IsDefeated() const { return Health <= 0.f; }
@@ -288,6 +295,10 @@ public:
 	float Defense(bool bMelee) const;
 	FString MezName() const;
 
+	/** Host: back on its feet with this share of health and endurance (resurrect powers, Awaken). */
+	void Revive(float Fraction, AActor* By);
+	/** Powers a defeated hero can still use on itself (Awaken, Bounce Back, Restoration, Rise of the Phoenix): how much they restore. */
+	static bool RevivesSelf(FName Power, float& OutFraction);
 	/** Damage from outside the power system (brawl, enemy swings). */
 	float ApplyDamage(float Amount, ECoHDamage Type, AActor* Causer);
 	void Heal(float Amount);
@@ -331,6 +342,7 @@ private:
 	const FCoHClassDef* Class() const;
 
 	TArray<FCoHBuff> Buffs;
+	TMap<FName, FCoHPowerDef> Boosted;
 	float MezUntil = 0;
 	FString Mez;
 	float NextToggleTick = 0;

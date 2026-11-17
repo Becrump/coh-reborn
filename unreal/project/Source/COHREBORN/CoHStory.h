@@ -27,7 +27,8 @@ class ACoHCombatEnemy;
 class UCoHHeroProgress;
 class SCoHStoryPanel;
 
-struct FCoHStoryObjective { FString Name, Display, Begin, Done, Reward; int32 Number = 1; };
+/** Location: ItemFloor, ItemAgainstWall or Person (where in a mission map it stands). */
+struct FCoHStoryObjective { FString Name, Display, Begin, Done, Reward, Location; int32 Number = 1; };
 struct FCoHStorySpawn { FString Logical, Placement, Group, Villain, Display; int32 Count = 1; TArray<FString> Lines; };
 
 struct FCoHStoryTask
@@ -57,13 +58,30 @@ struct FCoHStoryContact
 	TArray<FString> Hello;
 	FString FirstVisit, DontKnow, NoTasks, Busy, ComeBack, ToFriend, ToConfidant;
 	TArray<FString> Tasks, Arcs;
+	/** Stores the contact sells from: "<x>_CL1" / "_CL2" / "_CL3" by relationship, or all. */
+	TArray<FString> Stores;
 };
 
 /** A story NPC who is not a contact (delivery targets and the like). */
-struct FCoHStoryPerson { FString Id, Name, Zone, Model, Line; FVector Pos = FVector::ZeroVector; float Yaw = 0.f; };
+struct FCoHStoryPerson { FString Id, Name, Zone, Model, Line, Store; FVector Pos = FVector::ZeroVector; float Yaw = 0.f; };
 struct FCoHStoryDoor { TArray<FString> Lair; FVector Pos = FVector::ZeroVector; float Yaw = 0.f; };
 struct FCoHStoryArc { FString Name; int32 MinLevel = 1, MaxLevel = 54; TArray<FString> Episodes; };
 struct FCoHStoryReward { int32 XP = 0, Influence = 0; TArray<TPair<float, TArray<FString>>> Drops; };
+
+/** A place inside a mission map (local cm): an encounter (with its villain spots) or an objective spot. */
+struct FCoHMapSpot { FVector Pos = FVector::ZeroVector; float Yaw = 0.f; FString Rank, Kind; TArray<FVector> Spots; };
+/** An original indoor mission layout (tools/missions/mission_maps.py), imported as /Game/Missions/L_<Id>. */
+struct FCoHMissionMap
+{
+	FString Id, Set; int32 Length = 30;
+	FVector Start = FVector::ZeroVector, Exit = FVector::ZeroVector, BoundsMin = FVector::ZeroVector, BoundsMax = FVector::ZeroVector;
+	float StartYaw = 0.f;
+	TArray<FCoHMapSpot> Encounters;
+	/** ItemFloor / ItemAgainstWall / Person -> spots */
+	TMap<FString, TArray<FCoHMapSpot>> Objectives;
+	FString Level() const { return TEXT("/Game/Missions/L_") + Id; }
+};
+struct FCoHMapSelection { TArray<FString> Groups; int32 MinLevel = 1, MaxLevel = 50; FString Set; };
 
 UCLASS(Config = Game)
 class COHREBORN_API UCoHStory : public UGameInstanceSubsystem
@@ -75,6 +93,8 @@ public:
 
 	/** <out>/story/story_game.json; default: next to the rules folder. */
 	UPROPERTY(Config) FString StoryFile;
+	/** <out>/missions/missions.json; default: next to the story folder. */
+	UPROPERTY(Config) FString MissionsFile;
 
 	bool IsLoaded() const { return Contacts.Num() > 0; }
 	const FCoHStoryContact* Contact(const FString& Id) const { return Contacts.Find(Id); }
@@ -91,6 +111,10 @@ public:
 	bool PickDoor(const FCoHStoryTask& T, const FString& FallbackZone, const FVector& Near, FCoHStoryDoor& Out) const;
 	/** A visit-location marker by name, in any zone. */
 	bool VisitPoint(const FString& Name, FVector& Out) const;
+	/** An imported indoor map for a door mission: its map set (or one its villain group uses at
+	 *  this level), the nearest length; null when none is imported (the mission plays at the door). */
+	const FCoHMissionMap* PickMap(const FCoHStoryTask& T, int32 Level) const;
+	const FCoHMissionMap* Map(const FString& Id) const { return Maps.Find(Id); }
 
 	TMap<FString, FCoHStoryContact> Contacts;
 	TMap<FString, FCoHStoryPerson> People;
@@ -98,8 +122,19 @@ public:
 	TMap<FString, FCoHStoryArc> Arcs;
 	TMap<FString, TArray<FCoHStoryDoor>> Doors;
 	TMap<FString, TArray<TPair<FString, FVector>>> Visits;
+	/** Hospital beds ("gurney" spawn points) by zone: where defeated heroes wake up. */
+	TMap<FString, TArray<FVector>> Gurneys;
+	/** Zones whose original hospital is gone (Atlas Park was rebuilt): heroes wake at the start point. */
+	UPROPERTY(Config) TArray<FString> NoHospitalZones = { TEXT("city_01_01") };
+	/** The nearest hospital bed; false: none (use the start point). */
+	bool NearestHospital(const FVector& From, FVector& Out) const;
 	TMap<FString, TMap<int32, FCoHStoryReward>> Rewards;
+	TMap<FString, FCoHMissionMap> Maps;
+	/** map set (lower case) -> length -> map ids */
+	TMap<FString, TMap<int32, TArray<FString>>> MapSets;
+	TArray<FCoHMapSelection> MapSelect;
 private:
+	void LoadMaps(const FString& File);
 	TMap<FString, FString> Prev;
 };
 
@@ -134,14 +169,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "CoH|Story") float MeshYaw = -90.f;
 	void ApplyLook();
 	virtual void Tick(float Delta) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
 	UFUNCTION() void OnRep_Look();
 	bool bLookApplied = false;
 };
 
 UENUM()
-enum class ECoHMarkerKind : uint8 { Door, Objective, Visit };
+enum class ECoHMarkerKind : uint8 { Door, Objective, Visit, Exit };
 
 /** A glowing marker only its hero sees: a mission door, an objective to click, a place to visit. */
 UCLASS()
@@ -159,8 +194,27 @@ public:
 	UPROPERTY(VisibleAnywhere) TObjectPtr<class UStaticMeshComponent> Beam;
 	UPROPERTY(VisibleAnywhere) TObjectPtr<class UTextRenderComponent> Label;
 	virtual void Tick(float Delta) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	UFUNCTION() void OnRep_Marker();
+};
+
+/** One indoor mission map, streamed in as a level instance at this actor's place on the host and every client. */
+UCLASS()
+class COHREBORN_API ACoHMissionMap : public AActor
+{
+	GENERATED_BODY()
+public:
+	ACoHMissionMap();
+	/** Level package (/Game/Missions/L_<id>) and a name unique to this instance. */
+	UPROPERTY(ReplicatedUsing = OnRep_Map) FString LevelPath;
+	UPROPERTY(ReplicatedUsing = OnRep_Map) FString InstanceName;
+	/** Loaded and visible here. */
+	bool IsReady() const;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+	UFUNCTION() void OnRep_Map();
+private:
+	UPROPERTY(Transient) TObjectPtr<class ULevelStreamingDynamic> Streaming;
 };
 
 /** Host only: keeps story NPCs standing near players and runs door missions. */
@@ -177,12 +231,27 @@ public:
 	/** NPCs stand when a player is this close (cm) and go past LeaveDistance. */
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float StandDistance = 12000.f;
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float LeaveDistance = 20000.f;
+	/** Indoor mission maps load this far below the city (cm), one slot apart along X. */
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionDepth = 250000.f;
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionSlotSpacing = 150000.f;
+	/** At most this many encounter groups fill an indoor map besides the mission's own spawns. */
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") int32 MaxFillerGroups = 14;
 
 	/** Places a task's mission door for a hero; returns where (zero: none). */
 	FVector OpenMission(class UCoHStoryComponent* For, const FString& TaskId);
-	/** The hero went in at the door. Until the mission maps are in, the
-	 *  mission plays out at the door: its villains, boss and objectives. */
+	/** The hero went in at the door: an imported indoor map loads below the city and the hero
+	 *  goes in when it is ready; without one the mission plays out at the door. */
 	void EnterMission(class UCoHStoryComponent* For, const FString& TaskId);
+	/** The hero used the exit inside: back to the door (the map unloads once the mission is over). */
+	void ExitMission(class UCoHStoryComponent* For, const FString& TaskId);
+	/** A teammate used the hero's mission door / exit (CoHSocial.h teams). */
+	void GuestEnter(class UCoHStoryComponent* OwnerStory, const FString& TaskId, APawn* Guest);
+	void GuestExit(class UCoHStoryComponent* OwnerStory, const FString& TaskId, APawn* Guest);
+	/** Is the hero inside this task's indoor map? */
+	bool IsInside(const class UCoHStoryComponent* For, const FString& TaskId) const
+	{
+		return Missions.ContainsByPredicate([&](const FMission& M) { return M.Hero.Get() == For && M.Task == TaskId && M.bInside; });
+	}
 	/** The hero clicked an objective. */
 	void UseObjective(class UCoHStoryComponent* For, ACoHMissionMarker* Marker);
 	/** Removes a hero's mission (abandoned, finished, or the hero left). */
@@ -206,6 +275,16 @@ private:
 		TArray<TWeakObjectPtr<ACoHMissionMarker>> Objectives;
 		int32 ObjectivesLeft = 0;
 		bool bEntered = false;
+		// indoor map
+		TWeakObjectPtr<ACoHMissionMap> Map;
+		FString MapId;
+		FVector Origin = FVector::ZeroVector;
+		int32 Slot = -1;
+		bool bLoading = false, bInside = false, bFinished = false;
+		double ReadyAt = 0, LoadStarted = 0;
+		TWeakObjectPtr<ACoHMissionMarker> ExitMarker;
+		/** teammates inside the owner's map */
+		TArray<TWeakObjectPtr<APawn>> Guests;
 	};
 	TArray<FMission> Missions;
 	TMap<FString, TWeakObjectPtr<ACoHStoryNPC>> NPCs;
@@ -217,6 +296,15 @@ private:
 	ACoHMissionMarker* SpawnMarker(ECoHMarkerKind Kind, const FVector& At, APawn* For, const FString& Text, const FString& Task);
 	FMission* Find(class UCoHStoryComponent* For, const FString& TaskId);
 	void CheckMission(FMission& M);
+	void PopulateIndoor(FMission& M);
+	void SpawnOutdoor(FMission& M);
+	void TeleportHero(FMission& M, bool bIn);
+	void PutAtDoor(const FMission& M, APawn* Who) const;
+	void FreeMission(FMission& M);
+	int32 FreeSlot() const;
+	/** villain spawning shared by the door and indoor missions */
+	class ACoHCombatEnemy* SpawnFoe(FMission& M, const FString& Villain, const FVector& At, const FString& Display, int32 Level, int32 GroupId);
+	void SpawnGroupAt(FMission& M, const FString& Group, const TArray<FVector>& Spots, const FVector& Center, int32 Minions, bool bLt, int32 Level);
 };
 
 /** On each hero: talks to contacts, carries tasks; the contact window on the player's PC. */
@@ -258,6 +346,9 @@ public:
 private:
 	void Show(const FCoHDialogPage& Page);
 	void TalkToPerson(const FString& PersonId);
+	/** The contact's dialog page, with a Store button when the contact sells. */
+	void ShowContact(FCoHDialogPage& Page, const FCoHStoryContact& C);
+	void OpenContactStore(const FString& ContactId);
 	void ShowTask(const FString& TaskId, const FString& ContactId);
 	void TurnIn(const FString& TaskId);
 	void Abandon(const FString& TaskId);
