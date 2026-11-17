@@ -1,0 +1,197 @@
+{
+ "format": 1,
+ "note": "Talk-to-target data for the AI speech system (design: Claude Doc 'AI speech and Nemesis plan'). Hand-written, no game data. The game (host) owns every rule here; the language model only words replies. Numbers are first guesses to tune in playtests.",
+
+ "limits": {
+  "reply_max_words": 28,
+  "thought_max_words": 14,
+  "history_turns": 6,
+  "model_timeout_s": 6.0,
+  "queue_max_waiting": 2,
+  "npc_cooldown_s": 45,
+  "informant_seconds": 90,
+  "informant_chance": {"Minion": 0.10, "Lieutenant": 0.15, "Boss": 0.20},
+  "sway_cap": 0.90,
+  "one_speech_per_showdown": true
+ },
+
+ "reputation_tiers": [
+  {"id": "Paragon",   "min": 75,
+   "tone": {"civilian": "Starstruck. This is a beloved hero; you are thrilled, ask for an autograph, eager to help.",
+            "police":   "Admiring. Salute, call them by name, offer backup.",
+            "villain":  "Nervous. Bitter respect for a hero everyone loves; you hate how good they are.",
+            "contact":  "Warm and proud, treat them as a trusted partner."}},
+  {"id": "Hero",      "min": 25,
+   "tone": {"civilian": "Friendly and grateful.",
+            "police":   "Cooperative and professional.",
+            "villain":  "Normal trash talk.",
+            "contact":  "Friendly and businesslike."}},
+  {"id": "Known",     "min": -25,
+   "tone": {"civilian": "Polite but a little wary of a costumed stranger.",
+            "police":   "Neutral, a bit tired.",
+            "villain":  "Normal trash talk.",
+            "contact":  "Businesslike."}},
+  {"id": "Vigilante", "min": -75,
+   "tone": {"civilian": "Nervous. Short answers, wants to get away.",
+            "police":   "Suspicious. Warn them to watch themselves.",
+            "villain":  "Mocking. Call the hero 'one of us' and laugh at their reputation.",
+            "contact":  "Cold and disappointed."}},
+  {"id": "Wanted",    "min": -101,
+   "tone": {"civilian": "Terrified. You think this 'hero' is really a villain. Beg them not to hurt you.",
+            "police":   "Hostile. Order them to stand down and keep their hands where you can see them.",
+            "villain":  "Sly. Treat the hero as a fellow criminal and try to recruit them.",
+            "contact":  "Refuses to deal with them until they clean up their act."}}
+ ],
+
+ "reputation_events": {
+  "mission_complete": 4, "citizen_saved": 3, "cry_for_help_answered": 2, "rival_arrested": 6,
+  "scheme_thwarted": 8, "villain_talked_down": 6, "doppelganger_caught": 10,
+  "defeated": -3, "property_damage": -1, "hit_civilian_or_police": -4,
+  "cry_for_help_ignored": -2, "rescue_abandoned": -3, "scheme_failed": -6,
+  "brutal_interrogation": -2, "doppelganger_crime": -4,
+  "doppelganger_floor": -75
+ },
+
+ "approaches": {
+  "note": "The menu the game shows the classifier. The model must pick exactly one id. 'speech' is only offered at a showdown or Parley.",
+  "persuade":   {"desc": "appeals to conscience, reason, a better life, or offers help or leniency"},
+  "threaten":   {"desc": "intimidates, threatens pain, jail, or exposure"},
+  "sympathize": {"desc": "shows empathy, asks how they ended up here, mentions family or the past"},
+  "ask_clue":   {"desc": "directly asks where someone is, what the plan is, who they work for"},
+  "chat":       {"desc": "small talk, jokes, greetings, questions about the city"},
+  "speech":     {"desc": "a heroic speech meant to make a villain give up their plan"}
+ },
+
+ "temperaments": {
+  "note": "Resolve change per approach for an interrogation turn (negative = cracks). Reputation shifts persuade/sympathize by rep_scale * reputation/100 and threaten by the opposite sign: a beloved hero persuades better, a feared one threatens better.",
+  "rep_scale": 6,
+  "Cowardly":  {"start_resolve": 45, "persuade": -12, "threaten": -22, "sympathize": -10, "ask_clue": -4, "chat": 0, "sway_base": 0.30},
+  "Arrogant":  {"start_resolve": 70, "persuade": -6,  "threaten": -4,  "sympathize": -4,  "ask_clue": 0,  "chat": 0, "sway_base": 0.15},
+  "Vengeful":  {"start_resolve": 75, "persuade": -4,  "threaten": -6,  "sympathize": -10, "ask_clue": 0,  "chat": 0, "sway_base": 0.10},
+  "Greedy":    {"start_resolve": 60, "persuade": -14, "threaten": -10, "sympathize": -4,  "ask_clue": -2, "chat": 0, "sway_base": 0.20},
+  "Showman":   {"start_resolve": 60, "persuade": -8,  "threaten": -6,  "sympathize": -8,  "ask_clue": -2, "chat": -2, "sway_base": 0.20},
+  "Loyal":     {"start_resolve": 80, "persuade": -8,  "threaten": -4,  "sympathize": -12, "ask_clue": 0,  "chat": 0, "sway_base": 0.15},
+  "Fanatic":   {"start_resolve": 95, "persuade": -3,  "threaten": -2,  "sympathize": -3,  "ask_clue": 0,  "chat": 0, "sway_base": 0.03}
+ },
+
+ "clue_thresholds": {"note": "A clue tier unlocks when Resolve drops to or below the value. Telepathy probes add 'telepath_bonus' to the threshold.", "minor": 60, "major": 35, "secret": 15, "telepath_bonus": 20},
+
+ "sway": {"per_motive_secret": 0.15, "per_weakness_secret": 0.10, "reputation_scale": 0.10, "fail": "enraged"},
+
+ "kinds": {
+  "civilian": {
+   "audience": "civilian",
+   "persona": "You are {name}, an ordinary resident of Paragon City in {zone}. You live a normal life and keep your head down. You only know everyday things: local news, weather, rumors, headlines. You know nothing secret.",
+   "gives_clues": false
+  },
+  "rescued_civilian": {
+   "audience": "civilian",
+   "persona": "You are {name}, a Paragon City resident in {zone}. The hero {hero} just saved you from {faction} thugs. You are shaken and grateful, and you want to help. While they held you, you overheard them talking.",
+   "gives_clues": true
+  },
+  "police": {
+   "audience": "police",
+   "persona": "You are {name}, an officer of the Paragon Police Department on patrol in {zone}. You are practical and talk like a beat cop.",
+   "gives_clues": false
+  },
+  "informant": {
+   "audience": "villain",
+   "persona": "You are {name}, a {rank} of the {faction} street gang, lying dazed on the pavement in {zone} after the hero {hero} beat you. {voice} You are {temperament_lc}. You work for {boss}.",
+   "gives_clues": true
+  },
+  "rival": {
+   "audience": "villain",
+   "persona": "You are {name}, {stage_title} of the {faction}. {voice} You are {temperament_lc}. Your sworn enemy is the hero {hero}. History between you: {history}.",
+   "gives_clues": true
+  },
+  "contact": {
+   "audience": "contact",
+   "persona": "You are {name}, a hero contact in {zone}. You give heroes missions. Only talk about what is in your briefing notes; if asked about anything else, say you don't know. Briefing notes: {grounding}",
+   "gives_clues": false
+  }
+ },
+
+ "faction_voices": {
+  "Hellions":  "You talk like a cocky street punk with fire and devil bravado; you love fire puns.",
+  "Skulls":    "You talk like a gloomy death-obsessed punk with graveyard jokes.",
+  "Outcasts":  "You talk like an angry mutant gang kid who hates Paragon's 'normal' people.",
+  "Clockwork": "You speak in short machine phrases, clicks and whirs, and refer to 'the King'.",
+  "Vahzilok":  "You are a stitched-together cadaver servant; you speak slowly about 'the Doctor'.",
+  "Trolls":    "You talk like a huge loud brute hopped up on Superadine; short dumb sentences.",
+  "Tsoo":      "You speak with cold discipline about ink, honour and the Ancestors.",
+  "Family":    "You talk like an old-school mobster, all respect, favours and 'the Family'.",
+  "Freakshow": "You talk like a wild cyborg punk addicted to chaos and Rage.",
+  "Lost":      "You are a confused mutated drifter who whispers about the voices and 'the Rikti'."
+ },
+
+ "secrets": {
+  "note": "Rolled for each rival at birth (3 to 6). Only secrets the hero has DISCOVERED are ever put into a prompt or count toward a speech. Keywords and synonyms are matched by the game, not the model.",
+  "motive": [
+   {"id": "daughter",  "text": "has a young daughter living with her grandmother in {zone}", "keywords": ["daughter", "your kid", "your girl", "your child"]},
+   {"id": "brother",   "text": "joined the gang to protect a little brother who is still in school", "keywords": ["brother", "little bro", "your sibling"]},
+   {"id": "debt",      "text": "owes the Family a debt they can never pay", "keywords": ["debt", "owe", "the family"]},
+   {"id": "lab",       "text": "used to be a lab tech at Crey Industries until they were fired and blamed", "keywords": ["crey", "lab", "fired", "scientist"]},
+   {"id": "fire",      "text": "lost their home in a fire nobody investigated", "keywords": ["your home", "the fire", "house burned"]},
+   {"id": "mentor",    "text": "had a mentor who was a hero and died in the Rikti War", "keywords": ["mentor", "rikti war", "your teacher"]},
+   {"id": "music",     "text": "dreams of playing guitar in a band in Steel Canyon", "keywords": ["guitar", "band", "music"]},
+   {"id": "mother",    "text": "sends money to a sick mother in Kings Row", "keywords": ["mother", "your mom", "your ma", "kings row"]}
+  ],
+  "weakness": [
+   {"id": "fears_fire",    "text": "is terrified of open flame since an accident", "keywords": ["fire", "flame", "burn"], "combat": "takes +20% fire damage"},
+   {"id": "fears_heights", "text": "is afraid of heights", "keywords": ["heights", "falling", "rooftop"], "combat": "knockup and knockback last longer"},
+   {"id": "old_injury",    "text": "has an old knee injury that never healed", "keywords": ["knee", "injury", "limp"], "combat": "-15% run speed and slower recovery"},
+   {"id": "superstitious", "text": "is deeply superstitious about bad omens", "keywords": ["omen", "curse", "bad luck"], "combat": "-10% to-hit after a fear effect"},
+   {"id": "addicted",      "text": "depends on a drug or upgrade supplied by their boss", "keywords": ["fix", "supply", "dose", "upgrade"], "combat": "-15% damage when cut off"}
+  ]
+ },
+
+ "clue_pool": {
+  "note": "Clue templates the game fills from the rival and its active scheme. Tier decides the Resolve threshold. The game picks the clue; the model only says it.",
+  "minor":  ["{boss} has been hanging around {area}.", "The crew is buying a lot of {item} lately.", "Word is {boss} is planning something big."],
+  "major":  ["{boss} is meeting the crew at {place} tonight.", "The next job is {scheme_step} at {place}.", "{boss} is working with {partner} now."],
+  "secret": ["{boss} {secret}."]
+ },
+
+ "fallback_lines": {
+  "note": "Used when the model is off, slow, or its reply fails the checks. Picked by kind and reputation tier; {x} filled by the game.",
+  "civilian": {
+   "Paragon":   ["Oh my gosh, it's {hero}! Can I get a picture?", "Thank you for everything you do, {hero}!"],
+   "Hero":      ["Hey, {hero}! Nice day in {zone}, huh?", "Stay safe out there, hero."],
+   "Known":     ["Uh, hi. Can I help you?", "Just heading home, officer. I mean, hero."],
+   "Vigilante": ["I don't want any trouble.", "I didn't see anything, okay?"],
+   "Wanted":    ["Please don't hurt me!", "Somebody call the police!"]
+  },
+  "rescued_civilian": {
+   "any": ["Thank you! They kept talking about {clue}", "I heard them say something... {clue}"]
+  },
+  "police": {
+   "Paragon":   ["Good to see you, {hero}. Need backup?"],
+   "Hero":      ["Morning, {hero}. Quiet so far."],
+   "Known":     ["Move along, please."],
+   "Vigilante": ["Watch yourself, {hero}. We've had complaints."],
+   "Wanted":    ["Stand down! Hands where I can see them!"]
+  },
+  "informant": {
+   "resist":   ["I ain't telling you nothing!", "You think I'm scared of you?"],
+   "crack":    ["Okay, okay! {clue}", "Fine! Just... {clue}"],
+   "flavor":   ["Ugh... my head...", "You don't know who you're messing with."]
+  },
+  "rival": {
+   "resist":   ["You'll never stop me, {hero}!", "Is that all you've got?"],
+   "crack":    ["...{clue} There. Happy?"],
+   "swayed":   ["I... maybe you're right. I'm done."],
+   "enraged":  ["You don't get to talk about that! You're finished!"]
+  },
+  "contact": {
+   "any": ["Let's focus on the mission, {hero}."]
+  },
+  "thinking": ["Hmm...", "...", "Let me think..."],
+  "cooldown": ["I already told you everything I know."]
+ },
+
+ "word_filter": {
+  "note": "Plain-word blocklist checked against player input and model output (lowercase, whole words). Kept short here; fill in a fuller list on the PC. A hit drops the model reply and uses a fallback line; on player input the NPC answers with the 'filtered' line.",
+  "words": ["kill yourself", "kys"],
+  "filtered": ["Hey, watch your mouth."]
+ }
+}

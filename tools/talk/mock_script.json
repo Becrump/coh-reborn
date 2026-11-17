@@ -1,0 +1,21 @@
+[
+ {"npc": "thug", "hero": "blue_comet", "lines": [
+   "Hey. You okay down there?",
+   "Where is Cinder hiding?",
+   "Look, I can put in a good word with the cops if you help me. What's the next job?"]},
+ {"npc": "thug", "hero": "ironjaw", "lines": [
+   "Talk now or I'll make you hurt. Where's your boss?",
+   "What is Cinder planning next?"]},
+ {"npc": "rescued", "hero": "mindwave", "lines": [
+   "Are you hurt? Did you hear what those Hellions were saying?"]},
+ {"npc": "civilian", "hero": "mindwave", "lines": ["Hi there! Anything strange going on around here?"]},
+ {"npc": "civilian", "hero": "ironjaw", "lines": ["Hey you. Seen any Hellions?"]},
+ {"npc": "cop", "hero": "ironjaw", "lines": ["Evening, officer."]},
+ {"npc": "contact", "hero": "blue_comet", "lines": ["Got any work for me?", "Who runs the Hellions in this area?"]},
+ {"npc": "cinder", "hero": "blue_comet", "lines": [
+   "Give it up, Cinder. Who are you working with now?"]},
+ {"npc": "cinder", "hero": "blue_comet", "state": {"showdown": true}, "lines": [
+   "Don't do this, Cinder. I know about your daughter, Lily. She deserves better than a dad in the Zig."]},
+ {"npc": "cinder", "hero": "mindwave", "state": {"showdown": true}, "lines": [
+   "Stop this. Think of your daughter."]}
+]

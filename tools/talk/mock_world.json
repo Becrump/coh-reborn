@@ -1,0 +1,51 @@
+{
+ "note": "Mock snapshots for testing talk_sim.py without the game. Each entry is exactly what the game's snapshot builder will send for one NPC. Hand-written; the contact notes are a placeholder, not original game text (on the PC the contact's real briefing comes from tools/story/coh_story.py output).",
+ "heroes": {
+  "blue_comet": {"name": "Blue Comet", "archetype": "Blaster", "level": 12, "powers": ["Ice Blast", "Energy Manipulation", "Flight"], "reputation": 40, "telepath": false,
+                 "known": ["clue_cinder_warehouse", "secret_cinder_daughter"]},
+  "mindwave":   {"name": "Mindwave", "archetype": "Controller", "level": 14, "powers": ["Mind Control", "Kinetics", "Teleportation"], "reputation": 85, "telepath": true, "known": []},
+  "ironjaw":    {"name": "Ironjaw", "archetype": "Brute", "level": 10, "powers": ["Super Strength", "Invulnerability", "Super Jump"], "reputation": -60, "telepath": false, "known": []}
+ },
+ "place": {"zone": "Atlas Park", "landmark": "the Hellion turf near the old warehouse district", "time": "night"},
+ "events": [
+  "Hellions set fire to a car on Atlas Avenue ten minutes ago.",
+  "Paragon Times headline: 'Cinder's crew torches Atlas warehouse'.",
+  "The hero's reputation changed recently."
+ ],
+ "npcs": {
+  "cinder": {
+   "kind": "rival", "name": "Cinder", "faction": "Hellions", "rank": "Boss", "stage_title": "Crew Boss",
+   "temperament": "Showman", "resolve": 55,
+   "history": ["Blue Comet froze Cinder solid outside City Hall", "Cinder escaped the police van"],
+   "scheme": {"name": "Blackout", "step": "steal transformer parts from the power substation", "place": "the substation on Pine Street"},
+   "clues": [
+    {"id": "clue_cinder_warehouse", "tier": "minor", "text": "Cinder has been hanging around the old warehouse on Atlas Avenue."},
+    {"id": "clue_cinder_substation", "tier": "major", "text": "The next job is stealing transformer parts from the substation on Pine Street, tomorrow night."},
+    {"id": "clue_cinder_partner", "tier": "major", "text": "Cinder is working with a Skull called Rattles now."}
+   ],
+   "secrets": [
+    {"id": "secret_cinder_daughter", "type": "motive", "text": "has a young daughter named Lily living with her grandmother in Kings Row", "keywords": ["daughter", "lily", "your kid", "your girl", "your child"]},
+    {"id": "secret_cinder_fire", "type": "weakness", "text": "is secretly terrified of real fire since the warehouse blaze that scarred them", "keywords": ["scar", "afraid of fire", "scared of fire", "the blaze"], "combat": "takes +20% fire damage"}
+   ]
+  },
+  "thug": {
+   "kind": "informant", "name": "Hellion Thug", "faction": "Hellions", "rank": "Minion", "temperament": "Cowardly",
+   "boss": "Cinder", "resolve": 45,
+   "clues": [
+    {"id": "clue_thug_warehouse", "tier": "minor", "text": "Cinder has been hanging around the old warehouse on Atlas Avenue."},
+    {"id": "clue_thug_substation", "tier": "major", "text": "Cinder wants transformer parts from the substation on Pine Street."}
+   ],
+   "secrets": []
+  },
+  "rescued": {
+   "kind": "rescued_civilian", "name": "Maria Gomez", "faction": "Hellions",
+   "clues": [{"id": "clue_rescued_substation", "tier": "major", "text": "The thugs kept talking about 'lights out on Pine Street'."}]
+  },
+  "civilian": {"kind": "civilian", "name": "Dave Kowalski"},
+  "cop": {"kind": "police", "name": "Officer Reyes"},
+  "contact": {
+   "kind": "contact", "name": "Atlas Park contact (placeholder)",
+   "grounding": "The Hellions have been setting fires near the warehouses. The hero should break up three Hellion groups in the warehouse district and report back. Reward: experience and an enhancement."
+  }
+ }
+}
