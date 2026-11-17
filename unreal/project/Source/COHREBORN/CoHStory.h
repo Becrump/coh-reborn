@@ -58,10 +58,12 @@ struct FCoHStoryContact
 	TArray<FString> Hello;
 	FString FirstVisit, DontKnow, NoTasks, Busy, ComeBack, ToFriend, ToConfidant;
 	TArray<FString> Tasks, Arcs;
+	/** Stores the contact sells from: "<x>_CL1" / "_CL2" / "_CL3" by relationship, or all. */
+	TArray<FString> Stores;
 };
 
 /** A story NPC who is not a contact (delivery targets and the like). */
-struct FCoHStoryPerson { FString Id, Name, Zone, Model, Line; FVector Pos = FVector::ZeroVector; float Yaw = 0.f; };
+struct FCoHStoryPerson { FString Id, Name, Zone, Model, Line, Store; FVector Pos = FVector::ZeroVector; float Yaw = 0.f; };
 struct FCoHStoryDoor { TArray<FString> Lair; FVector Pos = FVector::ZeroVector; float Yaw = 0.f; };
 struct FCoHStoryArc { FString Name; int32 MinLevel = 1, MaxLevel = 54; TArray<FString> Episodes; };
 struct FCoHStoryReward { int32 XP = 0, Influence = 0; TArray<TPair<float, TArray<FString>>> Drops; };
@@ -332,6 +334,9 @@ public:
 private:
 	void Show(const FCoHDialogPage& Page);
 	void TalkToPerson(const FString& PersonId);
+	/** The contact's dialog page, with a Store button when the contact sells. */
+	void ShowContact(FCoHDialogPage& Page, const FCoHStoryContact& C);
+	void OpenContactStore(const FString& ContactId);
 	void ShowTask(const FString& TaskId, const FString& ContactId);
 	void TurnIn(const FString& TaskId);
 	void Abandon(const FString& TaskId);

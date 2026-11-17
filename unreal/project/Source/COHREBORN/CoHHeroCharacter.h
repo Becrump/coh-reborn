@@ -137,6 +137,9 @@ public:
 	/** Contacts, tasks and missions (CoHStory.h). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Story")
 	TObjectPtr<class UCoHStoryComponent> Story;
+	/** Enhancement slots, the tray of unslotted enhancements, stores (CoHItems.h). N: the window. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CoH|Hero")
+	TObjectPtr<class UCoHEnhancements> Enhancements;
 	/** E: talk to the contact in front of the hero, or use a mission door / objective. */
 	void Interact();
 

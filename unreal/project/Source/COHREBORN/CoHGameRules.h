@@ -100,6 +100,25 @@ struct FCoHStoryProgress
 };
 
 /** A hero file, format 2 (docs/hero-build.md), plus the leveling fields. */
+/** One power's enhancement slots: each entry "<boost id>@<level>", or empty for an open slot. */
+USTRUCT(BlueprintType)
+struct FCoHPowerSlots
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName Power;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Enh;
+};
+
+/** Slotted enhancements and the unslotted ones the hero carries (CoHItems.h). */
+USTRUCT(BlueprintType)
+struct FCoHBoostState
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHPowerSlots> Slots;
+	/** "<boost id>@<level>" */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Inventory;
+};
+
 USTRUCT(BlueprintType)
 struct FCoHHeroRecord
 {
@@ -119,6 +138,7 @@ struct FCoHHeroRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHPowerLook> Looks;   // restyled powers (the customize panel)
 	/** Contacts, tasks and story arcs (CoHStory.h); "story" in the hero file. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FCoHStoryProgress Story;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FCoHBoostState Boosts;
 };
 
 struct FCoHRulePower

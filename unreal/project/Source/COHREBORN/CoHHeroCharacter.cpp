@@ -1,5 +1,6 @@
 #include "CoHHeroCharacter.h"
 #include "CoHStory.h"
+#include "CoHItems.h"
 #include "CoHActiveRagdoll.h"
 #include "Net/UnrealNetwork.h"
 #include "Misc/CommandLine.h"
@@ -85,6 +86,7 @@ ACoHHeroCharacter::ACoHHeroCharacter()
 	Powers->bPlayerSide = true;
 	Progress = CreateDefaultSubobject<UCoHHeroProgress>(TEXT("Progress"));
 	Story = CreateDefaultSubobject<UCoHStoryComponent>(TEXT("Story"));
+	Enhancements = CreateDefaultSubobject<UCoHEnhancements>(TEXT("Enhancements"));
 }
 
 void ACoHHeroCharacter::BeginPlay()
@@ -174,6 +176,12 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindKey(EKeys::E, IE_Pressed, this, &ACoHHeroCharacter::Interact);     // talk to a contact, use a mission door or objective
 	Input->BindKey(EKeys::V, IE_Pressed, this, &ACoHHeroCharacter::ToggleClimbPower);
 	Input->BindKey(EKeys::F8, IE_Pressed, this, &ACoHHeroCharacter::ToggleAnimBench);
+	// N: the Enhancements window
+	{
+		FInputKeyBinding Enh(FInputChord(EKeys::N), IE_Pressed);
+		Enh.KeyDelegate.GetDelegateForManualSet().BindLambda([this] { if (Enhancements) Enhancements->TogglePanel(); });
+		Input->KeyBindings.Add(Enh);
+	}
 	// L: train to the next level (the original trainer step)
 	{
 		FInputKeyBinding Train(FInputChord(EKeys::L), IE_Pressed);

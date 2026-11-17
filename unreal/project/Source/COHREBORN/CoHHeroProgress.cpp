@@ -1,4 +1,5 @@
 #include "CoHHeroProgress.h"
+#include "CoHItems.h"
 #include "CoHStory.h"
 #include "CoHPowers.h"
 #include "Engine/World.h"
@@ -124,6 +125,7 @@ void UCoHHeroProgress::Apply(bool bRefillTray)
 	for (const FName& A : R->AutoPowers(Hero)) Owned.AddUnique(A);
 	Owned.AddUnique(CoHTravel::Climb);
 	P->Owned = Owned;
+	P->SetBoosts(Hero.Boosts, Hero.Origin, Hero.Level);
 	// the tray: bought powers in order, then the inherent click / toggle powers
 	// (Brawl, Sprint, Rest); passives (Defiance, Fitness) run on their own
 	if (P->Tray.Num() < 10) P->Tray.SetNum(10);
@@ -307,4 +309,5 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 		if (KV.Value > TopDamage) { TopDamage = KV.Value; Top = H; bTopItems = A[0].bItems; }
 	}
 	if (Top && bTopItems) Top->AddInspiration(R->RollDrop(Rank, Victim->Level - 1, Group));
+	if (Top && bTopItems) UCoHEnhancements::OnVillainDefeated(Top->GetOwner(), Victim->Level);      // and sometimes an enhancement
 }

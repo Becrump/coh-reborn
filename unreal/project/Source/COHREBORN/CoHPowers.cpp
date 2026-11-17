@@ -6,6 +6,7 @@
 #include "CoHPowerFX.h"
 #include "CoHEffects.h"
 #include "CoHGameRules.h"
+#include "CoHItems.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/GameInstance.h"
@@ -131,6 +132,7 @@ static FCoHPowerDef ReadPower(const FString& Id, const TSharedPtr<FJsonObject>& 
 	P.Target = JStr(O, TEXT("Target")); P.Affects = FString::Join(JList(O, TEXT("EntsAffected")), TEXT(" "));
 	P.AttackTypes = JList(O, TEXT("AttackTypes"));
 	P.AIGroups = JList(O, TEXT("AIGroups"));
+	P.BoostsAllowed = JList(O, TEXT("BoostsAllowed"));
 	P.Accuracy = JNum(O, TEXT("Accuracy"), 1); P.Range = JNum(O, TEXT("Range")); P.Radius = JNum(O, TEXT("Radius"));
 	P.Arc = JNum(O, TEXT("Arc")); P.EndCost = JNum(O, TEXT("EnduranceCost")); P.Activate = JNum(O, TEXT("TimeToActivate"), 1);
 	P.Recharge = JNum(O, TEXT("RechargeTime"), 1); P.Period = JNum(O, TEXT("ActivatePeriod")); P.MaxTargets = (int32)JNum(O, TEXT("MaxTargetsHit"));
@@ -144,6 +146,7 @@ static FCoHPowerDef ReadPower(const FString& Id, const TSharedPtr<FJsonObject>& 
 			D.Target = JStr(M, TEXT("Target")); D.bDuration = JStr(M, TEXT("Type")) == TEXT("kDuration");
 			D.Scale = JNum(M, TEXT("Scale")); D.Magnitude = JNum(M, TEXT("Magnitude"), 1); D.Duration = JNum(M, TEXT("Duration"));
 			D.Delay = JNum(M, TEXT("Delay")); D.Period = JNum(M, TEXT("Period")); D.Chance = JNum(M, TEXT("Chance"), 1);
+			D.bAllowStrength = JStr(M, TEXT("AllowStrength")) != TEXT("kFalse");
 			const FString Req = FString::Join(JList(M, TEXT("Requires")), TEXT(" ")).ToLower();
 			if (Req.IsEmpty()) D.Requires = 0;
 			else if (Req == TEXT("enttype target> critter eq")) D.Requires = 1;
@@ -633,10 +636,56 @@ float UCoHPowerComponent::RechargeLeft(FName Power) const
 	return 0.f;
 }
 
+const FCoHPowerDef* UCoHPowerComponent::Def(FName Power) const
+{
+	if (const FCoHPowerDef* B = Boosted.Find(Power)) return B;
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	return DB ? DB->FindPower(Power) : nullptr;
+}
+
+void UCoHPowerComponent::SetBoosts(const FCoHBoostState& State, const FString& Origin, int32 HeroLevel)
+{
+	Boosted.Reset();
+	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+	const UCoHItems* I = UCoHItems::Get(this);
+	if (!DB || !I) return;
+	for (const FCoHPowerSlots& S : State.Slots)
+	{
+		const FCoHPowerDef* Base = DB->FindPower(S.Power);
+		if (!Base) continue;
+		// total strength per attribute, then the original's diminishing returns
+		TMap<FString, float> Sum; TMap<FString, bool> SchedB;
+		for (const FString& Item : S.Enh)
+		{
+			FString Id; int32 Lv = 1;
+			const FCoHBoostDef* B = UCoHItems::Split(Item, Id, Lv) ? I->Boost(Id) : nullptr;
+			if (!B || !I->Fits(*B, *Base, Origin)) continue;
+			const float V = I->Strength(*B, Lv, HeroLevel);
+			for (const FString& A : B->Attribs) { Sum.FindOrAdd(A.ToLower()) += V; SchedB.FindOrAdd(A.ToLower()) |= B->bScheduleB; }
+		}
+		if (!Sum.Num()) continue;
+		for (TPair<FString, float>& KV : Sum) KV.Value = UCoHItems::Diminish(KV.Value, SchedB.FindRef(KV.Key));
+		FCoHPowerDef P = *Base;
+		auto Bonus = [&Sum](const TCHAR* A) { const float* V = Sum.Find(FString(A).ToLower()); return V ? *V : 0.f; };
+		P.Accuracy *= 1.f + Bonus(TEXT("kAccuracy"));
+		P.Recharge /= 1.f + Bonus(TEXT("kRechargeTime"));
+		P.EndCost /= 1.f + Bonus(TEXT("kEnduranceDiscount"));
+		P.Range *= 1.f + Bonus(TEXT("kRange"));
+		for (FCoHMod& M : P.Mods)
+		{
+			if (!M.bAllowStrength) continue;
+			const float* V = Sum.Find(M.Attrib.ToLower());
+			if (!V) continue;
+			if (M.bDuration) M.Duration *= 1.f + *V;      // holds, stuns...: longer
+			else M.Scale *= 1.f + *V;
+		}
+		Boosted.Add(S.Power, MoveTemp(P));
+	}
+}
+
 float UCoHPowerComponent::RechargeTotal(FName Power) const
 {
-	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
-	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
+	const FCoHPowerDef* P = Def(Power);
 	return P ? P->Recharge + P->Activate : 1.f;
 }
 
@@ -708,8 +757,7 @@ void UCoHPowerComponent::TickAutoAttack()
 	// target or is out of range, and fires as soon as it can
 	if (IsDefeated()) return;
 	if (!Tray.Contains(AutoPower)) { StopAuto(TEXT("off (left the tray)")); return; }
-	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
-	const FCoHPowerDef* P = DB ? DB->FindPower(AutoPower) : nullptr;
+	const FCoHPowerDef* P = Def(AutoPower);
 	if (!P) { StopAuto(TEXT("off")); return; }
 	const AActor* Owner = GetOwner();
 	const float Reach = P->Range * FeetToCm + 120.f;
@@ -749,8 +797,7 @@ static AActor* NearestFoe(const UCoHPowerComponent* Me, float MaxRange, bool bIn
 
 void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* TargetActor, FVector_NetQuantize Location)
 {
-	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
-	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
+	const FCoHPowerDef* P = Def(Power);
 	UWorld* W = GetWorld();
 	UE_LOG(LogTemp, Log, TEXT("CoH activate %s by %s (target %s): %s"), *Power.ToString(), *GetNameSafe(GetOwner()), *GetNameSafe(TargetActor),
 		!P ? TEXT("unknown power") : IsDefeated() ? TEXT("defeated") : Now0(W) < BusyUntil ? TEXT("busy") : RechargeLeft(Power) > 0.f ? TEXT("recharging") : TEXT("ok"));
@@ -835,8 +882,7 @@ void UCoHPowerComponent::ServerActivate_Implementation(FName Power, AActor* Targ
 
 void UCoHPowerComponent::Release(FName Power, TWeakObjectPtr<AActor> TargetActor, FVector Location)
 {
-	UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
-	const FCoHPowerDef* P = DB ? DB->FindPower(Power) : nullptr;
+	const FCoHPowerDef* P = Def(Power);
 	if (!P || IsDefeated()) return;
 	Execute(*P, TargetActor.Get(), Location);
 }
@@ -1135,12 +1181,12 @@ void UCoHPowerComponent::TickComponent(float Dt, ELevelTick TickType, FActorComp
 		const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
 		if (!DB) return;
 		for (const FName& Id : TArray<FName>(ActiveToggles))
-			if (const FCoHPowerDef* P = DB->FindPower(Id)) ToggleTick(*P);
+			if (const FCoHPowerDef* P = Def(Id)) ToggleTick(*P);
 		// auto powers in the tray, and the ones a built hero owns, are always on
 		for (const FName& Id : Tray)
-			if (const FCoHPowerDef* P = DB->FindPower(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
+			if (const FCoHPowerDef* P = Def(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
 		for (const FName& Id : Owned)
-			if (!Tray.Contains(Id)) if (const FCoHPowerDef* P = DB->FindPower(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
+			if (!Tray.Contains(Id)) if (const FCoHPowerDef* P = Def(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
 	}
 }
 

@@ -1,6 +1,7 @@
 #include "CoHStory.h"
 #include "CoHCombat.h"
 #include "CoHHeroProgress.h"
+#include "CoHItems.h"
 #include "CoHPowers.h"
 #include "Animation/AnimSequenceBase.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -113,6 +114,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			C.Busy = StoryStr(O, TEXT("busy")); C.ComeBack = StoryStr(O, TEXT("come_back"));
 			C.ToFriend = StoryStr(O, TEXT("to_friend")); C.ToConfidant = StoryStr(O, TEXT("to_confidant"));
 			C.Tasks = StoryList(O, TEXT("tasks")); C.Arcs = StoryList(O, TEXT("arcs"));
+			C.Stores = StoryList(O, TEXT("stores"));
 			Contacts.Add(C.Id, MoveTemp(C));
 		}
 	if (const auto Ps = StoryObj(Root, TEXT("people")))
@@ -121,7 +123,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			const auto O = KV.Value->AsObject();
 			FCoHStoryPerson P;
 			P.Id = FString(KV.Key); P.Name = StoryStr(O, TEXT("name")); P.Zone = StoryStr(O, TEXT("zone")); P.Model = StoryStr(O, TEXT("model"));
-			P.Line = StoryStr(O, TEXT("line")); P.Pos = StoryVec(O, TEXT("pos")); P.Yaw = (float)StoryNum(O, TEXT("yaw"));
+			P.Line = StoryStr(O, TEXT("line")); P.Store = StoryStr(O, TEXT("store")); P.Pos = StoryVec(O, TEXT("pos")); P.Yaw = (float)StoryNum(O, TEXT("yaw"));
 			People.Add(P.Id, MoveTemp(P));
 		}
 	if (const auto Ts = StoryObj(Root, TEXT("tasks")))
@@ -1338,6 +1340,13 @@ void UCoHStoryComponent::ServerChoose_Implementation(const FString& Action)
 	else if (Verb == TEXT("accept")) Accept(A1, A2);
 	else if (Verb == TEXT("turnin")) TurnIn(A1);
 	else if (Verb == TEXT("abandon")) Abandon(A1);
+	else if (Verb == TEXT("store")) OpenContactStore(A1);
+	else if (Verb == TEXT("pstore"))
+	{
+		const FCoHStoryPerson* Who = Story() ? UCoHStory::Get(this)->Person(A1) : nullptr;
+		UCoHEnhancements* E = UCoHEnhancements::Of(GetOwner());
+		if (Who && E && !Who->Store.IsEmpty()) E->OpenStore({ Who->Store }, Who->Name);
+	}
 	else if (Verb == TEXT("enter"))
 	{
 		if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld())) D->EnterMission(this, A1);
@@ -1419,7 +1428,7 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 			CompleteTask(Id, FString());
 			Page.Body = Fill(D->Complete.IsEmpty() ? TEXT("Thank you, {HeroName}.") : D->Complete, C);
 			Page.Labels = { TEXT("Continue") }; Page.Actions = { TEXT("talk|") + ContactId };
-			Show(Page);
+			ShowContact(Page, *C);
 			return;
 		}
 	}
@@ -1430,7 +1439,7 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 			const FCoHStoryTask* D = S->Task(T.Task);
 			Page.Body = Fill(D && !D->Return.IsEmpty() ? D->Return : TEXT("Well done, {HeroName}."), C);
 			Page.Labels = { TEXT("Finish") }; Page.Actions = { TEXT("turnin|") + T.Task };
-			Show(Page);
+			ShowContact(Page, *C);
 			return;
 		}
 	const bool bFirst = !P->Contacts.ContainsByPredicate([&](const FCoHContactState& X) { return X.Contact == ContactId; });
@@ -1440,7 +1449,7 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 	{
 		Page.Body = Fill(C->ComeBack.IsEmpty() ? C->DontKnow : C->ComeBack, C);
 		Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
-		Show(Page);
+		ShowContact(Page, *C);
 		return;
 	}
 	FString Hello = bFirst && !C->FirstVisit.IsEmpty() ? C->FirstVisit : C->Hello.Num() ? C->Hello[FMath::RandRange(0, C->Hello.Num() - 1)] : FString();
@@ -1452,14 +1461,14 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 			Page.Body = Fill(D && !D->Busy.IsEmpty() ? D->Busy : Hello, C);
 			Page.Labels = { TEXT("I'm on it"), TEXT("Abandon this task") };
 			Page.Actions = { TEXT("close"), TEXT("abandon|") + T.Task };
-			Show(Page);
+			ShowContact(Page, *C);
 			return;
 		}
 	if (P->Tasks.Num() >= 3)
 	{
 		Page.Body = Fill(C->Busy.IsEmpty() ? TEXT("You have enough on your plate, {HeroName}.") : C->Busy, C);
 		Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
-		Show(Page);
+		ShowContact(Page, *C);
 		return;
 	}
 	const TArray<FString> Offer = Offers(*C);
@@ -1467,7 +1476,7 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 	{
 		Page.Body = Fill(C->NoTasks.IsEmpty() ? TEXT("I have nothing for you right now.") : C->NoTasks, C);
 		Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
-		Show(Page);
+		ShowContact(Page, *C);
 		return;
 	}
 	Page.Body = Fill(Hello, C);
@@ -1478,7 +1487,7 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 		Page.Actions.Add(FString::Printf(TEXT("show|%s|%s"), *Id, *ContactId));
 	}
 	Page.Labels.Add(TEXT("Leave")); Page.Actions.Add(TEXT("close"));
-	Show(Page);
+	ShowContact(Page, *C);
 }
 
 void UCoHStoryComponent::ShowTask(const FString& TaskId, const FString& ContactId)
@@ -1584,7 +1593,17 @@ void UCoHStoryComponent::GiveReward(const FString& Table)
 	if (R.XP > 0 || R.Influence > 0) P->Award(R.XP, R.Influence);
 	for (const auto& D : R.Drops)
 		if (FMath::FRand() * 100.f < D.Key)
-			UE_LOG(LogTemp, Log, TEXT("CoH story: reward %s would drop %s (enhancements come later)"), *Table, *FString::Join(D.Value, TEXT(", ")));
+		{
+			// the original's power-up lists (PL.Single5Magic, PL.Dual5NatMag, PL.GenericPowerFive...):
+			// an enhancement of the hero's origin around the hero's level
+			bool bEnh = false;
+			for (const FString& Set : D.Value)
+				bEnh |= Set.Contains(TEXT("Single")) || Set.Contains(TEXT("Dual")) || Set.Contains(TEXT("PowerFive"));
+			const UCoHItems* I = UCoHItems::Get(this);
+			UCoHEnhancements* E = UCoHEnhancements::Of(GetOwner());
+			if (bEnh && I && E) E->Give(I->RandomDrop(P->Hero.Origin, HeroLevel()));
+			else UE_LOG(LogTemp, Log, TEXT("CoH story: reward %s would drop %s (not in the game yet)"), *Table, *FString::Join(D.Value, TEXT(", ")));
+		}
 }
 
 void UCoHStoryComponent::TurnIn(const FString& TaskId)
@@ -1633,6 +1652,34 @@ void UCoHStoryComponent::Abandon(const FString& TaskId)
 	if (!LastContact.IsEmpty()) TalkTo(LastContact);
 }
 
+void UCoHStoryComponent::ShowContact(FCoHDialogPage& Page, const FCoHStoryContact& C)
+{
+	if (C.Stores.Num() && UCoHEnhancements::Of(GetOwner()))
+	{
+		const int32 At = FMath::Max(0, Page.Actions.IndexOfByKey(TEXT("close")));
+		Page.Labels.Insert(TEXT("Store"), At); Page.Actions.Insert(TEXT("store|") + C.Id, At);
+	}
+	Show(Page);
+}
+
+void UCoHStoryComponent::OpenContactStore(const FString& ContactId)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryContact* C = S ? S->Contact(ContactId) : nullptr;
+	UCoHEnhancements* E = UCoHEnhancements::Of(GetOwner());
+	if (!C || !E || !C->Stores.Num()) return;
+	// the original: a contact's store improves as the hero becomes a friend, then a confidant
+	int32 Points = 0;
+	if (const FCoHStoryProgress* P = Story())
+		if (const FCoHContactState* CS = P->Contacts.FindByPredicate([&](const FCoHContactState& X) { return X.Contact == ContactId; })) Points = CS->Points;
+	const FString Tier = Points >= C->ConfidantCP ? TEXT("_CL3") : Points >= C->FriendCP ? TEXT("_CL2") : TEXT("_CL1");
+	TArray<FString> Use;
+	for (const FString& Sid : C->Stores) if (Sid.EndsWith(Tier)) Use.Add(Sid);
+	if (!Use.Num()) for (const FString& Sid : C->Stores) if (!Sid.Contains(TEXT("_CL"))) Use.Add(Sid);
+	if (!Use.Num()) Use = C->Stores;
+	E->OpenStore(Use, C->Name);
+}
+
 void UCoHStoryComponent::TalkToPerson(const FString& PersonId)
 {
 	const UCoHStory* S = UCoHStory::Get(this);
@@ -1654,6 +1701,10 @@ void UCoHStoryComponent::TalkToPerson(const FString& PersonId)
 		}
 	}
 	Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
+	if (!Who->Store.IsEmpty() && UCoHEnhancements::Of(GetOwner()))
+	{
+		Page.Labels.Insert(TEXT("Store"), 0); Page.Actions.Insert(TEXT("pstore|") + PersonId, 0);
+	}
 	Show(Page);
 }
 

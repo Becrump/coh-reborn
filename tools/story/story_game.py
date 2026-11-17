@@ -479,7 +479,7 @@ def main():
             name = (nd.get("a") or [""])[0].lower()
             if name in people or (name not in targets and kid(nd, "DisplayName") is None):
                 continue
-            people[name] = {"name": line(nd, "DisplayName", None) or name, "zone": zone,
+            people[name] = {"name": line(nd, "DisplayName", None) or name, "zone": zone, "store": arg(nd, "Store"),
                             "model": arg(nd, "Model"), "pos": p["world_cm"], "yaw": p["yaw_deg"],
                             "line": line(nd, "Dialog", None), "npc": p["npc"]}
     result = {"contacts": out_contacts, "tasks": tasks, "people": people,
