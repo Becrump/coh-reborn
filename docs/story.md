@@ -25,7 +25,7 @@ The game loads it from `<out>/story/story_game.json`, next to the rules folder (
   - Defeat X: villains of the group (and zone, if the task names one) that the hero gets credit for.
   - Deliver: talk to the target contact or NPC, then go back.
   - Visit: walk within 15 m of the marker.
-  - Door mission: a gold beam marks the door (a door of the task's zone whose lair type matches its door type, else any door there). Until the indoor mission maps are in, the mission plays out around the door: its boss (with the original display name), patrols and filler groups of the mission's villain group at the hero's level, and its objectives as green posts to click. Its CanCompleteWith rules decide when it is done.
+  - Door mission: a gold beam marks the door (a door of the task's zone whose lair type matches its door type, else any door there). Inside is an original indoor map (docs/missions.md); with no map imported, the mission plays out around the door: its boss (with the original display name), patrols and filler groups of the mission's villain group at the hero's level, and its objectives as green posts to click. Its CanCompleteWith rules decide when it is done.
   - Compound tasks move to their next part at once; story arc episodes are offered one after another.
 - **Rewards**: the task's completion table (MissionOwner) and return table (StoryArcSL2 ...) give their XP and influence for the hero's level. Their enhancement drops are logged until enhancements exist.
 - **Saving**: the hero file gets a `story` object (contacts met with points, tasks in hand, tasks done). Door missions in hand get their doors back after loading.
@@ -34,4 +34,4 @@ Host test command: `coh.Story.Talk [name]` talks to a contact from anywhere (no 
 
 ## Not yet
 
-Indoor mission maps (next), team-shared missions, enhancement rewards and contact stores, task forces, newspaper/police-band missions, villain side, clues window, contact introductions (any contact talks to a hero in its level range).
+Team-shared missions, enhancement rewards and contact stores, task forces, newspaper/police-band missions, villain side, clues window, contact introductions (any contact talks to a hero in its level range).

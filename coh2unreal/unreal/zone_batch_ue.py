@@ -141,7 +141,7 @@ def stage_level():
     if EAL.does_asset_exist(lp):
         lsub.load_level(lp)
     else:
-        lsub.new_level(lp, True)
+        lsub.new_level(lp, CFG.get("partitioned", True))
     log("level: now " + world_path())
 
 
@@ -381,6 +381,59 @@ def stage_sky():
     log("sky: ready")
 
 
+def stage_interior():
+    """mission maps: the original Omni lights (clustered to <= LIGHT_CAP, no shadows) + a narrow exposure range"""
+    rows = json.load(open(CFG["lights"])) if CFG.get("lights") and os.path.isfile(CFG["lights"]) else []
+    for a in asub.get_all_level_actors():
+        if str(a.get_folder_path()).startswith("Lights"):
+            asub.destroy_actor(a)
+    cell = CFG.get("light_cell_cm", 600.0)
+    cap = CFG.get("light_cap", 220)
+    cl = {}
+    for r in rows:
+        # glTF metres (x, y up, -game z) -> Unreal cm (x, -game z, up)
+        x, y, z = r["pos"][0] * 100.0, r["pos"][2] * 100.0, r["pos"][1] * 100.0
+        k = (int(x // cell), int(y // cell), int(z // cell))
+        c = cl.setdefault(k, [0.0, 0.0, 0.0, 0, [0.0, 0.0, 0.0], 0.0, 0.0])
+        c[0] += x; c[1] += y; c[2] += z; c[3] += 1
+        for i in range(3):
+            c[4][i] += r["color"][i]
+        c[5] = max(c[5], r["intensity"]); c[6] = max(c[6], r["range"])
+    best = sorted(cl.values(), key=lambda c: -c[3])[:cap]
+    for n, c in enumerate(best):
+        k = c[3]
+        a = asub.spawn_actor_from_class(unreal.PointLight, unreal.Vector(c[0] / k, c[1] / k, c[2] / k))
+        a.set_actor_label("CoHLight_%d" % n)
+        a.set_folder_path("Lights")
+        pc = a.get_component_by_class(unreal.PointLightComponent)
+        pc.set_editor_property("cast_shadows", False)
+        pc.set_editor_property("intensity_units", unreal.LightUnits.CANDELAS)
+        pc.set_editor_property("intensity", min(c[5] * 1.5, 60.0) * min(k, 3))
+        pc.set_editor_property("attenuation_radius", max(c[6] * 100.0 * 1.6, 800.0))
+        pc.set_editor_property("light_color", unreal.Color(*[int(255 * min(1.0, v / k)) for v in c[4]], 255))
+    ppv = _spawn(unreal.PostProcessVolume, "MissionPost")
+    ppv.set_folder_path("Lights")
+    ppv.set_editor_property("unbound", False)   # only inside this map, the city keeps its own exposure
+    b = CFG.get("bounds")
+    if b:
+        ctr = unreal.Vector(*[(b[0][i] + b[1][i]) / 2 for i in range(3)])
+        ext = [max((b[1][i] - b[0][i]) / 2 + 2000, 2000) for i in range(3)]
+        ppv.set_actor_location(ctr, False, False)
+        ppv.set_actor_scale3d(unreal.Vector(ext[0] / 100, ext[1] / 100, ext[2] / 100))
+        # villains path inside: the nav mesh is built at runtime, only inside nav bounds
+        nav = _spawn(unreal.NavMeshBoundsVolume, "MissionNavBounds")
+        nav.set_folder_path("Lights")
+        nav.set_actor_location(ctr, False, False)
+        nav.set_actor_scale3d(unreal.Vector(ext[0] / 100, ext[1] / 100, ext[2] / 100))
+    s = ppv.get_editor_property("settings")
+    for prop, val in (("auto_exposure_min_brightness", 0.3), ("auto_exposure_max_brightness", 1.5),
+                      ("dynamic_global_illumination_method", unreal.DynamicGlobalIlluminationMethod.LUMEN)):
+        s.set_editor_property("override_" + prop, True)
+        s.set_editor_property(prop, val)
+    ppv.set_editor_property("settings", s)
+    log("interior: %d lights from %d originals" % (len(best), len(rows)))
+
+
 def _bounds():
     xs, ys, zs = [], [], []
     for a in asub.get_all_level_actors():
@@ -585,6 +638,6 @@ def stage_world():
 
 
 {"fix": stage_fix, "world": stage_world, "split": stage_split, "index": write_index, "level": stage_level, "meshes": stage_meshes, "mats": stage_mats,
- "link": stage_link, "place": stage_place, "sky": stage_sky, "save": save_ours,
+ "link": stage_link, "place": stage_place, "sky": stage_sky, "interior": stage_interior, "save": save_ours,
  "shots": stage_shots, "stats": stage_stats}[STAGE]()
 clear_python_refs()

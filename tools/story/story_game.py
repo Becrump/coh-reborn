@@ -159,6 +159,7 @@ def parse_mission(md, vars_):
                      "display": line(o, "ModelDisplayName", v),
                      "model": arg(o, "Model"),
                      "number": int(num) if num.isdigit() else 1,
+                     "location": arg(o, "Location", 0, "ItemFloor"),
                      "begin": line(o, "InteractBeginString", v),
                      "done": line(o, "InteractCompleteString", v),
                      "reward": line(kid(o, "Reward") or {}, "Dialog", v)})

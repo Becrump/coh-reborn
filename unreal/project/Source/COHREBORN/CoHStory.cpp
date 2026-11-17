@@ -11,6 +11,7 @@
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/GameViewportClient.h"
+#include "Engine/LevelStreamingDynamic.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -21,6 +22,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
+#include "Misc/PackageName.h"
 #include "Misc/Paths.h"
 #include "NavigationSystem.h"
 #include "Net/UnrealNetwork.h"
@@ -156,6 +158,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 						FCoHStoryObjective Ob;
 						Ob.Name = StoryStr(OO, TEXT("name")); Ob.Display = StoryStr(OO, TEXT("display")); Ob.Begin = StoryStr(OO, TEXT("begin"));
 						Ob.Done = StoryStr(OO, TEXT("done")); Ob.Reward = StoryStr(OO, TEXT("reward")); Ob.Number = FMath::Clamp(StoryInt(OO, TEXT("number"), 1), 1, 8);
+						Ob.Location = StoryStr(OO, TEXT("location"));
 						T.Objectives.Add(Ob);
 					}
 				if (M->TryGetArrayField(TEXT("spawns"), A))
@@ -221,6 +224,116 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 		}
 	UE_LOG(LogTemp, Log, TEXT("CoH story: %d contacts, %d people, %d tasks, %d arcs, %d reward tables (%.1f s)"),
 		Contacts.Num(), People.Num(), Tasks.Num(), Arcs.Num(), Rewards.Num(), FPlatformTime::Seconds() - T0);
+	LoadMaps(MissionsFile.IsEmpty() ? FPaths::GetPath(FPaths::GetPath(File)) / TEXT("missions/missions.json") : MissionsFile);
+}
+
+void UCoHStory::LoadMaps(const FString& File)
+{
+	FString Text;
+	TSharedPtr<FJsonObject> Root;
+	if (!FFileHelper::LoadFileToString(Text, *File) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), Root) || !Root.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CoH story: no %s (tools/missions/mission_maps.py): door missions play at the door"), *File);
+		return;
+	}
+	auto Spot = [](const TSharedPtr<FJsonObject>& O)
+	{
+		FCoHMapSpot S; S.Pos = StoryVec(O, TEXT("pos")); S.Yaw = (float)StoryNum(O, TEXT("yaw"));
+		S.Rank = StoryStr(O, TEXT("rank")); S.Kind = StoryStr(O, TEXT("kind"));
+		const TArray<TSharedPtr<FJsonValue>>* A;
+		if (O->TryGetArrayField(TEXT("spots"), A))
+			for (const auto& V : *A)
+			{
+				const auto& P = V->AsArray();
+				if (P.Num() >= 3) S.Spots.Add(FVector(P[0]->AsNumber(), P[1]->AsNumber(), P[2]->AsNumber()));
+			}
+		return S;
+	};
+	if (const auto Ms = StoryObj(Root, TEXT("maps")))
+		for (const auto& KV : Ms->Values)
+		{
+			const auto O = KV.Value->AsObject();
+			if (!O.IsValid()) continue;
+			FCoHMissionMap M;
+			M.Id = FString(KV.Key); M.Set = StoryStr(O, TEXT("set")); M.Length = StoryInt(O, TEXT("length"), 30);
+			const auto St = StoryObj(O, TEXT("start"));
+			M.Start = StoryVec(St, TEXT("pos")); M.StartYaw = (float)StoryNum(St, TEXT("yaw"));
+			M.Exit = StoryVec(StoryObj(O, TEXT("exit")), TEXT("pos"));
+			const TArray<TSharedPtr<FJsonValue>>* A;
+			if (O->TryGetArrayField(TEXT("bounds"), A) && A->Num() == 2)
+			{
+				const auto& Lo = (*A)[0]->AsArray(); const auto& Hi = (*A)[1]->AsArray();
+				if (Lo.Num() >= 3 && Hi.Num() >= 3)
+				{
+					M.BoundsMin = FVector(Lo[0]->AsNumber(), Lo[1]->AsNumber(), Lo[2]->AsNumber());
+					M.BoundsMax = FVector(Hi[0]->AsNumber(), Hi[1]->AsNumber(), Hi[2]->AsNumber());
+				}
+			}
+			if (O->TryGetArrayField(TEXT("encounters"), A))
+				for (const auto& V : *A) if (V->AsObject().IsValid()) M.Encounters.Add(Spot(V->AsObject()));
+			if (const auto Ob = StoryObj(O, TEXT("objectives")))
+				for (const auto& OK : Ob->Values)
+				{
+					TArray<FCoHMapSpot>& L = M.Objectives.FindOrAdd(FString(OK.Key));
+					for (const auto& V : OK.Value->AsArray()) if (V->AsObject().IsValid()) L.Add(Spot(V->AsObject()));
+				}
+			Maps.Add(M.Id, MoveTemp(M));
+		}
+	if (const auto Ss = StoryObj(Root, TEXT("sets")))
+		for (const auto& KV : Ss->Values)
+		{
+			TMap<int32, TArray<FString>>& Lens = MapSets.FindOrAdd(FString(KV.Key).ToLower());
+			const auto O = KV.Value->AsObject();
+			if (!O.IsValid()) continue;
+			for (const auto& L : O->Values)
+			{
+				TArray<FString>& Ids = Lens.FindOrAdd(FCString::Atoi(*FString(L.Key)));
+				for (const auto& V : L.Value->AsArray()) { FString Id; if (V->TryGetString(Id) && Maps.Contains(Id)) Ids.AddUnique(Id); }
+			}
+		}
+	const TArray<TSharedPtr<FJsonValue>>* Sel;
+	if (Root->TryGetArrayField(TEXT("select"), Sel))
+		for (const auto& V : *Sel)
+		{
+			const auto O = V->AsObject();
+			if (!O.IsValid()) continue;
+			FCoHMapSelection S; S.Groups = StoryList(O, TEXT("groups")); S.MinLevel = StoryInt(O, TEXT("min"), 1);
+			S.MaxLevel = StoryInt(O, TEXT("max"), 50); S.Set = StoryStr(O, TEXT("set"));
+			MapSelect.Add(S);
+		}
+	UE_LOG(LogTemp, Log, TEXT("CoH story: %d indoor mission maps in %d map sets"), Maps.Num(), MapSets.Num());
+}
+
+const FCoHMissionMap* UCoHStory::PickMap(const FCoHStoryTask& T, int32 Level) const
+{
+	TArray<FString> Sets;
+	if (!T.MapSet.IsEmpty()) Sets.Add(T.MapSet.ToLower());
+	else
+	{
+		const FString G = T.MissionGroup.ToLower();
+		for (const FCoHMapSelection& S : MapSelect)
+			if (S.Groups.Contains(G) && Level >= S.MinLevel && Level <= S.MaxLevel) Sets.AddUnique(S.Set.ToLower());
+		if (Sets.Num() == 0) { Sets.Add(TEXT("warehouse")); Sets.Add(TEXT("office")); }
+	}
+	// layouts of those sets, nearest length first, whose level is imported
+	TArray<FString> Best; int32 BestGap = TNumericLimits<int32>::Max();
+	for (const FString& Set : Sets)
+	{
+		const TMap<int32, TArray<FString>>* Lens = MapSets.Find(Set);
+		if (!Lens) continue;
+		for (const auto& L : *Lens)
+		{
+			TArray<FString> Have;
+			for (const FString& Id : L.Value)
+				if (const FCoHMissionMap* M = Maps.Find(Id))
+					if (FPackageName::DoesPackageExist(M->Level())) Have.Add(Id);
+			if (Have.Num() == 0) continue;
+			const int32 Gap = FMath::Abs(L.Key - T.MapLength);
+			if (Gap < BestGap) { BestGap = Gap; Best = Have; }
+			else if (Gap == BestGap) Best.Append(Have);
+		}
+	}
+	return Best.Num() ? Maps.Find(Best[FMath::RandRange(0, Best.Num() - 1)]) : nullptr;
 }
 
 UCoHStory* UCoHStory::Get(const UObject* WorldContext)
@@ -511,12 +624,14 @@ void ACoHMissionMarker::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 void ACoHMissionMarker::OnRep_Marker()
 {
-	const bool bDoor = Kind == ECoHMarkerKind::Door, bObj = Kind == ECoHMarkerKind::Objective;
+	const bool bDoor = Kind == ECoHMarkerKind::Door, bExit = Kind == ECoHMarkerKind::Exit;
+	const bool bObj = Kind == ECoHMarkerKind::Objective || bExit;      // short posts (indoors)
 	// door: a tall gold beam; objective: a short green post; visit: a blue beam
 	Beam->SetRelativeScale3D(bObj ? FVector(0.5f, 0.5f, 1.2f) : FVector(0.6f, 0.6f, 40.f));
 	Beam->SetRelativeLocation(FVector(0, 0, bObj ? 60.f : 2000.f));
 	Label->SetRelativeLocation(FVector(0, 0, bObj ? 160.f : 260.f));
-	const FLinearColor Col = bDoor ? FLinearColor(1.f, 0.75f, 0.1f) : bObj ? FLinearColor(0.2f, 1.f, 0.35f) : FLinearColor(0.3f, 0.6f, 1.f);
+	const FLinearColor Col = bDoor ? FLinearColor(1.f, 0.75f, 0.1f) : bExit ? FLinearColor(0.85f, 0.95f, 1.f)
+		: bObj ? FLinearColor(0.2f, 1.f, 0.35f) : FLinearColor(0.3f, 0.6f, 1.f);
 	if (UMaterialInterface* Base = Beam->GetMaterial(0))
 	{
 		UMaterialInstanceDynamic* MID = Beam->CreateDynamicMaterialInstance(0, Base);
@@ -540,6 +655,48 @@ void ACoHMissionMarker::Tick(float Delta)
 		const FVector To = PC->PlayerCameraManager->GetCameraLocation() - Label->GetComponentLocation();
 		Label->SetWorldRotation(FRotator(0.f, To.Rotation().Yaw, 0.f));
 	}
+}
+
+// ------------------------------------------------------------------ ACoHMissionMap
+ACoHMissionMap::ACoHMissionMap()
+{
+	bReplicates = true;
+	bAlwaysRelevant = true;
+	SetReplicatingMovement(false);
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+}
+
+void ACoHMissionMap::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACoHMissionMap, LevelPath);
+	DOREPLIFETIME(ACoHMissionMap, InstanceName);
+}
+
+void ACoHMissionMap::OnRep_Map()
+{
+	if (Streaming || LevelPath.IsEmpty() || InstanceName.IsEmpty()) return;
+	bool bOk = false;
+	// the same instance name on host and clients, so the level's actors match up
+	Streaming = ULevelStreamingDynamic::LoadLevelInstance(this, LevelPath, GetActorLocation(), FRotator::ZeroRotator, bOk, InstanceName);
+	UE_LOG(LogTemp, Log, TEXT("CoH mission map: %s as %s at %s: %s"), *LevelPath, *InstanceName, *GetActorLocation().ToCompactString(), bOk ? TEXT("loading") : TEXT("FAILED"));
+}
+
+bool ACoHMissionMap::IsReady() const
+{
+	return Streaming && Streaming->IsLevelLoaded() && Streaming->IsLevelVisible();
+}
+
+void ACoHMissionMap::EndPlay(const EEndPlayReason::Type Reason)
+{
+	if (Streaming)
+	{
+		Streaming->SetShouldBeLoaded(false);
+		Streaming->SetShouldBeVisible(false);
+		Streaming->SetIsRequestingUnloadAndRemoval(true);
+		Streaming = nullptr;
+	}
+	Super::EndPlay(Reason);
 }
 
 // ------------------------------------------------------------------ ACoHStoryDirector
@@ -645,12 +802,26 @@ void ACoHStoryDirector::Tick(float Delta)
 		if (!M.Hero.IsValid())
 		{
 			for (auto& F : M.Foes) if (F.IsValid()) F->Destroy();
-			for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
-			if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
+			FreeMission(M);
 			Missions.RemoveAt(i);
 			continue;
 		}
-		if (M.bEntered) CheckMission(M);
+		if (M.bLoading)
+		{
+			if (!M.Map.IsValid()) { M.bLoading = false; SpawnOutdoor(M); continue; }
+			if (!M.Map->IsReady())
+			{
+				if (Now > M.LoadStarted + 60.0) { UE_LOG(LogTemp, Warning, TEXT("CoH story: map %s did not load in 60 s: mission at the door"), *M.MapId); M.Map->Destroy(); }
+				continue;
+			}
+			if (M.ReadyAt <= 0) { M.ReadyAt = Now + 1.5; continue; }   // a moment for clients to stream it in too
+			if (Now < M.ReadyAt) continue;
+			M.bLoading = false;
+			PopulateIndoor(M);
+			TeleportHero(M, true);
+			continue;
+		}
+		if (M.bEntered && !M.bFinished) CheckMission(M);
 	}
 }
 
@@ -713,69 +884,226 @@ static TArray<FString> CoHStoryRoll(const UCoHGameRules* R, const FString& Group
 	return Out;
 }
 
+ACoHCombatEnemy* ACoHStoryDirector::SpawnFoe(FMission& M, const FString& Villain, const FVector& At, const FString& Display, int32 Level, int32 GroupId)
+{
+	TActorIterator<ACoHEnemySpawner> Spawner(GetWorld());
+	if (!Spawner) return nullptr;
+	const FRotator Rot(0.f, FMath::FRandRange(-180.f, 180.f), 0.f);
+	ACoHCombatEnemy* E = Spawner->SpawnKitVillain(Villain, Level, At, Rot);
+	if (!E) return nullptr;
+	E->GroupId = GroupId;
+	if (!Display.IsEmpty() && E->Powers && M.Hero.IsValid()) E->Powers->DisplayName = M.Hero->Fill(Display);
+	M.Foes.Add(E);
+	return E;
+}
+
+void ACoHStoryDirector::SpawnGroupAt(FMission& M, const FString& Group, const TArray<FVector>& Spots, const FVector& Center, int32 Minions, bool bLt, int32 Level)
+{
+	const UCoHGameRules* R = UCoHGameRules::Get(this);
+	if (!R) return;
+	const int32 GroupId = NextGroupId++;
+	const TArray<FString> Min = CoHStoryRoll(R, Group, TEXT("Minion"), Level);
+	const TArray<FString> Lt = CoHStoryRoll(R, Group, TEXT("Lieutenant"), Level);
+	int32 Used = 0;
+	auto Where = [&](float Radius)
+	{
+		if (Spots.IsValidIndex(Used)) return Spots[Used++];
+		FVector P; return RandomSpot(Center, Radius, P) ? P : Center;
+	};
+	for (int32 i = 0; i < Minions && Min.Num(); ++i) SpawnFoe(M, Min[FMath::RandRange(0, Min.Num() - 1)], Where(350.f), FString(), Level, GroupId);
+	if (bLt && Lt.Num()) SpawnFoe(M, Lt[FMath::RandRange(0, Lt.Num() - 1)], Where(250.f), FString(), Level, GroupId);
+}
+
+int32 ACoHStoryDirector::FreeSlot() const
+{
+	for (int32 Slot = 0;; ++Slot)
+		if (!Missions.ContainsByPredicate([&](const FMission& M) { return M.Slot == Slot; })) return Slot;
+}
+
 void ACoHStoryDirector::EnterMission(UCoHStoryComponent* For, const FString& TaskId)
 {
 	FMission* M = Find(For, TaskId);
 	const UCoHStory* S = UCoHStory::Get(this);
-	const UCoHGameRules* R = UCoHGameRules::Get(this);
 	const FCoHStoryTask* T = S ? S->Task(TaskId) : nullptr;
 	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
-	if (!M || !T || !R || !Hero || M->bEntered) return;
-	TActorIterator<ACoHEnemySpawner> Spawner(GetWorld());
-	if (!Spawner) { UE_LOG(LogTemp, Warning, TEXT("CoH story: no enemy spawner: mission %s has no villains"), *TaskId); return; }
+	if (!M || !T || !Hero) return;
+	if (M->bEntered)
+	{
+		// back in through the door of a mission still running inside
+		if (M->Map.IsValid() && !M->bLoading && !M->bFinished) TeleportHero(*M, true);
+		return;
+	}
 	M->bEntered = true;
-	if (M->DoorMarker.IsValid()) M->DoorMarker->Destroy();
+	const FCoHMissionMap* Map = S->PickMap(*T, FMath::Clamp(For->HeroLevel(), 1, 50));
+	if (!Map) { if (M->DoorMarker.IsValid()) M->DoorMarker->Destroy(); SpawnOutdoor(*M); return; }
+	M->Slot = FreeSlot();
+	M->MapId = Map->Id;
+	M->Origin = FVector(M->Slot * MissionSlotSpacing, 0.f, -MissionDepth) - Map->Start;     // the map's start ends up at the slot point
+	FActorSpawnParameters P; P.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ACoHMissionMap* MA = GetWorld()->SpawnActor<ACoHMissionMap>(M->Origin, FRotator::ZeroRotator, P);
+	if (!MA) { SpawnOutdoor(*M); return; }
+	MA->LevelPath = Map->Level();
+	MA->InstanceName = FString::Printf(TEXT("CoHMission_%d_%s"), M->Slot, *Map->Id);
+	MA->OnRep_Map();
+	M->Map = MA;
+	M->bLoading = true;
+	M->ReadyAt = 0;
+	M->LoadStarted = GetWorld()->GetTimeSeconds();
+	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s loads indoor map %s (%s, %d min) in slot %d"), *TaskId, *Map->Id, *Map->Set, Map->Length, M->Slot);
+}
+
+void ACoHStoryDirector::SpawnOutdoor(FMission& M)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	UCoHStoryComponent* For = M.Hero.Get();
+	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
+	if (!T || !Hero) return;
+	if (!TActorIterator<ACoHEnemySpawner>(GetWorld())) { UE_LOG(LogTemp, Warning, TEXT("CoH story: no enemy spawner: mission %s has no villains"), *M.Task); return; }
+	if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
 	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
 	const FString Group = T->MissionGroup.IsEmpty() ? TEXT("Hellions") : T->MissionGroup;
-	const int32 GroupId = NextGroupId++;
-	auto SpawnOne = [&](const FString& Villain, const FVector& At, const FString& Display) -> ACoHCombatEnemy*
-	{
-		const FRotator Rot(0.f, FMath::FRandRange(-180.f, 180.f), 0.f);
-		ACoHCombatEnemy* E = Spawner->SpawnKitVillain(Villain, Level, At, Rot);
-		if (!E) return nullptr;
-		E->GroupId = GroupId;
-		if (!Display.IsEmpty() && E->Powers) E->Powers->DisplayName = For->Fill(Display);
-		M->Foes.Add(E);
-		return E;
-	};
-	auto SpawnGroup = [&](const FString& G, const FVector& Center, int32 Minions, bool bLt)
-	{
-		const TArray<FString> Min = CoHStoryRoll(R, G, TEXT("Minion"), Level);
-		const TArray<FString> Lt = CoHStoryRoll(R, G, TEXT("Lieutenant"), Level);
-		for (int32 i = 0; i < Minions && Min.Num(); ++i)
-		{
-			FVector P; if (!RandomSpot(Center, 350.f, P)) P = Center;
-			SpawnOne(Min[FMath::RandRange(0, Min.Num() - 1)], P, FString());
-		}
-		if (bLt && Lt.Num()) { FVector P; if (!RandomSpot(Center, 250.f, P)) P = Center; SpawnOne(Lt[FMath::RandRange(0, Lt.Num() - 1)], P, FString()); }
-	};
+	const TArray<FVector> None;
 	// the mission's own spawns (bosses, patrols), then filler groups by map length
 	int32 Groups = FMath::Clamp(T->MapLength / 10, 2, 5) + (T->bLong ? 1 : 0);
 	for (const FCoHStorySpawn& Sp : T->Spawns)
 	{
 		const FString G = Sp.Group.IsEmpty() ? Group : Sp.Group;
-		FVector C; if (!RandomSpot(M->Door, 2500.f, C)) C = M->Door;
+		FVector C; if (!RandomSpot(M.Door, 2500.f, C)) C = M.Door;
 		if (!Sp.Villain.IsEmpty())
 		{
-			if (ACoHCombatEnemy* B = SpawnOne(Sp.Villain, C, Sp.Display)) M->Boss = B;
-			SpawnGroup(G, C, 2, false);
+			if (ACoHCombatEnemy* B = SpawnFoe(M, Sp.Villain, C, Sp.Display, Level, NextGroupId++)) M.Boss = B;
+			SpawnGroupAt(M, G, None, C, 2, false, Level);
 		}
-		else for (int32 i = 0; i < FMath::Min(Sp.Count, 3); ++i) { FVector P; if (!RandomSpot(M->Door, 2500.f, P)) P = C; SpawnGroup(G, P, 3, true); }
+		else for (int32 i = 0; i < FMath::Min(Sp.Count, 3); ++i) { FVector P; if (!RandomSpot(M.Door, 2500.f, P)) P = C; SpawnGroupAt(M, G, None, P, 3, true, Level); }
 		--Groups;
 	}
-	for (int32 i = 0; i < Groups; ++i) { FVector C; if (!RandomSpot(M->Door, 3000.f, C)) C = M->Door; SpawnGroup(Group, C, 3, i % 2 == 0); }
+	for (int32 i = 0; i < Groups; ++i) { FVector C; if (!RandomSpot(M.Door, 3000.f, C)) C = M.Door; SpawnGroupAt(M, Group, None, C, 3, i % 2 == 0, Level); }
 	// objectives to click (crates, computers, hostages...)
 	for (int32 o = 0; o < T->Objectives.Num(); ++o)
 		for (int32 n = 0; n < T->Objectives[o].Number; ++n)
 		{
-			FVector P; if (!RandomSpot(M->Door, 2500.f, P)) continue;
-			ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, P, Hero, T->Objectives[o].Display.IsEmpty() ? T->Objectives[o].Name : T->Objectives[o].Display, TaskId);
-			if (Mk) { Mk->Objective = o; M->Objectives.Add(Mk); ++M->ObjectivesLeft; }
+			FVector P; if (!RandomSpot(M.Door, 2500.f, P)) continue;
+			ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, P, Hero, T->Objectives[o].Display.IsEmpty() ? T->Objectives[o].Name : T->Objectives[o].Display, M.Task);
+			if (Mk) { Mk->Objective = o; M.Objectives.Add(Mk); ++M.ObjectivesLeft; }
 		}
 	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s started at the door: %d villains (%s, level %d), %d objectives"),
-		*TaskId, M->Foes.Num(), *Group, Level, M->ObjectivesLeft);
+		*M.Task, M.Foes.Num(), *Group, Level, M.ObjectivesLeft);
 }
 
+void ACoHStoryDirector::PopulateIndoor(FMission& M)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	const FCoHMissionMap* Map = S ? S->Map(M.MapId) : nullptr;
+	UCoHStoryComponent* For = M.Hero.Get();
+	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
+	if (!T || !Map || !Hero) return;
+	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
+	const FString Group = T->MissionGroup.IsEmpty() ? TEXT("Hellions") : T->MissionGroup;
+	// encounter places by rank; each used once
+	TArray<int32> Free;
+	for (int32 i = 0; i < Map->Encounters.Num(); ++i) Free.Add(i);
+	auto Take = [&](const FString& Rank) -> const FCoHMapSpot*
+	{
+		TArray<int32> Match;
+		for (int32 i : Free)
+		{
+			const FString& R = Map->Encounters[i].Rank;
+			if (Rank.IsEmpty() || Rank == TEXT("Any") || R == Rank) Match.Add(i);
+		}
+		if (Match.Num() == 0) for (int32 i : Free) if (Map->Encounters[i].Rank != TEXT("Lobby")) Match.Add(i);
+		if (Match.Num() == 0) Match = Free;
+		if (Match.Num() == 0) return nullptr;
+		const int32 Pick = Match[FMath::RandRange(0, Match.Num() - 1)];
+		Free.Remove(Pick);
+		return &Map->Encounters[Pick];
+	};
+	auto ToWorld = [&](const FVector& Local) { return M.Origin + Local; };
+	auto Spots = [&](const FCoHMapSpot& E) { TArray<FVector> Out; for (const FVector& V : E.Spots) Out.Add(ToWorld(V)); return Out; };
+	for (const FCoHStorySpawn& Sp : T->Spawns)
+	{
+		const FString G = Sp.Group.IsEmpty() ? Group : Sp.Group;
+		if (Sp.Placement == TEXT("Lobby") && Sp.Villain.Contains(TEXT("Marker"))) continue;   // invisible script helpers
+		for (int32 c = 0; c < FMath::Clamp(Sp.Count, 1, 4); ++c)
+		{
+			const FCoHMapSpot* E = Take(Sp.Placement);
+			if (!E) break;
+			TArray<FVector> At = Spots(*E);
+			const FVector C = ToWorld(E->Pos);
+			if (!Sp.Villain.IsEmpty())
+			{
+				const FVector BossAt = At.Num() ? At[0] : C;
+				if (At.Num()) At.RemoveAt(0);
+				if (ACoHCombatEnemy* B = SpawnFoe(M, Sp.Villain, BossAt, Sp.Display, Level, NextGroupId++)) M.Boss = B;
+				SpawnGroupAt(M, G, At, C, 2, false, Level);
+			}
+			else SpawnGroupAt(M, G, At, C, 3, true, Level);
+		}
+	}
+	// the rest of the map's mission encounters (as the original fills them), up to MaxFillerGroups
+	TArray<int32> Fill;
+	for (int32 i : Free) if (Map->Encounters[i].Rank != TEXT("Lobby") && (Map->Encounters[i].Kind.IsEmpty() || Map->Encounters[i].Kind == TEXT("Mission"))) Fill.Add(i);
+	for (int32 n = 0; n < FMath::Min(MaxFillerGroups, Fill.Num()); ++n)
+	{
+		const int32 k = FMath::RandRange(n, Fill.Num() - 1);
+		Fill.Swap(n, k);
+		const FCoHMapSpot& E = Map->Encounters[Fill[n]];
+		SpawnGroupAt(M, Group, Spots(E), ToWorld(E.Pos), 2 + (n % 3), n % 2 == 0, Level);
+	}
+	// objectives at the map's item / person spots, Back and Middle rooms first
+	TSet<const FCoHMapSpot*> UsedSpots;
+	for (int32 o = 0; o < T->Objectives.Num(); ++o)
+	{
+		const FCoHStoryObjective& Ob = T->Objectives[o];
+		for (int32 n = 0; n < Ob.Number; ++n)
+		{
+			const FCoHMapSpot* Best = nullptr; int32 BestScore = -1;
+			for (const FString& Kind : { Ob.Location, FString(TEXT("ItemFloor")), FString(TEXT("ItemAgainstWall")), FString(TEXT("Person")) })
+			{
+				const TArray<FCoHMapSpot>* L = Map->Objectives.Find(Kind.IsEmpty() ? TEXT("ItemFloor") : Kind);
+				if (!L) continue;
+				for (const FCoHMapSpot& Sp : *L)
+				{
+					if (UsedSpots.Contains(&Sp)) continue;
+					const int32 Score = (Sp.Rank == TEXT("Back") ? 3 : Sp.Rank == TEXT("Middle") ? 2 : Sp.Rank == TEXT("Front") ? 1 : 0) * 10 + FMath::RandRange(0, 9);
+					if (Score > BestScore) { BestScore = Score; Best = &Sp; }
+				}
+				if (Best) break;
+			}
+			FVector P;
+			if (Best) { UsedSpots.Add(Best); P = ToWorld(Best->Pos); }
+			else if (const FCoHMapSpot* E = Take(TEXT("Back"))) P = ToWorld(E->Pos);
+			else continue;
+			ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, P, Hero, Ob.Display.IsEmpty() ? Ob.Name : Ob.Display, M.Task);
+			if (Mk) { Mk->Objective = o; M.Objectives.Add(Mk); ++M.ObjectivesLeft; }
+		}
+	}
+	M.ExitMarker = SpawnMarker(ECoHMarkerKind::Exit, ToWorld(Map->Exit), Hero, TEXT("Exit"), M.Task);
+	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s inside %s: %d villains (%s, level %d), %d objectives"),
+		*M.Task, *M.MapId, M.Foes.Num(), *Group, Level, M.ObjectivesLeft);
+}
+
+void ACoHStoryDirector::TeleportHero(FMission& M, bool bIn)
+{
+	UCoHStoryComponent* For = M.Hero.Get();
+	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHMissionMap* Map = S ? S->Map(M.MapId) : nullptr;
+	if (!Hero) return;
+	if (bIn && Map)
+	{
+		Hero->TeleportTo(M.Origin + Map->Start + FVector(0, 0, 100.f), FRotator(0.f, Map->StartYaw, 0.f));
+		M.bInside = true;
+	}
+	else
+	{
+		FVector At = M.Door + FVector(0, 0, 100.f);
+		FVector G; if (Ground(M.Door, G)) At = G + FVector(0, 0, 100.f);
+		Hero->TeleportTo(At, Hero->GetActorRotation());
+		M.bInside = false;
+	}
+}
 void ACoHStoryDirector::UseObjective(UCoHStoryComponent* For, ACoHMissionMarker* Marker)
 {
 	FMission* M = Marker ? Find(For, Marker->Task) : nullptr;
@@ -814,8 +1142,33 @@ void ACoHStoryDirector::CheckMission(FMission& M)
 	if (!bDone) return;
 	UCoHStoryComponent* Hero = M.Hero.Get();
 	const FString Task = M.Task;
+	if (M.Map.IsValid() && M.bInside)
+	{
+		// done inside: the task completes now, the hero walks out through the exit
+		M.bFinished = true;
+		for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
+		M.Objectives.Reset();
+		if (Hero) Hero->CompleteTask(Task, T->Complete);
+		return;
+	}
 	CloseMission(Hero, Task);
 	if (Hero) Hero->CompleteTask(Task, T->Complete);
+}
+
+void ACoHStoryDirector::ExitMission(UCoHStoryComponent* For, const FString& TaskId)
+{
+	FMission* M = Find(For, TaskId);
+	if (!M) return;
+	TeleportHero(*M, false);
+	if (M->bFinished) CloseMission(For, TaskId);
+}
+
+void ACoHStoryDirector::FreeMission(FMission& M)
+{
+	for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
+	if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
+	if (M.ExitMarker.IsValid()) M.ExitMarker->Destroy();
+	if (M.Map.IsValid()) M.Map->Destroy();     // unloads the level here and on clients
 }
 
 void ACoHStoryDirector::CloseMission(UCoHStoryComponent* For, const FString& TaskId)
@@ -824,10 +1177,11 @@ void ACoHStoryDirector::CloseMission(UCoHStoryComponent* For, const FString& Tas
 	{
 		FMission& M = Missions[i];
 		if (M.Hero.Get() != For || M.Task != TaskId) continue;
-		for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
-		if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
-		// the mission's villains (down or not) clear away half a minute later
-		for (auto& F : M.Foes) if (F.IsValid()) F->SetLifeSpan(30.f);
+		if (M.bInside) TeleportHero(M, false);      // abandoned inside: out to the door first
+		const bool bIndoor = M.Map.IsValid();
+		FreeMission(M);
+		// the mission's villains clear away: at once with their map, else half a minute later
+		for (auto& F : M.Foes) if (F.IsValid()) { if (bIndoor) F->Destroy(); else F->SetLifeSpan(30.f); }
 		Missions.RemoveAt(i);
 	}
 }
@@ -962,12 +1316,13 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 			FCoHDialogPage P;
 			P.Title = T->MapSet.IsEmpty() ? TEXT("Mission") : T->MapSet;
 			P.Body = Fill(T->Entry.IsEmpty() ? T->Active : T->Entry);
-			P.Body += TEXT("\n\n(The indoor mission maps are not in yet: this mission plays out here, around the door.)");
+			if (D->IsInside(this, Mk->Task)) P.Body = TEXT("Go back inside?");
 			P.Labels = { TEXT("Enter"), TEXT("Not now") };
 			P.Actions = { TEXT("enter|") + Mk->Task, TEXT("close") };
 			Show(P);
 		}
 		else if (Mk->Kind == ECoHMarkerKind::Objective) D->UseObjective(this, Mk);
+		else if (Mk->Kind == ECoHMarkerKind::Exit) D->ExitMission(this, Mk->Task);
 	}
 }
 
@@ -986,7 +1341,7 @@ void UCoHStoryComponent::ServerChoose_Implementation(const FString& Action)
 	else if (Verb == TEXT("enter"))
 	{
 		if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld())) D->EnterMission(this, A1);
-		FCoHDialogPage P; P.Title = TEXT("Mission"); P.Body = TEXT("Defeat the villains here and complete the objectives.");
+		FCoHDialogPage P; P.Title = TEXT("Mission"); P.Body = TEXT("Defeat the villains and complete the objectives. The exit post inside takes you back to the door.");
 		P.Labels = { TEXT("Go") }; P.Actions = { TEXT("close") };
 		Show(P);
 	}

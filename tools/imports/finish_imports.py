@@ -23,6 +23,8 @@ Convert stages (no editor needed; each takes seconds to a few minutes):
                (tools/story/world_points.py) and the compiled contacts, tasks,
                arcs and reward tables (tools/story/story_game.py)
                -> out/story/story_game.json
+  missions     indoor mission maps the tasks use, 2 layouts per map set and
+               length (tools/missions/mission_maps.py) -> out/missions
   characters   the 120 hero presets and every contact/mission NPC model
                (coh2unreal.player models) -> out/player/models, models.json
 
@@ -34,6 +36,8 @@ and resume at any time):
   ue_presets   hero presets and contacts on player bodies
                -> /Game/CoH/Player/Presets/<body>/<name>
   ue_npcs      the other NPC models, each on its own skeleton -> /Game/CoH/NPCs
+  ue_missions  indoor mission maps, one level each -> /Game/Missions/L_<id>
+               (tools/missions/import_missions.py)
 
 Progress: finish_imports_state.json and one line per stage in
 finish_imports_log.txt, both in <out>. Re-running skips finished stages.
@@ -62,10 +66,11 @@ PIGG_CANDIDATES = [os.environ.get("COH_PIGGS", ""),
 UE_EXEC = os.path.join(REPO, "unreal", "scripts", "ue_exec.py")
 GS = os.path.join(REPO, "unreal", "scripts", "game_systems")
 NEEDED = ("texts/english", "scripts.loc/contacts", "scripts.loc/spawndefs",
-          "maps/city_zones", "defs/powers", "sequencers", "aiscript", "menu")
+          "maps/city_zones", "maps/missions", "object_library", "defs/powers", "sequencers",
+          "aiscript", "menu")
 CONVERT = ["encounters", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
-           "characters"]
-UNREAL = ["ue_fx", "ue_enemies", "ue_presets", "ue_npcs"]
+           "missions", "characters"]
+UNREAL = ["ue_fx", "ue_enemies", "ue_missions", "ue_presets", "ue_npcs"]
 
 
 def now():
@@ -161,6 +166,9 @@ def convert(stage, data, piggs):
             return False, last_line(p, "Error")
         p = run([PY, "tools/story/story_game.py", o("story")])
         return p.returncode == 0, last_line(p, "contacts placed")
+    if stage == "missions":
+        p = run([PY, "tools/missions/mission_maps.py", data, piggs, o("missions")])
+        return p.returncode == 0, last_line(p, "missions.json")
     if stage == "characters":
         npcs = json.load(open(o("story", "npcs.json"), encoding="utf-8"))
         models = sorted({c["a"][0] for rel, t in npcs.items() for d in t
@@ -241,6 +249,9 @@ def unreal_stage(stage):
             if word not in line:
                 return False, line
         return False, "gave up after 200 batches"
+    if stage == "ue_missions":
+        p = run([PY, "tools/missions/import_missions.py", "--out", OUT], timeout=48 * 3600)
+        return p.returncode == 0, last_line(p, "MISSIONS")
     raise ValueError(stage)
 
 
