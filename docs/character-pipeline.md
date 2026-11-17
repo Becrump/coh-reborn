@@ -1,0 +1,179 @@
+# Character pipeline (charpipe): local image-to-3D to a rigged, CoH-animatable character
+
+`tools/charpipe/` turns reference images of a character into a textured, rigged model that plays the original City of Heroes clips. It runs locally and unattended on Robert's PC (RTX 3070 8 GB), uses no paid services, and can be rerun to resume.
+
+```
+reference images ─► Hunyuan3D-2 shape ─► Hunyuan3D-Paint texture ─► auto-rig (shared 24-bone skeleton)
+   (1-4 views)       (2mini / 2mv)          (CPU offload)            + heat weights
+                                                                          │
+   preview PNGs ◄─ CoH idle/run/Brawl retarget ◄─ FBX + GLB (+ part slots) ◄─ rig cleanup
+```
+
+## Install (once)
+
+```
+bash tools/charpipe/install/install_hy3d.sh 2>&1 | tee C:/Users/rtcru/hy3d/install.log
+```
+
+It installs into `C:\Users\rtcru\hy3d\` (outside the repo):
+- Python 3.12 venv (uv), torch 2.6.0+cu126, Tencent-Hunyuan/Hunyuan3D-2 (commit in `hy3d_commit.txt`), transformers 4.46.3 / diffusers 0.31.0. Newer transformers renamed the DINOv2 weights, so the checkpoints fail to load.
+- `setup_cuda.sh`: a portable CUDA 12.6.3 toolkit assembled from NVIDIA's official redistributable zips (`cuda126\`, SHA-256 checked, no admin, no system changes).
+- `build_rasterizer.cmd`: compiles Hunyuan3D's `custom_rasterizer` for **sm_86** with VS 2022 Build Tools (v14.29 toolset). The prebuilt wheels that ship with ComfyUI wrappers are sm_89 (RTX 40-series) only and fail on a 3070 with `no kernel image is available`.
+- `mesh_processor` (CPU) comes prebuilt from 3D Gen Studio's ComfyUI-Hunyuan3DWrapper.
+- Model weights download on first use into `~/.cache/huggingface` (2mini 7 GB, 2mv 9 GB, paint + delight 18 GB). All of them are ungated.
+
+Requires Blender 5.2 and VS 2022 Build Tools with the C++ workload.
+
+## Use
+
+```
+tools\charpipe\charpipe.cmd <in_dir> <out_dir> [--only NAME] [--parts] [--wait] [--redo STEP] [--height 1.8]
+```
+
+- `<in_dir>/<character>/front.png` is required. Add `left.png`, `back.png` and `right.png` for multi-view (better proportions). Any single image works as the front. An optional `height.txt` sets the height in metres.
+- Make the inputs from an original CoH model: `blender -b --factory-startup -P tools/charpipe/bl_refviews.py -- <character.gltf> <in_dir>/<name>`, which renders the 4 orthographic T-pose views + `height.txt`. Concept art, Meshy renders or photos also work, best with a T-pose and plain background.
+- For Gemini / Tripo multi-view references in the MetaHuman A-pose (upper arms 52 deg below horizontal, legs 4 deg apart, 1024x1536, mid-grey, same ortho framing for front/left/back/right): `blender -b --factory-startup -P tools/charpipe/bl_refviews_apose.py -- <character.gltf> <out_dir> <name> [--nogear]`. `--nogear` hides the Hair and EyeDetail parts (CoH caps, hats, goggles, masks); bandanas baked into the Head texture stay.
+- MetaHuman Creator conform input from a rigged charpipe/Tripo character: `blender -b --factory-startup -P tools/charpipe/bl_mh_conform_prep.py -- <rigged.glb> <out_dir> <name>` writes a cm-scale, feet-at-origin, A-posed static FBX/OBJ with texture, plus a headless body-only variant.
+- Tripo downloads come out about 1 unit tall. Drop them in `C:\Users\rtcru\charpipe_test\tripo\in\` and double-click `tools/charpipe/tripo_normalize.cmd` (optional height argument, default 182 cm). File names pick the height: kid/lean 172, veteran 178, average 180, heavy/brawler 183, big/biker 193; `headless` puts the neck at 0.87 x height; gear names (bandana, cap, bat, shotgun...) get a typical real size. Output: `tripo\mh_ready\*.fbx` plus `normalize_log.txt`.
+- Copy `config.example.json` to `config.json` to change paths, VRAM thresholds or the face budget.
+
+Per character, in `<out_dir>/<character>/`:
+
+| Step | Output | Runs on | Time (3070) |
+|---|---|---|---|
+| shape | `shape.glb` (≤40k faces) | GPU, Hunyuan3D-2mini (1 view) / 2mv (2+ views) | ~3-4 min incl. model load |
+| texture | `textured.glb` | GPU, Hunyuan3D-Paint v2.0 turbo, CPU offload | see test run below |
+| rig | `rigged_raw.glb`, `autorig.json` | Blender (CPU) | ~15 s |
+| clean | `<name>.glb`, `cleanup.json` | Blender (CPU) | ~6 s |
+| export | `<name>.fbx` (+ `parts/<name>_<slot>.glb` with `--parts`) | Blender (CPU) | ~10 s |
+| preview | `preview/preview_{idle,run,brawl,head}.png` | Blender EEVEE (light GPU) | ~20 s |
+
+Each step is skipped when its output exists, so a rerun resumes. `--redo STEP` reruns from that step on. Logs: `<out_dir>/charpipe_log.txt` has one line per character and step (`OK` / `FAIL` / `SKIP` / `WAIT` with time and details), and `<character>/logs/<step>.log` holds the full output.
+
+### GPU guard
+
+Before every GPU step the pipeline checks for `UnrealEditor*.exe` (editor, `-Cmd`, or a `-game` copy) and for free VRAM in `nvidia-smi` (shape/texture need 6000 MB, preview 1500 MB). If either check fails:
+- without `--wait` it logs `WAIT <reason>` and exits with code 3;
+- with `--wait` it checks again every 3 minutes and starts as soon as the GPU is free.
+
+It **never closes or touches the Unreal editor**. Hunyuan3D cannot share 8 GB with an open editor.
+
+## The rig
+
+`bl_autorig.py` fits the 24-bone skeleton that Meshy uses (`Hips, Spine02, Spine01, Spine, neck, Head, Left/Right Shoulder/Arm/ForeArm/Hand/UpLeg/Leg/Foot/ToeBase`, plus `head_end`, `headfront`) to the mesh:
+- torso joints at fixed height fractions, centred on the body cross-section;
+- hands at the farthest arm point (works for T-pose and arms-down);
+- knees and ankles at the leg cross-section centres; toes at the most forward foot point.
+
+Weights come from Blender's automatic (heat) weighting, with envelope weights as the fallback.
+
+`rig_cleanup.py` then bakes scale, faces the model down -Y, grounds it, and fixes the weights: stray hand weights, plus limb isolation by surface distance, so hands never pull thigh or pocket skin and the left arm never moves the right. Because the bone names are Meshy's, the same files also clean Meshy rigs.
+
+`retarget2.py` plays CoH clips (family `coh`, male/skel_ready2) on it (family `meshy`). It has one shared bone map per body family, with elbow/knee hinge alignment, forearm twist from the thumb direction, hips scaled by leg length, and a ground pass that keeps run airtime. The same code drives the samples in `model-upgrade-samples` (Meshy Hellions on CoH clips, style packs).
+
+## Known limits
+
+- **No finger bones.** The skeleton has none, so hands keep the pose the generator made. Use references with closed fists for brawlers. CoH's finger curl (RING/F2/F1) is lost.
+- **Facing:** generated meshes come out facing -Y. If one comes out backwards, pass `--face-plus-y` to `bl_autorig.py`.
+- **Fused geometry:** arms-down references can fuse hands to thighs. The cleanup keeps the hands with the arms, but the fused faces still stretch. Use T-pose references.
+- **Joint fitting is heuristic.** Very wide costumes (capes, huge shoulder pads, long coats) can misplace shoulders or hips. Check `preview_brawl.png`; `autorig.json` lists every joint.
+- **Texture** uses the front image only: backs and sides are inferred. Multi-view reference images improve the shape, not yet the texture.
+- **Part slots** (`--parts`) are cut by dominant bone. Seams between parts of different characters need collars/cuffs or a common base body (see the seam log in `model-upgrade-samples/README.md`); in Unreal this maps to Mutable object groups.
+- **Weights** stay in the user cache, not the repo. Outputs are not committed.
+
+## Files
+
+| File | Runs in | Purpose |
+|---|---|---|
+| `charpipe.py` / `charpipe.cmd` | system Python | orchestration, resume, GPU guard, log |
+| `hy3d_gen.py` | hy3d venv | Hunyuan3D shape / texture |
+| `bl_refviews.py` | Blender | reference views from an original CoH model |
+| `bl_refviews_apose.py` | Blender | MetaHuman A-pose 4-view references (Gemini/Tripo), optional gear hidden |
+| `bl_mh_conform_prep.py` | Blender | A-posed cm-scale FBX/OBJ (+ headless) for MetaHuman Creator conform |
+| `bl_tripo_normalize.py` + `tripo_normalize.cmd` | Blender | batch: Tripo downloads (1 unit tall) -> MetaHuman-scale FBX in cm, feet at origin, +Y facing, A-pose if rigged; heights per build from the file name |
+| `bl_decimate.py` | Blender | weld + decimate dense generated meshes (Tripo) before rigging |
+| `bl_autorig.py` | Blender | skeleton fit + weights |
+| `rig_cleanup.py` | Blender | scale / facing / ground / weight fixes (also for Meshy rigs) |
+| `bl_export.py` | Blender | FBX for Unreal + part slots |
+| `bl_preview.py`, `common.py`, `retarget2.py` | Blender | CoH clip retarget + preview renders |
+| `install/install_hy3d.sh`, `install/setup_cuda.sh`, `install/build_rasterizer.cmd` | bash / cmd | one-time install |
+
+## Tripo downloads -> rigged, Unreal-ready (cleanup + rig)
+
+`bash tools/charpipe/tripo_rig.sh <download.glb|fbx> <work_dir> <name> [--headless] [--height-cm 182]`
+runs: `bl_tripo_clean.py` (join, weld seams, drop floaters < 0.3 %, outward normals, decimate to 50k tris,
+2K textures, size from the build, feet at origin) -> `bl_proxy_head.py` (headless bodies get a temporary
+head so the autorig fits neck/head; removed again later) -> `bl_autorig.py` -> `rig_cleanup.py` ->
+`bl_fingers.py` (30 finger bones; every finger joint now blends 50/50 with a smoothstep instead of hard
+steps, so fists fold round) -> `bl_weight_polish.py` (cut the proxy head, keep the stump collar on the
+chest, fix vertices the autorig left unweighted, 3 smoothing passes on hand/finger weights, wrist twist
+spread over the distal forearm, shoulder smoothing, max 4 influences) -> `bl_export.py` (FBX, cm).
+Gear: `bl_gear_fit.py <rigged.glb> <gear.glb> <out.glb> neck|head` fits a piece as its own skinned mesh
+on the same skeleton (Leader Pose in Unreal). The interior-face removal in the clean step is opt-in
+(`--interior`): on thin low-poly shells it punched holes.
+
+### Tripo website plan workflow (no API spend)
+
+1. Concepts go in `C:\Users\rtcru\charpipe_test\tripo\upload\<group>_<build>_<outfit>\` (see `UPLOAD.md` there).
+2. Generate on tripo3d.ai with the plan credits (HD, texture + PBR, no rig), save the GLB as `<folder name>.glb`
+   into `tripo\in\` (or send via the Blender bridge and save it from Blender).
+3. `tools/charpipe/tripo_watch.cmd` (or `python tools/charpipe/tripo_watch.py --once`) picks up each new file:
+   clean -> (proxy head) -> autorig -> cleanup -> fingers -> polish -> FBX -> CoH clip test renders.
+   Output `tripo\ue_ready\<name>.fbx` + `ue_ready\previews\<name>.jpg`; log `tripo\watch_log.txt`; already
+   processed files are skipped (`watch_state.json`); waits while CPU_HOLD.txt / GPU_HOLD.txt exist.
+
+## Heads and skin tone
+
+- `bl_head_swap.py <headless_rigged.glb> <head.glb> <out.glb>`: puts a library head on a headless body (neck =
+  narrowest slab of the head mesh, busts are cut there; sized from 3 cm inside the collar to the full height,
+  centred on the stump ring; weights neck -> Head). Test: Tripo head + 2 local heads, all play idle/Brawl/hit.
+- `bl_skin_tone.py <rigged.glb> <out_dir> <name> [--tones ...] [--de 16]`: skin mask per mesh = skin-likely
+  regions (arms, hands, shoulders, neck, head) AND skin colour (YCbCr) AND close (Lab) to the body's own bare
+  forearm colour; detail = luminance / median skin luminance. Writes `<name>_<mesh>_skinmask.png`
+  (R = mask, G = detail * 0.5) and tinted GLBs per tone. Unreal: one Material Instance parameter SkinTone
+  (Vector) shared by body and head materials: `BaseColor = lerp(Tex.rgb, SkinTone.rgb * (Mask.G * 2), Mask.R)`.
+  Known limits: blond/light-brown hair close to skin colour gets tinted; very dark tones show light halos at
+  the mask edge (needs a wider feather or edge darkening).
+
+## MAIN ROUTE (decided 2026-11-16): outfit bodies + swappable heads
+
+Separate clothing pieces did not fit reliably on other bodies (fit report: 34/66 pass, jackets worst), so the
+production route is:
+
+1. **Outfit bodies**: one **headless, fully dressed** Tripo export per outfit x build (clothes baked in, so they
+   always fit). Gemini: style block + character line from the variation sheet + the **headless** follow-up.
+   Name the download after its line, e.g. `hellions_heavy_trench_headless.glb`, drop it in `Tripo Exports\Hellions\`.
+2. **Heads**: the **head library** (24 bust prompts). Name downloads `head_<id>.glb` (e.g. `head_H07.glb`) in
+   `Tripo Exports\Heads\`. Attached at the neck by `bl_head_swap.py`.
+3. **Skin tone**: one SkinTone colour for body + head (`bl_skin_tone.py`), so any head works on any body.
+4. **Gear**: rigid socket items only (caps, masks, face/neck bandanas, hair, chains, weapons): `gear_<item>.glb`.
+5. **Free variety**: outfit palette tints on the non-skin texture (`--outfit-tint h:s:v`), later bone-scale
+   heavier/thinner variants.
+
+`tripo_watch` rigs bodies (fingers, CoH tests, `ue_ready`), files heads into the head library and gear into the
+gear list, all registered in `charpipe_test/characters_lib.json`; `random_character.py <lib> <out> --count N
+--render` assembles random characters (body + head + tone + tint + gear) with idle/Brawl previews.
+
+Experimental / shelved (kept in the repo): `bl_cloth_autofit.py`, `bl_fit_report.py`, `bl_wardrobe_make.py`,
+`bl_wardrobe_assemble.py`, `bl_wardrobe_to_mh.py`, `bl_kitbash_*`: separate clothing pieces. `tripo_watch` logs and
+skips clothing pieces.
+
+## MAIN ROUTE (16 Nov 2026, evening): COMPLETE characters only
+
+Supersedes the "outfit bodies + heads" route above: automatic assembly (head swap, auto gear, skin recolouring,
+random assembly) looked wrong at close range and is shelved as experimental (kept in the repo, off by default).
+
+1. **One complete Tripo character per variant**: head, outfit and integrated gear in one export; full body,
+   A-pose (MetaHuman bind pose), plain grey background. Gemini: the style block (with "bare face" removed if the
+   character should wear its mask / bandana / cap as part of the model) + one character line; no headless follow-up.
+2. **Rigging**: either Robert rigs in AccuRig 2 and exports FBX to `Tripo Exports\Rigged\` (never re-rigged:
+   `tripo_watch` only copies it to `ue_ready`, checks size / facing / skeleton with `bl_rig_check.py`, detects the
+   bone names with `skeleton_detect.py` (AccuRig CC_Base_, UE / MetaHuman, Mixamo, charpipe) and runs the CoH
+   clip tests + close-ups), or `tripo_watch` auto-rigs complete models dropped elsewhere in `Tripo Exports`.
+3. **Checks before anything is called good**: idle / run / Brawl / hit / death plus close-ups of the face, both
+   hands, the Brawl fist and the shoulders at Brawl (`ue_ready\previews\<name>.jpg`).
+4. **Variety**: more complete characters; optional manual colour tint per character with a before/after preview
+   (`bl_tint_preview.py --hue --sat --val [--protect-skin]`, only colours change); animation / idle sets.
+5. Gear: weapons on hand sockets set up once per character in Unreal; no automatic placement.
+
+`tripo_watch --all-types` re-enables the experimental head / gear / clothing processing.
