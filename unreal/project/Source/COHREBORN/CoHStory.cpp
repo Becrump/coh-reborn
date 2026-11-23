@@ -1,4 +1,5 @@
 #include "CoHStory.h"
+#include "CoHNavWindows.h"
 #include "CoHCombat.h"
 #include "CoHHeroProgress.h"
 #include "CoHItems.h"
@@ -2014,6 +2015,9 @@ void UCoHStoryComponent::BeginPlay()
 		Panel = SNew(SCoHStoryPanel).Owner(this);
 		PanelHost = SNew(SWeakWidget).PossiblyNullContent(Panel);
 		GEngine->GameViewport->AddViewportWidgetContent(PanelHost.ToSharedRef(), 8);
+		Nav = SNew(SCoHNavPanel).Owner(this);
+		NavHost = SNew(SWeakWidget).PossiblyNullContent(Nav);
+		GEngine->GameViewport->AddViewportWidgetContent(NavHost.ToSharedRef(), 7);
 	}
 	// the host stands the contacts in the world (one director per map)
 	if (GetOwnerRole() == ROLE_Authority && GetWorld() && !ACoHStoryDirector::Get(GetWorld()))
@@ -2024,8 +2028,13 @@ void UCoHStoryComponent::EndPlay(const EEndPlayReason::Type Reason)
 {
 	if (PanelHost.IsValid() && GEngine && GEngine->GameViewport) GEngine->GameViewport->RemoveViewportWidgetContent(PanelHost.ToSharedRef());
 	PanelHost.Reset(); Panel.Reset();
+	if (NavHost.IsValid() && GEngine && GEngine->GameViewport) GEngine->GameViewport->RemoveViewportWidgetContent(NavHost.ToSharedRef());
+	NavHost.Reset(); Nav.Reset();
 	Super::EndPlay(Reason);
 }
+
+void UCoHStoryComponent::ToggleNavWindow(const FString& Tab) { if (Nav.IsValid()) Nav->Toggle(Tab); }
+void UCoHStoryComponent::ToggleCompass() { if (Nav.IsValid()) Nav->ToggleCompass(); }
 
 FString UCoHStoryComponent::Fill(const FString& Text, const FCoHStoryContact* C) const
 {

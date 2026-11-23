@@ -487,6 +487,13 @@ public:
 	/** The task force line of the mission list (replicated; empty: not on one). */
 	UPROPERTY(Replicated) FString TaskForceLine;
 	UPROPERTY(Replicated) FVector TaskForceWaypoint = FVector::ZeroVector;
+	/** The nav windows on the player's PC (CoHNavWindows.h): "contacts", "missions", "clues",
+	 *  "souvenirs", "badges"; the open one again closes it. */
+	void ToggleNavWindow(const FString& Tab);
+	void ToggleCompass();
+	/** The waypoint the player set in the contacts or missions window (this PC only; zero: none). */
+	FVector NavWaypoint = FVector::ZeroVector;
+	FString NavWaypointName;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
@@ -521,4 +528,6 @@ private:
 	// the player's own PC
 	TSharedPtr<SCoHStoryPanel> Panel;
 	TSharedPtr<class SWidget> PanelHost;
+	TSharedPtr<class SCoHNavPanel> Nav;
+	TSharedPtr<class SWidget> NavHost;
 };

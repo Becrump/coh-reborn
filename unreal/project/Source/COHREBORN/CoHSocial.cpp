@@ -226,9 +226,15 @@ void UCoHSocial::Submit(const FString& Line)
 		if (Rest.Split(TEXT(","), &Who, &Text)) ServerSay(ECoHChat::Tell, Who.TrimStartAndEnd(), Text.TrimStartAndEnd());
 		else { Lines.Add({ ECoHChat::System, FString(), TEXT("Use /tell name, message") }); ++LinesVersion; }
 	}
+	else if (Cmd == TEXT("contacts") || Cmd == TEXT("missions") || Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("badges") || Cmd == TEXT("nav"))
+	{
+		// the nav windows (CoHNavWindows.h); /nav shows or hides the compass
+		if (UCoHStoryComponent* St = UCoHStoryComponent::Of(GetOwner())) { if (Cmd == TEXT("nav")) St->ToggleCompass(); else St->ToggleNavWindow(Cmd); }
+	}
+	else if (Cmd == TEXT("badgelist") || Cmd == TEXT("cluelist") || Cmd == TEXT("souvenirlist"))
+		ServerCommand(Cmd.LeftChop(4) + TEXT("s"), Rest);   // the old chat lists
 	else if (Cmd == TEXT("invite") || Cmd == TEXT("i") || Cmd == TEXT("accept") || Cmd == TEXT("decline") || Cmd == TEXT("leave")
-		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges")
-		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("respec") || Cmd == TEXT("releasepets") || Cmd == TEXT("release")
+		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("respec") || Cmd == TEXT("releasepets") || Cmd == TEXT("release")
 		|| Cmd == TEXT("zoneevent"))
 		ServerCommand(Cmd == TEXT("i") ? FString(TEXT("invite")) : Cmd, Rest);
 	else if (Cmd == TEXT("inventions") || Cmd == TEXT("invent") || Cmd == TEXT("salvage") || Cmd == TEXT("recipes"))
