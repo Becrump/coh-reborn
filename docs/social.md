@@ -42,3 +42,16 @@ there wake at the start point until it has a hospital). A teammate's resurrect
 power (any power with a `kDead...` target, such as Empathy's Resurrect) or an
 Awaken / Bounce Back / Restoration inspiration (25 / 50 / 100%) brings the hero
 back up where it lies; so does Rise of the Phoenix.
+
+## Sidekick and exemplar
+
+As the original: on a team every hero fights at the team leader's level.
+- A hero more than one level below the leader is **sidekicked** to one below
+  the leader (HP, damage, to-hit and enhancement strength all at that level).
+- A hero above the leader is **exemplared** down to the leader's level. It keeps
+  the powers it picked up to 5 levels above that level; later picks are off
+  until it leaves the team.
+- Defeat XP and influence are worked out at the combat level. Contacts, the
+  trainer and enhancement slots still use the hero's own level.
+- Levels change when someone joins or leaves, the leader changes, or the leader
+  trains. The hero sees "Sidekicked to level N" / "Exemplared to level N".

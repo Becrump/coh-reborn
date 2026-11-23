@@ -29,6 +29,10 @@ public:
 	/** Host: the player's hero file name (sent on joining); names the host's backup folder. */
 	UPROPERTY(Transient) FString BackupName;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CoH|Hero") bool bHasRecord = false;
+	/** Sidekicked up / exemplared down to the team leader's level (0: the hero's own level). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CoH|Hero") int32 CombatLevel = 0;
+	/** The level the hero fights at: its combat level on a team, else its own. */
+	int32 EffectiveLevel() const { return CombatLevel > 0 ? CombatLevel : Hero.Level; }
 
 	/** Server: load a hero file and grant its powers. */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") bool LoadHeroFile(const FString& File);
