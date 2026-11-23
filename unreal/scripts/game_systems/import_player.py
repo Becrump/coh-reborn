@@ -164,7 +164,11 @@ elif step == "npcs":
     # own skeleton under /Game/CoH/NPCs/<name>; GS_LIMIT new imports per call
     ms = models()
     limit = int(globals().get("GS_LIMIT") or 0)
-    todo = sorted(n for n, m in ms.items() if not m.get("body"))
+    # models that imported no skeletal mesh once (rigid props, power effects)
+    # are recorded and skipped, so they are not retried in every batch
+    skip_p = os.path.join(OUT, "npcs_no_skeletal_mesh.json")
+    skip = set(json.load(open(skip_p))) if os.path.isfile(skip_p) else set()
+    todo = sorted(n for n, m in ms.items() if not m.get("body") and n not in skip)
     done = 0
     for name in todo:
         dest = "/Game/CoH/NPCs/%s" % name
@@ -176,7 +180,11 @@ elif step == "npcs":
         rename_clips(dest)
         save(dest)
         done += 1
-        print("NPC", name, "ok" if ok and assets_in(dest, "SkeletalMesh") else "FAILED")
+        got = bool(ok and assets_in(dest, "SkeletalMesh"))
+        print("NPC", name, "ok" if got else "FAILED")
+        if not got:
+            skip.add(name)
+            json.dump(sorted(skip), open(skip_p, "w"), indent=1)
     print("NPCS LEFT", sum(1 for n in todo if not assets_in("/Game/CoH/NPCs/%s" % n, "SkeletalMesh")))
 
 elif step == "anims":
