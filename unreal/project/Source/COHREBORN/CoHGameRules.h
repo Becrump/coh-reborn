@@ -224,11 +224,15 @@ struct FCoHEncounterActor
 	FString Group, Rank, Villain;     // Villain set: a named villain
 	int32 Count = 1, MinHeroes = 1, MaxHeroes = 8;
 	FString AIInactive, AIActive;
+	/** what it says idle and when it spots a hero: a var of the encounter's dialog file or a message id (chatter.json) */
+	FString SayInactive, SayAlerted;
 	TMap<int32, TArray<FString>> Rolls;   // level -> villains that slot can roll
 };
 struct FCoHEncounter
 {
 	FString Name, Kind;
+	/** the spawn definition's dialog file (spawndefs/dialog/hellions.dialog2), lower case */
+	FString Dialog;
 	int32 MinLevel = 1, MaxLevel = 1, MinTeam = 1, MaxTeam = 8, Spots = 1;
 	float Respawn = 300;
 	TArray<FCoHEncounterActor> Actors;
@@ -324,8 +328,14 @@ public:
 	/** the encounter list for a world position: the zone's own list in the one-world map, else Encounters */
 	const TArray<FCoHEncounter>& EncountersAt(const UWorld* World, const FVector& Pos) const;
 	TMap<FString, FCoHKitVillain> Villains;
+	/** Villain chatter (<out>/story/chatter.json, tools/story/chatter.py): a random line for a dialog var
+	 *  of a dialog file (or any file that has the var), or a message id ("K123"); empty: none. */
+	FString ChatterLine(const FString& DialogFile, const FString& Var) const;
+	TMap<FString, TMap<FString, TArray<FString>>> Chatter;
+	TMap<FString, FString> ChatterIds;
 
 private:
+	void LoadChatter(const FString& File);
 	void LoadPowerAnims(const FString& File, TMap<FName, FCoHPowerAnim>& Into);
 	void LoadHeroRules(const FString& File);
 	void LoadRewards(const FString& File);

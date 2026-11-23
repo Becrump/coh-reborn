@@ -35,3 +35,20 @@ Host test command: `coh.Story.Talk [name]` talks to a contact from anywhere (no 
 ## Not yet
 
 Team-shared missions, enhancement rewards and contact stores, task forces, newspaper/police-band missions, villain side, clues window, contact introductions (any contact talks to a hero in its level range).
+
+## Villain chatter (2026-11-23)
+
+Street villains talk as they did in the original. `tools/story/chatter.py <i24>/data <out>` (the
+`chatter` stage of `finish_imports.cmd convert`) reads the dialog files
+(`scripts.loc/spawndefs/dialog/*.dialog2`: 142 files, about 33,000 lines) and the message ids spawn
+definitions name directly, and writes `<out>/story/chatter.json`.
+
+- Zone encounters keep each actor's `dialog_inactive` / `dialog_alerted` and the encounter's `dialog`
+  file (`tools/zones/encounters.py`). `UCoHGameRules::ChatterLine` picks a random line of that var.
+- A villain says its idle line once when a hero first comes within 20 m, and its alert line when it
+  spots a hero. The line floats over its head and goes to local chat for heroes within 100 feet.
+- Mission spawns carry their actors' lines in `story_game.json` (`say`: idle, alert), with the task's
+  vars and the hero's name filled in: boss taunts, captors' threats.
+
+Not yet: Dialog_Completion and Dialog_ThankHero (rescued civilians thanking the hero; civilians are
+not in the game yet), and the original's boss health lines (BOSS_75HEALTH_DIALOG and the like).

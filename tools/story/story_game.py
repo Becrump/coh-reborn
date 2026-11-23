@@ -208,7 +208,15 @@ def encounter_of(sd, v):
             role = "object"
         if role == "helper":
             continue
-        actors.append({"role": role, "villain": villain, "group": group,
+        def say(*keys):
+            for k in keys:
+                raw = arg(a, k)
+                t = clean(v.sub(raw), v) if raw else ""
+                if t and not re.fullmatch(r"[A-Z0-9_]+", t) and t != raw:
+                    return t
+            return ""
+        actors.append({"say": [say("Dialog_InActive"), say("Dialog_Alerted", "Dialog_Active")],
+                       "role": role, "villain": villain, "group": group,
                        "rank": RANKS.get(val("VillainType").lower(), "Minion" if role == "foe" else ""),
                        "name": clean(val("Name"), v), "number": int(num) if num.isdigit() else 1,
                        "heroes": [int(lo) if lo.isdigit() else 1, int(hi) if hi.isdigit() else 8],

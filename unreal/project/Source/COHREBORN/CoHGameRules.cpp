@@ -258,6 +258,7 @@ void UCoHGameRules::Initialize(FSubsystemCollectionBase& Collection)
 	LoadRewards(HeroRulesDir / TEXT("rewards.json"));
 	LoadEnemies(EnemyDir);
 	LoadZoneEncounters(Out / TEXT("zone_encounters"));
+	LoadChatter(Out / TEXT("story/chatter.json"));
 	UE_LOG(LogTemp, Log, TEXT("CoH game rules: %d power anims, %d archetypes, %d sets, XP table %d, %d reward ranks, %d kit villains, %d encounters (%.1f s)"),
 		PowerAnims.Num(), Classes.Num(), Sets.Num(), XPForLevel.Num(), Tables.Num(), Villains.Num(), Encounters.Num(), FPlatformTime::Seconds() - T0);
 }
@@ -952,6 +953,7 @@ void UCoHGameRules::LoadEncountersFile(const FString& File, TArray<FCoHEncounter
 				Enc.MinLevel = (int32)N(E, TEXT("min_level"), 1); Enc.MaxLevel = (int32)N(E, TEXT("max_level"), Enc.MinLevel);
 				Enc.MinTeam = (int32)N(E, TEXT("min_team"), 1); Enc.MaxTeam = (int32)N(E, TEXT("max_team"), 8);
 				Enc.Respawn = N(E, TEXT("respawn"), 300);
+				Enc.Dialog = S(E, TEXT("dialog")).Replace(TEXT("\\"), TEXT("/")).ToLower();
 				int32 Spots = 0;
 				const TSharedPtr<FJsonObject>* SpotsO;
 				if (E->TryGetObjectField(TEXT("spots"), SpotsO)) for (const auto& Sp : (*SpotsO)->Values) Spots += (int32)Sp.Value->AsNumber();
@@ -968,6 +970,8 @@ void UCoHGameRules::LoadEncountersFile(const FString& File, TArray<FCoHEncounter
 						if (A->HasField(TEXT("exact_heroes"))) Act.MinHeroes = Act.MaxHeroes = (int32)N(A, TEXT("exact_heroes"), 1);
 						else { Act.MinHeroes = (int32)N(A, TEXT("min_heroes"), 1); Act.MaxHeroes = (int32)N(A, TEXT("max_heroes"), 8); }
 						Act.AIInactive = S(A, TEXT("ai_inactive")); Act.AIActive = S(A, TEXT("ai_alerted"));
+						Act.SayInactive = S(A, TEXT("dialog_inactive")); Act.SayAlerted = S(A, TEXT("dialog_alerted"));
+						if (Act.SayAlerted.IsEmpty()) Act.SayAlerted = S(A, TEXT("dialog_active"));
 						const TSharedPtr<FJsonObject>* Rolls;
 						if (A->TryGetObjectField(TEXT("rolls"), Rolls))
 							for (const auto& R : (*Rolls)->Values) Act.Rolls.Add(FCString::Atoi(*R.Key), Tokens(R.Value));
@@ -976,6 +980,45 @@ void UCoHGameRules::LoadEncountersFile(const FString& File, TArray<FCoHEncounter
 				if (Enc.Actors.Num()) Out.Add(MoveTemp(Enc));
 			}
 	}
+}
+
+void UCoHGameRules::LoadChatter(const FString& File)
+{
+	TSharedPtr<FJsonValue> Root;
+	if (!ReadJson(File, Root) || !Root->AsObject().IsValid())
+	{
+		UE_LOG(LogTemp, Log, TEXT("CoH rules: no %s (tools/story/chatter.py): villains keep quiet"), *File);
+		return;
+	}
+	const TSharedPtr<FJsonObject>* Files;
+	if (Root->AsObject()->TryGetObjectField(TEXT("files"), Files))
+		for (const auto& F : (*Files)->Values)
+		{
+			auto& Table = Chatter.FindOrAdd(FString(F.Key).ToLower());
+			if (const TSharedPtr<FJsonObject> FO = F.Value->AsObject())
+				for (const auto& V : FO->Values) Table.Add(FString(V.Key).ToUpper(), Tokens(V.Value));
+		}
+	const TSharedPtr<FJsonObject>* Ids;
+	if (Root->AsObject()->TryGetObjectField(TEXT("ids"), Ids))
+		for (const auto& I : (*Ids)->Values) ChatterIds.Add(FString(I.Key), I.Value->AsString());
+	UE_LOG(LogTemp, Log, TEXT("CoH rules: villain chatter from %d dialog files, %d direct lines"), Chatter.Num(), ChatterIds.Num());
+}
+
+FString UCoHGameRules::ChatterLine(const FString& DialogFile, const FString& Var) const
+{
+	FString Key = Var.TrimStartAndEnd().TrimQuotes();
+	if (Key.IsEmpty()) return FString();
+	if (Key.StartsWith(TEXT("=")) ) return Key.Mid(1);                          // a line given as is (mission bosses)
+	if ((Key[0] == TEXT('K') || Key[0] == TEXT('P')) && Key.Len() > 1 && Key.Mid(1).IsNumeric())
+	{
+		const FString* L = ChatterIds.Find(TEXT("K") + Key.Mid(1));
+		return L ? *L : FString();
+	}
+	Key = Key.ToUpper();
+	auto Pick = [](const TArray<FString>& L) { return L.Num() ? L[FMath::RandRange(0, L.Num() - 1)] : FString(); };
+	if (const auto* T = Chatter.Find(DialogFile)) if (const TArray<FString>* L = T->Find(Key)) return Pick(*L);
+	for (const auto& T : Chatter) if (const TArray<FString>* L = T.Value.Find(Key)) return Pick(*L);
+	return FString();
 }
 
 void UCoHGameRules::LoadZoneEncounters(const FString& Dir)

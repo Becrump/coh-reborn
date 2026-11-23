@@ -116,6 +116,13 @@ public:
  /** Mesh turn relative to the capsule (preview-placed enemies: 180, rules villains: 90). */
  float MeshYaw = 180.f;
  bool bHarassPosed = false;
+public:
+ /** Villain chatter (UCoHGameRules::ChatterLine): the encounter's dialog file, what it says idle when a
+  *  hero first comes near and when it spots one ("=text": a line as is). Said over its head and in local chat. */
+ FString ChatFile, ChatIdle, ChatAlert;
+ void SayLine(const FString& Var, APawn* About = nullptr);
+ bool bSaidIdle = false, bSaidAlert = false;
+ double NextChatCheck = 0;
  FVector HarassSpot = FVector::ZeroVector;
  /** Fighting, helping or walking home: the spawner leaves it alone. */
  bool IsBusy() const { return Target != nullptr || bReturning; }

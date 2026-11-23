@@ -44,7 +44,7 @@ struct FCoHStoryObjective
 	FCoHStoryClues Clues;
 };
 /** One villain slot of a mission spawn's encounter (Role: foe, hostage or object). */
-struct FCoHStoryActor { FString Role, Villain, Group, Rank, Name; int32 Number = 1, MinHeroes = 1, MaxHeroes = 8; };
+struct FCoHStoryActor { FString Role, Villain, Group, Rank, Name, SayIdle, SayAlert; int32 Number = 1, MinHeroes = 1, MaxHeroes = 8; };
 /** A mission spawn (Kind: fight, rescue, escort, ambush or destroy; docs/missions.md). */
 struct FCoHStorySpawn
 {

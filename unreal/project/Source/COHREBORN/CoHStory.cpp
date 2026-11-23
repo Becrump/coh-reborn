@@ -197,6 +197,9 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 								Act.Role = StoryStr(AO, TEXT("role")); Act.Villain = StoryStr(AO, TEXT("villain")); Act.Group = StoryStr(AO, TEXT("group"));
 								Act.Rank = StoryStr(AO, TEXT("rank")); Act.Name = StoryStr(AO, TEXT("name"));
 								Act.Number = FMath::Clamp(StoryInt(AO, TEXT("number"), 1), 1, 8);
+								const TArray<FString> Say = StoryList(AO, TEXT("say"));
+								if (Say.Num() > 0) Act.SayIdle = Say[0];
+								if (Say.Num() > 1) Act.SayAlert = Say[1];
 								const TArray<TSharedPtr<FJsonValue>>* H;
 								if (AO->TryGetArrayField(TEXT("heroes"), H) && H->Num() == 2) { Act.MinHeroes = (int32)(*H)[0]->AsNumber(); Act.MaxHeroes = (int32)(*H)[1]->AsNumber(); }
 								Sp.Actors.Add(Act);
@@ -1360,6 +1363,9 @@ void ACoHStoryDirector::CreateRun(FMission& M, int32 RunIdx)
 			}
 			if (!E) continue;
 			bAny = true;
+			// what the original has it say (boss taunts, captors' threats): "=" marks a line given as is
+			if (!A.SayIdle.IsEmpty()) E->ChatIdle = TEXT("=") + For->Fill(A.SayIdle);
+			if (!A.SayAlert.IsEmpty()) E->ChatAlert = TEXT("=") + For->Fill(A.SayAlert);
 			if (A.Rank == TEXT("Boss") && !A.Villain.IsEmpty()) M.Boss = E;
 		}
 	}
