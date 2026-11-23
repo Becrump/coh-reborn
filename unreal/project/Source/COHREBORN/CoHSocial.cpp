@@ -368,10 +368,18 @@ void UCoHSocial::Invite(const FString& Who)
 	if (!S || S == this) { Tell(ECoHChat::System, FString(), FString::Printf(TEXT("No one called %s is online."), *Who)); return; }
 	if (TeamId != 0 && !bLeader) { Tell(ECoHChat::System, FString(), TEXT("Only the team leader can invite.")); return; }
 	if (S->TeamId != 0) { Tell(ECoHChat::System, FString(), S->Name() + TEXT(" is already on a team.")); return; }
+	if (const ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld()))
+		if (D->TaskForceOf(GetOwner())) { Tell(ECoHChat::System, FString(), TEXT("Your team is on a task force: no one can join until it is over.")); return; }
 	if (TeamMembers().Num() >= MaxTeam) { Tell(ECoHChat::System, FString(), TEXT("Your team is full.")); return; }
 	S->InvitedBy = this;
 	S->Tell(ECoHChat::System, FString(), Name() + TEXT(" invites you to join a team. Type /accept or /decline."));
 	Tell(ECoHChat::System, FString(), TEXT("You invited ") + S->Name() + TEXT("."));
+}
+
+int32 UCoHSocial::NewTeamId()
+{
+	static int32 NextTeam = 1;
+	return NextTeam++;
 }
 
 void UCoHSocial::Accept()
@@ -382,8 +390,7 @@ void UCoHSocial::Accept()
 	if (TeamId != 0) Leave();
 	if (L->TeamId == 0)
 	{
-		static int32 NextTeam = 1;
-		L->TeamId = NextTeam++;
+		L->TeamId = NewTeamId();
 		L->bLeader = true;
 	}
 	if (L->TeamMembers().Num() >= MaxTeam) { Tell(ECoHChat::System, FString(), TEXT("That team is full.")); return; }
@@ -402,7 +409,14 @@ void UCoHSocial::Leave()
 	TeamId = 0; bLeader = false;
 	TArray<UCoHSocial*> Rest;
 	for (UCoHSocial* S : AllHeroes()) if (S->TeamId == Old) Rest.Add(S);
-	if (Rest.Num() == 1) { Rest[0]->TeamId = 0; Rest[0]->bLeader = false; Rest[0]->Tell(ECoHChat::System, FString(), TEXT("Your team has disbanded.")); }
+	ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+	const bool bTaskForce = D && Rest.Num() && D->TaskForceOf(Rest[0]->GetOwner());
+	if (Rest.Num() == 1 && bTaskForce)
+	{
+		// a task force goes on with whoever is left, even one hero
+		if (!Rest[0]->bLeader) { Rest[0]->bLeader = true; Rest[0]->Tell(ECoHChat::System, FString(), TEXT("You are now the team leader.")); }
+	}
+	else if (Rest.Num() == 1) { Rest[0]->TeamId = 0; Rest[0]->bLeader = false; Rest[0]->Tell(ECoHChat::System, FString(), TEXT("Your team has disbanded.")); }
 	else if (bWasLeader && Rest.Num() > 1)
 	{
 		Rest[0]->bLeader = true;
@@ -410,6 +424,7 @@ void UCoHSocial::Leave()
 	}
 	RefreshTeamLevels();      // back to this hero's own level
 	if (Rest.Num()) Rest[0]->RefreshTeamLevels();
+	if (D) D->LeftTeam(Cast<APawn>(GetOwner()), Old);
 }
 
 void UCoHSocial::Kick(const FString& Who)

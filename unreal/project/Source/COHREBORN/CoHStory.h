@@ -59,6 +59,11 @@ struct FCoHStoryTask
 {
 	FString Id, Type, Intro, Accept, SendOff, Active, Busy, Title, Begin, Complete, Return;
 	FString Reward, CompleteReward, Next, Arc;
+	/** SecondaryReward tables for the whole team on completing / turning in; a name that is no
+	 *  reward table is a badge token ("SynapseTF") */
+	TArray<FString> Secondary, ReturnSecondary;
+	/** ForceTaskLevel: its villains are this level (task forces); 0: the hero's */
+	int32 ForceLevel = 0;
 	bool bAutoNext = false, bLong = false, bRequired = false, bNoReturn = false;
 	int32 MinLevel = 1, MaxLevel = 54, ContactPoints = 0;
 	// killx
@@ -75,12 +80,21 @@ struct FCoHStoryTask
 	TArray<FCoHStorySpawn> Spawns;
 };
 
+/** A task force contact's rules (docs/story.md "Task forces"). */
+struct FCoHTaskForceRules
+{
+	TArray<FString> Names;
+	int32 MinSize = 1, LevelAdjust = 0;
+	FString Invite, TooLow, TooHigh, NeedLargeTeam, NeedLeader, NeedTeamHere, BadTeamLevel, FirstVisit;
+};
+
 struct FCoHStoryContact
 {
 	FString Id, Name, Profession, Description, Location, Zone, Model;
 	FVector Pos = FVector::ZeroVector; float Yaw = 0.f;
 	int32 MinLevel = 1, MaxLevel = 54, FriendCP = 10, ConfidantCP = 20, CompleteCP = 30;
 	bool bTaskForce = false;
+	FCoHTaskForceRules TaskForce;
 	TArray<FString> Hello;
 	FString FirstVisit, DontKnow, NoTasks, Busy, ComeBack, ToFriend, ToConfidant;
 	TArray<FString> Tasks, Arcs;
@@ -259,6 +273,19 @@ private:
 	UPROPERTY(Transient) TObjectPtr<class ULevelStreamingDynamic> Streaming;
 };
 
+/** A team playing a task force (host): its contact's story arc, one episode at a time, held by
+ *  one member (Holder: the leader who started it, or the next leader) for the whole team. */
+struct FCoHTaskForce
+{
+	int32 TeamId = 0;
+	FString Contact, Name;
+	TWeakObjectPtr<class UCoHStoryComponent> Holder;
+	/** episodes (first task ids) turned in */
+	TArray<FString> Done;
+	/** heroes who started it (names, for the log) */
+	TArray<FString> Started;
+};
+
 /** Host only: keeps story NPCs standing near players and runs door missions. */
 UCLASS(Config = Game)
 class COHREBORN_API ACoHStoryDirector : public AActor
@@ -313,7 +340,28 @@ public:
 	ACoHStoryNPC* NPCFor(const FString& Key) const { const TWeakObjectPtr<ACoHStoryNPC>* N = NPCs.Find(Key); return N ? N->Get() : nullptr; }
 	/** Where a story NPC stands (spawned, else its data position). */
 	bool WhereIs(const FString& Key, FVector& Out) const;
+
+	// ---- task forces (docs/story.md)
+	/** The original asks for MinTaskForceSize heroes (4 to 8); a small group of friends can't always
+	 *  field that, so a task force asks for at most this many (0: the original's number). */
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") int32 MaxTaskForceTeam = 2;
+	/** Teammates must be this near the contact to start (the original: on the same map). */
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float TaskForceGatherDistance = 50000.f;
+	FCoHTaskForce* TaskForceOf(const AActor* Hero);
+	const FCoHTaskForce* TaskForceOf(const AActor* Hero) const { return const_cast<ACoHStoryDirector*>(this)->TaskForceOf(Hero); }
+	int32 TaskForceSize(const FCoHStoryContact& C) const;
+	/** The leader started the contact's task force: the team is locked and shares its arc. */
+	void StartTaskForce(class UCoHStoryComponent* Leader, const FString& ContactId);
+	/** A hero left (or was kicked from) team OldTeam: it leaves the task force; the task moves on to
+	 *  the new leader when it was the holder. */
+	void LeftTeam(APawn* Who, int32 OldTeam);
+	/** The arc is done or no one is left: the team is a plain team again. */
+	void EndTaskForce(int32 TeamId, bool bComplete);
 private:
+	TArray<FCoHTaskForce> TaskForces;
+	void TickTaskForces();
+	/** a task force's holder hands its task over to another member */
+	void MoveTaskForceTask(FCoHTaskForce& TF, class UCoHStoryComponent* To);
 	struct FMission
 	{
 		FString Task;
@@ -431,6 +479,15 @@ public:
 	void GiveClues(const FString& TaskId, const FCoHStoryClues& C);
 	/** "Clues: ..." / "Souvenirs: ..." for /clues and /souvenirs. */
 	FString DescribeClues(bool bSouvenirs) const;
+	/** The level a task's villains are: its ForceTaskLevel, else the hero's. */
+	int32 MissionLevel(const FString& TaskId) const;
+	/** Host: the reward tables (and badge tokens) of a task step for this hero. */
+	void GiveReward(const FString& Table);
+	void GiveSecondary(const TArray<FString>& Tables);
+	/** The task force line of the mission list (replicated; empty: not on one). */
+	UPROPERTY(Replicated) FString TaskForceLine;
+	UPROPERTY(Replicated) FVector TaskForceWaypoint = FVector::ZeroVector;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
 	void Show(const FCoHDialogPage& Page);
@@ -445,8 +502,19 @@ private:
 	void Refresh(FCoHTaskState& S) const;
 	FCoHContactState& ContactState(const FString& Id);
 	TArray<FString> Offers(const FCoHStoryContact& C) const;
+	/** task forces: the contact window of a task force contact */
+	void TalkToTaskForce(const FCoHStoryContact& C);
+	/** why this hero's team can't start the contact's task force (the contact's line); empty: it can */
+	FString TaskForceRefusal(const FCoHStoryContact& C) const;
+	/** the task force's next episode (empty: all done) */
+	FString TaskForceNext(const FCoHTaskForce& TF, const FCoHStoryContact& C) const;
+	/** rewards and clues of a task force step for every member but the holder */
+	void ShareWithTaskForce(const FString& ContactId, const FString& TaskId, const FString& Table, const FCoHStoryClues& Clues, const TCHAR* Line);
+	/** on a task force, not its holder: a delivery of the task force's task to this contact or person */
+	bool TaskForceDelivery(const FString& Key, FString& Line);
+	/** everyone on the hero's team (itself alone when not teamed) */
+	TArray<UCoHStoryComponent*> Team() const;
 	bool Available(const FCoHStoryTask& T) const;
-	void GiveReward(const FString& Table);
 	void Say(const FString& Text, FLinearColor Colour = FLinearColor(1.f, 0.9f, 0.5f)) const;
 	FString LastContact;
 	double NextVisitCheck = 0;

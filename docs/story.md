@@ -34,7 +34,7 @@ Host test command: `coh.Story.Talk [name]` talks to a contact from anywhere (no 
 
 ## Not yet
 
-Team-shared missions, enhancement rewards and contact stores, task forces, newspaper/police-band missions, villain side, clues window, contact introductions (any contact talks to a hero in its level range).
+Team-shared missions, enhancement rewards and contact stores, newspaper/police-band missions, villain side, clues window, contact introductions (any contact talks to a hero in its level range).
 
 ## Villain chatter (2026-11-23)
 
@@ -52,3 +52,38 @@ definitions name directly, and writes `<out>/story/chatter.json`.
 
 Not yet: Dialog_Completion and Dialog_ThankHero (rescued civilians thanking the hero; civilians are
 not in the game yet), and the original's boss health lines (BOSS_75HEALTH_DIALOG and the like).
+
+## Task forces (2026-11-23)
+
+The original's task forces: a team takes on a contact's story arc together, one episode at a time.
+27 task force contacts stand in our zones (Synapse, Citadel, Manticore, Numina, Ms. Liberty, Katie
+Hannon, Moonfire, Ernesto Hess, Karsis, Admiral Sutter, Penelope Yin, Dr. Kahn, the trial contacts and
+the signature story arc contacts, which the original also ran as task forces).
+
+- **Data**: `story_game.py` gives a task force contact `task_force`: the names it gives the team
+  (one is picked: "Task Force Velocity"), `min_size` (MinTaskForceSize) and its lines (invite, level
+  too low or high, need a bigger team, send your leader, gather your team, a teammate's level is
+  wrong). Tasks keep `force_level` (ForceTaskLevel: their villains' level), and `secondary` /
+  `return_secondary` (SecondaryReward: tables for the whole team, e.g. MissionHelper; a name that is
+  no reward table is a badge token, e.g. `TaskForceReward, SynapseTF`). `badges_game.py` keeps the
+  badges the story gives as tokens (the original's `Requires 0` task force badges).
+- **Starting**: the team leader talks to the contact. The level band (every member), team size and
+  everyone being near the contact are checked, with the contact's own refusal lines. The original
+  asks for 4 to 8 heroes; the game asks for at most `MaxTaskForceTeam` (default 2, `[/Script/COHREBORN.CoHStoryDirector]`
+  in Game.ini; 0: the original's number). A hero alone can start one when the size allows.
+- **Playing**: the team gets its name; no one can join until it is over (`/invite` refuses). The
+  leader holds each episode as a normal task (doors, maps, objectives); teammates enter the door,
+  their defeats count for defeat-X tasks, any of them can make a delivery or reach a visit spot, and
+  any of them can talk to the contact to accept or turn in. Everyone gets the rewards and clues. The
+  mission list shows a TASK FORCE line. Other contacts don't give tasks during a task force.
+  `{TaskForceName}` in texts is the team's name.
+- **Leaving**: leaving or being kicked from the team leaves the task force. When the holder leaves
+  (or disconnects), the task moves to the new leader (an open mission closes and its door opens
+  again). The task force goes on with even one hero left, and ends when no one is left.
+- **Finishing**: the last turn-in ends it: "Task force complete!", the final rewards and the badge.
+- **Tests**: `coh.Story.TaskForceAnyLevel 1` skips the level band; `coh.Story.Talk synapse` talks to
+  Synapse from anywhere.
+
+Not yet: merits and the weekly task force bonus (storyarc.merits), task force challenges
+(TFChallenge), the original's auto-exemplar to the task force's level, and saving a task force
+across a host restart (it ends; the heroes keep what they earned).

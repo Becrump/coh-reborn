@@ -38,6 +38,9 @@ public:
 	static void AddStat(AActor* Hero, const FString& Key, int32 Amount = 1);
 	/** Host: a villain the hero helped defeat (kills.<group>, kills.<group>.<rank>, kills.<villain>). */
 	static void OnDefeat(AActor* Hero, const FString& Group, const FString& Rank, const FString& Villain);
+	/** Host: a reward token the story gives ("SynapseTF" when Synapse's task force is done): the
+	 *  badge of that name when there is one, else kept as the stat token.<id>. */
+	static void Grant(AActor* Hero, const FString& Id);
 	/** Host: check every badge the hero lacks (after a level-up and the like). */
 	void Check(AActor* Hero) const;
 	/** "12 badges: Title, Title..." for /badges. */

@@ -9,7 +9,8 @@ Reads contacts.json, tasksets.json, storyarcs.json, npcs.json and
 world_points.json from <out>/story; writes <out>/story/story_game.json:
 
   contacts  "<contact file>": name, profession, description, location, zone,
-            npc, model, pos (world cm), yaw, level band, contact points to
+            npc, model, pos (world cm), yaw, level band, task_force (null, or
+            {names, min_size, level_adjust, invite and refusal lines}), contact points to
             friend/confidant/complete, dialogue lines (hello is a list: one
             is picked per visit), store items, tasks (ids, offered in order)
   tasks     "<file>#<name>": type (mission, killx, deliver, visit), texts
@@ -22,6 +23,9 @@ world_points.json from <out>/story; writes <out>/story/story_game.json:
             kind (fight, rescue, escort, ambush, destroy), actors, objective,
             create_on, activate_on, hostage}]} (docs/missions.md);
             clues {begin, complete, return}: clues and souvenirs given or taken
+            secondary / return_secondary: reward tables for the whole team on
+            completing / turning in (a name that is no table is a badge token)
+            force_level: the level its villains are (ForceTaskLevel)
             next: the task that follows (compound tasks, arc episodes);
             auto_next: it follows at once (compound parts), else the
             contact offers it once this one is turned in (arc episodes)
@@ -42,7 +46,7 @@ LINK = re.compile(r"<\s*a\s[^>]*>|<\s*/\s*a\s*>", re.I)
 BR = re.compile(r"<\s*br\s*/?\s*>", re.I)
 TAG = re.compile(r"<[^>]{1,60}>")
 VAR = re.compile(r"\{([A-Za-z0-9_]+)\}")
-KEEP = {"heroname", "level", "herolevel", "contactname", "villaingroup"}
+KEEP = {"heroname", "level", "herolevel", "contactname", "villaingroup", "taskforcename"}
 
 
 def norm(path):
@@ -137,6 +141,21 @@ def dialog_of(n, vars_):
     except ValueError:
         cp = 0
     return line(n, "Dialog", vars_), cp, arg(n, "PrimaryReward")
+
+
+def secondary_of(*blocks):
+    """SecondaryReward tables of reward blocks: the original gives them to the whole team
+    ("TaskForceReward, SynapseTF": the task force's reward and its badge token)."""
+    out = []
+    for n in blocks:
+        for c in kids(n or {}, "SecondaryReward"):
+            out += [a.strip(", ") for a in c.get("a", []) if a.strip(", ")]
+    return out
+
+
+def add_secondary(t, names, key="return_secondary"):
+    if names:
+        t[key] = t.get(key, []) + [x for x in names if x not in t.get(key, [])]
 
 
 INCS = {}          # spawnincs.json: the encounter files mission spawns include
@@ -344,6 +363,11 @@ def compile_task(td, tid, vars_, npc_contact, out, parent=None):
             last["return"] = ret
         last["contact_points"] = max(last.get("contact_points", 0), cp)
         last["reward"] = reward or last.get("reward", "")
+        add_secondary(last, secondary_of(kid(td, "ReturnSuccess")))
+        fl = arg(td, "ForceTaskLevel")
+        if fl.isdigit():
+            for i in ids:
+                out[i].setdefault("force_level", int(fl))
         rc = clues_of(kid(td, "ReturnSuccess"))
         if rc:
             last.setdefault("clues", {})["return"] = rc
@@ -363,6 +387,11 @@ def compile_task(td, tid, vars_, npc_contact, out, parent=None):
     t["complete"], cp1, t["complete_reward"] = dialog_of(done, v)
     t["return"], cp2, t["reward"] = dialog_of(kid(td, "ReturnSuccess"), v)
     t["contact_points"] = cp1 + cp2
+    add_secondary(t, secondary_of(done), "secondary")
+    add_secondary(t, secondary_of(kid(td, "ReturnSuccess")))
+    fl = arg(td, "ForceTaskLevel")
+    if fl.isdigit():
+        t["force_level"] = int(fl)
     take_clues(td, tid.split("#")[0])
     cl = {k: clues_of(n) for k, n in (("begin", kid(td, "TaskBegin")), ("complete", done),
                                        ("return", kid(td, "ReturnSuccess")))}
@@ -384,6 +413,31 @@ def compile_task(td, tid, vars_, npc_contact, out, parent=None):
         t["mission"] = parse_mission(md, v)
     out[tid] = t
     return tid
+
+
+def task_force(c, v):
+    """A task force contact's rules (TaskForceName set), else None: the team size it needs,
+    the names it gives the team (one picked) and its refusal lines (docs/story.md)."""
+    if kid(c, "TaskForceName") is None:
+        return None
+    names = []
+    tn = (kid(c, "TaskForceName").get("a") or [""])[0]
+    src = next((x for x in kids(c, "var") if (x.get("a") or [""])[0].upper() == tn.upper()), None)
+    if src is not None:
+        names = [n for n in (clean(text_of(src, i)) for i in range(2, len(src["a"])))
+                 if n and "never referenced" not in n.lower()]
+    elif tn and not tn.upper().startswith("VAR_"):
+        names = [clean(text_of(kid(c, "TaskForceName")))]
+    size = arg(c, "MinTaskForceSize", 0, "1")
+    adj = arg(c, "TaskForceLevelAdjust", 0, "0")
+    tf = {"names": names, "min_size": int(size) if size.isdigit() else 1,
+          "level_adjust": int(adj) if adj.lstrip("-").isdigit() else 0}
+    for key, field in (("invite", "TaskForceInvite"), ("too_low", "PlayerLevelTooLow"),
+                       ("too_high", "PlayerLevelTooHigh"), ("need_large_team", "NeedLargeTeam"),
+                       ("need_leader", "NeedTeamLeader"), ("need_team_here", "NeedTeamOnMap"),
+                       ("bad_team_level", "BadTeamLevel"), ("first_visit", "SOLFirstVisitString")):
+        tf[key] = line(c, field, v)
+    return tf
 
 
 def reward_tables(story_dir, names):
@@ -516,6 +570,7 @@ def main():
                     tasks[last]["return"] = ret
                 tasks[last]["contact_points"] += cp
                 tasks[last]["reward"] = reward or tasks[last]["reward"]
+                add_secondary(tasks[last], secondary_of(kid(ep, "ReturnSuccess")))
                 rc = clues_of(kid(ep, "ReturnSuccess"))
                 if rc:
                     have = tasks[last].setdefault("clues", {}).setdefault("return", {})
@@ -580,7 +635,7 @@ def main():
             "complete_cp": num("CompleteCP", 30),
             "requires": (kid(c, "ContactRequires") or {}).get("a", []),
             "stature_set": arg(c, "StatureSet"), "next_stature_set": arg(c, "NextStatureSet"),
-            "flags": flags, "task_force": kid(c, "TaskForceName") is not None,
+            "flags": flags, "task_force": task_force(c, v),
             "hello": [x for x in hello if x],
             "first_visit": line(c, "FirstVisitString", v), "dont_know": line(c, "IDontKnowYouString", v),
             "no_tasks": line(c, "NoTasksRemainingString", v), "busy": line(c, "PlayerBusyString", v),
@@ -641,7 +696,9 @@ def main():
     scopes = {k.split("#")[0] for k in tasks}
     result["clues"] = {k: c for k, c in CLUES.items() if k.split("#")[0] in scopes}
     result["rewards"] = reward_tables(d, {t[k] for t in tasks.values()
-                                          for k in ("reward", "complete_reward") if t.get(k)})
+                                          for k in ("reward", "complete_reward") if t.get(k)}
+                                      | {x for t in tasks.values()
+                                         for x in t.get("secondary", []) + t.get("return_secondary", [])})
     with open(os.path.join(d, "story_game.json"), "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False)
     by_type = {}

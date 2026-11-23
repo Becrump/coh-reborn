@@ -159,6 +159,23 @@ void UCoHBadges::Check(AActor* Hero) const
 	if (bAny) P->Save();
 }
 
+void UCoHBadges::Grant(AActor* Hero, const FString& Id)
+{
+	UCoHHeroProgress* P = UCoHHeroProgress::Of(Hero);
+	const UCoHBadges* B = Get(Hero);
+	if (!P || !P->bHasRecord || !B || Id.IsEmpty()) return;
+	const FCoHBadgeDef* Def = B->Badges.FindByPredicate([&Id](const FCoHBadgeDef& X) { return X.Id.Equals(Id, ESearchCase::IgnoreCase); });
+	if (!Def) { AddStat(Hero, TEXT("token.") + Id); return; }
+	if (!P->Hero.Badges.Owned.Contains(Def->Id))
+	{
+		P->Hero.Badges.Owned.Add(Def->Id);
+		if (UCoHPowerComponent* C = UCoHPowerComponent::Of(Hero)) C->MulticastText(TEXT("Badge earned: ") + Def->Title, FLinearColor(1.f, 0.85f, 0.2f));
+		if (UCoHSocial* S = UCoHSocial::Of(Hero)) S->Tell(ECoHChat::System, FString(), FString::Printf(TEXT("You earned the %s badge. %s"), *Def->Title, *Def->Text));
+	}
+	B->Check(Hero);      // accolades made of this badge
+	P->Save();
+}
+
 void UCoHBadges::AddStat(AActor* Hero, const FString& Key, int32 Amount)
 {
 	UCoHHeroProgress* P = UCoHHeroProgress::Of(Hero);
