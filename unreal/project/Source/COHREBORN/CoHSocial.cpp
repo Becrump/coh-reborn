@@ -4,6 +4,7 @@
 #include "CoHBadges.h"
 #include "CoHHeroProgress.h"
 #include "CoHCombat.h"
+#include "CoHItems.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -228,6 +229,10 @@ void UCoHSocial::Submit(const FString& Line)
 		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges")
 		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("respec") || Cmd == TEXT("releasepets") || Cmd == TEXT("release"))
 		ServerCommand(Cmd == TEXT("i") ? FString(TEXT("invite")) : Cmd, Rest);
+	else if (Cmd == TEXT("inventions") || Cmd == TEXT("invent") || Cmd == TEXT("salvage") || Cmd == TEXT("recipes"))
+	{
+		if (UCoHEnhancements* E = UCoHEnhancements::Of(GetOwner())) E->ToggleInventions();
+	}
 	else { Lines.Add({ ECoHChat::System, FString(), TEXT("Unknown command /") + Cmd }); ++LinesVersion; }
 }
 

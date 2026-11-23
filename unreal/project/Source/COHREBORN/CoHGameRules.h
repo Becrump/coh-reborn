@@ -139,6 +139,9 @@ struct FCoHBoostState
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHPowerSlots> Slots;
 	/** "<boost id>@<level>" */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Inventory;
+	/** Invention salvage (one entry per piece, "S_LuckCharm") and recipes ("Invention_Damage_15"). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Salvage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Recipes;
 };
 
 USTRUCT(BlueprintType)

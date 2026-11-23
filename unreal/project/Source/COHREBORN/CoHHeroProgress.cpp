@@ -376,4 +376,5 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 	}
 	if (Top && bTopItems) Top->AddInspiration(R->RollDrop(Rank, Victim->Level - 1, Group));
 	if (Top && bTopItems) UCoHEnhancements::OnVillainDefeated(Top->GetOwner(), Victim->Level);      // and sometimes an enhancement
+	if (Top && bTopItems) UCoHEnhancements::OnVillainDefeatedInventions(Top->GetOwner(), Rank, Victim->Level, Group);      // salvage and recipes
 }

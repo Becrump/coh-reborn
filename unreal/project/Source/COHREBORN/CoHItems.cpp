@@ -99,6 +99,136 @@ void UCoHItems::Initialize(FSubsystemCollectionBase& Collection)
 	TArray<float> Sl; Nums(TEXT("slots"), Sl); for (float L : Sl) SlotLevels.Add((int32)L);
 	Nums(TEXT("effect_above"), Above); Nums(TEXT("effect_below"), Below);
 	UE_LOG(LogTemp, Log, TEXT("CoH items: %d enhancements, %d stores, %d slot levels"), Boosts.Num(), Stores.Num(), SlotLevels.Num());
+	LoadInventions(FPaths::GetPath(File) / TEXT("inventions_game.json"));
+}
+
+void UCoHItems::LoadInventions(const FString& File)
+{
+	FString Text;
+	TSharedPtr<FJsonObject> Root;
+	if (!FFileHelper::LoadFileToString(Text, *File) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), Root) || !Root.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CoH items: no %s (tools/items/inventions_game.py): no inventions"), *File);
+		return;
+	}
+	auto Str = [](const TSharedPtr<FJsonObject>& O, const TCHAR* K) { FString V; O->TryGetStringField(K, V); return V; };
+	auto Int = [](const TSharedPtr<FJsonObject>& O, const TCHAR* K) { double V = 0; O->TryGetNumberField(K, V); return (int32)V; };
+	auto Pairs = [](const TArray<TSharedPtr<FJsonValue>>& A, TArray<TPair<float, FString>>& Out)
+	{
+		for (const auto& V : A)
+		{
+			const TArray<TSharedPtr<FJsonValue>>& P = V->AsArray();
+			if (P.Num() >= 2) Out.Add({ (float)P[0]->AsNumber(), P[1]->AsString() });
+		}
+	};
+	const TSharedPtr<FJsonObject>* Obj;
+	if (Root->TryGetObjectField(TEXT("caps"), Obj))
+	{
+		const TArray<TSharedPtr<FJsonValue>>* A;
+		if ((*Obj)->TryGetArrayField(TEXT("salvage"), A)) for (const auto& V : *A) SalvageCap.Add((int32)V->AsNumber());
+		if ((*Obj)->TryGetArrayField(TEXT("recipe"), A)) for (const auto& V : *A) RecipeCap.Add((int32)V->AsNumber());
+	}
+	if (Root->TryGetObjectField(TEXT("salvage"), Obj))
+		for (const auto& KV : (*Obj)->Values)
+		{
+			const auto O = KV.Value->AsObject(); if (!O.IsValid()) continue;
+			FCoHSalvageDef D; D.Name = Str(O, TEXT("name")); D.Rarity = Str(O, TEXT("rarity")); D.Icon = Str(O, TEXT("icon")); D.Sell = Int(O, TEXT("sell"));
+			Salvage.Add(FString(KV.Key), MoveTemp(D));
+		}
+	if (Root->TryGetObjectField(TEXT("recipes"), Obj))
+		for (const auto& KV : (*Obj)->Values)
+		{
+			const auto O = KV.Value->AsObject(); if (!O.IsValid()) continue;
+			FCoHRecipeDef D; D.Id = FString(KV.Key); D.Name = Str(O, TEXT("name")); D.Rarity = Str(O, TEXT("rarity"));
+			D.Boost = Str(O, TEXT("boost")); D.Power = Str(O, TEXT("power"));
+			D.Level = FMath::Max(1, Int(O, TEXT("level"))); D.Cost = Int(O, TEXT("cost")); D.Sell = Int(O, TEXT("sell"));
+			const TArray<TSharedPtr<FJsonValue>>* A;
+			if (O->TryGetArrayField(TEXT("salvage"), A))
+				for (const auto& V : *A) { const auto& P = V->AsArray(); if (P.Num() >= 2) D.Salvage.Add({ P[1]->AsString(), (int32)P[0]->AsNumber() }); }
+			Recipes.Add(D.Id, MoveTemp(D));
+		}
+	if (Root->TryGetObjectField(TEXT("boosts"), Obj))
+		for (const auto& KV : (*Obj)->Values)
+		{
+			const auto O = KV.Value->AsObject(); if (!O.IsValid()) continue;
+			FCoHBoostDef B; B.Id = FString(KV.Key);
+			B.Name = Str(O, TEXT("name")); B.Grade = TEXT("IO"); B.Icon = Str(O, TEXT("icon")); B.Help = Str(O, TEXT("help"));
+			B.Table = Str(O, TEXT("table")); B.Set = Str(O, TEXT("set")).Replace(TEXT("_"), TEXT(" "));
+			bool bU = false; O->TryGetBoolField(TEXT("unique"), bU); B.bUnique = bU;
+			const TArray<TSharedPtr<FJsonValue>>* A;
+			if (O->TryGetArrayField(TEXT("types"), A)) for (const auto& V : *A) B.Types.Add(V->AsString());
+			const TSharedPtr<FJsonObject>* Sc;
+			if (O->TryGetObjectField(TEXT("scales"), Sc)) for (const auto& S : (*Sc)->Values) { B.Scales.Add(FString(S.Key), (float)S.Value->AsNumber()); B.Attribs.Add(FString(S.Key)); }
+			if (B.Types.Num() == 0 || B.Scales.Num() == 0) continue;
+			B.Type = B.Types[0];
+			B.Scale = B.Scales.CreateConstIterator().Value();
+			B.bScheduleB = B.Type.Contains(TEXT("Defense")) || B.Type.Contains(TEXT("ToHit")) || B.Type.Contains(TEXT("Range")) || B.Type.Contains(TEXT("Res_Damage"));
+			Boosts.Add(B.Id, MoveTemp(B));
+		}
+	if (Root->TryGetObjectField(TEXT("sets"), Obj))
+		for (const auto& KV : (*Obj)->Values) Pairs(KV.Value->AsArray(), DropSets.Add(FString(KV.Key)));
+	if (Root->TryGetObjectField(TEXT("drops"), Obj))
+		for (const auto& Rank : (*Obj)->Values)
+		{
+			auto& Rows = Drops.Add(FString(Rank.Key));
+			for (const auto& Row : Rank.Value->AsObject()->Values)
+			{
+				auto& Lines = Rows.Add(FCString::Atoi(*Row.Key));
+				for (const auto& LV : Row.Value->AsArray())
+				{
+					const auto O = LV->AsObject(); if (!O.IsValid()) continue;
+					FCoHDropLine L; double C = 0; O->TryGetNumberField(TEXT("chance"), C); L.Chance = (float)C;
+					bool bD = false; O->TryGetBoolField(TEXT("default"), bD); L.bDefault = bD;
+					const TArray<TSharedPtr<FJsonValue>>* A;
+					if (O->TryGetArrayField(TEXT("groups"), A)) for (const auto& V : *A) L.Groups.Add(V->AsString());
+					if (O->TryGetArrayField(TEXT("sets"), A)) Pairs(*A, L.Sets);
+					Lines.Add(MoveTemp(L));
+				}
+			}
+		}
+	UE_LOG(LogTemp, Log, TEXT("CoH items: inventions: %d salvage, %d recipes, %d drop sets, %d ranks"), Salvage.Num(), Recipes.Num(), DropSets.Num(), Drops.Num());
+}
+
+int32 UCoHItems::SalvageRoom(int32 Level) const
+{
+	return SalvageCap.Num() ? SalvageCap[FMath::Clamp(Level, 0, SalvageCap.Num() - 1)] : 30;
+}
+
+int32 UCoHItems::RecipeRoom(int32 Level) const
+{
+	return RecipeCap.Num() ? RecipeCap[FMath::Clamp(Level, 0, RecipeCap.Num() - 1)] : 10;
+}
+
+TArray<FString> UCoHItems::RollInventions(const FString& RankIn, int32 Level, const FString& Group) const
+{
+	TArray<FString> Out;
+	// the rank's salvage table (snipers as lieutenants, small fry as minions, giant monsters as archvillains)
+	const FString Rank = RankIn == TEXT("Sniper") ? TEXT("Lieutenant") : RankIn == TEXT("Small") || RankIn == TEXT("Pet") ? TEXT("Minion")
+		: RankIn == TEXT("BigMonster") ? TEXT("ArchVillain") : RankIn;
+	const TMap<int32, TArray<FCoHDropLine>>* Rows = Drops.Find(Rank);
+	if (!Rows || Rows->Num() == 0) return Out;
+	const TArray<FCoHDropLine>* Row = Rows->Find(Level);
+	for (int32 d = 1; !Row && d < 60; ++d) { Row = Rows->Find(Level - d); if (!Row) Row = Rows->Find(Level + d); }
+	if (!Row) return Out;
+	// lines for the villain's group; the default lines only when no line names it
+	bool bListed = false;
+	for (const FCoHDropLine& L : *Row) if (L.Groups.Contains(Group)) bListed = true;
+	for (const FCoHDropLine& L : *Row)
+	{
+		if (L.Groups.Num() ? !L.Groups.Contains(Group) : bListed) continue;
+		if (FMath::FRand() * 100.f >= L.Chance) continue;
+		// one set of the line by weight, then one item of it by weight
+		auto Pick = [](const TArray<TPair<float, FString>>& From) -> FString
+		{
+			float Total = 0.f; for (const auto& P : From) Total += P.Key;
+			float Roll = FMath::FRand() * Total;
+			for (const auto& P : From) if ((Roll -= P.Key) <= 0.f) return P.Value;
+			return From.Num() ? From.Last().Value : FString();
+		};
+		const TArray<TPair<float, FString>>* Items = DropSets.Find(Pick(L.Sets));
+		if (Items && Items->Num()) { const FString It = Pick(*Items); if (!It.IsEmpty()) Out.Add(It); }
+	}
+	return Out;
 }
 
 UCoHItems* UCoHItems::Get(const UObject* WorldContext)
@@ -134,6 +264,14 @@ float UCoHItems::Strength(const FCoHBoostDef& B, int32 EnhLevel, int32 HeroLevel
 		if (-Diff > 3) return 0.f;      // red: too far below the hero to work
 		if (Below.Num()) E = Below[FMath::Min(-Diff, Below.Num() - 1)];
 	}
+	if (B.Grade == TEXT("IO"))
+	{
+		// inventions: the class table at the enhancement's own level, whatever the hero's level
+		const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
+		const FCoHClassDef* C = DB ? DB->FindClass(TEXT("Class_Blaster")) : nullptr;
+		const float T = C ? C->TableValue(B.Table, EnhLevel) : 0.f;
+		return T > 0.f ? T : 0.33f;      // inventions never wear out
+	}
 	return B.Scale * E;
 }
 
@@ -149,6 +287,13 @@ float UCoHItems::Diminish(float T, bool bB)
 
 bool UCoHItems::Fits(const FCoHBoostDef& B, const FCoHPowerDef& P, const FString& Origin) const
 {
+	if (B.Types.Num())
+	{
+		// inventions: any of the types they enhance (set pieces go in powers that take their kind)
+		bool bAny = false;
+		for (const FString& T : B.Types) if (P.BoostsAllowed.Contains(T)) bAny = true;
+		return bAny;
+	}
 	if (!P.BoostsAllowed.Contains(B.Type)) return false;
 	if (B.Origins.Num() == 0 || Origin.IsEmpty()) return true;
 	for (const FString& O : B.Origins) if (Origin.Contains(O) || O.Contains(Origin)) return true;
@@ -187,6 +332,12 @@ FString UCoHItems::Label(const FString& Item) const
 	FString Id; int32 Lv = 1;
 	if (!Split(Item, Id, Lv)) return Item;
 	const FCoHBoostDef* B = Boost(Id);
+	if (B && !B->Set.IsEmpty())
+	{
+		// a set piece: the set's name and what it enhances (Annoyance Taunt 15)
+		TArray<FString> Kinds; for (const FString& T : B->Types) { FCoHBoostDef K; K.Type = T; Kinds.Add(K.Short()); }
+		return FString::Printf(TEXT("%s %s %d"), *B->Set, *FString::Join(Kinds, TEXT("/")), Lv);
+	}
 	return B ? FString::Printf(TEXT("%s %s %d"), *B->Grade, *B->Short(), Lv) : Item;
 }
 
@@ -218,7 +369,9 @@ public:
 	}
 
 	bool IsOpen() const { return Window.IsValid() && Window->GetVisibility() == EVisibility::Visible; }
-	void Open(bool bStore) { bStoreMode = bStore; Selected = INDEX_NONE; Window->SetVisibility(EVisibility::Visible); Rebuild(); }
+	void Open(bool bStore) { bStoreMode = bStore; bInventMode = false; Selected = INDEX_NONE; Window->SetVisibility(EVisibility::Visible); Rebuild(); }
+	void OpenInventions() { bStoreMode = false; bInventMode = true; Selected = INDEX_NONE; Window->SetVisibility(EVisibility::Visible); Rebuild(); }
+	bool IsInventions() const { return bInventMode; }
 	void Close() { Window->SetVisibility(EVisibility::Collapsed); }
 
 	virtual void Tick(const FGeometry& G, const double Now, const float Dt) override
@@ -233,7 +386,7 @@ private:
 	TWeakObjectPtr<UCoHEnhancements> Owner;
 	TSharedPtr<SBox> Window;
 	TSharedPtr<SVerticalBox> Body;
-	bool bStoreMode = false;
+	bool bStoreMode = false, bInventMode = false;
 	int32 Selected = INDEX_NONE;
 	FString LastSig;
 
@@ -243,7 +396,8 @@ private:
 		const FCoHBoostState* S = E ? E->State() : nullptr;
 		const UCoHHeroProgress* P = E ? E->Progress() : nullptr;
 		if (!S || !P) return FString();
-		FString Out = FString::Printf(TEXT("%d|%d|%d|%s|"), P->Hero.Level, P->Hero.Influence, Selected, *FString::Join(S->Inventory, TEXT(",")));
+		FString Out = FString::Printf(TEXT("%d|%d|%d|%d|%s|%s|%s|"), P->Hero.Level, P->Hero.Influence, Selected, bInventMode ? 1 : 0, *FString::Join(S->Inventory, TEXT(",")),
+			*FString::Join(S->Salvage, TEXT(",")), *FString::Join(S->Recipes, TEXT(",")));
 		for (const FCoHPowerSlots& Ps : S->Slots) Out += Ps.Power.ToString() + TEXT(":") + FString::Join(Ps.Enh, TEXT(",")) + TEXT(";");
 		if (const UCoHPowerComponent* C = E->Powers()) for (const FName& O : C->Owned) Out += O.ToString();
 		return Out + E->StoreTitle + FString::FromInt(E->StoreRows.Num());
@@ -260,6 +414,52 @@ private:
 			[Label(T, FLinearColor::White, 10)];
 	}
 
+	void BuildInventions(UCoHEnhancements* E, const FCoHBoostState& S, const UCoHItems& I, const UCoHHeroProgress& HP, TSharedRef<SScrollBox> Scroll)
+	{
+		TMap<FString, int32> Have;
+		for (const FString& Sv : S.Salvage) ++Have.FindOrAdd(Sv);
+		Scroll->AddSlot().Padding(0, 2)[Label(FString::Printf(TEXT("Recipes (%d / %d)    Influence %d"), S.Recipes.Num(), I.RecipeRoom(HP.Hero.Level), HP.Hero.Influence), FLinearColor(0.55f, 0.85f, 1.f), 12, true)];
+		if (S.Recipes.Num() == 0) Scroll->AddSlot()[Label(TEXT("No recipes yet: villains drop them."))];
+		TArray<FString> Seen;
+		for (const FString& Rid : S.Recipes)
+		{
+			if (Seen.Contains(Rid)) continue;
+			Seen.Add(Rid);
+			const FCoHRecipeDef* R = I.Recipes.Find(Rid);
+			if (!R) continue;
+			int32 Count = 0; for (const FString& X : S.Recipes) Count += X == Rid;
+			TArray<FString> Need; bool bOk = HP.Hero.Influence >= R->Cost;
+			for (const auto& C : R->Salvage)
+			{
+				const int32 H = Have.FindRef(C.Key);
+				bOk &= H >= C.Value;
+				Need.Add(FString::Printf(TEXT("%s %d/%d"), *I.SalvageName(C.Key), H, C.Value));
+			}
+			const FString Line = FString::Printf(TEXT("%s%s  level %d, %s.  Needs %s, %d inf"), *R->Name.Replace(TEXT(" (Recipe)"), TEXT("")),
+				Count > 1 ? *FString::Printf(TEXT(" x%d"), Count) : TEXT(""), R->Level, *R->Rarity, *FString::Join(Need, TEXT(", ")), R->Cost);
+			const FString Id = Rid;
+			Scroll->AddSlot().Padding(0, 1)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().FillWidth(1.f).VAlign(VAlign_Center)[Label(Line, bOk ? FLinearColor(0.85f, 1.f, 0.85f) : FLinearColor(0.7f, 0.75f, 0.85f), 10)]
+				+ SHorizontalBox::Slot().AutoWidth().Padding(2, 0)[Button(TEXT("Craft"), [E, Id]() { E->ServerCraft(Id); }, bOk ? FLinearColor(0.2f, 0.5f, 0.3f) : FLinearColor(0.2f, 0.22f, 0.28f))]
+				+ SHorizontalBox::Slot().AutoWidth().Padding(2, 0)[Button(TEXT("Sell"), [E, Id]() { E->ServerTrashRecipe(Id); }, FLinearColor(0.45f, 0.3f, 0.15f))]
+			];
+		}
+		Scroll->AddSlot().Padding(0, 10, 0, 2)[Label(FString::Printf(TEXT("Salvage (%d / %d)"), S.Salvage.Num(), I.SalvageRoom(HP.Hero.Level)), FLinearColor(0.55f, 0.85f, 1.f), 12, true)];
+		TSharedRef<SWrapBox> Wrap = SNew(SWrapBox).UseAllottedSize(true);
+		TArray<FString> Keys; Have.GetKeys(Keys); Keys.Sort();
+		for (const FString& K : Keys)
+		{
+			const FCoHSalvageDef* D = I.Salvage.Find(K);
+			const FString Id = K;
+			const FLinearColor Col = !D ? FLinearColor(0.25f, 0.4f, 0.7f) : D->Rarity == TEXT("Rare") ? FLinearColor(0.6f, 0.35f, 0.1f) : D->Rarity == TEXT("Uncommon") ? FLinearColor(0.45f, 0.4f, 0.1f) : FLinearColor(0.25f, 0.4f, 0.7f);
+			Wrap->AddSlot().Padding(2)[Button(FString::Printf(TEXT("%s x%d"), *I.SalvageName(K), Have[K]), [E, Id]() { E->ServerTrashSalvage(Id); }, Col)];
+		}
+		Scroll->AddSlot()[Wrap];
+		Scroll->AddSlot().Padding(0, 4)[Label(TEXT("Click a salvage piece to sell one. Crafted enhancements go to the enhancement tray."), FLinearColor(0.7f, 0.75f, 0.85f), 9)];
+	}
+
 	void Rebuild()
 	{
 		LastSig = Signature();
@@ -271,13 +471,20 @@ private:
 		const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(E);
 		const UCoHHeroProgress* HP = E ? E->Progress() : nullptr;
 		TSharedRef<SHorizontalBox> Head = SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot().FillWidth(1.f)[Label(bStoreMode && E ? E->StoreTitle : FString(TEXT("Enhancements")), FLinearColor(0.55f, 0.85f, 1.f), 15, true)]
+			+ SHorizontalBox::Slot().FillWidth(1.f)[Label(bStoreMode && E ? E->StoreTitle : FString(bInventMode ? TEXT("Inventions") : TEXT("Enhancements")), FLinearColor(0.55f, 0.85f, 1.f), 15, true)]
+			+ SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 6, 0)[Button(bInventMode ? TEXT("Enhancements") : TEXT("Inventions"), [this]() { bInventMode = !bInventMode; bStoreMode = false; Selected = INDEX_NONE; Rebuild(); }, FLinearColor(0.35f, 0.3f, 0.55f))]
 			+ SHorizontalBox::Slot().AutoWidth()[Button(TEXT("Close"), [this]() { Close(); })];
 		Body->AddSlot().AutoHeight().Padding(0, 0, 0, 6)[Head];
 		if (!E || !S || !I || !C || !DB || !HP) { Body->AddSlot().AutoHeight()[Label(TEXT("No hero loaded."))]; return; }
 		Body->AddSlot().AutoHeight().Padding(0, 0, 0, 6)[Label(FString::Printf(TEXT("Influence %d    Slots to place: %d    %s"), HP->Hero.Influence, E->SlotsLeft(),
 			Selected != INDEX_NONE ? TEXT("Click a slot to put the selected enhancement in it.") : TEXT("Pick an enhancement below, then a slot.")), FLinearColor(1.f, 0.9f, 0.55f))];
 		TSharedRef<SScrollBox> Scroll = SNew(SScrollBox);
+		if (bInventMode)
+		{
+			BuildInventions(E, *S, *I, *HP, Scroll);
+			Body->AddSlot().FillHeight(1.f)[Scroll];
+			return;
+		}
 		if (bStoreMode)
 		{
 			for (int32 r = 0; r < E->StoreRows.Num(); ++r)
@@ -374,6 +581,12 @@ void UCoHEnhancements::EndPlay(const EEndPlayReason::Type Reason)
 	Super::EndPlay(Reason);
 }
 
+void UCoHEnhancements::ToggleInventions()
+{
+	if (!Panel.IsValid()) return;
+	if (Panel->IsOpen() && Panel->IsInventions()) Panel->Close(); else Panel->OpenInventions();
+}
+
 void UCoHEnhancements::TogglePanel()
 {
 	if (!Panel.IsValid()) return;
@@ -422,6 +635,89 @@ void UCoHEnhancements::OnVillainDefeated(AActor* Hero, int32 VillainLevel)
 	E->Give(I->RandomDrop(P->Hero.Origin, FMath::Max(1, VillainLevel)));
 }
 
+bool UCoHEnhancements::GiveInvention(const FString& Item)
+{
+	FCoHBoostState* S = MutableState();
+	const UCoHItems* I = UCoHItems::Get(this);
+	const UCoHHeroProgress* HP = Progress();
+	if (!S || !I || !HP || Item.Len() < 3) return false;
+	const FString Id = Item.Mid(2);
+	if (Item.StartsWith(TEXT("S:")))
+	{
+		if (!I->Salvage.Contains(Id)) return false;
+		if (S->Salvage.Num() >= I->SalvageRoom(HP->Hero.Level)) { CoHEnhSay(this, TEXT("Salvage full"), FLinearColor(1.f, 0.6f, 0.4f)); return false; }
+		S->Salvage.Add(Id);
+		CoHEnhSay(this, TEXT("Salvage: ") + I->SalvageName(Id), FLinearColor(0.75f, 0.9f, 0.6f));
+	}
+	else if (Item.StartsWith(TEXT("R:")))
+	{
+		const FCoHRecipeDef* R = I->Recipes.Find(Id);
+		if (!R) return false;
+		if (S->Recipes.Num() >= I->RecipeRoom(HP->Hero.Level)) { CoHEnhSay(this, TEXT("Recipes full"), FLinearColor(1.f, 0.6f, 0.4f)); return false; }
+		S->Recipes.Add(Id);
+		CoHEnhSay(this, TEXT("Recipe: ") + R->Name.Replace(TEXT(" (Recipe)"), TEXT("")) + FString::Printf(TEXT(" (%d)"), R->Level), FLinearColor(0.95f, 0.8f, 0.4f));
+	}
+	else return false;
+	Changed();
+	return true;
+}
+
+void UCoHEnhancements::OnVillainDefeatedInventions(AActor* Hero, const FString& Rank, int32 VillainLevel, const FString& Group)
+{
+	UCoHEnhancements* E = Of(Hero);
+	const UCoHItems* I = UCoHItems::Get(Hero);
+	const UCoHHeroProgress* P = E ? E->Progress() : nullptr;
+	if (!E || !I || !P || !P->bHasRecord) return;
+	for (const FString& It : I->RollInventions(Rank, FMath::Max(1, VillainLevel), Group)) E->GiveInvention(It);
+}
+
+void UCoHEnhancements::ServerCraft_Implementation(const FString& Recipe)
+{
+	FCoHBoostState* S = MutableState();
+	const UCoHItems* I = UCoHItems::Get(this);
+	UCoHHeroProgress* HP = Progress();
+	const FCoHRecipeDef* R = I ? I->Recipes.Find(Recipe) : nullptr;
+	if (!S || !HP || !R || !S->Recipes.Contains(Recipe)) return;
+	if (R->Boost.IsEmpty() || !I->Boost(R->Boost)) { CoHEnhSay(this, TEXT("That recipe can't be crafted yet"), FLinearColor(1.f, 0.6f, 0.4f)); return; }
+	TArray<FString> Missing;
+	for (const auto& C : R->Salvage)
+	{
+		int32 H = 0; for (const FString& X : S->Salvage) H += X == C.Key;
+		if (H < C.Value) Missing.Add(I->SalvageName(C.Key));
+	}
+	if (Missing.Num()) { CoHEnhSay(this, TEXT("Missing salvage: ") + FString::Join(Missing, TEXT(", ")), FLinearColor(1.f, 0.6f, 0.4f)); return; }
+	if (HP->Hero.Influence < R->Cost) { CoHEnhSay(this, FString::Printf(TEXT("Crafting costs %d influence"), R->Cost), FLinearColor(1.f, 0.6f, 0.4f)); return; }
+	if (S->Inventory.Num() >= TraySize) { CoHEnhSay(this, TEXT("Enhancement tray full"), FLinearColor(1.f, 0.6f, 0.4f)); return; }
+	for (const auto& C : R->Salvage) for (int32 n = 0; n < C.Value; ++n) S->Salvage.RemoveSingle(C.Key);
+	S->Recipes.RemoveSingle(Recipe);
+	HP->Hero.Influence -= R->Cost;
+	Give(FString::Printf(TEXT("%s@%d"), *R->Boost, R->Level));      // saves
+}
+
+void UCoHEnhancements::ServerTrashSalvage_Implementation(const FString& Salvage)
+{
+	FCoHBoostState* S = MutableState();
+	const UCoHItems* I = UCoHItems::Get(this);
+	UCoHHeroProgress* HP = Progress();
+	if (!S || !I || !HP || S->Salvage.RemoveSingle(Salvage) == 0) return;
+	const FCoHSalvageDef* D = I->Salvage.Find(Salvage);
+	HP->Hero.Influence += D ? D->Sell : 0;
+	CoHEnhSay(this, FString::Printf(TEXT("Sold %s for %d influence"), *I->SalvageName(Salvage), D ? D->Sell : 0));
+	Changed();
+}
+
+void UCoHEnhancements::ServerTrashRecipe_Implementation(const FString& Recipe)
+{
+	FCoHBoostState* S = MutableState();
+	const UCoHItems* I = UCoHItems::Get(this);
+	UCoHHeroProgress* HP = Progress();
+	if (!S || !I || !HP || S->Recipes.RemoveSingle(Recipe) == 0) return;
+	const FCoHRecipeDef* R = I->Recipes.Find(Recipe);
+	HP->Hero.Influence += R ? R->Sell : 0;
+	CoHEnhSay(this, FString::Printf(TEXT("Sold the recipe for %d influence"), R ? R->Sell : 0));
+	Changed();
+}
+
 void UCoHEnhancements::ServerAddSlot_Implementation(FName Power)
 {
 	FCoHBoostState* S = MutableState();
@@ -449,6 +745,13 @@ void UCoHEnhancements::ServerSlot_Implementation(int32 TrayIndex, FName Power, i
 	if (!B || !P) return;
 	if (!I->Fits(*B, *P, HP->Hero.Origin)) { CoHEnhSay(this, FString::Printf(TEXT("%s can't take %s"), *P->Display, *B->Name), FLinearColor(1.f, 0.6f, 0.4f)); return; }
 	if (Lv > HP->Hero.Level + 3) { CoHEnhSay(this, TEXT("That enhancement's level is too high for you"), FLinearColor(1.f, 0.6f, 0.4f)); return; }
+	if (B->bUnique)
+		for (const FCoHPowerSlots& X : S->Slots)
+			for (const FString& Other : X.Enh)
+			{
+				FString OId; int32 OLv = 1;
+				if (UCoHItems::Split(Other, OId, OLv) && OId == Id) { CoHEnhSay(this, TEXT("Unique: only one of those can be slotted"), FLinearColor(1.f, 0.6f, 0.4f)); return; }
+			}
 	FCoHPowerSlots* Ps = S->Slots.FindByPredicate([&](const FCoHPowerSlots& X) { return X.Power == Power; });
 	if (!Ps) { Ps = &S->Slots.AddDefaulted_GetRef(); Ps->Power = Power; Ps->Enh.SetNum(1); }
 	if (!Ps->Enh.IsValidIndex(SlotIndex)) SlotIndex = Ps->Enh.IndexOfByKey(FString());
