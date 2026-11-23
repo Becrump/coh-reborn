@@ -15,7 +15,7 @@ rem The Unreal editor and other game copies must be closed (they share RAM and v
 rem this script never closes them. Overrides: UE_ROOT, COH_PROJECT, COH_RES, COH_SPEED (cm/s).
 setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
-if not defined COH_PROJECT set "COH_PROJECT=%USERPROFILE%\OneDrive\Documents\Unreal Projects\COHREBORN"
+if not defined COH_PROJECT set "COH_PROJECT=C:\UnrealProjects\COHREBORN"
 if not defined UE_ROOT (
   for /f "tokens=2,*" %%a in ('reg query "HKLM\SOFTWARE\EpicGames\Unreal Engine\5.8" /v InstalledDirectory 2^>nul ^| find "InstalledDirectory"') do set "UE_ROOT=%%b"
 )

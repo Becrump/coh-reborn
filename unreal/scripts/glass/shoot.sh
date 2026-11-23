@@ -3,7 +3,7 @@ cd C:/Users/rtcru/ClaudeProjects/coh-reborn
 W=../coh-reborn-dm8n7k/unreal/scripts/glass
 if [ "$1" != "-" ]; then (echo "import os; os.environ['GLASS_OPTION']='$1'"; cat $W/apply_test_overrides.py) > $TEMP/glass/_apply.py
   bash $TEMP/glass/uex.sh $TEMP/glass/_apply.py | cut -c1-160 || exit 1; fi
-SS="C:/Users/rtcru/OneDrive/Documents/Unreal Projects/COHREBORN/Saved/Screenshots/WindowsEditor"
+SS="${COH_PROJECT:-C:/UnrealProjects/COHREBORN}/Saved/Screenshots/WindowsEditor"
 rm -f "$SS/glass_$2.png"
 (echo "import os; os.environ['SHOT']='$2'; os.environ['CAM']='${3:-40778,29128,13709,24.4,78.2}'"; cat "$TEMP/glass/hrs.py") > $TEMP/glass/_hrs.py
 bash $TEMP/glass/uex.sh $TEMP/glass/_hrs.py > /dev/null || exit 1
