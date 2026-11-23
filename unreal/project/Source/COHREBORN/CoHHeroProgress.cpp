@@ -24,6 +24,7 @@ void UCoHHeroProgress::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCoHHeroProgress, Hero);
 	DOREPLIFETIME(UCoHHeroProgress, bHasRecord);
+	DOREPLIFETIME(UCoHHeroProgress, CombatLevel);
 }
 
 UCoHHeroProgress* UCoHHeroProgress::Of(const AActor* A) { return A ? A->FindComponentByClass<UCoHHeroProgress>() : nullptr; }
@@ -121,14 +122,26 @@ void UCoHHeroProgress::Apply(bool bRefillTray)
 	const UCoHPowerDatabase* DB = UCoHPowerDatabase::Get(this);
 	if (!P || !R || !DB) return;
 	P->DisplayName = Hero.Name;
-	P->SetClassAndLevel(Hero.Class, Hero.Level);
-	// owned: the picks plus the free auto-issued powers for this level
+	// on a team the hero fights at the leader's level, as the original's sidekick
+	// (up to one below the leader) and exemplar (down to the leader)
+	const int32 OldCombat = CombatLevel;
+	CombatLevel = GetOwnerRole() == ROLE_Authority ? UCoHSocial::CombatLevelFor(GetOwner(), Hero.Level) : CombatLevel;
+	const int32 Lv = EffectiveLevel();
+	if (CombatLevel != OldCombat && bHasRecord)
+		Say(CombatLevel == 0 ? FString::Printf(TEXT("Back to your own level, %d"), Hero.Level)
+			: CombatLevel > Hero.Level ? FString::Printf(TEXT("Sidekicked to level %d"), CombatLevel)
+			: FString::Printf(TEXT("Exemplared to level %d"), CombatLevel), FLinearColor(0.5f, 0.85f, 1.f));
+	P->SetClassAndLevel(Hero.Class, Lv);
+	// owned: the picks plus the free auto-issued powers for this level; an
+	// exemplar keeps the powers picked up to 5 levels above its combat level
 	TArray<FName> Owned;
-	for (const FCoHHeroPick& Pk : Hero.Picks) Owned.AddUnique(Pk.Power);
-	for (const FName& A : R->AutoPowers(Hero)) Owned.AddUnique(A);
+	for (const FCoHHeroPick& Pk : Hero.Picks) if (Lv >= Hero.Level || Pk.Level <= Lv + 5) Owned.AddUnique(Pk.Power);
+	FCoHHeroRecord AtLevel = Hero;
+	AtLevel.Level = FMath::Min(Lv, Hero.Level);
+	for (const FName& A : R->AutoPowers(AtLevel)) Owned.AddUnique(A);
 	Owned.AddUnique(CoHTravel::Climb);
 	P->Owned = Owned;
-	P->SetBoosts(Hero.Boosts, Hero.Origin, Hero.Level);
+	P->SetBoosts(Hero.Boosts, Hero.Origin, Lv);
 	// the tray: bought powers in order, then the inherent click / toggle powers
 	// (Brawl, Sprint, Rest); passives (Defiance, Fitness) run on their own
 	if (P->Tray.Num() < 10) P->Tray.SetNum(10);
@@ -222,6 +235,7 @@ void UCoHHeroProgress::ServerTrain_Implementation()
 	if (PicksOpen() > 0) Msg += TEXT(": choose a new power (P)");
 	Say(Msg, FLinearColor(1.f, 0.85f, 0.2f));
 	if (const UCoHBadges* B = UCoHBadges::Get(this)) B->Check(GetOwner());      // level badges
+	if (UCoHSocial* So = UCoHSocial::Of(GetOwner())) So->RefreshTeamLevels();      // a leader's new level moves the team
 	Save();
 }
 
@@ -317,7 +331,7 @@ void UCoHHeroProgress::RewardDefeat(UCoHPowerComponent* Victim, const FString& R
 		if (!H || !H->bHasRecord || KV.Value <= 0.f) continue;
 		// no kill credit past 200 ft (DIST_FOR_KILL_CREDIT)
 		if (FVector::Dist(Who->GetActorLocation(), Where) > R->KillCreditFeet * 30.48f) continue;
-		const TArray<FCoHAward> A = R->Defeat(Rank, Victim->Level - 1, { H->Hero.Level - 1 }, KV.Value / Total, Group);
+		const TArray<FCoHAward> A = R->Defeat(Rank, Victim->Level - 1, { H->EffectiveLevel() - 1 }, KV.Value / Total, Group);
 		if (A.Num() == 0) continue;
 		UE_LOG(LogTemp, Log, TEXT("CoH reward: %s level %d %s defeated -> %s (%.0f%% damage): %d XP, %d influence"), *Group, Victim->Level, *Rank,
 			*H->Hero.Name, 100.f * KV.Value / Total, A[0].XP, A[0].Influence);

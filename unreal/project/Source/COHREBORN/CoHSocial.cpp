@@ -2,6 +2,7 @@
 #include "CoHStory.h"
 #include "CoHPowers.h"
 #include "CoHBadges.h"
+#include "CoHHeroProgress.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -259,6 +260,30 @@ UCoHSocial* UCoHSocial::FindByName(const FString& Who) const
 	return Partial;
 }
 
+int32 UCoHSocial::CombatLevelFor(const AActor* Hero, int32 OwnLevel)
+{
+	const UCoHSocial* Me = Of(Hero);
+	if (!Me || Me->TeamId == 0 || Me->bLeader) return 0;
+	for (APawn* P : Me->TeamMembers())
+	{
+		const UCoHSocial* S = Of(P);
+		const UCoHHeroProgress* L = S && S->bLeader ? UCoHHeroProgress::Of(P) : nullptr;
+		if (!L || !L->bHasRecord) continue;
+		const int32 Lead = L->Hero.Level;
+		if (OwnLevel < Lead - 1) return Lead - 1;      // sidekick
+		if (OwnLevel > Lead) return Lead;              // exemplar
+		return 0;
+	}
+	return 0;
+}
+
+void UCoHSocial::RefreshTeamLevels()
+{
+	TArray<APawn*> Who = TeamMembers();
+	if (APawn* Self = Cast<APawn>(GetOwner())) Who.AddUnique(Self);
+	for (APawn* P : Who) if (UCoHHeroProgress* H = UCoHHeroProgress::Of(P)) if (H->bHasRecord) H->Apply(false);
+}
+
 TArray<APawn*> UCoHSocial::TeamMembers() const
 {
 	TArray<APawn*> Out;
@@ -365,6 +390,7 @@ void UCoHSocial::Accept()
 	TeamId = L->TeamId;
 	bLeader = false;
 	SayTeam(Name() + TEXT(" has joined the team."));
+	RefreshTeamLevels();
 }
 
 void UCoHSocial::Leave()
@@ -382,6 +408,8 @@ void UCoHSocial::Leave()
 		Rest[0]->bLeader = true;
 		for (UCoHSocial* S : Rest) S->Tell(ECoHChat::System, FString(), Rest[0]->Name() + TEXT(" is now the team leader."));
 	}
+	RefreshTeamLevels();      // back to this hero's own level
+	if (Rest.Num()) Rest[0]->RefreshTeamLevels();
 }
 
 void UCoHSocial::Kick(const FString& Who)
