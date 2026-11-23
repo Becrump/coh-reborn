@@ -18,11 +18,16 @@ world_points.json from <out>/story; writes <out>/story/story_game.json:
             killx {group, count}; deliver {npc, contact}; visit {location};
             mission {mapset, group, zone, door, length, entry, complete_with,
             objectives [{name, display, number, begin, done}], spawns
-            [{logical, placement, count, group, villain, display, lines}]};
+            [{logical, placement, count, group, villain, display, lines,
+            kind (fight, rescue, escort, ambush, destroy), actors, objective,
+            create_on, activate_on, hostage}]} (docs/missions.md);
+            clues {begin, complete, return}: clues and souvenirs given or taken
             next: the task that follows (compound tasks, arc episodes);
             auto_next: it follows at once (compound parts), else the
             contact offers it once this one is turned in (arc episodes)
   arcs      "<file>": name, level band, episodes (task ids)
+  clues     "<file>#<clue>": name, text (ClueDefs of the tasks and arcs)
+  souvenirs "<souvenir>": name, text (souvenirs.json)
 
 Texts are plain: links, colours and markup are stripped, <br> is a line
 break, and task variables ({ITEM_NAME}) take their first value. {HeroName}
@@ -134,6 +139,100 @@ def dialog_of(n, vars_):
     return line(n, "Dialog", vars_), cp, arg(n, "PrimaryReward")
 
 
+INCS = {}          # spawnincs.json: the encounter files mission spawns include
+CLUES = {}         # "<file>#<clue>" (lower case) -> {"name", "text"}
+
+
+def take_clues(n, scope):
+    for c in kids(n, "ClueDef"):
+        cid = (c.get("a") or [""])[0].lower()
+        if cid:
+            CLUES.setdefault("%s#%s" % (scope, cid), {"name": clean(text_of(kid(c, "Name"))),
+                                                      "text": clean(text_of(kid(c, "DetailString")))})
+RANKS = {"minion": "Minion", "lieutenant": "Lieutenant", "boss": "Boss", "archvillain": "ArchVillain",
+         "eliteboss": "Boss", "sniper": "Minion", "pet": "Minion"}
+
+
+def names(n, key):
+    return [a for c in kids(n, key) for a in c.get("a", [])]
+
+
+def clues_of(n):
+    """AddClues / RemoveClues / SouvenirClue lines of a reward block."""
+    if n is None:
+        return {}
+    out = {"add": names(n, "AddClues"), "remove": names(n, "RemoveClues"),
+           "souvenirs": names(n, "SouvenirClue")}
+    return {k: v for k, v in out.items() if v}
+
+
+def encounter_of(sd, v):
+    """The spawn's included encounter (spawnincs.json): kind and actors.
+
+    kind: rescue (a hostage freed once its captors are down, then follows),
+    escort (a hostage led to the exit), ambush (a wave that runs at the heroes
+    when it is created), destroy (an object to smash), or fight."""
+    inc = next((norm(c["a"][0]) for c in kids(sd, "include") if c.get("a")), "")
+    nodes = list(INCS.get(inc, []))
+    nodes += [c for c in sd.get("c", []) if c["k"] in ("Actor", "Script", "EncounterSpawn")]
+    scripts = {}
+    for sc in [c for c in nodes if c["k"] == "Script"]:
+        sv = Vars(v).take(sc)
+        scripts[arg(sc, "ScriptName").lower()] = sv
+    actors = []
+    rescuee = None
+    if "leadtoplace" in scripts or "multileadtoplace" in scripts:
+        sv = scripts.get("leadtoplace") or scripts.get("multileadtoplace")
+        rescuee = clean(sv.v.get("POSITIONOFRESCUEE", "40"))
+    for a in [c for c in nodes if c["k"] == "Actor"]:
+        def val(key, default=""):
+            x = arg(a, key, 0, default)
+            return clean(v.sub(x)) if x else default
+        villain, group = val("Villain"), val("VillainGroup")
+        if villain.upper() == villain and "_" in villain and villain.upper() in (k for k in v.v):
+            villain = ""
+        if group.upper() == "VILLAIN_GROUP":
+            group = ""
+        num = val("Number", "1")
+        lo = val("ExactHeroesRequired") or val("MinimumHeroesRequired", "1")
+        hi = val("ExactHeroesRequired") or val("MaximumHeroesRequired", "8")
+        ai = (val("AI_InActive") + " " + val("AI_Active")).lower()
+        loc = val("Location", "0")
+        role = "foe"
+        if rescuee and loc == rescuee:
+            role = "hostage"
+        elif "untargetable" in ai or "marker" in villain.lower() or \
+                (villain.lower() in ("pets_target", "") and not group and not val("VillainType")):
+            role = "helper"
+        elif "OBJECT" in arg(a, "Villain").upper() or "donothing" in ai and villain.lower().startswith(("object", "obj_", "destructible")):
+            role = "object"
+        if role == "helper":
+            continue
+        def say(*keys):
+            for k in keys:
+                raw = arg(a, k)
+                t = clean(v.sub(raw), v) if raw else ""
+                if t and not re.fullmatch(r"[A-Z0-9_]+", t) and t != raw:
+                    return t
+            return ""
+        actors.append({"say": [say("Dialog_InActive"), say("Dialog_Alerted", "Dialog_Active")],
+                       "role": role, "villain": villain, "group": group,
+                       "rank": RANKS.get(val("VillainType").lower(), "Minion" if role == "foe" else ""),
+                       "name": clean(val("Name"), v), "number": int(num) if num.isdigit() else 1,
+                       "heroes": [int(lo) if lo.isdigit() else 1, int(hi) if hi.isdigit() else 8],
+                       "fail_on_death": val("FailOnDeath") == "1"})
+    if rescuee and any(x["role"] == "hostage" for x in actors):
+        sv = scripts.get("leadtoplace") or scripts.get("multileadtoplace")
+        kind = "rescue" if clean(sv.v.get("SUCCEEDONRESCUEORDELIVERY", "Rescue")).lower() == "rescue" else "escort"
+    elif "waveattackencounter" in scripts:
+        kind = "ambush"
+    elif any(x["role"] == "object" for x in actors):
+        kind = "destroy"
+    else:
+        kind = "fight"
+    return kind, actors, inc
+
+
 def parse_spawn(sd, vars_):
     v = Vars(vars_).take(sd)
     lines = [clean(text_of(c, 3), v) for c in kids(sd, "var")
@@ -141,13 +240,29 @@ def parse_spawn(sd, vars_):
     def var(name):
         return v.v.get(name, "")
     count = arg(sd, "MissionCount", 0, "1")
-    return {"logical": arg(sd, "LogicalName"),
-            "placement": arg(sd, "MissionPlacement", 0, "Any"),
-            "count": int(count) if count.isdigit() else 1,
-            "group": var("VILLAIN_GROUP"),
-            "villain": var("BOSS_VILLAIN") or var("VILLAIN"),
-            "display": clean(var("BOSS_DISPLAYNAME"), v),
-            "lines": [l for l in lines if l][:4]}
+    kind, actors, inc = encounter_of(sd, v)
+    ob = kid(sd, "Objective")
+    out = {"logical": arg(sd, "LogicalName"),
+           "placement": arg(sd, "MissionPlacement", 0, "Any"),
+           "count": int(count) if count.isdigit() else 1,
+           "group": clean(var("VILLAIN_GROUP")),
+           "villain": clean(var("BOSS_VILLAIN") or var("VILLAIN")),
+           "display": clean(var("BOSS_DISPLAYNAME"), v),
+           "lines": [l for l in lines if l][:4],
+           "kind": kind, "actors": actors, "include": os.path.basename(inc),
+           "create_on": names(sd, "CreateOnObjectiveComplete"),
+           "activate_on": names(sd, "ActivateOnObjectiveComplete"),
+           "uncounted": kid(sd, "MissionUncounted") is not None}
+    if kind in ("rescue", "escort"):
+        h = next(x for x in actors if x["role"] == "hostage")
+        out["hostage"] = {"villain": h["villain"], "name": h["name"] or clean(var("HOSTAGE_NAME"), v)}
+    if ob is not None:
+        out["objective"] = (ob.get("a") or [""])[0]
+        out["objective_text"] = line(ob, "Description", v)
+        rw = kid(ob, "Reward")
+        out["reward"] = line(rw or {}, "Dialog", v)
+        out["clues"] = clues_of(rw)
+    return out
 
 
 def parse_mission(md, vars_):
@@ -155,14 +270,21 @@ def parse_mission(md, vars_):
     objs = []
     for o in kids(md, "Objective"):
         num = arg(o, "Number", 0, "1")
+        delay = arg(o, "InteractDelay", 0, "0")
+        rw = kid(o, "Reward")
         objs.append({"name": (o.get("a") or [""])[0],
                      "display": line(o, "ModelDisplayName", v),
                      "model": arg(o, "Model"),
                      "number": int(num) if num.isdigit() else 1,
                      "location": arg(o, "Location", 0, "ItemFloor"),
+                     "placement": arg(o, "MissionPlacement", 0, ""),
+                     "delay": int(delay) if delay.isdigit() else 0,
+                     "desc": line(o, "Description", v),
+                     "activate_on": names(o, "ActivateOnObjectiveComplete"),
                      "begin": line(o, "InteractBeginString", v),
                      "done": line(o, "InteractCompleteString", v),
-                     "reward": line(kid(o, "Reward") or {}, "Dialog", v)})
+                     "reward": line(rw or {}, "Dialog", v),
+                     "clues": clues_of(rw)})
     length = arg(md, "MapLength", 0, "15")
     return {"mapset": arg(md, "MapSet"), "group": arg(md, "VillainGroup"),
             "zone": arg(md, "CityZone").lower(), "door": arg(md, "DoorType").lower(),
@@ -170,6 +292,7 @@ def parse_mission(md, vars_):
             "length": int(length) if length.isdigit() else 15,
             "entry": line(md, "EntryString", v),
             "complete_with": [" ".join(c.get("a", [])) for c in kids(md, "CanCompleteWith")],
+            "fail_with": [" ".join(c.get("a", [])) for c in kids(md, "CanFailWith")],
             "objectives": objs,
             "spawns": [parse_spawn(s, v) for s in kids(md, "SpawnDef")]}
 
@@ -221,6 +344,10 @@ def compile_task(td, tid, vars_, npc_contact, out, parent=None):
             last["return"] = ret
         last["contact_points"] = max(last.get("contact_points", 0), cp)
         last["reward"] = reward or last.get("reward", "")
+        rc = clues_of(kid(td, "ReturnSuccess"))
+        if rc:
+            last.setdefault("clues", {})["return"] = rc
+        take_clues(td, tid.split("#")[0])
         return ids[0]
     t = dict(texts)
     t["type"] = TYPES[kind]
@@ -236,6 +363,10 @@ def compile_task(td, tid, vars_, npc_contact, out, parent=None):
     t["complete"], cp1, t["complete_reward"] = dialog_of(done, v)
     t["return"], cp2, t["reward"] = dialog_of(kid(td, "ReturnSuccess"), v)
     t["contact_points"] = cp1 + cp2
+    take_clues(td, tid.split("#")[0])
+    cl = {k: clues_of(n) for k, n in (("begin", kid(td, "TaskBegin")), ("complete", done),
+                                       ("return", kid(td, "ReturnSuccess")))}
+    t["clues"] = {k: c for k, c in cl.items() if c}
     if t["type"] == "killx":
         cnt = arg(td, "VillainCount", 0, "5")
         t["killx"] = {"group": arg(td, "VillainType"), "count": int(cnt) if cnt.isdigit() else 5,
@@ -308,6 +439,7 @@ def main():
     load = lambda n: json.load(open(os.path.join(d, n), encoding="utf-8"))
     contacts, tasksets, arcs_raw = load("contacts.json"), load("tasksets.json"), load("storyarcs.json")
     npcs, points = load("npcs.json"), load("world_points.json")["zones"]
+    INCS.update(load("spawnincs.json") if os.path.isfile(os.path.join(d, "spawnincs.json")) else {})
 
     npc_contact, npc_model, npc_by_name = {}, {}, {}
     for key, defs in npcs.items():
@@ -367,6 +499,7 @@ def main():
             return key
         for root in arcs_raw.get(key, []):
             v = Vars().take(root)
+            take_clues(root, key)
             eps = []
             for i, ep in enumerate(kids(root, "Episode")):
                 td = kid(ep, "TaskDef")
@@ -383,6 +516,11 @@ def main():
                     tasks[last]["return"] = ret
                 tasks[last]["contact_points"] += cp
                 tasks[last]["reward"] = reward or tasks[last]["reward"]
+                rc = clues_of(kid(ep, "ReturnSuccess"))
+                if rc:
+                    have = tasks[last].setdefault("clues", {}).setdefault("return", {})
+                    for k, x in rc.items():
+                        have[k] = have.get(k, []) + x
                 eps.append(tid)
             for a, b in zip(eps, eps[1:]):
                 last = a
@@ -440,6 +578,7 @@ def main():
             "complete_level": num("CompletePlayerLevel", 54), "failsafe_level": num("FailsafePlayerLevel", 54),
             "friend_cp": num("FriendCP", 10), "confidant_cp": num("ConfidantCP", 20),
             "complete_cp": num("CompleteCP", 30),
+            "requires": (kid(c, "ContactRequires") or {}).get("a", []),
             "stature_set": arg(c, "StatureSet"), "next_stature_set": arg(c, "NextStatureSet"),
             "flags": flags, "task_force": kid(c, "TaskForceName") is not None,
             "hello": [x for x in hello if x],
@@ -490,6 +629,17 @@ def main():
                             for p in zp["doors"] if "world_cm" in p] for z, zp in points.items()},
               "spawns": {z: [{"name": p["name"], "pos": p["world_cm"], "yaw": p["yaw_deg"]}
                              for p in zp["spawns"] if "world_cm" in p] for z, zp in points.items()}}
+    souvenirs = {}
+    if os.path.isfile(os.path.join(d, "souvenirs.json")):
+        for defs in load("souvenirs.json").values():
+            for sc in defs:
+                if sc["k"] == "SouvenirClueDef" and sc.get("a"):
+                    souvenirs[sc["a"][0].lower()] = {"name": clean(text_of(kid(sc, "Name"))),
+                                                     "text": clean(text_of(kid(sc, "DetailString")))}
+    result["souvenirs"] = souvenirs
+    # clues of the kept tasks only
+    scopes = {k.split("#")[0] for k in tasks}
+    result["clues"] = {k: c for k, c in CLUES.items() if k.split("#")[0] in scopes}
     result["rewards"] = reward_tables(d, {t[k] for t in tasks.values()
                                           for k in ("reward", "complete_reward") if t.get(k)})
     with open(os.path.join(d, "story_game.json"), "w", encoding="utf-8") as f:
@@ -500,6 +650,11 @@ def main():
     print("contacts placed %d, with tasks %d, tasks %d %s, arcs %d" % (
         len(out_contacts), sum(1 for c in out_contacts.values() if c["tasks"] or c["arcs"]),
         len(tasks), by_type, len(result["arcs"])))
+    kinds = {}
+    for t in tasks.values():
+        for sp in t.get("mission", {}).get("spawns", []):
+            kinds[sp["kind"]] = kinds.get(sp["kind"], 0) + 1
+    print("mission spawns %s, clues %d, souvenirs %d" % (kinds, len(result["clues"]), len(souvenirs)))
 
 
 if __name__ == "__main__":

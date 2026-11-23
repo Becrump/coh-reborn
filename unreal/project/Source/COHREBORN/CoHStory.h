@@ -27,9 +27,33 @@ class ACoHCombatEnemy;
 class UCoHHeroProgress;
 class SCoHStoryPanel;
 
-/** Location: ItemFloor, ItemAgainstWall or Person (where in a mission map it stands). */
-struct FCoHStoryObjective { FString Name, Display, Begin, Done, Reward, Location; int32 Number = 1; };
-struct FCoHStorySpawn { FString Logical, Placement, Group, Villain, Display; int32 Count = 1; TArray<FString> Lines; };
+/** Clues a step gives or takes ("<name>", looked up in the task's file) and souvenirs it gives. */
+struct FCoHStoryClues { TArray<FString> Add, Remove, Souvenirs; bool IsEmpty() const { return !Add.Num() && !Remove.Num() && !Souvenirs.Num(); } };
+/** A clue or souvenir: its title and the text the clue window shows. */
+struct FCoHClueDef { FString Name, Text; };
+
+/** A mission objective to click (Location: ItemFloor, ItemAgainstWall or Person; where in a mission map it stands). */
+struct FCoHStoryObjective
+{
+	FString Name, Display, Begin, Done, Reward, Location, Placement, Desc;
+	int32 Number = 1;
+	/** seconds the click takes (the original's InteractDelay) */
+	int32 Delay = 0;
+	/** appears only once one of these objectives is done */
+	TArray<FString> ActivateOn;
+	FCoHStoryClues Clues;
+};
+/** One villain slot of a mission spawn's encounter (Role: foe, hostage or object). */
+struct FCoHStoryActor { FString Role, Villain, Group, Rank, Name, SayIdle, SayAlert; int32 Number = 1, MinHeroes = 1, MaxHeroes = 8; };
+/** A mission spawn (Kind: fight, rescue, escort, ambush or destroy; docs/missions.md). */
+struct FCoHStorySpawn
+{
+	FString Logical, Placement, Group, Villain, Display, Kind, Objective, ObjectiveText, RewardText, HostageVillain, HostageName;
+	int32 Count = 1;
+	TArray<FString> Lines, CreateOn, ActivateOn;
+	TArray<FCoHStoryActor> Actors;
+	FCoHStoryClues Clues;
+};
 
 struct FCoHStoryTask
 {
@@ -44,8 +68,10 @@ struct FCoHStoryTask
 	// mission
 	FString MapSet, MissionGroup, MissionZone, Door, Entry;
 	int32 MapLength = 15;
-	TArray<FString> CompleteWith;
+	TArray<FString> CompleteWith, FailWith;
 	TArray<FCoHStoryObjective> Objectives;
+	/** clues and souvenirs on accepting, completing and turning in */
+	FCoHStoryClues BeginClues, CompleteClues, ReturnClues;
 	TArray<FCoHStorySpawn> Spawns;
 };
 
@@ -60,6 +86,8 @@ struct FCoHStoryContact
 	TArray<FString> Tasks, Arcs;
 	/** Stores the contact sells from: "<x>_CL1" / "_CL2" / "_CL3" by relationship, or all. */
 	TArray<FString> Stores;
+	/** ContactRequires (postfix: "class_peacebringer arch char> eq"); empty: anyone */
+	TArray<FString> Requires;
 };
 
 /** A story NPC who is not a contact (delivery targets and the like). */
@@ -126,13 +154,17 @@ public:
 	TMap<FString, TArray<FVector>> Gurneys;
 	/** Zones whose original hospital is gone (Atlas Park was rebuilt): heroes wake at the start point. */
 	UPROPERTY(Config) TArray<FString> NoHospitalZones = { TEXT("city_01_01") };
-	/** The nearest hospital bed; false: none (use the start point). */
-	bool NearestHospital(const FVector& From, FVector& Out) const;
+	/** The nearest hospital bed in the zone at From; false: none there (use the start point). */
+	bool NearestHospital(const UObject* WorldContext, const FVector& From, FVector& Out) const;
 	TMap<FString, TMap<int32, FCoHStoryReward>> Rewards;
 	TMap<FString, FCoHMissionMap> Maps;
 	/** map set (lower case) -> length -> map ids */
 	TMap<FString, TMap<int32, TArray<FString>>> MapSets;
 	TArray<FCoHMapSelection> MapSelect;
+	/** "<file>#<clue>" (lower case) and souvenir name (lower case) */
+	TMap<FString, FCoHClueDef> Clues, Souvenirs;
+	/** A clue a task names: the one in the task's own file. Key: "<file>#<clue>". */
+	FString ClueKey(const FString& TaskId, const FString& Clue) const;
 private:
 	void LoadMaps(const FString& File);
 	TMap<FString, FString> Prev;
@@ -170,8 +202,14 @@ public:
 	void ApplyLook();
 	virtual void Tick(float Delta) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	/** Host: a rescued hostage walks after this hero (null: stands still). */
+	void FollowHero(APawn* Hero);
+	APawn* Following() const { return Follow.Get(); }
+	/** A mission hostage (rescue / escort), not a contact or person to talk to. */
+	bool bHostage = false;
 private:
 	UFUNCTION() void OnRep_Look();
+	TWeakObjectPtr<APawn> Follow;
 	bool bLookApplied = false;
 };
 
@@ -191,6 +229,10 @@ public:
 	/** Host: the task it belongs to and, for objectives, which. */
 	FString Task;
 	int32 Objective = INDEX_NONE;
+	/** an object to destroy (a mission spawn run) standing in as a marker */
+	int32 Run = INDEX_NONE;
+	/** a click that takes time is under way */
+	bool bBusy = false;
 	UPROPERTY(VisibleAnywhere) TObjectPtr<class UStaticMeshComponent> Beam;
 	UPROPERTY(VisibleAnywhere) TObjectPtr<class UTextRenderComponent> Label;
 	virtual void Tick(float Delta) override;
@@ -231,8 +273,9 @@ public:
 	/** NPCs stand when a player is this close (cm) and go past LeaveDistance. */
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float StandDistance = 12000.f;
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float LeaveDistance = 20000.f;
-	/** Indoor mission maps load this far below the city (cm), one slot apart along X. */
-	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionDepth = 250000.f;
+	/** Indoor mission maps load this far above the city (cm), one slot apart along X: high above the
+	 *  height fog, which is thickest low down (below the city they were lost in it). */
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionHeight = 300000.f;
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionSlotSpacing = 150000.f;
 	/** At most this many encounter groups fill an indoor map besides the mission's own spawns. */
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") int32 MaxFillerGroups = 14;
@@ -252,8 +295,15 @@ public:
 	{
 		return Missions.ContainsByPredicate([&](const FMission& M) { return M.Hero.Get() == For && M.Task == TaskId && M.bInside; });
 	}
-	/** The hero clicked an objective. */
-	void UseObjective(class UCoHStoryComponent* For, ACoHMissionMarker* Marker);
+	/** A hero defeated inside an indoor map goes to the hospital: true and the mission's door when it was
+	 *  inside one (it is no longer inside). */
+	bool LeaveForHospital(APawn* Who, FVector& Door);
+	/** Is this place inside an indoor mission map (above the city)? */
+	bool IsMissionSpace(const FVector& P) const { return P.Z > MissionHeight * 0.5f; }
+	/** The hero clicked an objective (or an object to destroy that stands in as a marker). */
+	void UseObjective(class UCoHStoryComponent* For, ACoHMissionMarker* Marker, APawn* By = nullptr);
+	/** A hero (owner or teammate) used a hostage: freed once its captors are down, then it follows. */
+	void UseHostage(APawn* By, ACoHStoryNPC* Hostage);
 	/** Removes a hero's mission (abandoned, finished, or the hero left). */
 	void CloseMission(class UCoHStoryComponent* For, const FString& TaskId);
 	bool HasMission(const class UCoHStoryComponent* For, const FString& TaskId) const
@@ -285,6 +335,29 @@ private:
 		TWeakObjectPtr<ACoHMissionMarker> ExitMarker;
 		/** teammates inside the owner's map */
 		TArray<TWeakObjectPtr<APawn>> Guests;
+		/** the task's spawns, one run per copy (MissionCount): placed now or when their trigger objective is done */
+		struct FRun
+		{
+			int32 Spawn = INDEX_NONE;
+			FVector Center = FVector::ZeroVector;
+			TArray<FVector> Spots;
+			bool bEndRoom = false, bCreated = false, bDone = false, bRescued = false;
+			TArray<TWeakObjectPtr<ACoHCombatEnemy>> Foes;
+			TWeakObjectPtr<ACoHStoryNPC> Hostage;
+			/** an object to destroy with no model: a marker to smash */
+			TWeakObjectPtr<ACoHMissionMarker> Object;
+		};
+		TArray<FRun> Runs;
+		/** objective name (lower case) -> instances still to do; Known: every name this mission can complete */
+		TMap<FString, int32> Left;
+		TSet<FString> Known, Done;
+		/** objectives to click that wait for another objective (ActivateOn): index and place */
+		TArray<TPair<int32, FVector>> Waiting;
+		/** clicks that take time (InteractDelay): marker, who, when done */
+		struct FClick { TWeakObjectPtr<ACoHMissionMarker> Marker; TWeakObjectPtr<APawn> By; double At = 0; };
+		TArray<FClick> Clicks;
+		/** team size the mission was filled for (the original scales encounters by it) */
+		int32 Heroes = 1;
 	};
 	TArray<FMission> Missions;
 	TMap<FString, TWeakObjectPtr<ACoHStoryNPC>> NPCs;
@@ -292,6 +365,8 @@ private:
 	int32 NextGroupId = 900000;
 	void Stream();
 	bool Ground(const FVector& Near, FVector& Out) const;
+	/** where a story NPC stands: the lowest surface at or above its data position */
+	bool StandingSpot(const FVector& Pos, FVector& Out) const;
 	bool RandomSpot(const FVector& Center, float Radius, FVector& Out) const;
 	ACoHMissionMarker* SpawnMarker(ECoHMarkerKind Kind, const FVector& At, APawn* For, const FString& Text, const FString& Task);
 	FMission* Find(class UCoHStoryComponent* For, const FString& TaskId);
@@ -305,6 +380,16 @@ private:
 	/** villain spawning shared by the door and indoor missions */
 	class ACoHCombatEnemy* SpawnFoe(FMission& M, const FString& Villain, const FVector& At, const FString& Display, int32 Level, int32 GroupId);
 	void SpawnGroupAt(FMission& M, const FString& Group, const TArray<FVector>& Spots, const FVector& Center, int32 Minions, bool bLt, int32 Level);
+	/** mission variety (docs/missions.md): runs of the task's spawns, named objectives, triggers */
+	void AddRun(FMission& M, int32 Spawn, const FVector& Center, const TArray<FVector>& Spots, bool bEndRoom);
+	void CreateRun(FMission& M, int32 RunIdx);
+	void RunDone(FMission& M, int32 RunIdx);
+	void ObjectiveDone(FMission& M, const FString& Name);
+	bool Triggered(const FMission& M, const TArray<FString>& On) const;
+	void PlaceClickable(FMission& M, int32 Objective, const FVector& At, bool bCount = true);
+	void FinishClick(FMission& M, ACoHMissionMarker* Marker);
+	void TickRuns(FMission& M);
+	int32 TeamSize(const FMission& M) const;
 };
 
 /** On each hero: talks to contacts, carries tasks; the contact window on the player's PC. */
@@ -342,6 +427,10 @@ public:
 	/** Console: coh.Story.Give <task id> (tests), coh.Story.Contact <id> (talk from anywhere). */
 	void TalkTo(const FString& ContactId);
 	void Accept(const FString& TaskId, const FString& ContactId);
+	/** Host: clues and souvenirs a task step gives or takes (shown as a line; /clues lists them). */
+	void GiveClues(const FString& TaskId, const FCoHStoryClues& C);
+	/** "Clues: ..." / "Souvenirs: ..." for /clues and /souvenirs. */
+	FString DescribeClues(bool bSouvenirs) const;
 
 private:
 	void Show(const FCoHDialogPage& Page);

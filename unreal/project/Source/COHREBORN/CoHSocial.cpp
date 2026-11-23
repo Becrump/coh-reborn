@@ -1,4 +1,5 @@
 #include "CoHSocial.h"
+#include "CoHStory.h"
 #include "CoHPowers.h"
 #include "CoHBadges.h"
 #include "CoHHeroProgress.h"
@@ -223,7 +224,8 @@ void UCoHSocial::Submit(const FString& Line)
 		else { Lines.Add({ ECoHChat::System, FString(), TEXT("Use /tell name, message") }); ++LinesVersion; }
 	}
 	else if (Cmd == TEXT("invite") || Cmd == TEXT("i") || Cmd == TEXT("accept") || Cmd == TEXT("decline") || Cmd == TEXT("leave")
-		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges"))
+		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges")
+		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs"))
 		ServerCommand(Cmd == TEXT("i") ? FString(TEXT("invite")) : Cmd, Rest);
 	else { Lines.Add({ ECoHChat::System, FString(), TEXT("Unknown command /") + Cmd }); ++LinesVersion; }
 }
@@ -347,6 +349,10 @@ void UCoHSocial::ServerCommand_Implementation(const FString& Command, const FStr
 	else if (Command == TEXT("badges"))
 	{
 		if (const UCoHBadges* B = UCoHBadges::Get(this)) Tell(ECoHChat::System, FString(), B->Describe(GetOwner()));
+	}
+	else if (Command == TEXT("clues") || Command == TEXT("souvenirs"))
+	{
+		if (const UCoHStoryComponent* St = UCoHStoryComponent::Of(GetOwner())) Tell(ECoHChat::System, FString(), St->DescribeClues(Command == TEXT("souvenirs")));
 	}
 	else if (Command == TEXT("who"))
 	{

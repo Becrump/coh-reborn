@@ -4,6 +4,7 @@
 #include "CoHActiveRagdoll.h"
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
+#include "CoHSocial.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "CoHLifeManager.h"
@@ -297,6 +298,14 @@ void ACoHCombatEnemy::Tick(float Delta)
  if(bRagdoll || State==ECoHEnemyState::Dead || State==ECoHEnemyState::Hit || State==ECoHEnemyState::Attack) return;
  auto* AI=Cast<AAIController>(GetController()); if(!AI) return;
  if(Powers && Powers->IsMezzed()){AI->StopMovement();return;}
+ if(!bSaidIdle && !ChatIdle.IsEmpty() && !Target && HasAuthority() && GetWorld()->GetTimeSeconds()>=NextChatCheck)
+ {
+  // the idle line, once, when a hero first comes near (the original's Dialog_InActive)
+  NextChatCheck=GetWorld()->GetTimeSeconds()+1.0;
+  for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)
+   if(APawn* P=It->Get()?It->Get()->GetPawn():nullptr)
+    if(FVector::Dist(P->GetActorLocation(),GetActorLocation())<2000.f){ bSaidIdle=true; SayLine(ChatIdle,P); break; }
+ }
  if(Think(Delta,AI)) return;
  // the nearest player (any of the group) is who we care about
  APawn* Player=nullptr; float Best=TNumericLimits<float>::Max();
@@ -606,6 +615,22 @@ void ACoHCombatEnemy::Alert(APawn* Who)
  Threat.FindOrAdd(Who)+=1.f;
  if(!Target) Target=Who;
 }
+void ACoHCombatEnemy::SayLine(const FString& Var,APawn* About)
+{
+ const UCoHGameRules* GR=UCoHGameRules::Get(this);
+ if(!GR || IsDead() || !HasAuthority()) return;
+ FString Line=GR->ChatterLine(ChatFile,Var);
+ if(Line.IsEmpty()) return;
+ const UCoHSocial* AboutS=UCoHSocial::Of(About);
+ const FString HeroName=AboutS?AboutS->Name():FString(TEXT("hero"));
+ Line=Line.Replace(TEXT("{HeroName}"),*HeroName).Replace(TEXT("$name"),*HeroName).Replace(TEXT("$Name"),*HeroName);
+ const FString Who=Powers && !Powers->DisplayName.IsEmpty()?Powers->DisplayName:Villain;
+ if(Powers) Powers->MulticastText(Line,FLinearColor(0.95f,0.95f,0.85f));
+ // local chat: heroes within the original's 100 feet
+ for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It)
+  if(APawn* P=It->Get()?It->Get()->GetPawn():nullptr)
+   if(UCoHSocial* S=UCoHSocial::Of(P)) if(FVector::Dist(P->GetActorLocation(),GetActorLocation())<=S->LocalRangeCm) S->Tell(ECoHChat::Local,Who,Line);
+}
 void ACoHCombatEnemy::Shout(APawn* Who)
 {
  // call for help (AI config: ShoutChance % to each friend within ShoutRadius;
@@ -679,6 +704,7 @@ bool ACoHCombatEnemy::Think(float Delta,AAIController* AI)
   LastEvent.Add(P,Now);
   if(Threat.Contains(P)) continue;
   Threat.Add(P,1.f);
+  if(!bSaidAlert && !ChatAlert.IsEmpty()){ bSaidAlert=true; bSaidIdle=true; SayLine(ChatAlert,P); }
   Shout(P);
  }
  for(auto It=Threat.CreateIterator();It;++It)
@@ -1344,6 +1370,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
    if(!E) continue;
    E->SetHome(At);
    E->SetEncounterIdle(A.AIInactive);
+   E->ChatFile=Enc->Dialog; E->ChatIdle=A.SayInactive; E->ChatAlert=A.SayAlerted;
    if(G.Members.Num()==0){ auto* Inv=NewObject<UNavigationInvokerComponent>(E); Inv->SetGenerationRadii(2500.f,3500.f); Inv->RegisterComponent(); }
    E->GroupId=NextGroupId;
    G.Members.Add(E);

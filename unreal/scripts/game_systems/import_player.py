@@ -111,6 +111,16 @@ def rename_clips(dest):
             el.rename_asset(str(d.package_name), dest + "/" + clip)
 
 
+def flag_skeletal_materials(dest):
+    """Each body part has its own material: mark it Used with Skeletal Mesh, or Unreal draws the
+    part with its default material in the game (found in the 2026-11-23 playtest)."""
+    for d in assets_in(dest, "Material"):
+        mat = d.get_asset()
+        if not mat.get_editor_property("used_with_skeletal_mesh"):
+            needs = unreal.MaterialEditingLibrary.set_material_usage(mat, unreal.MaterialUsage.MATUSAGE_SKELETAL_MESH)
+            print("skeletal usage", d.asset_name, needs)
+
+
 def import_preset(body, name, skeleton):
     dest = "%s/Presets/%s/%s" % (ROOT, body, name)
     if assets_in(dest, "SkeletalMesh"):
@@ -119,6 +129,7 @@ def import_preset(body, name, skeleton):
     m = models()[name]
     ok = run_import(body_copy(os.path.join(OUT, m["gltf"]), body), dest, pipeline(skeleton))
     rename_clips(dest)
+    flag_skeletal_materials(dest)
     save(dest)
     meshes = assets_in(dest, "SkeletalMesh")
     print("PRESET", name, body, "ok" if ok and meshes else "FAILED",

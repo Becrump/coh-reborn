@@ -1001,13 +1001,16 @@ void ACoHHeroCharacter::ServerHospital_Implementation()
  // the original: wake up in the nearest hospital, healed (the debt was taken at the defeat)
  FVector At = RespawnLocation;
  const UCoHStory* S = UCoHStory::Get(this);
- FVector Bed;
- if (S && S->NearestHospital(GetActorLocation(), Bed))
+ FVector Bed, From = GetActorLocation();
+ // defeated inside a mission map: the hospital of the zone its door is in
+ if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld())) { FVector Door; if (D->LeaveForHospital(this, Door)) From = Door; }
+ if (S && S->NearestHospital(this, From, Bed))
  {
+  // only a bed with ground under it (its tile streamed in); else the start point
   FHitResult Hit;
   FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHHospital), true, this);
-  At = GetWorld()->LineTraceSingleByObjectType(Hit, Bed + FVector(0, 0, 300.f), Bed - FVector(0, 0, 5000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q)
-   ? Hit.ImpactPoint + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f) : Bed + FVector(0, 0, 100.f);
+  if (GetWorld()->LineTraceSingleByObjectType(Hit, Bed + FVector(0, 0, 300.f), Bed - FVector(0, 0, 5000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q))
+   At = Hit.ImpactPoint + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f);
  }
  Powers->Reset();
  Health = Powers->Health;
@@ -1275,11 +1278,12 @@ void ACoHHeroCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void ACoHHeroCharacter::SendLocalHero()
 {
 	if (!Progress) return;
-	// which hero: -Hero=<name>, else the starter's name (+ _P<n> for extra PIE players)
-	// the hero picked in the HQ lobby, else -Hero=<name>, else the starter's name
+	// which hero: -Hero=<name> on the command line (tests: play_two.cmd gives each copy its own),
+	// else the hero picked in the HQ lobby, else the starter's name (+ _P<n> for extra PIE players)
 	FString Name;
-	if (const UCoHFrontend* Front = UCoHFrontend::Get(this)) Name = Front->ChosenHero();
-	if (Name.IsEmpty() && (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name) || Name.IsEmpty()))
+	if (!FParse::Value(FCommandLine::Get(), TEXT("Hero="), Name)) Name.Reset();
+	if (Name.IsEmpty()) if (const UCoHFrontend* Front = UCoHFrontend::Get(this)) Name = Front->ChosenHero();
+	if (Name.IsEmpty())
 	{
 		Name = HeroFile.IsEmpty() ? FString(TEXT("Hero")) : FPaths::GetBaseFilename(HeroFile);
 		const FWorldContext* WC = GEngine ? GEngine->GetWorldContextFromWorld(GetWorld()) : nullptr;
@@ -1429,4 +1433,10 @@ void ACoHHeroCharacter::ApplyTravel(const FCoHTravelState& State)
 	else if (!State.bClimbing && bClimbing) StopClimb();
 	if (bFlight != State.bFlight) SetFlightEnabled(State.bFlight);
 	else ApplyMovementMode();
+}
+
+bool ACoHHeroCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
+{
+	if (UCoHSocial::SameTeam(this, ViewTarget) || UCoHSocial::SameTeam(this, RealViewer ? RealViewer->GetOwner() : nullptr)) return true;
+	return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 }

@@ -64,7 +64,13 @@ if /i "%~1"=="sync" (
   copy /y "%UPROJECT%" "!BACKUP!\" >nul
   echo Copying Source from "!REPO!"
   rem no /PURGE: local .bak files and anything only on this PC stay
-  robocopy "!REPO!\unreal\project\Source" "%COH_PROJECT%\Source" /E /NFL /NDL /NJH /NJS >nul
+  robocopy "!REPO!\unreal\project\Source" "%COH_PROJECT%\Source" /E /FP /NDL /NJH /NJS /NC /NS > "%TEMP%\coh_synced.txt"
+  rem the copied files keep the repo's times, which can be older than the last build, so the build
+  rem would skip them: stamp every file that was copied with the time now
+  rem (robocopy lists the repo side: the same path under the project's Source is stamped)
+  set "COH_SRC=!REPO!\unreal\project\Source"
+  set "COH_DST=%COH_PROJECT%\Source"
+  powershell -NoProfile -Command "$s = (Resolve-Path -LiteralPath $env:COH_SRC).Path; Get-Content $env:TEMP\coh_synced.txt | ForEach-Object { $f = $_.Trim(); if ($f -and $f.StartsWith($s, 'OrdinalIgnoreCase')) { $d = $env:COH_DST + $f.Substring($s.Length); if (Test-Path -LiteralPath $d) { (Get-Item -LiteralPath $d).LastWriteTime = Get-Date } } }"
   copy /y "!REPO!\unreal\project\Config\DefaultGame.ini" "%COH_PROJECT%\Config\DefaultGame.ini" >nul
   copy /y "!REPO!\unreal\project\Config\DefaultEngine.ini" "%COH_PROJECT%\Config\DefaultEngine.ini" >nul
   if exist "!REPO!\unreal\project\Config\DefaultScalability.ini" copy /y "!REPO!\unreal\project\Config\DefaultScalability.ini" "%COH_PROJECT%\Config\DefaultScalability.ini" >nul

@@ -252,6 +252,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	/** Teammates always see each other (team window, position) however far apart, as in the original. */
+	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
 	virtual void SetupPlayerInputComponent(UInputComponent* Input) override;
 
 private:
