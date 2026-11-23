@@ -44,6 +44,11 @@ public:
 
 	/** Are these two heroes on the same team (or the same hero)? */
 	static bool SameTeam(const AActor* A, const AActor* B);
+	/** Host: the level a hero of OwnLevel fights at on its team (sidekick / exemplar to the
+	 *  leader); 0: its own level. */
+	static int32 CombatLevelFor(const AActor* Hero, int32 OwnLevel);
+	/** Host: re-apply every teammate's level (team or leader changed). */
+	void RefreshTeamLevels();
 	/** Host: every hero on this one's team (itself included; just itself when not teamed). */
 	TArray<APawn*> TeamMembers() const;
 	/** The hero's name as others see it. */
