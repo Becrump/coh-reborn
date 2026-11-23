@@ -13,6 +13,7 @@
 #include "CoHBodyAnim.h"
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
+#include "CoHZoneEvents.h"
 #include "CoHPowerUI.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/Skeleton.h"
@@ -878,6 +879,8 @@ void ACoHGameMode::StartPlay()
 		W->SpawnActor<ACoHEnemySpawner>(ACoHEnemySpawner::StaticClass(), FTransform::Identity);
 		UE_LOG(LogTemp, Log, TEXT("CoH: no enemy spawner on the map, added one"));
 	}
+	// the zone events (fires, raves, invasions): one director per world, the host runs it
+	if (W && !ACoHZoneEvents::Get(W)) W->SpawnActor<ACoHZoneEvents>(ACoHZoneEvents::StaticClass(), FTransform::Identity);
 }
 
 AActor* ACoHGameMode::ChoosePlayerStart_Implementation(AController* Player)

@@ -8,7 +8,8 @@ tools/ai/coh_encounters.py does for Atlas Park, and writes into <out>:
   roster.json           villain -> group, rank, class, AI config, ally,
                         powers, levels, costumes, encounters (zone:name);
                         plus the pets powers call (Fire Imps, henchmen...,
-                        ally "Pet", no encounters) unless --no-pets
+                        ally "Pet", no encounters) unless --no-pets, and the
+                        villains zone events spawn (<enc>/zone_events.json)
   encounters_all.json   every zone's spawn definitions, keyed "<zone>:<name>"
                         (the game keeps reading Atlas Park's encounters.json;
                         this file only feeds the idle behaviors of the kit)
@@ -132,6 +133,34 @@ def pets_of(powers, villains, roster):
     return out
 
 
+def event_villains(enc_dir, villains, roster):
+    """The villains zone events spawn (<enc_dir>/zone_events.json, tools/zones/zone_events.py)."""
+    p = os.path.join(enc_dir, "zone_events.json")
+    if not os.path.exists(p):
+        return {}
+    ev = json.load(open(p))
+    names = set()
+    for e in [x for z in ev.get("zone", {}).values() for x in z] + ev.get("city", []):
+        for vl in e.get("villains", {}).values():
+            names.update(vl)
+        for k in ("BossName",):
+            if e.get("vars", {}).get(k):
+                names.add(e["vars"][k])
+    lower = {k.lower(): k for k in villains}
+    out = {}
+    for n in sorted(names):
+        n = lower.get(n.lower(), n)
+        v = villains.get(n)
+        if not v or n in roster or not ce._costumes(v):
+            continue
+        out[n] = {"group": v.get("VillainGroup"), "rank": v.get("Rank"), "class": v.get("Class"),
+                  "ai_config": v.get("AIConfig"), "ally": v.get("Ally") or "Monster",
+                  "powers": [".".join(p) for p in v.get("powers", [])],
+                  "def_levels": sorted(v.get("levels", {})), "costumes": ce._costumes(v),
+                  "spawn_levels": [], "weight": 0, "zones": [], "encounters": []}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("data")
@@ -154,6 +183,9 @@ def main():
                        villains, roster)
         roster.update(pets)
         print("%d pets" % len(pets), flush=True)
+    evs = event_villains(a.enc_dir, villains, roster)
+    roster.update(evs)
+    print("%d zone event villains" % len(evs), flush=True)
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, "roster.json"), "w") as f:
         json.dump(roster, f, indent=1)
