@@ -33,7 +33,7 @@ GLAZE_PATHS = {"GalaxyCity": "/Game/Zones/GalaxyCity"}   # Galaxy's materials pr
 OPTIONAL = {"props", "trees", "shot_overview", "shot_street"}   # a failure here is logged, the zone carries on
 OUT = os.path.join(REPO, "docs", "zones", "import")
 WORK = os.path.join(os.environ.get("TEMP", "."), "coh_zone_batch")
-SHOT_DIR = r"C:\Users\rtcru\OneDrive\Documents\Unreal Projects\COHREBORN\Saved\Screenshots\WindowsEditor"
+SHOT_DIR = os.path.join(os.environ.get("COH_PROJECT", r"C:\UnrealProjects\COHREBORN"), "Saved", "Screenshots", "WindowsEditor")
 
 # order from docs/zones/one-world-plan.md (Galaxy City was imported first and seeds the library)
 ORDER = [

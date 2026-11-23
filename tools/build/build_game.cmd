@@ -21,7 +21,7 @@ set "LOG=%HERE%build_log.txt"
 set "ERR=%HERE%build_errors.txt"
 set "STATUS=%HERE%build_status.txt"
 
-if not defined COH_PROJECT set "COH_PROJECT=%USERPROFILE%\OneDrive\Documents\Unreal Projects\COHREBORN"
+if not defined COH_PROJECT set "COH_PROJECT=C:\UnrealProjects\COHREBORN"
 set "UPROJECT=%COH_PROJECT%\COHREBORN.uproject"
 if not exist "%UPROJECT%" (
   echo %date% %time% NO PROJECT at "%UPROJECT%" > "%STATUS%"
