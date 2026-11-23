@@ -2,7 +2,7 @@
 
 The original game's enhancement system for the core game: Training (TO), Dual
 Origin (DO) and Single Origin (SO) enhancements, slots, stores and drops.
-Invention sets, Hamidon origins and attuned enhancements come later.
+Inventions (salvage, recipes, invention enhancements): see inventions.md. Set bonuses, Hamidon origins and attuned enhancements come later.
 
 ## Data
 

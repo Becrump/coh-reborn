@@ -27,14 +27,31 @@ struct FCoHPowerDef;
 
 struct FCoHBoostDef
 {
-	FString Id, Name, Grade, Type, Icon, Help;   // Grade TO / DO / SO; Type kDamage_Boost...
+	FString Id, Name, Grade, Type, Icon, Help;   // Grade TO / DO / SO / IO; Type kDamage_Boost...
 	TArray<FString> Origins, Attribs;
 	float Scale = 0.f;
 	bool bScheduleB = false;
+	/** Invention enhancements: every type they enhance (Acc/Dmg...), the strength of
+	 *  each attribute (times the class table Table at the enhancement's level), the set. */
+	TArray<FString> Types;
+	TMap<FString, float> Scales;
+	FString Table, Set;
+	bool bUnique = false;
+	/** This attribute's share (an invention's own scale; 1 for the others). */
+	float Part(const FString& Attrib) const { const float* S = Scales.Find(Attrib); return S ? *S : 1.f; }
 	/** "Dmg", "Acc"... for the slot buttons */
 	FString Short() const;
 };
 struct FCoHStoreItem { FString Boost; int32 Level = 1, Price = 0; };
+struct FCoHSalvageDef { FString Name, Rarity, Icon; int32 Sell = 0; };
+struct FCoHRecipeDef
+{
+	FString Id, Name, Rarity, Boost, Power;     // makes an enhancement (Boost) or a temporary power
+	int32 Level = 1, Cost = 0, Sell = 0;
+	TArray<TPair<FString, int32>> Salvage;      // components
+};
+/** One line of a rank's salvage table: rolls Chance %, then one item of its sets. */
+struct FCoHDropLine { float Chance = 0.f; TArray<FString> Groups; bool bDefault = true; TArray<TPair<float, FString>> Sets; };
 
 UCLASS(Config = Game)
 class COHREBORN_API UCoHItems : public UGameInstanceSubsystem
@@ -63,6 +80,19 @@ public:
 	int32 SellPrice(const FString& Item) const;
 	/** A label for an item ("Single Origin: Damage 25"). */
 	FString Label(const FString& Item) const;
+
+	// inventions (<out>/items/inventions_game.json, tools/items/inventions_game.py)
+	/** Host: the salvage and recipes a defeated villain drops ("S:S_LuckCharm", "R:Invention_Damage_15"). */
+	TArray<FString> RollInventions(const FString& Rank, int32 Level, const FString& Group) const;
+	int32 SalvageRoom(int32 Level) const;
+	int32 RecipeRoom(int32 Level) const;
+	FString SalvageName(const FString& Id) const { const FCoHSalvageDef* S = Salvage.Find(Id); return S ? S->Name : Id; }
+	TMap<FString, FCoHSalvageDef> Salvage;
+	TMap<FString, FCoHRecipeDef> Recipes;
+	TMap<FString, TArray<TPair<float, FString>>> DropSets;
+	TMap<FString, TMap<int32, TArray<FCoHDropLine>>> Drops;
+	TArray<int32> SalvageCap, RecipeCap;
+	void LoadInventions(const FString& File);
 
 	TMap<FString, FCoHBoostDef> Boosts;
 	TMap<FString, TArray<FCoHStoreItem>> Stores;
@@ -95,6 +125,16 @@ public:
 	UFUNCTION(Server, Reliable) void ServerTrash(int32 TrayIndex);
 	UFUNCTION(Server, Reliable) void ServerBuy(int32 Row);
 	UFUNCTION(Server, Reliable) void ServerSell(int32 TrayIndex);
+	/** Inventions: craft a recipe (its salvage and influence) into an enhancement or a power. */
+	UFUNCTION(Server, Reliable) void ServerCraft(const FString& Recipe);
+	UFUNCTION(Server, Reliable) void ServerTrashSalvage(const FString& Salvage);
+	UFUNCTION(Server, Reliable) void ServerTrashRecipe(const FString& Recipe);
+	/** Host: salvage / recipe drops for the hero (false when there's no room). */
+	bool GiveInvention(const FString& Item);
+	/** Host: a defeated villain's invention drops (the rank's salvage table). */
+	static void OnVillainDefeatedInventions(AActor* Hero, const FString& Rank, int32 VillainLevel, const FString& Group);
+	/** The player's own PC: the window on the inventions page. */
+	void ToggleInventions();
 	UFUNCTION(Client, Reliable) void ClientShowStore(const FString& Title, const TArray<FString>& Rows);
 
 	/** The player's own PC: the Enhancements window. */

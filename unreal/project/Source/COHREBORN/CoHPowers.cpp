@@ -676,7 +676,7 @@ void UCoHPowerComponent::SetBoosts(const FCoHBoostState& State, const FString& O
 			const FCoHBoostDef* B = UCoHItems::Split(Item, Id, Lv) ? I->Boost(Id) : nullptr;
 			if (!B || !I->Fits(*B, *Base, Origin)) continue;
 			const float V = I->Strength(*B, Lv, HeroLevel);
-			for (const FString& A : B->Attribs) { Sum.FindOrAdd(A.ToLower()) += V; SchedB.FindOrAdd(A.ToLower()) |= B->bScheduleB; }
+			for (const FString& A : B->Attribs) { Sum.FindOrAdd(A.ToLower()) += V * B->Part(A); SchedB.FindOrAdd(A.ToLower()) |= B->bScheduleB; }   // an invention's own share per attribute
 		}
 		if (!Sum.Num()) continue;
 		for (TPair<FString, float>& KV : Sum) KV.Value = UCoHItems::Diminish(KV.Value, SchedB.FindRef(KV.Key));

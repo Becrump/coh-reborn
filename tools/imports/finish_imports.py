@@ -29,6 +29,8 @@ Convert stages (no editor needed; each takes seconds to a few minutes):
                (tools/badges/badges_game.py) -> out/badges/badges_game.json
   items_game   enhancements, stores and slot levels the game reads
                (tools/items/items_game.py) -> out/items/items_game.json
+  inventions_game  salvage, recipes, invention enhancements and their drop
+               tables (tools/items/inventions_game.py) -> out/items/inventions_game.json
   missions     indoor mission maps the tasks use, 2 layouts per map set and
                length (tools/missions/mission_maps.py) -> out/missions
   characters   the 120 hero presets and every contact/mission NPC model
@@ -75,7 +77,7 @@ NEEDED = ("texts/english", "scripts.loc/contacts", "scripts.loc/spawndefs",
           "maps/city_zones", "maps/missions", "object_library", "defs/powers", "sequencers",
           "aiscript", "menu")
 CONVERT = ["encounters", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
-           "items_game", "badges_game", "chatter", "missions", "characters"]
+           "items_game", "inventions_game", "badges_game", "chatter", "missions", "characters"]
 UNREAL = ["ue_fx", "ue_enemies", "ue_missions", "ue_presets", "ue_npcs"]
 
 
@@ -175,6 +177,9 @@ def convert(stage, data, piggs):
     if stage == "items_game":
         p = run([PY, "tools/items/items_game.py", OUT])
         return p.returncode == 0, last_line(p, "items_game.json")
+    if stage == "inventions_game":
+        p = run([PY, "tools/items/inventions_game.py", OUT])
+        return p.returncode == 0, last_line(p, "inventions_game.json")
     if stage == "chatter":
         p = run([PY, "tools/story/chatter.py", data, OUT])
         return p.returncode == 0, last_line(p, "chatter.json")
