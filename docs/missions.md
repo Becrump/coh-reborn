@@ -42,7 +42,51 @@ shadows; a post process volume for indoor exposure; a nav mesh bounds volume), s
   once; the map unloads when the hero leaves. Abandoning inside moves the hero out first.
 - No imported layout (or it fails to load in 60 s): the mission plays at the door as before.
 
+## Mission variety (2026-11-23)
+
+`story_game.py` now reads each mission spawn's included encounter (`spawnincs.json`, the original's
+`SpawnDefs/TaskIncluded/MissionMap/*.spawninc`) and exports per spawn:
+
+- `kind`: **rescue** (a `LeadToPlace` script, succeed on rescue), **escort** (`LeadToPlace`, succeed on
+  delivery), **ambush** (`WaveAttackEncounter`), **destroy** (an object villain such as
+  `Objects_Exploding_Crate_Warehouse`) or **fight**. In the Paragon City tasks: 165 ambushes, 100 rescues,
+  50 escorts, 123 destroy spawns, about 3,100 fights.
+- `actors`: the encounter's villain slots (role foe / hostage / object, villain or group and rank, name,
+  number, and the team sizes it appears for), with the task's vars filled in.
+- `objective` (the spawn's own objective name, its text, reward line and clues), `create_on` and
+  `activate_on` (CreateOnObjectiveComplete / ActivateOnObjectiveComplete triggers).
+
+Objectives to click gained `placement` (the room the original asks for), `delay` (InteractDelay
+seconds), `desc`, `activate_on` and `clues`. Missions gained `fail_with`. Tasks gained `clues` (begin,
+complete, return: AddClues, RemoveClues, SouvenirClue), and the file gained `clues` (the ClueDefs, keyed
+`<task or arc file>#<clue>`) and `souvenirs` (souvenirs.json). 1,528 clues and 284 souvenirs.
+
+In the game (`ACoHStoryDirector`, `CoHStory.cpp`):
+
+- Each copy of a task spawn is a **run**. It is placed when the mission fills, or once an objective it
+  waits for is done. A trigger that only one of the original's mission scripts could fire places it at
+  once (an ambush: after the first objective). A run never keeps a mission stuck: when everything else
+  is done, waiting runs come anyway.
+- Encounters put out the original's actors for the **team size** (MinimumHeroesRequired /
+  MaximumHeroesRequired), so a team of four meets more than a solo hero.
+- **Hostages** stand among their captors (a story NPC with the hostage's villain model when it is
+  imported, else a marker). E on a hostage once the captors near it are down frees it and it follows
+  that hero. A rescue completes then; an escort completes when the hostage reaches the exit (or the door
+  outdoors). A teammate can take the lead with E. Hostages can't be hurt yet, so CanFailWith is not used.
+- **Ambushes** shout "Ambush!" and run at the hero when they come.
+- **Destroy**: the object spawns as a villain when its model exists; otherwise a marker stands in that
+  is smashed with E.
+- Objectives to click go to the room the original names, can wait for another objective, and take
+  their InteractDelay seconds (step away and it is interrupted).
+- The mission completes by **CanCompleteWith**: any one line whose names are all done
+  (DefeatAllVillains, DefeatAllVillainsInEndRoom = the Back room's spawns, objectives and spawns by
+  name). Names of scripts we can't run are left out; a line of only those means defeat all and finish
+  every objective.
+- **Clues and souvenirs** are kept in the hero record (`story.Clues`, `story.Souvenirs`) and announced
+  when gained. `/clues` and `/souvenirs` in chat list them (a clue window comes with the UI windows).
+
 ## Not yet
 
-Team members joining the mission (teams are next), elevators between floors, unique story-arc maps,
-villain-side maps, glowing clues and hostage following.
+Elevators between floors, unique story-arc maps, villain-side maps, hostages that villains attack
+(and missions that fail when they fall), timed missions, the original's mission scripts (cut scenes,
+boss health triggers), and a clue window.

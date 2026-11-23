@@ -73,6 +73,14 @@
 		if (O.IsValid() && O->TryGetArrayField(K, A) && A->Num() >= 3) return FVector((*A)[0]->AsNumber(), (*A)[1]->AsNumber(), (*A)[2]->AsNumber());
 		return FVector::ZeroVector;
 	}
+	static FCoHStoryClues StoryClues(const TSharedPtr<FJsonObject>& O, const TCHAR* K)
+	{
+		FCoHStoryClues C;
+		const TSharedPtr<FJsonObject>* Sub;
+		if (!O.IsValid() || !O->TryGetObjectField(K, Sub)) return C;
+		C.Add = StoryList(*Sub, TEXT("add")); C.Remove = StoryList(*Sub, TEXT("remove")); C.Souvenirs = StoryList(*Sub, TEXT("souvenirs"));
+		return C;
+	}
 	static TSharedPtr<FJsonObject> StoryObj(const TSharedPtr<FJsonObject>& O, const TCHAR* K)
 	{
 		const TSharedPtr<FJsonObject>* P; return O.IsValid() && O->TryGetObjectField(K, P) ? *P : nullptr;
@@ -152,7 +160,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			{
 				T.MapSet = StoryStr(M, TEXT("mapset")); T.MissionGroup = StoryStr(M, TEXT("group")); T.MissionZone = StoryStr(M, TEXT("zone"));
 				T.Door = StoryStr(M, TEXT("door")); T.Entry = StoryStr(M, TEXT("entry")); T.MapLength = StoryInt(M, TEXT("length"), 15);
-				T.CompleteWith = StoryList(M, TEXT("complete_with"));
+				T.CompleteWith = StoryList(M, TEXT("complete_with")); T.FailWith = StoryList(M, TEXT("fail_with"));
 				const TArray<TSharedPtr<FJsonValue>>* A;
 				if (M->TryGetArrayField(TEXT("objectives"), A))
 					for (const auto& V : *A)
@@ -161,7 +169,9 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 						FCoHStoryObjective Ob;
 						Ob.Name = StoryStr(OO, TEXT("name")); Ob.Display = StoryStr(OO, TEXT("display")); Ob.Begin = StoryStr(OO, TEXT("begin"));
 						Ob.Done = StoryStr(OO, TEXT("done")); Ob.Reward = StoryStr(OO, TEXT("reward")); Ob.Number = FMath::Clamp(StoryInt(OO, TEXT("number"), 1), 1, 8);
-						Ob.Location = StoryStr(OO, TEXT("location"));
+						Ob.Location = StoryStr(OO, TEXT("location")); Ob.Placement = StoryStr(OO, TEXT("placement")); Ob.Desc = StoryStr(OO, TEXT("desc"));
+						Ob.Delay = FMath::Clamp(StoryInt(OO, TEXT("delay")), 0, 30); Ob.ActivateOn = StoryList(OO, TEXT("activate_on"));
+						Ob.Clues = StoryClues(OO, TEXT("clues"));
 						T.Objectives.Add(Ob);
 					}
 				if (M->TryGetArrayField(TEXT("spawns"), A))
@@ -172,11 +182,42 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 						Sp.Logical = StoryStr(SO, TEXT("logical")); Sp.Placement = StoryStr(SO, TEXT("placement"));
 						Sp.Group = StoryStr(SO, TEXT("group")); Sp.Villain = StoryStr(SO, TEXT("villain")); Sp.Display = StoryStr(SO, TEXT("display"));
 						Sp.Count = FMath::Clamp(StoryInt(SO, TEXT("count"), 1), 1, 6); Sp.Lines = StoryList(SO, TEXT("lines"));
+						Sp.Kind = StoryStr(SO, TEXT("kind")); if (Sp.Kind.IsEmpty()) Sp.Kind = TEXT("fight");
+						Sp.Objective = StoryStr(SO, TEXT("objective")); Sp.ObjectiveText = StoryStr(SO, TEXT("objective_text"));
+						Sp.RewardText = StoryStr(SO, TEXT("reward")); Sp.Clues = StoryClues(SO, TEXT("clues"));
+						Sp.CreateOn = StoryList(SO, TEXT("create_on")); Sp.ActivateOn = StoryList(SO, TEXT("activate_on"));
+						if (const auto H = StoryObj(SO, TEXT("hostage"))) { Sp.HostageVillain = StoryStr(H, TEXT("villain")); Sp.HostageName = StoryStr(H, TEXT("name")); }
+						const TArray<TSharedPtr<FJsonValue>>* Ac;
+						if (SO->TryGetArrayField(TEXT("actors"), Ac))
+							for (const auto& AV : *Ac)
+							{
+								const auto AO = AV->AsObject();
+								if (!AO.IsValid()) continue;
+								FCoHStoryActor Act;
+								Act.Role = StoryStr(AO, TEXT("role")); Act.Villain = StoryStr(AO, TEXT("villain")); Act.Group = StoryStr(AO, TEXT("group"));
+								Act.Rank = StoryStr(AO, TEXT("rank")); Act.Name = StoryStr(AO, TEXT("name"));
+								Act.Number = FMath::Clamp(StoryInt(AO, TEXT("number"), 1), 1, 8);
+								const TArray<TSharedPtr<FJsonValue>>* H;
+								if (AO->TryGetArrayField(TEXT("heroes"), H) && H->Num() == 2) { Act.MinHeroes = (int32)(*H)[0]->AsNumber(); Act.MaxHeroes = (int32)(*H)[1]->AsNumber(); }
+								Sp.Actors.Add(Act);
+							}
 						T.Spawns.Add(Sp);
 					}
 			}
+			if (const auto Cl = StoryObj(O, TEXT("clues")))
+			{
+				T.BeginClues = StoryClues(Cl, TEXT("begin")); T.CompleteClues = StoryClues(Cl, TEXT("complete")); T.ReturnClues = StoryClues(Cl, TEXT("return"));
+			}
 			Tasks.Add(T.Id, MoveTemp(T));
 		}
+	for (const TCHAR* Which : { TEXT("clues"), TEXT("souvenirs") })
+		if (const auto Cs = StoryObj(Root, Which))
+			for (const auto& KV : Cs->Values)
+			{
+				const auto O = KV.Value->AsObject();
+				if (!O.IsValid()) continue;
+				(FCString::Strcmp(Which, TEXT("clues")) == 0 ? Clues : Souvenirs).Add(FString(KV.Key).ToLower(), { StoryStr(O, TEXT("name")), StoryStr(O, TEXT("text")) });
+			}
 	for (const auto& KV : Tasks)
 		if (!KV.Value.Next.IsEmpty() && !KV.Value.bAutoNext) Prev.Add(KV.Value.Next, KV.Key);
 	if (const auto As = StoryObj(Root, TEXT("arcs")))
@@ -236,8 +277,8 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 				Levels.Add(FCString::Atoi(*FString(L.Key)), R);
 			}
 		}
-	UE_LOG(LogTemp, Log, TEXT("CoH story: %d contacts, %d people, %d tasks, %d arcs, %d reward tables (%.1f s)"),
-		Contacts.Num(), People.Num(), Tasks.Num(), Arcs.Num(), Rewards.Num(), FPlatformTime::Seconds() - T0);
+	UE_LOG(LogTemp, Log, TEXT("CoH story: %d contacts, %d people, %d tasks, %d arcs, %d reward tables, %d clues, %d souvenirs (%.1f s)"),
+		Contacts.Num(), People.Num(), Tasks.Num(), Arcs.Num(), Rewards.Num(), Clues.Num(), Souvenirs.Num(), FPlatformTime::Seconds() - T0);
 	LoadMaps(MissionsFile.IsEmpty() ? FPaths::GetPath(FPaths::GetPath(File)) / TEXT("missions/missions.json") : MissionsFile);
 }
 
@@ -348,6 +389,13 @@ const FCoHMissionMap* UCoHStory::PickMap(const FCoHStoryTask& T, int32 Level) co
 		}
 	}
 	return Best.Num() ? Maps.Find(Best[FMath::RandRange(0, Best.Num() - 1)]) : nullptr;
+}
+
+FString UCoHStory::ClueKey(const FString& TaskId, const FString& Clue) const
+{
+	FString File = TaskId, Rest;
+	TaskId.Split(TEXT("#"), &File, &Rest);
+	return (File + TEXT("#") + Clue).ToLower();
 }
 
 UCoHStory* UCoHStory::Get(const UObject* WorldContext)
@@ -581,6 +629,14 @@ void ACoHStoryNPC::ApplyLook()
 		TArray<FAssetData> Found;
 		AR.GetAssetsByPath(FName(*Folder), Found, true);
 		for (const FAssetData& D : Found) if (D.IsInstanceOf(USkeletalMesh::StaticClass())) { SM = Cast<USkeletalMesh>(D.GetAsset()); break; }
+		if (!SM)
+		{
+			// a hostage on a villain model (/Game/CoH/Enemies/<model>)
+			Folder = R->EnemyRoot / Model;
+			Found.Reset();
+			AR.GetAssetsByPath(FName(*Folder), Found, true);
+			for (const FAssetData& D : Found) if (D.IsInstanceOf(USkeletalMesh::StaticClass())) { SM = Cast<USkeletalMesh>(D.GetAsset()); break; }
+		}
 	}
 	if (!SM)
 	{
@@ -593,9 +649,36 @@ void ACoHStoryNPC::ApplyLook()
 	if (UAnimSequenceBase* Idle = R->ClipIn(Folder, TEXT("idle"))) Mesh->PlayAnimation(Idle, true);
 }
 
+void ACoHStoryNPC::FollowHero(APawn* Hero)
+{
+	Follow = Hero;
+	if (Hero) SetReplicatingMovement(true);
+}
+
 void ACoHStoryNPC::Tick(float Delta)
 {
 	Super::Tick(Delta);
+	if (HasAuthority() && Follow.IsValid())
+	{
+		// a freed hostage walks a little behind its hero, on the floor under it (indoor maps have floors above)
+		const APawn* H = Follow.Get();
+		const FVector Want = H->GetActorLocation() - H->GetActorForwardVector() * 160.f;
+		FVector To = Want - GetActorLocation();
+		if (To.Size() > 4000.f) Follow = nullptr;                // the hero left it behind (teleported out): it waits here
+		else if (To.Size2D() > 120.f)
+		{
+			To.Z = 0.f;
+			const FVector Step = To.GetSafeNormal() * FMath::Min(To.Size(), 520.f * Delta);
+			FVector Next = GetActorLocation() + Step;
+			FHitResult Hit;
+			FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHHostageFloor), false, this);
+			Q.AddIgnoredActor(H);
+			if (GetWorld()->LineTraceSingleByChannel(Hit, Next + FVector(0, 0, 60.f), Next - FVector(0, 0, 400.f), ECC_WorldStatic, Q))
+				Next.Z = Hit.ImpactPoint.Z + 92.f;
+			else Next.Z = FMath::FInterpTo(GetActorLocation().Z, H->GetActorLocation().Z, Delta, 4.f);
+			SetActorLocationAndRotation(Next, FRotator(0.f, To.Rotation().Yaw, 0.f));
+		}
+	}
 	if (GetNetMode() == NM_DedicatedServer) return;
 	// the name turns to face the local camera
 	const APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
@@ -990,31 +1073,29 @@ void ACoHStoryDirector::SpawnOutdoor(FMission& M)
 	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
 	const FString Group = T->MissionGroup.IsEmpty() ? TEXT("Hellions") : T->MissionGroup;
 	const TArray<FVector> None;
-	// the mission's own spawns (bosses, patrols), then filler groups by map length
+	// the mission's own spawns (bosses, hostages, patrols; some wait for a trigger), then filler groups by map length
+	M.Heroes = TeamSize(M);
 	int32 Groups = FMath::Clamp(T->MapLength / 10, 2, 5) + (T->bLong ? 1 : 0);
-	for (const FCoHStorySpawn& Sp : T->Spawns)
+	for (int32 i = 0; i < T->Spawns.Num(); ++i)
 	{
-		const FString G = Sp.Group.IsEmpty() ? Group : Sp.Group;
-		FVector C; if (!RandomSpot(M.Door, 2500.f, C)) C = M.Door;
-		if (!Sp.Villain.IsEmpty())
+		for (int32 c = 0; c < FMath::Clamp(T->Spawns[i].Count, 1, 4); ++c)
 		{
-			if (ACoHCombatEnemy* B = SpawnFoe(M, Sp.Villain, C, Sp.Display, Level, NextGroupId++)) M.Boss = B;
-			SpawnGroupAt(M, G, None, C, 2, false, Level);
+			FVector C; if (!RandomSpot(M.Door, 2500.f, C)) C = M.Door;
+			AddRun(M, i, C, None, false);
 		}
-		else for (int32 i = 0; i < FMath::Min(Sp.Count, 3); ++i) { FVector P; if (!RandomSpot(M.Door, 2500.f, P)) P = C; SpawnGroupAt(M, G, None, P, 3, true, Level); }
 		--Groups;
 	}
 	for (int32 i = 0; i < Groups; ++i) { FVector C; if (!RandomSpot(M.Door, 3000.f, C)) C = M.Door; SpawnGroupAt(M, Group, None, C, 3, i % 2 == 0, Level); }
-	// objectives to click (crates, computers, hostages...)
+	// objectives to click (crates, computers, bombs...)
 	for (int32 o = 0; o < T->Objectives.Num(); ++o)
 		for (int32 n = 0; n < T->Objectives[o].Number; ++n)
 		{
 			FVector P; if (!RandomSpot(M.Door, 2500.f, P)) continue;
-			ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, P, Hero, T->Objectives[o].Display.IsEmpty() ? T->Objectives[o].Name : T->Objectives[o].Display, M.Task);
-			if (Mk) { Mk->Objective = o; M.Objectives.Add(Mk); ++M.ObjectivesLeft; }
+			PlaceClickable(M, o, P);
 		}
-	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s started at the door: %d villains (%s, level %d), %d objectives"),
-		*M.Task, M.Foes.Num(), *Group, Level, M.ObjectivesLeft);
+	TickRuns(M);
+	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s started at the door: %d villains (%s, level %d), %d objectives, %d spawns (%d waiting)"),
+		*M.Task, M.Foes.Num(), *Group, Level, M.ObjectivesLeft, M.Runs.Num(), M.Runs.FilterByPredicate([](const FMission::FRun& R) { return !R.bCreated; }).Num());
 }
 
 void ACoHStoryDirector::PopulateIndoor(FMission& M)
@@ -1047,24 +1128,17 @@ void ACoHStoryDirector::PopulateIndoor(FMission& M)
 	};
 	auto ToWorld = [&](const FVector& Local) { return M.Origin + Local; };
 	auto Spots = [&](const FCoHMapSpot& E) { TArray<FVector> Out; for (const FVector& V : E.Spots) Out.Add(ToWorld(V)); return Out; };
-	for (const FCoHStorySpawn& Sp : T->Spawns)
+	// the task's own spawns at encounters of their placement: placed now, or later when their trigger objective is done
+	M.Heroes = TeamSize(M);
+	for (int32 i = 0; i < T->Spawns.Num(); ++i)
 	{
-		const FString G = Sp.Group.IsEmpty() ? Group : Sp.Group;
+		const FCoHStorySpawn& Sp = T->Spawns[i];
 		if (Sp.Placement == TEXT("Lobby") && Sp.Villain.Contains(TEXT("Marker"))) continue;   // invisible script helpers
 		for (int32 c = 0; c < FMath::Clamp(Sp.Count, 1, 4); ++c)
 		{
 			const FCoHMapSpot* E = Take(Sp.Placement);
 			if (!E) break;
-			TArray<FVector> At = Spots(*E);
-			const FVector C = ToWorld(E->Pos);
-			if (!Sp.Villain.IsEmpty())
-			{
-				const FVector BossAt = At.Num() ? At[0] : C;
-				if (At.Num()) At.RemoveAt(0);
-				if (ACoHCombatEnemy* B = SpawnFoe(M, Sp.Villain, BossAt, Sp.Display, Level, NextGroupId++)) M.Boss = B;
-				SpawnGroupAt(M, G, At, C, 2, false, Level);
-			}
-			else SpawnGroupAt(M, G, At, C, 3, true, Level);
+			AddRun(M, i, ToWorld(E->Pos), Spots(*E), E->Rank == TEXT("Back"));
 		}
 	}
 	// the rest of the map's mission encounters (as the original fills them), up to MaxFillerGroups
@@ -1092,7 +1166,8 @@ void ACoHStoryDirector::PopulateIndoor(FMission& M)
 				for (const FCoHMapSpot& Sp : *L)
 				{
 					if (UsedSpots.Contains(&Sp)) continue;
-					const int32 Score = (Sp.Rank == TEXT("Back") ? 3 : Sp.Rank == TEXT("Middle") ? 2 : Sp.Rank == TEXT("Front") ? 1 : 0) * 10 + FMath::RandRange(0, 9);
+					int32 Score = (Sp.Rank == TEXT("Back") ? 3 : Sp.Rank == TEXT("Middle") ? 2 : Sp.Rank == TEXT("Front") ? 1 : 0) * 10 + FMath::RandRange(0, 9);
+					if (!Ob.Placement.IsEmpty() && Ob.Placement != TEXT("Any") && Sp.Rank == Ob.Placement) Score += 100;   // the room the original asks for
 					if (Score > BestScore) { BestScore = Score; Best = &Sp; }
 				}
 				if (Best) break;
@@ -1101,13 +1176,14 @@ void ACoHStoryDirector::PopulateIndoor(FMission& M)
 			if (Best) { UsedSpots.Add(Best); P = ToWorld(Best->Pos); }
 			else if (const FCoHMapSpot* E = Take(TEXT("Back"))) P = ToWorld(E->Pos);
 			else continue;
-			ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, P, Hero, Ob.Display.IsEmpty() ? Ob.Name : Ob.Display, M.Task);
-			if (Mk) { Mk->Objective = o; M.Objectives.Add(Mk); ++M.ObjectivesLeft; }
+			PlaceClickable(M, o, P);
 		}
 	}
+	TickRuns(M);
 	M.ExitMarker = SpawnMarker(ECoHMarkerKind::Exit, ToWorld(Map->Exit), Hero, TEXT("Exit"), M.Task);
-	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s inside %s: %d villains (%s, level %d), %d objectives"),
-		*M.Task, *M.MapId, M.Foes.Num(), *Group, Level, M.ObjectivesLeft);
+	UE_LOG(LogTemp, Log, TEXT("CoH story: mission %s inside %s: %d villains (%s, level %d), %d objectives, %d spawns (%d waiting), team of %d"),
+		*M.Task, *M.MapId, M.Foes.Num(), *Group, Level, M.ObjectivesLeft, M.Runs.Num(),
+		M.Runs.FilterByPredicate([](const FMission::FRun& R) { return !R.bCreated; }).Num(), M.Heroes);
 }
 
 void ACoHStoryDirector::TeleportHero(FMission& M, bool bIn)
@@ -1163,21 +1239,344 @@ void ACoHStoryDirector::GuestExit(UCoHStoryComponent* OwnerStory, const FString&
 	PutAtDoor(*M, Guest);
 	M->Guests.Remove(Guest);
 }
-void ACoHStoryDirector::UseObjective(UCoHStoryComponent* For, ACoHMissionMarker* Marker)
+// ---------------------------------------------------------------- mission variety
+// The original's mission spawns (docs/missions.md): each copy of a task spawn is a run. A run
+// is placed when the mission fills, or once an objective it waits for is done
+// (CreateOnObjectiveComplete; an ambush also on ActivateOnObjectiveComplete). A run that
+// carries an objective completes it when its villains are down, its hostage is freed
+// (rescue) or brought to the exit (escort), or its object is smashed (destroy). The mission
+// completes by its CanCompleteWith lines: any one line whose objectives are all done.
+
+int32 ACoHStoryDirector::TeamSize(const FMission& M) const
+{
+	const UCoHStoryComponent* For = M.Hero.Get();
+	const UCoHSocial* So = For ? UCoHSocial::Of(For->GetOwner()) : nullptr;
+	return FMath::Clamp(So ? So->TeamMembers().Num() : 1, 1, 8);
+}
+
+void ACoHStoryDirector::AddRun(FMission& M, int32 Spawn, const FVector& Center, const TArray<FVector>& Spots, bool bEndRoom)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	if (!T || !T->Spawns.IsValidIndex(Spawn)) return;
+	FMission::FRun R;
+	R.Spawn = Spawn; R.Center = Center; R.Spots = Spots; R.bEndRoom = bEndRoom;
+	M.Runs.Add(R);
+	const FString Ob = T->Spawns[Spawn].Objective.ToLower();
+	if (!Ob.IsEmpty()) { M.Left.FindOrAdd(Ob) += 1; M.Known.Add(Ob); }
+}
+
+void ACoHStoryDirector::PlaceClickable(FMission& M, int32 Objective, const FVector& At, bool bCount)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	UCoHStoryComponent* For = M.Hero.Get();
+	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
+	if (!T || !Hero || !T->Objectives.IsValidIndex(Objective)) return;
+	const FCoHStoryObjective& Ob = T->Objectives[Objective];
+	if (bCount)
+	{
+		const FString Name = Ob.Name.ToLower();
+		M.Left.FindOrAdd(Name) += 1;
+		M.Known.Add(Name);
+		++M.ObjectivesLeft;
+	}
+	// it waits for another objective of this mission (ActivateOnObjectiveComplete)
+	if (Ob.ActivateOn.Num() && !Triggered(M, Ob.ActivateOn))
+	{
+		bool bAny = false;
+		for (const FString& N : Ob.ActivateOn) bAny |= T->Objectives.ContainsByPredicate([&](const FCoHStoryObjective& X) { return X.Name.Equals(N, ESearchCase::IgnoreCase); })
+			|| T->Spawns.ContainsByPredicate([&](const FCoHStorySpawn& X) { return X.Objective.Equals(N, ESearchCase::IgnoreCase); });
+		if (bAny) { M.Waiting.Add(TPair<int32, FVector>(Objective, At)); return; }
+	}
+	ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, At, Hero, Ob.Display.IsEmpty() ? Ob.Name : Ob.Display, M.Task);
+	if (Mk) { Mk->Objective = Objective; M.Objectives.Add(Mk); }
+}
+
+bool ACoHStoryDirector::Triggered(const FMission& M, const TArray<FString>& On) const
+{
+	for (const FString& N : On) if (M.Done.Contains(N.ToLower())) return true;
+	return false;
+}
+
+void ACoHStoryDirector::CreateRun(FMission& M, int32 RunIdx)
+{
+	FMission::FRun& R = M.Runs[RunIdx];
+	if (R.bCreated) return;
+	R.bCreated = true;
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	UCoHStoryComponent* For = M.Hero.Get();
+	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
+	const UCoHGameRules* GR = UCoHGameRules::Get(this);
+	if (!T || !Hero || !GR || !T->Spawns.IsValidIndex(R.Spawn)) { RunDone(M, RunIdx); return; }
+	const FCoHStorySpawn& Sp = T->Spawns[R.Spawn];
+	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
+	const FString G = Sp.Group.IsEmpty() ? (T->MissionGroup.IsEmpty() ? FString(TEXT("Hellions")) : T->MissionGroup) : Sp.Group;
+	const int32 GroupId = NextGroupId++;
+	const int32 Before = M.Foes.Num();
+	int32 Used = 0;
+	auto Where = [&]() { if (R.Spots.IsValidIndex(Used)) return R.Spots[Used++]; FVector P; return RandomSpot(R.Center, 350.f, P) ? P : R.Center; };
+	bool bAny = false;
+	// the encounter's actors, as many as the original puts out for a team this size
+	for (const FCoHStoryActor& A : Sp.Actors)
+	{
+		if (M.Heroes < A.MinHeroes || M.Heroes > A.MaxHeroes) continue;
+		for (int32 n = 0; n < A.Number; ++n)
+		{
+			const FVector At = Where();
+			if (A.Role == TEXT("hostage"))
+			{
+				if (R.Hostage.IsValid()) continue;
+				FActorSpawnParameters P; P.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				ACoHStoryNPC* N = GetWorld()->SpawnActor<ACoHStoryNPC>(At + FVector(0, 0, 92.f), FRotator(0.f, FMath::FRandRange(-180.f, 180.f), 0.f), P);
+				if (!N) continue;
+				const FString Name = !A.Name.IsEmpty() ? A.Name : !Sp.HostageName.IsEmpty() ? Sp.HostageName : FString(TEXT("Hostage"));
+				const FCoHKitVillain* K = GR->Kit(A.Villain.IsEmpty() ? Sp.HostageVillain : A.Villain);
+				N->Key = TEXT("hostage"); N->bContact = false; N->bHostage = true;
+				N->DisplayName = For->Fill(Name);
+				N->Model = K && K->Models.Num() ? K->Models[0] : FString();
+				N->ApplyLook();
+				R.Hostage = N;
+				continue;
+			}
+			FString Villain = A.Villain;
+			if (Villain.IsEmpty())
+			{
+				const FString AG = A.Group.IsEmpty() ? G : A.Group;
+				for (const FString& Rank : { A.Rank.IsEmpty() ? FString(TEXT("Minion")) : A.Rank, FString(TEXT("Lieutenant")), FString(TEXT("Minion")) })
+				{
+					const TArray<FString> Roll = CoHStoryRoll(GR, AG, Rank, Level);
+					if (Roll.Num()) { Villain = Roll[FMath::RandRange(0, Roll.Num() - 1)]; break; }
+				}
+			}
+			ACoHCombatEnemy* E = Villain.IsEmpty() ? nullptr : SpawnFoe(M, Villain, At, A.Name, Level, GroupId);
+			if (A.Role == TEXT("object") && !E && !R.Object.IsValid())
+			{
+				// no model for the object: a marker to smash
+				R.Object = SpawnMarker(ECoHMarkerKind::Objective, At, Hero, For->Fill(A.Name.IsEmpty() ? FString(TEXT("Destroy")) : A.Name), M.Task);
+				if (R.Object.IsValid()) { R.Object->Run = RunIdx; M.Objectives.Add(R.Object); }
+				continue;
+			}
+			if (!E) continue;
+			bAny = true;
+			if (A.Rank == TEXT("Boss") && !A.Villain.IsEmpty()) M.Boss = E;
+		}
+	}
+	if (!bAny && !R.Hostage.IsValid() && !R.Object.IsValid())
+	{
+		// no encounter of its own (or none of it could spawn): the spawn's boss with two, else three and a lieutenant
+		TArray<FVector> At = R.Spots;
+		if (!Sp.Villain.IsEmpty())
+		{
+			const FVector BossAt = At.Num() ? At[0] : R.Center;
+			if (At.Num()) At.RemoveAt(0);
+			if (ACoHCombatEnemy* B = SpawnFoe(M, Sp.Villain, BossAt, Sp.Display, Level, GroupId)) M.Boss = B;
+			SpawnGroupAt(M, G, At, R.Center, 2, false, Level);
+		}
+		else SpawnGroupAt(M, G, At, R.Center, 3, true, Level);
+	}
+	for (int32 i = Before; i < M.Foes.Num(); ++i) R.Foes.AddUnique(M.Foes[i]);
+	if (Sp.Kind == TEXT("ambush"))
+	{
+		// the wave runs at the heroes
+		for (auto& F : R.Foes) if (ACoHCombatEnemy* E = F.Get()) { E->SetHome(Hero->GetActorLocation()); E->Alert(Hero); }
+		if (UCoHPowerComponent* P = UCoHPowerComponent::Of(Hero)) P->MulticastText(TEXT("Ambush!"), FLinearColor(1.f, 0.35f, 0.25f));
+	}
+	if (R.Foes.Num() == 0 && !R.Hostage.IsValid() && !R.Object.IsValid()) RunDone(M, RunIdx);
+	UE_LOG(LogTemp, Log, TEXT("CoH story: %s spawn %s (%s) placed: %d villains%s"), *M.Task, *Sp.Logical, *Sp.Kind, R.Foes.Num(), R.Hostage.IsValid() ? TEXT(", a hostage") : TEXT(""));
+}
+
+void ACoHStoryDirector::RunDone(FMission& M, int32 RunIdx)
+{
+	FMission::FRun& R = M.Runs[RunIdx];
+	if (R.bDone) return;
+	R.bDone = true;
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	if (!T || !T->Spawns.IsValidIndex(R.Spawn)) return;
+	const FCoHStorySpawn& Sp = T->Spawns[R.Spawn];
+	const FString Ob = Sp.Objective.ToLower();
+	if (Ob.IsEmpty()) return;
+	UCoHStoryComponent* For = M.Hero.Get();
+	if (For && !Sp.RewardText.IsEmpty()) if (UCoHPowerComponent* P = UCoHPowerComponent::Of(For->GetOwner())) P->MulticastText(For->Fill(Sp.RewardText), FLinearColor(0.4f, 1.f, 0.5f));
+	if (For) For->GiveClues(M.Task, Sp.Clues);
+	int32& L = M.Left.FindOrAdd(Ob);
+	L = FMath::Max(0, L - 1);
+	if (L == 0) ObjectiveDone(M, Ob);
+}
+
+void ACoHStoryDirector::ObjectiveDone(FMission& M, const FString& Name)
+{
+	if (M.Done.Contains(Name)) return;
+	M.Done.Add(Name);
+	UE_LOG(LogTemp, Log, TEXT("CoH story: %s objective %s done"), *M.Task, *Name);
+	// objectives to click that were waiting for it
+	for (int32 i = M.Waiting.Num() - 1; i >= 0; --i)
+	{
+		const TPair<int32, FVector> W = M.Waiting[i];
+		const UCoHStory* S = UCoHStory::Get(this);
+		const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+		if (!T || !T->Objectives.IsValidIndex(W.Key) || !Triggered(M, T->Objectives[W.Key].ActivateOn)) continue;
+		M.Waiting.RemoveAt(i);
+		PlaceClickable(M, W.Key, W.Value, false);
+	}
+	TickRuns(M);
+}
+
+void ACoHStoryDirector::TickRuns(FMission& M)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	if (!T) return;
+	auto KnownAny = [&](const TArray<FString>& On) { for (const FString& N : On) if (M.Known.Contains(N.ToLower())) return true; return false; };
+	// the objectives a waiting run is not itself part of: when they are all done and it still waits, it comes anyway
+	bool bOthersDone = true;
+	for (const auto& KV : M.Left)
+		if (KV.Value > 0 && !M.Runs.ContainsByPredicate([&](const FMission::FRun& R) { return !R.bCreated && T->Spawns[R.Spawn].Objective.ToLower() == KV.Key; }))
+			bOthersDone = false;
+	for (int32 i = 0; i < M.Runs.Num(); ++i)
+	{
+		FMission::FRun& R = M.Runs[i];
+		const FCoHStorySpawn& Sp = T->Spawns[R.Spawn];
+		if (!R.bCreated)
+		{
+			TArray<FString> On = Sp.CreateOn;
+			if (Sp.Kind == TEXT("ambush")) On.Append(Sp.ActivateOn);
+			bool bGo;
+			if (On.Num() == 0) bGo = Sp.Kind != TEXT("ambush") || M.Known.Num() == 0 || M.Done.Num() > 0;   // an ambush with no trigger: after the first objective
+			else if (KnownAny(On)) bGo = Triggered(M, On);
+			else bGo = Sp.Kind != TEXT("ambush") || M.Done.Num() > 0 || M.Known.Num() == 0;              // its trigger is a script of the original: at once (ambush: after the first objective)
+			if (!bGo && bOthersDone && M.bEntered && M.Done.Num() > 0) bGo = true;                        // never leave a mission stuck on a trigger
+			if (!bGo) continue;
+			CreateRun(M, i);
+			if (R.bDone) continue;
+		}
+		if (R.bDone) continue;
+		if (Sp.Kind == TEXT("rescue") || Sp.Kind == TEXT("escort"))
+		{
+			if (!R.Hostage.IsValid()) { RunDone(M, i); continue; }
+			if (Sp.Kind == TEXT("escort") && R.bRescued)
+			{
+				// brought to the exit (indoors) or back to the door
+				const FCoHMissionMap* Map = S->Map(M.MapId);
+				const FVector Goal = M.Map.IsValid() && Map ? M.Origin + Map->Exit : M.Door;
+				if (FVector::Dist(R.Hostage->GetActorLocation(), Goal) < 800.f)
+				{
+					R.Hostage->FollowHero(nullptr);
+					R.Hostage->SetLifeSpan(3.f);
+					RunDone(M, i);
+				}
+			}
+			continue;
+		}
+		if (R.Object.IsValid()) continue;                       // the object marker is still standing
+		bool bLeft = false;
+		for (const auto& F : R.Foes) if (F.IsValid() && !F->IsDead()) { bLeft = true; break; }
+		if (!bLeft) RunDone(M, i);
+	}
+	// objectives to click still waiting when every spawn and other objective is through: their trigger will not come, so they show now
+	if (M.Waiting.Num() && M.bEntered && M.Objectives.Num() == 0 && !M.Runs.ContainsByPredicate([](const FMission::FRun& R) { return !R.bDone; }))
+	{
+		const TArray<TPair<int32, FVector>> Now = MoveTemp(M.Waiting);
+		M.Waiting.Reset();
+		for (const auto& W : Now)
+		{
+			const FCoHStoryObjective& Ob = T->Objectives[W.Key];
+			if (ACoHMissionMarker* Mk = SpawnMarker(ECoHMarkerKind::Objective, W.Value, Cast<APawn>(M.Hero->GetOwner()), Ob.Display.IsEmpty() ? Ob.Name : Ob.Display, M.Task))
+			{ Mk->Objective = W.Key; M.Objectives.Add(Mk); }
+		}
+	}
+}
+
+void ACoHStoryDirector::UseHostage(APawn* By, ACoHStoryNPC* Hostage)
+{
+	if (!By || !Hostage) return;
+	for (FMission& M : Missions)
+		for (int32 i = 0; i < M.Runs.Num(); ++i)
+		{
+			FMission::FRun& R = M.Runs[i];
+			if (R.Hostage.Get() != Hostage) continue;
+			UCoHStoryComponent* For = M.Hero.Get();
+			APawn* OwnerPawn = For ? Cast<APawn>(For->GetOwner()) : nullptr;
+			UCoHPowerComponent* P = UCoHPowerComponent::Of(By);
+			if (By != OwnerPawn && !UCoHSocial::SameTeam(By, OwnerPawn)) return;
+			if (R.bRescued)
+			{
+				// another hero takes the lead
+				Hostage->FollowHero(By);
+				if (P) P->MulticastText(FString::Printf(TEXT("%s follows you"), *Hostage->DisplayName), FLinearColor(0.6f, 0.9f, 1.f));
+				return;
+			}
+			for (const auto& F : R.Foes)
+				if (F.IsValid() && !F->IsDead() && FVector::Dist(F->GetActorLocation(), Hostage->GetActorLocation()) < 2500.f)
+				{
+					if (P) P->MulticastText(TEXT("Defeat the captors first!"), FLinearColor(1.f, 0.6f, 0.4f));
+					return;
+				}
+			R.bRescued = true;
+			Hostage->FollowHero(By);
+			const UCoHStory* S = UCoHStory::Get(this);
+			const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+			const bool bEscort = T && T->Spawns.IsValidIndex(R.Spawn) && T->Spawns[R.Spawn].Kind == TEXT("escort");
+			if (P) P->MulticastText(bEscort ? FString::Printf(TEXT("%s: Get me out of here!"), *Hostage->DisplayName)
+				: FString::Printf(TEXT("%s: Thank you!"), *Hostage->DisplayName), FLinearColor(0.6f, 0.9f, 1.f));
+			if (!bEscort) RunDone(M, i);
+			return;
+		}
+}
+
+void ACoHStoryDirector::UseObjective(UCoHStoryComponent* For, ACoHMissionMarker* Marker, APawn* ByPawn)
 {
 	FMission* M = Marker ? Find(For, Marker->Task) : nullptr;
 	const UCoHStory* S = UCoHStory::Get(this);
 	const FCoHStoryTask* T = S && M ? S->Task(M->Task) : nullptr;
-	if (!T) return;
+	if (!T || Marker->bBusy) return;
+	if (Marker->Run != INDEX_NONE)
+	{
+		// an object to destroy with no model of its own: smashed at once
+		if (M->Runs.IsValidIndex(Marker->Run)) { M->Runs[Marker->Run].Object = nullptr; RunDone(*M, Marker->Run); }
+		M->Objectives.Remove(Marker);
+		Marker->Destroy();
+		return;
+	}
 	const FCoHStoryObjective* O = T->Objectives.IsValidIndex(Marker->Objective) ? &T->Objectives[Marker->Objective] : nullptr;
-	if (O)
+	if (O && O->Delay > 0)
+	{
+		// it takes a moment (the original's InteractDelay): stay near it
+		APawn* By = ByPawn ? ByPawn : For ? Cast<APawn>(For->GetOwner()) : nullptr;
+		if (!O->Begin.IsEmpty()) if (UCoHPowerComponent* P = UCoHPowerComponent::Of(By)) P->MulticastText(For->Fill(O->Begin), FLinearColor(0.9f, 0.9f, 0.9f));
+		Marker->bBusy = true;
+		FMission::FClick C; C.Marker = Marker; C.By = By; C.At = GetWorld()->GetTimeSeconds() + O->Delay;
+		M->Clicks.Add(C);
+		return;
+	}
+	FinishClick(*M, Marker);
+}
+
+void ACoHStoryDirector::FinishClick(FMission& M, ACoHMissionMarker* Marker)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
+	UCoHStoryComponent* For = M.Hero.Get();
+	if (!T || !Marker) return;
+	const FCoHStoryObjective* O = T->Objectives.IsValidIndex(Marker->Objective) ? &T->Objectives[Marker->Objective] : nullptr;
+	if (O && For)
 	{
 		const FString Msg = !O->Reward.IsEmpty() ? O->Reward : !O->Done.IsEmpty() ? O->Done : FString::Printf(TEXT("%s: done"), *O->Display);
 		if (UCoHPowerComponent* P = UCoHPowerComponent::Of(For->GetOwner())) P->MulticastText(For->Fill(Msg), FLinearColor(0.4f, 1.f, 0.5f));
+		For->GiveClues(M.Task, O->Clues);
 	}
-	M->Objectives.Remove(Marker);
-	M->ObjectivesLeft = FMath::Max(0, M->ObjectivesLeft - 1);
+	M.Objectives.Remove(Marker);
+	M.ObjectivesLeft = FMath::Max(0, M.ObjectivesLeft - 1);
 	Marker->Destroy();
+	if (O)
+	{
+		const FString Name = O->Name.ToLower();
+		int32& L = M.Left.FindOrAdd(Name);
+		L = FMath::Max(0, L - 1);
+		if (L == 0) ObjectiveDone(M, Name);
+	}
 }
 
 void ACoHStoryDirector::CheckMission(FMission& M)
@@ -1185,19 +1584,49 @@ void ACoHStoryDirector::CheckMission(FMission& M)
 	const UCoHStory* S = UCoHStory::Get(this);
 	const FCoHStoryTask* T = S ? S->Task(M.Task) : nullptr;
 	if (!T) return;
-	int32 Alive = 0;
-	for (const auto& F : M.Foes) if (F.IsValid() && !F->IsDead()) ++Alive;
-	const bool bBossDown = !M.Boss.IsValid() || M.Boss->IsDead();
-	// CanCompleteWith: defeat all, the boss, or objectives by name; nothing named: defeat all
-	bool bAll = T->CompleteWith.Num() == 0, bBoss = false, bObjectives = false;
-	for (const FString& C : T->CompleteWith)
+	// clicks that take time
+	const double Now = GetWorld()->GetTimeSeconds();
+	for (int32 i = M.Clicks.Num() - 1; i >= 0; --i)
 	{
-		if (C.Contains(TEXT("DefeatAll"))) bAll = true;
-		else if (C.Contains(TEXT("Boss"))) bBoss = true;
-		else bObjectives = true;
+		const FMission::FClick C = M.Clicks[i];
+		ACoHMissionMarker* Mk = C.Marker.Get();
+		if (!Mk) { M.Clicks.RemoveAt(i); continue; }
+		if (!C.By.IsValid() || FVector::Dist2D(C.By->GetActorLocation(), Mk->GetActorLocation()) > 700.f)
+		{
+			if (UCoHPowerComponent* P = UCoHPowerComponent::Of(C.By.Get())) P->MulticastText(TEXT("Interrupted"), FLinearColor(1.f, 0.6f, 0.4f));
+			Mk->bBusy = false;
+			M.Clicks.RemoveAt(i);
+			continue;
+		}
+		if (Now < C.At) continue;
+		M.Clicks.RemoveAt(i);
+		Mk->bBusy = false;
+		FinishClick(M, Mk);
 	}
-	if (!bAll && !bBoss && !bObjectives) bAll = true;
-	const bool bDone = (bAll ? Alive == 0 : true) && (bBoss ? bBossDown : true) && (bObjectives || bAll ? M.ObjectivesLeft == 0 : true);
+	TickRuns(M);
+	int32 Alive = 0, AliveEnd = 0;
+	for (const auto& F : M.Foes) if (F.IsValid() && !F->IsDead()) ++Alive;
+	for (const FMission::FRun& R : M.Runs) if (R.bEndRoom) for (const auto& F : R.Foes) if (F.IsValid() && !F->IsDead()) ++AliveEnd;
+	// CanCompleteWith: any one line whose names are all done (DefeatAllVillains[InEndRoom], objectives
+	// and spawns by name); names of the original's scripts we can't run are left out, and a line of
+	// only those, or no line at all, is defeat all with every objective done
+	const bool bAllDone = Alive == 0 && M.ObjectivesLeft == 0 && !M.Runs.ContainsByPredicate([](const FMission::FRun& R) { return !R.bDone; });
+	bool bDone = T->CompleteWith.Num() == 0 && bAllDone;
+	for (const FString& Line : T->CompleteWith)
+	{
+		TArray<FString> Names;
+		Line.ParseIntoArrayWS(Names);
+		bool bOk = true, bAny = false;
+		for (const FString& N : Names)
+		{
+			const FString L = N.ToLower();
+			if (L == TEXT("defeatallvillains")) { bAny = true; bOk &= Alive == 0; }
+			else if (L == TEXT("defeatallvillainsinendroom")) { bAny = true; bOk &= M.MapId.IsEmpty() ? Alive == 0 : AliveEnd == 0; }
+			else if (M.Known.Contains(L)) { bAny = true; bOk &= M.Done.Contains(L); }
+		}
+		if (!bAny) bOk = bAllDone;
+		if (bOk) { bDone = true; break; }
+	}
 	if (!bDone) return;
 	UCoHStoryComponent* Hero = M.Hero.Get();
 	const FString Task = M.Task;
@@ -1229,6 +1658,7 @@ void ACoHStoryDirector::FreeMission(FMission& M)
 		if (APawn* P = G.Get()) if (P->GetActorLocation().Z < -MissionDepth * 0.5f) PutAtDoor(M, P);
 	M.Guests.Reset();
 	for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
+	for (FMission::FRun& R : M.Runs) if (R.Hostage.IsValid()) R.Hostage->Destroy();
 	if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
 	if (M.ExitMarker.IsValid()) M.ExitMarker->Destroy();
 	if (M.Map.IsValid()) M.Map->Destroy();     // unloads the level here and on clients
@@ -1366,7 +1796,8 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 	}
 	if (ACoHStoryNPC* N = Cast<ACoHStoryNPC>(Best))
 	{
-		if (N->bContact) TalkTo(N->Key); else TalkToPerson(N->Key);
+		if (N->bHostage) { if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld())) D->UseHostage(Cast<APawn>(GetOwner()), N); }
+		else if (N->bContact) TalkTo(N->Key); else TalkToPerson(N->Key);
 	}
 	else if (ACoHMissionMarker* Mk = Cast<ACoHMissionMarker>(Best))
 	{
@@ -1380,7 +1811,7 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 		{
 			APawn* MePawn = Cast<APawn>(GetOwner());
 			if (Mk->Kind == ECoHMarkerKind::Door) D->GuestEnter(OwnerStory, Mk->Task, MePawn);
-			else if (Mk->Kind == ECoHMarkerKind::Objective) D->UseObjective(OwnerStory, Mk);
+			else if (Mk->Kind == ECoHMarkerKind::Objective) D->UseObjective(OwnerStory, Mk, MePawn);
 			else if (Mk->Kind == ECoHMarkerKind::Exit) D->GuestExit(OwnerStory, Mk->Task, MePawn);
 			return;
 		}
@@ -1615,6 +2046,7 @@ void UCoHStoryComponent::Accept(const FString& TaskId, const FString& ContactId)
 	else if (T->Type == TEXT("visit")) S->VisitPoint(T->VisitLocation, St.Waypoint);
 	Refresh(St);
 	P->Tasks.Add(St);
+	GiveClues(TaskId, T->BeginClues);
 	UE_LOG(LogTemp, Log, TEXT("CoH story: %s took %s (%s) from %s"), *HeroName(), *TaskId, *T->Type, *ContactId);
 	Save();
 	if (C)
@@ -1639,6 +2071,7 @@ void UCoHStoryComponent::CompleteTask(const FString& TaskId, const FString& Mess
 	if (!Message.IsEmpty()) Say(Fill(Message), FLinearColor(0.4f, 1.f, 0.5f));
 	Say(TEXT("Mission complete!"), FLinearColor(1.f, 0.85f, 0.2f));
 	GiveReward(T->CompleteReward);
+	GiveClues(TaskId, T->CompleteClues);
 	if (T->bAutoNext && !T->Next.IsEmpty())
 	{
 		// the next part of the same task, at once
@@ -1677,6 +2110,47 @@ void UCoHStoryComponent::GiveReward(const FString& Table)
 		}
 }
 
+void UCoHStoryComponent::GiveClues(const FString& TaskId, const FCoHStoryClues& C)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	FCoHStoryProgress* P = Story();
+	if (!S || !P || C.IsEmpty()) return;
+	for (const FString& Name : C.Remove) P->Clues.Remove(S->ClueKey(TaskId, Name));
+	for (const FString& Name : C.Add)
+	{
+		const FString Key = S->ClueKey(TaskId, Name);
+		const FCoHClueDef* D = S->Clues.Find(Key);
+		if (P->Clues.Contains(Key)) continue;
+		P->Clues.Add(Key);
+		Say(TEXT("New clue: ") + (D && !D->Name.IsEmpty() ? Fill(D->Name) : Name), FLinearColor(0.7f, 0.85f, 1.f));
+	}
+	for (const FString& Name : C.Souvenirs)
+	{
+		const FString Key = Name.ToLower();
+		if (P->Souvenirs.Contains(Key)) continue;
+		P->Souvenirs.Add(Key);
+		const FCoHClueDef* D = S->Souvenirs.Find(Key);
+		Say(TEXT("Souvenir: ") + (D && !D->Name.IsEmpty() ? Fill(D->Name) : Name), FLinearColor(1.f, 0.8f, 0.3f));
+	}
+	Save();
+}
+
+FString UCoHStoryComponent::DescribeClues(bool bSouvenirs) const
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryProgress* P = Story();
+	if (!S || !P) return FString();
+	const TArray<FString>& Have = bSouvenirs ? P->Souvenirs : P->Clues;
+	if (Have.Num() == 0) return bSouvenirs ? TEXT("You have no souvenirs yet.") : TEXT("You have no clues.");
+	FString Out = FString::Printf(TEXT("%d %s:"), Have.Num(), bSouvenirs ? TEXT("souvenirs") : TEXT("clues"));
+	for (const FString& Key : Have)
+	{
+		const FCoHClueDef* D = (bSouvenirs ? S->Souvenirs : S->Clues).Find(Key);
+		Out += TEXT("\n- ") + (D ? Fill(D->Name) + (D->Text.IsEmpty() ? FString() : TEXT(": ") + Fill(D->Text).Left(300)) : Key);
+	}
+	return Out;
+}
+
 void UCoHStoryComponent::TurnIn(const FString& TaskId)
 {
 	const UCoHStory* S = UCoHStory::Get(this);
@@ -1689,6 +2163,7 @@ void UCoHStoryComponent::TurnIn(const FString& TaskId)
 	P->Tasks.RemoveAt(Idx);
 	P->Done.AddUnique(TaskId);
 	GiveReward(T->Reward);
+	GiveClues(TaskId, T->ReturnClues);
 	const FCoHStoryContact* C = S->Contact(ContactId);
 	FString Extra;
 	if (C)

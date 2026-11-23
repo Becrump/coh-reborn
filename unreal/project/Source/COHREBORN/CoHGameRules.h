@@ -97,6 +97,10 @@ struct FCoHStoryProgress
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHContactState> Contacts;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FCoHTaskState> Tasks;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Done;
+	/** clues the hero carries ("<file>#<clue>", story_game.json clues) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Clues;
+	/** souvenirs kept from finished story arcs (souvenir names) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FString> Souvenirs;
 };
 
 /** A hero file, format 2 (docs/hero-build.md), plus the leveling fields. */
