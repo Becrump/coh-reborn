@@ -2,6 +2,7 @@
 #include "CoHCombat.h"
 #include "CoHHeroProgress.h"
 #include "CoHItems.h"
+#include "CoHBadges.h"
 #include "CoHSocial.h"
 #include "CoHPowers.h"
 #include "Animation/AnimSequenceBase.h"
@@ -117,7 +118,16 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			C.Pos = StoryVec(O, TEXT("pos")); C.Yaw = (float)StoryNum(O, TEXT("yaw"));
 			C.MinLevel = StoryInt(O, TEXT("min_level"), 1); C.MaxLevel = StoryInt(O, TEXT("max_level"), 54);
 			C.FriendCP = StoryInt(O, TEXT("friend_cp"), 10); C.ConfidantCP = StoryInt(O, TEXT("confidant_cp"), 20); C.CompleteCP = StoryInt(O, TEXT("complete_cp"), 30);
-			C.bTaskForce = StoryFlag(O, TEXT("task_force"));
+			if (const auto TF = StoryObj(O, TEXT("task_force")))
+			{
+				FCoHTaskForceRules& R = C.TaskForce;
+				C.bTaskForce = true;
+				R.Names = StoryList(TF, TEXT("names")); R.MinSize = StoryInt(TF, TEXT("min_size"), 1); R.LevelAdjust = StoryInt(TF, TEXT("level_adjust"));
+				R.Invite = StoryStr(TF, TEXT("invite")); R.TooLow = StoryStr(TF, TEXT("too_low")); R.TooHigh = StoryStr(TF, TEXT("too_high"));
+				R.NeedLargeTeam = StoryStr(TF, TEXT("need_large_team")); R.NeedLeader = StoryStr(TF, TEXT("need_leader"));
+				R.NeedTeamHere = StoryStr(TF, TEXT("need_team_here")); R.BadTeamLevel = StoryStr(TF, TEXT("bad_team_level"));
+				R.FirstVisit = StoryStr(TF, TEXT("first_visit"));
+			}
 			C.Hello = StoryList(O, TEXT("hello"));
 			C.FirstVisit = StoryStr(O, TEXT("first_visit")); C.DontKnow = StoryStr(O, TEXT("dont_know")); C.NoTasks = StoryStr(O, TEXT("no_tasks"));
 			C.Busy = StoryStr(O, TEXT("busy")); C.ComeBack = StoryStr(O, TEXT("come_back"));
@@ -149,6 +159,8 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			T.bLong = StoryFlag(O, TEXT("long")); T.bRequired = StoryFlag(O, TEXT("required")); T.bNoReturn = StoryFlag(O, TEXT("no_return"));
 			T.MinLevel = StoryInt(O, TEXT("min_level"), 1); T.MaxLevel = StoryInt(O, TEXT("max_level"), 54);
 			T.ContactPoints = StoryInt(O, TEXT("contact_points"));
+			T.Secondary = StoryList(O, TEXT("secondary")); T.ReturnSecondary = StoryList(O, TEXT("return_secondary"));
+			T.ForceLevel = StoryInt(O, TEXT("force_level"));
 			if (const auto K = StoryObj(O, TEXT("killx")))
 			{
 				T.KillGroup = StoryStr(K, TEXT("group")); T.KillCount = StoryInt(K, TEXT("count"), 5);
@@ -548,10 +560,16 @@ private:
 	{
 		const UCoHStoryComponent* C = Owner.Get();
 		const UCoHHeroProgress* P = C ? C->Progress() : nullptr;
-		if (!P || !P->bHasRecord || P->Hero.Story.Tasks.Num() == 0) return FString();
+		if (!P || !P->bHasRecord || (P->Hero.Story.Tasks.Num() == 0 && C->TaskForceLine.IsEmpty())) return FString();
 		const AActor* Me = C->GetOwner();
 		FString Out = TEXT("MISSIONS");
-		for (const FCoHTaskState& S : P->Hero.Story.Tasks)
+		TArray<FCoHTaskState> List = P->Hero.Story.Tasks;
+		if (!C->TaskForceLine.IsEmpty())
+		{
+			FCoHTaskState TF; TF.Text = TEXT("TASK FORCE ") + C->TaskForceLine; TF.Waypoint = C->TaskForceWaypoint;
+			List.Insert(TF, 0);
+		}
+		for (const FCoHTaskState& S : List)
 		{
 			Out += TEXT("\n- ") + S.Text;
 			if (!S.Waypoint.IsZero() && Me)
@@ -933,7 +951,7 @@ void ACoHStoryDirector::Tick(float Delta)
 	Super::Tick(Delta);
 	if (!HasAuthority()) return;
 	const double Now = GetWorld()->GetTimeSeconds();
-	if (Now >= NextStream) { NextStream = Now + 1.0; Stream(); }
+	if (Now >= NextStream) { NextStream = Now + 1.0; Stream(); TickTaskForces(); }
 	for (int32 i = Missions.Num() - 1; i >= 0; --i)
 	{
 		FMission& M = Missions[i];
@@ -1103,7 +1121,7 @@ void ACoHStoryDirector::EnterMission(UCoHStoryComponent* For, const FString& Tas
 		return;
 	}
 	M->bEntered = true;
-	const FCoHMissionMap* Map = S->PickMap(*T, FMath::Clamp(For->HeroLevel(), 1, 50));
+	const FCoHMissionMap* Map = S->PickMap(*T, FMath::Clamp(For->MissionLevel(TaskId), 1, 50));
 	if (!Map) { if (M->DoorMarker.IsValid()) M->DoorMarker->Destroy(); SpawnOutdoor(*M); return; }
 	M->Slot = FreeSlot();
 	M->MapId = Map->Id;
@@ -1130,7 +1148,7 @@ void ACoHStoryDirector::SpawnOutdoor(FMission& M)
 	if (!T || !Hero) return;
 	if (!TActorIterator<ACoHEnemySpawner>(GetWorld())) { UE_LOG(LogTemp, Warning, TEXT("CoH story: no enemy spawner: mission %s has no villains"), *M.Task); return; }
 	if (M.DoorMarker.IsValid()) M.DoorMarker->Destroy();
-	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
+	const int32 Level = FMath::Clamp(For->MissionLevel(M.Task), 1, 50);
 	const FString Group = T->MissionGroup.IsEmpty() ? TEXT("Hellions") : T->MissionGroup;
 	const TArray<FVector> None;
 	// the mission's own spawns (bosses, hostages, patrols; some wait for a trigger), then filler groups by map length
@@ -1166,7 +1184,7 @@ void ACoHStoryDirector::PopulateIndoor(FMission& M)
 	UCoHStoryComponent* For = M.Hero.Get();
 	APawn* Hero = For ? Cast<APawn>(For->GetOwner()) : nullptr;
 	if (!T || !Map || !Hero) return;
-	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
+	const int32 Level = FMath::Clamp(For->MissionLevel(M.Task), 1, 50);
 	const FString Group = T->MissionGroup.IsEmpty() ? TEXT("Hellions") : T->MissionGroup;
 	// encounter places by rank; each used once
 	TArray<int32> Free;
@@ -1371,7 +1389,7 @@ void ACoHStoryDirector::CreateRun(FMission& M, int32 RunIdx)
 	const UCoHGameRules* GR = UCoHGameRules::Get(this);
 	if (!T || !Hero || !GR || !T->Spawns.IsValidIndex(R.Spawn)) { RunDone(M, RunIdx); return; }
 	const FCoHStorySpawn& Sp = T->Spawns[R.Spawn];
-	const int32 Level = FMath::Clamp(For->HeroLevel(), 1, 50);
+	const int32 Level = FMath::Clamp(For->MissionLevel(M.Task), 1, 50);
 	const FString G = Sp.Group.IsEmpty() ? (T->MissionGroup.IsEmpty() ? FString(TEXT("Hellions")) : T->MissionGroup) : Sp.Group;
 	const int32 GroupId = NextGroupId++;
 	const int32 Before = M.Foes.Num();
@@ -1746,6 +1764,158 @@ void ACoHStoryDirector::CloseMission(UCoHStoryComponent* For, const FString& Tas
 	}
 }
 
+// ------------------------------------------------------------------ task forces (docs/story.md)
+static TArray<UCoHStoryComponent*> CoHTeamStories(const UWorld* W, int32 TeamId)
+{
+	TArray<UCoHStoryComponent*> Out;
+	if (!W || TeamId == 0) return Out;
+	for (FConstPlayerControllerIterator It = W->GetPlayerControllerIterator(); It; ++It)
+	{
+		const APlayerController* PC = It->Get();
+		APawn* P = PC ? PC->GetPawn() : nullptr;
+		const UCoHSocial* So = UCoHSocial::Of(P);
+		if (So && So->TeamId == TeamId) if (UCoHStoryComponent* St = UCoHStoryComponent::Of(P)) Out.Add(St);
+	}
+	return Out;
+}
+
+static void CoHTellStory(UCoHStoryComponent* St, const FString& Text)
+{
+	if (UCoHSocial* So = St ? UCoHSocial::Of(St->GetOwner()) : nullptr) So->Tell(ECoHChat::System, FString(), Text);
+}
+
+FCoHTaskForce* ACoHStoryDirector::TaskForceOf(const AActor* Hero)
+{
+	const UCoHSocial* So = UCoHSocial::Of(Hero);
+	if (!So || So->TeamId == 0) return nullptr;
+	const int32 Team = So->TeamId;
+	return TaskForces.FindByPredicate([Team](const FCoHTaskForce& T) { return T.TeamId == Team; });
+}
+
+int32 ACoHStoryDirector::TaskForceSize(const FCoHStoryContact& C) const
+{
+	const int32 N = FMath::Max(1, C.TaskForce.MinSize);
+	return MaxTaskForceTeam > 0 ? FMath::Min(N, MaxTaskForceTeam) : N;
+}
+
+void ACoHStoryDirector::StartTaskForce(UCoHStoryComponent* Leader, const FString& ContactId)
+{
+	APawn* Pawn = Leader ? Cast<APawn>(Leader->GetOwner()) : nullptr;
+	UCoHSocial* So = UCoHSocial::Of(Pawn);
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryContact* C = S ? S->Contact(ContactId) : nullptr;
+	if (!Pawn || !So || !C || TaskForceOf(Pawn)) return;
+	if (So->TeamId == 0) { So->TeamId = UCoHSocial::NewTeamId(); So->bLeader = true; }     // a task force of one
+	FCoHTaskForce& TF = TaskForces.AddDefaulted_GetRef();
+	TF.TeamId = So->TeamId; TF.Contact = ContactId; TF.Holder = Leader;
+	TF.Name = C->TaskForce.Names.Num() ? Leader->Fill(C->TaskForce.Names[FMath::RandRange(0, C->TaskForce.Names.Num() - 1)], C)
+		: FString::Printf(TEXT("%s's task force"), *C->Name);
+	for (UCoHStoryComponent* M : CoHTeamStories(GetWorld(), TF.TeamId))
+	{
+		TF.Started.Add(M->HeroName());
+		CoHTellStory(M, FString::Printf(TEXT("Your team is now %s, on %s's task force. No one can join until it is over, and leaving the team leaves the task force."), *TF.Name, *C->Name));
+		if (UCoHPowerComponent* Pw = UCoHPowerComponent::Of(M->GetOwner())) Pw->MulticastText(TF.Name, FLinearColor(1.f, 0.85f, 0.2f));
+	}
+	UE_LOG(LogTemp, Log, TEXT("CoH story: task force %s started at %s (%s)"), *TF.Name, *ContactId, *FString::Join(TF.Started, TEXT(", ")));
+	TickTaskForces();
+}
+
+void ACoHStoryDirector::MoveTaskForceTask(FCoHTaskForce& TF, UCoHStoryComponent* To)
+{
+	UCoHStoryComponent* From = TF.Holder.Get();
+	TF.Holder = To;
+	if (!To || From == To) return;
+	FCoHStoryProgress* A = From ? From->Story() : nullptr;
+	FCoHStoryProgress* B = To->Story();
+	if (A && B)
+		for (int32 i = A->Tasks.Num() - 1; i >= 0; --i)
+		{
+			if (A->Tasks[i].Contact != TF.Contact) continue;
+			FCoHTaskState St = A->Tasks[i];
+			A->Tasks.RemoveAt(i);
+			CloseMission(From, St.Task);
+			if (!St.bComplete) St.Waypoint = FVector::ZeroVector;     // its door opens again for the new holder
+			B->Tasks.Add(St);
+		}
+	if (UCoHHeroProgress* P = From ? From->Progress() : nullptr) P->Save();
+	if (UCoHHeroProgress* P = To->Progress()) P->Save();
+	for (UCoHStoryComponent* M : CoHTeamStories(GetWorld(), TF.TeamId))
+		CoHTellStory(M, FString::Printf(TEXT("%s now holds %s's mission."), *To->HeroName(), *TF.Name));
+}
+
+void ACoHStoryDirector::LeftTeam(APawn* Who, int32 OldTeam)
+{
+	FCoHTaskForce* TF = TaskForces.FindByPredicate([OldTeam](const FCoHTaskForce& T) { return T.TeamId == OldTeam; });
+	if (!TF) return;
+	UCoHStoryComponent* St = UCoHStoryComponent::Of(Who);
+	if (St) { St->TaskForceLine.Empty(); St->TaskForceWaypoint = FVector::ZeroVector; CoHTellStory(St, TEXT("You left the task force.")); }
+	const TArray<UCoHStoryComponent*> Rest = CoHTeamStories(GetWorld(), OldTeam);
+	if (Rest.Num() == 0) { EndTaskForce(OldTeam, false); return; }
+	if (TF->Holder.Get() == St || !TF->Holder.IsValid())
+	{
+		UCoHStoryComponent* Next = Rest[0];
+		for (UCoHStoryComponent* M : Rest) if (const UCoHSocial* So = UCoHSocial::Of(M->GetOwner())) if (So->bLeader) Next = M;
+		MoveTaskForceTask(*TF, Next);
+	}
+}
+
+void ACoHStoryDirector::EndTaskForce(int32 TeamId, bool bComplete)
+{
+	const int32 Idx = TaskForces.IndexOfByPredicate([TeamId](const FCoHTaskForce& T) { return T.TeamId == TeamId; });
+	if (Idx == INDEX_NONE) return;
+	const FCoHTaskForce TF = TaskForces[Idx];
+	TaskForces.RemoveAt(Idx);
+	// a task still in hand goes with the task force
+	if (UCoHStoryComponent* H = TF.Holder.Get())
+		if (FCoHStoryProgress* P = H->Story())
+		{
+			for (int32 i = P->Tasks.Num() - 1; i >= 0; --i)
+				if (P->Tasks[i].Contact == TF.Contact) { CloseMission(H, P->Tasks[i].Task); P->Tasks.RemoveAt(i); }
+			if (UCoHHeroProgress* HP = H->Progress()) HP->Save();
+		}
+	const TArray<UCoHStoryComponent*> Members = CoHTeamStories(GetWorld(), TeamId);
+	for (UCoHStoryComponent* M : Members)
+	{
+		M->TaskForceLine.Empty(); M->TaskForceWaypoint = FVector::ZeroVector;
+		CoHTellStory(M, bComplete ? FString::Printf(TEXT("%s is complete! Well done, heroes."), *TF.Name) : FString::Printf(TEXT("%s has disbanded."), *TF.Name));
+		if (bComplete) if (UCoHPowerComponent* Pw = UCoHPowerComponent::Of(M->GetOwner())) Pw->MulticastText(TEXT("Task force complete!"), FLinearColor(1.f, 0.85f, 0.2f));
+	}
+	// a task force of one is no team afterwards
+	if (Members.Num() == 1) if (UCoHSocial* So = UCoHSocial::Of(Members[0]->GetOwner())) { So->TeamId = 0; So->bLeader = false; }
+	UE_LOG(LogTemp, Log, TEXT("CoH story: task force %s %s"), *TF.Name, bComplete ? TEXT("complete") : TEXT("disbanded"));
+}
+
+void ACoHStoryDirector::TickTaskForces()
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	for (int32 i = TaskForces.Num() - 1; i >= 0; --i)
+	{
+		const TArray<UCoHStoryComponent*> Members = CoHTeamStories(GetWorld(), TaskForces[i].TeamId);
+		if (Members.Num() == 0) { EndTaskForce(TaskForces[i].TeamId, false); continue; }
+		FCoHTaskForce& TF = TaskForces[i];
+		if (!TF.Holder.IsValid() || !Members.Contains(TF.Holder.Get()))
+		{
+			UCoHStoryComponent* Next = Members[0];
+			for (UCoHStoryComponent* M : Members) if (const UCoHSocial* So = UCoHSocial::Of(M->GetOwner())) if (So->bLeader) Next = M;
+			MoveTaskForceTask(TF, Next);
+		}
+		// the mission list line: the task in hand, or back to the contact
+		UCoHStoryComponent* H = TF.Holder.Get();
+		const FCoHStoryContact* C = S ? S->Contact(TF.Contact) : nullptr;
+		FString Line = FString::Printf(TEXT("Talk to %s"), C ? *C->Name : TEXT("the task force contact"));
+		FVector Way = C ? C->Pos : FVector::ZeroVector;
+		if (!WhereIs(TF.Contact, Way) && C) Way = C->Pos;
+		if (const FCoHStoryProgress* P = H ? H->Story() : nullptr)
+			for (const FCoHTaskState& St : P->Tasks)
+				if (St.Contact == TF.Contact) { Line = St.Text; Way = St.Waypoint; break; }
+		for (UCoHStoryComponent* M : Members)
+		{
+			M->TaskForceLine = M == H ? TF.Name + TEXT(" (you hold the mission)") : TF.Name + TEXT(": ") + Line;
+			M->TaskForceWaypoint = M == H ? FVector::ZeroVector : Way;
+		}
+	}
+}
+
 // ------------------------------------------------------------------ UCoHStoryComponent
 UCoHStoryComponent::UCoHStoryComponent()
 {
@@ -1755,6 +1925,75 @@ UCoHStoryComponent::UCoHStoryComponent()
 }
 
 UCoHStoryComponent* UCoHStoryComponent::Of(const AActor* A) { return A ? A->FindComponentByClass<UCoHStoryComponent>() : nullptr; }
+
+void UCoHStoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(UCoHStoryComponent, TaskForceLine, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UCoHStoryComponent, TaskForceWaypoint, COND_OwnerOnly);
+}
+
+int32 UCoHStoryComponent::MissionLevel(const FString& TaskId) const
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	const FCoHStoryTask* T = S ? S->Task(TaskId) : nullptr;
+	return T && T->ForceLevel > 0 ? T->ForceLevel : HeroLevel();
+}
+
+TArray<UCoHStoryComponent*> UCoHStoryComponent::Team() const
+{
+	TArray<UCoHStoryComponent*> Out;
+	if (const UCoHSocial* So = UCoHSocial::Of(GetOwner()))
+		for (APawn* P : So->TeamMembers()) if (UCoHStoryComponent* M = Of(P)) Out.AddUnique(M);
+	if (Out.Num() == 0) Out.Add(const_cast<UCoHStoryComponent*>(this));
+	return Out;
+}
+
+void UCoHStoryComponent::GiveSecondary(const TArray<FString>& Tables)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	if (!S) return;
+	for (const FString& Name : Tables)
+	{
+		if (S->Rewards.Contains(Name)) GiveReward(Name);
+		else UCoHBadges::Grant(GetOwner(), Name);      // a reward token: the badge of that name
+	}
+}
+
+void UCoHStoryComponent::ShareWithTaskForce(const FString& ContactId, const FString& TaskId, const FString& Table, const FCoHStoryClues& Clues, const TCHAR* Line)
+{
+	ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+	const FCoHTaskForce* TF = D ? D->TaskForceOf(GetOwner()) : nullptr;
+	if (!TF || TF->Holder.Get() != this || TF->Contact != ContactId) return;
+	for (UCoHStoryComponent* M : Team())
+	{
+		if (M == this) continue;
+		if (Line) M->Say(Line, FLinearColor(1.f, 0.85f, 0.2f));
+		M->GiveReward(Table);
+		M->GiveClues(TaskId, Clues);
+	}
+}
+
+bool UCoHStoryComponent::TaskForceDelivery(const FString& Key, FString& Line)
+{
+	ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+	const FCoHTaskForce* TF = D ? D->TaskForceOf(GetOwner()) : nullptr;
+	UCoHStoryComponent* H = TF ? TF->Holder.Get() : nullptr;
+	FCoHStoryProgress* HP = H && H != this ? H->Story() : nullptr;
+	const UCoHStory* S = UCoHStory::Get(this);
+	if (!HP || !S) return false;
+	for (const FCoHTaskState& T : HP->Tasks)
+	{
+		const FCoHStoryTask* Dl = S->Task(T.Task);
+		if (!Dl || T.bComplete || Dl->Type != TEXT("deliver") || T.Contact != TF->Contact || T.Contact == Key) continue;
+		if (Dl->DeliverContact != Key && Dl->DeliverNpc != Key) continue;
+		Line = Fill(Dl->Complete.IsEmpty() ? TEXT("Thank you, {HeroName}.") : Dl->Complete);
+		const FString Id = T.Task;      // CompleteTask changes the list
+		H->CompleteTask(Id, FString());
+		return true;
+	}
+	return false;
+}
 UCoHHeroProgress* UCoHStoryComponent::Progress() const { return UCoHHeroProgress::Of(GetOwner()); }
 FCoHStoryProgress* UCoHStoryComponent::Story() const { UCoHHeroProgress* P = Progress(); return P && P->bHasRecord ? &P->Hero.Story : nullptr; }
 FString UCoHStoryComponent::HeroName() const { const UCoHHeroProgress* P = Progress(); return P ? P->Hero.Name : TEXT("Hero"); }
@@ -1793,6 +2032,12 @@ FString UCoHStoryComponent::Fill(const FString& Text, const FCoHStoryContact* C)
 	FString Out = Text.Replace(TEXT("{HeroName}"), *HeroName(), ESearchCase::IgnoreCase);
 	Out = Out.Replace(TEXT("{Level}"), *FString::FromInt(C ? C->MinLevel : HeroLevel()), ESearchCase::IgnoreCase);
 	if (C) Out = Out.Replace(TEXT("{ContactName}"), *C->Name, ESearchCase::IgnoreCase);
+	if (Out.Contains(TEXT("{TaskForceName}"), ESearchCase::IgnoreCase))
+	{
+		const ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+		const FCoHTaskForce* TF = D ? D->TaskForceOf(GetOwner()) : nullptr;
+		Out = Out.Replace(TEXT("{TaskForceName}"), TF ? *TF->Name : *HeroName(), ESearchCase::IgnoreCase);
+	}
 	// variables the export could not fill (random picks): show the name without braces
 	FString Clean; Clean.Reserve(Out.Len());
 	for (int32 i = 0; i < Out.Len(); ++i)
@@ -1911,6 +2156,54 @@ void UCoHStoryComponent::ServerChoose_Implementation(const FString& Action)
 	else if (Verb == TEXT("turnin")) TurnIn(A1);
 	else if (Verb == TEXT("abandon")) Abandon(A1);
 	else if (Verb == TEXT("store")) OpenContactStore(A1);
+	else if (Verb == TEXT("tfstart") || Verb == TEXT("tfaccept") || Verb == TEXT("tfturnin"))
+	{
+		const UCoHStory* S = UCoHStory::Get(this);
+		ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+		if (!S || !D) return;
+		if (Verb == TEXT("tfstart"))
+		{
+			const FCoHStoryContact* C = S->Contact(A1);
+			if (!C || !C->bTaskForce || D->TaskForceOf(GetOwner())) return;
+			if (!TaskForceRefusal(*C).IsEmpty()) { TalkTo(A1); return; }
+			D->StartTaskForce(this, A1);
+			TalkTo(A1);           // the first episode
+			return;
+		}
+		FCoHTaskForce* TF = D->TaskForceOf(GetOwner());
+		UCoHStoryComponent* H = TF ? TF->Holder.Get() : nullptr;
+		const FCoHStoryContact* C = TF ? S->Contact(TF->Contact) : nullptr;
+		if (!H || !C) return;
+		if (Verb == TEXT("tfaccept"))
+		{
+			if (A1 != TaskForceNext(*TF, *C) || H->Story() == nullptr) return;
+			if (H->Story()->Tasks.ContainsByPredicate([&](const FCoHTaskState& X) { return X.Contact == C->Id; })) return;
+			const FCoHStoryTask* T = S->Task(A1);
+			H->Accept(A1, C->Id);          // the holder carries it; the team plays it together
+			for (UCoHStoryComponent* M : Team())
+				if (M != this) CoHTellStory(M, FString::Printf(TEXT("%s: %s"), *TF->Name, *M->Fill(T && !T->Active.IsEmpty() ? T->Active : T ? T->Accept : FString(), C)));
+			if (H != this && T)
+			{
+				FCoHDialogPage Page;
+				Page.Title = C->Name;
+				Page.Body = Fill(T->SendOff.IsEmpty() ? TEXT("Good luck, {HeroName}.") : T->SendOff, C);
+				Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
+				Show(Page);
+			}
+			return;
+		}
+		// tfturnin: the holder turns it in for the team
+		const FString ContactId = C->Id, ContactName = C->Name;
+		const FCoHStoryTask* T = S->Task(A1);
+		H->TurnIn(A1);
+		if (H == this) return;           // the holder's own window shows what's next
+		if (D->TaskForceOf(GetOwner()) || !T) { TalkTo(ContactId); return; }
+		FCoHDialogPage Page;
+		Page.Title = ContactName;
+		Page.Body = Fill(T->Return.IsEmpty() ? TEXT("You did it, heroes.") : T->Return, S->Contact(ContactId));
+		Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
+		Show(Page);
+	}
 	else if (Verb == TEXT("pstore"))
 	{
 		const FCoHStoryPerson* Who = Story() ? UCoHStory::Get(this)->Person(A1) : nullptr;
@@ -2025,6 +2318,17 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 	LastContact = ContactId;
 	FCoHDialogPage Page;
 	Page.Title = C->Profession.IsEmpty() ? C->Name : FString::Printf(TEXT("%s, %s"), *C->Name, *C->Profession);
+	// on a task force: a delivery the team's task force task asks for
+	{
+		FString Line;
+		if (TaskForceDelivery(ContactId, Line))
+		{
+			Page.Body = Line;
+			Page.Labels = { TEXT("Continue") }; Page.Actions = { TEXT("talk|") + ContactId };
+			ShowContact(Page, *C);
+			return;
+		}
+	}
 	// a delivery for this contact
 	for (FCoHTaskState& T : P->Tasks)
 	{
@@ -2039,6 +2343,7 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 			return;
 		}
 	}
+	if (C->bTaskForce) { ContactState(ContactId); TalkToTaskForce(*C); return; }
 	// a finished task of this contact: turn it in
 	for (const FCoHTaskState& T : P->Tasks)
 		if (T.Contact == ContactId && T.bComplete)
@@ -2080,6 +2385,16 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 			ShowContact(Page, *C);
 			return;
 		}
+	if (const ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld()))
+		if (const FCoHTaskForce* TF = D->TaskForceOf(GetOwner()))
+		{
+			// the original: a task force takes all of a hero's time
+			Page.Body = FString::Printf(TEXT("You're on %s right now, {HeroName}. Come back when the task force is over."), *TF->Name);
+			Page.Body = Fill(Page.Body, C);
+			Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
+			ShowContact(Page, *C);
+			return;
+		}
 	if (P->Tasks.Num() >= 3)
 	{
 		Page.Body = Fill(C->Busy.IsEmpty() ? TEXT("You have enough on your plate, {HeroName}.") : C->Busy, C);
@@ -2104,6 +2419,115 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 	}
 	Page.Labels.Add(TEXT("Leave")); Page.Actions.Add(TEXT("close"));
 	ShowContact(Page, *C);
+}
+
+FString UCoHStoryComponent::TaskForceNext(const FCoHTaskForce& TF, const FCoHStoryContact& C) const
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	if (!S) return FString();
+	for (const FString& A : C.Arcs)
+		if (const FCoHStoryArc* Arc = S->Arc(A))
+			for (const FString& E : Arc->Episodes)
+			{
+				// an episode is done once its last part (compound tasks) is turned in
+				FString Last = E;
+				for (int32 Guard = 0; Guard < 20; ++Guard)
+				{
+					const FCoHStoryTask* T = S->Task(Last);
+					if (!T || !T->bAutoNext || T->Next.IsEmpty()) break;
+					Last = T->Next;
+				}
+				if (!TF.Done.Contains(Last) && !TF.Done.Contains(E)) return E;
+			}
+	return FString();
+}
+
+static TAutoConsoleVariable<int32> CVarCoHTaskForceAnyLevel(
+	TEXT("coh.Story.TaskForceAnyLevel"), 0,
+	TEXT("1: task force contacts skip their level band (tests with heroes of any level)."));
+
+FString UCoHStoryComponent::TaskForceRefusal(const FCoHStoryContact& C) const
+{
+	const ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+	const UCoHSocial* So = UCoHSocial::Of(GetOwner());
+	const UCoHHeroProgress* HP = Progress();
+	if (!D || !HP) return TEXT("...");
+	auto Line = [&](const FString& L, const TCHAR* Default) { return Fill(L.IsEmpty() ? FString(Default) : L, &C); };
+	const int32 Lv = HeroLevel();
+	if (!CoHContactAllows(C.Requires, HP->Hero)) return Line(C.DontKnow, TEXT("I don't think I can help you, {HeroName}."));
+	const bool bAnyLevel = CVarCoHTaskForceAnyLevel.GetValueOnGameThread() != 0;
+	if (!bAnyLevel && Lv < C.MinLevel) return Line(C.TaskForce.TooLow.IsEmpty() ? C.ComeBack : C.TaskForce.TooLow, TEXT("You are not ready for this yet, {HeroName}."));
+	if (!bAnyLevel && Lv > C.MaxLevel) return Line(C.TaskForce.TooHigh, TEXT("This is beneath someone of your power, {HeroName}."));
+	if (So && So->TeamId != 0 && !So->bLeader) return Line(C.TaskForce.NeedLeader, TEXT("Send your team leader to talk to me."));
+	const TArray<UCoHStoryComponent*> Members = Team();
+	const int32 Need = D->TaskForceSize(C);
+	if (Members.Num() < Need)
+		return Line(C.TaskForce.NeedLargeTeam, TEXT("This needs a bigger team.")) + FString::Printf(TEXT("\n\n(This task force needs a team of %d.)"), Need);
+	for (const UCoHStoryComponent* M : Members)
+		if (FVector::Dist(M->GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()) > D->TaskForceGatherDistance)
+			return Line(C.TaskForce.NeedTeamHere, TEXT("Gather your whole team here first.")) + FString::Printf(TEXT("\n\n(%s is too far away.)"), *M->HeroName());
+	for (const UCoHStoryComponent* M : Members)
+	{
+		const int32 L = M->HeroLevel();
+		if (!bAnyLevel && (L < C.MinLevel || L > C.MaxLevel))
+			return Line(C.TaskForce.BadTeamLevel, TEXT("Everyone on your team has to be up to this.")) + FString::Printf(TEXT("\n\n(%s is level %d; this task force is for levels %d to %d.)"), *M->HeroName(), L, C.MinLevel, C.MaxLevel);
+	}
+	return FString();
+}
+
+void UCoHStoryComponent::TalkToTaskForce(const FCoHStoryContact& C)
+{
+	const UCoHStory* S = UCoHStory::Get(this);
+	ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld());
+	if (!S || !D) return;
+	FCoHDialogPage Page;
+	Page.Title = C.Profession.IsEmpty() ? C.Name : FString::Printf(TEXT("%s, %s"), *C.Name, *C.Profession);
+	const FString Hello = C.Hello.Num() ? C.Hello[FMath::RandRange(0, C.Hello.Num() - 1)] : FString();
+	auto Reply = [&](const FString& Body)
+	{
+		Page.Body = Body;
+		Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
+		ShowContact(Page, C);
+	};
+	FCoHTaskForce* TF = D->TaskForceOf(GetOwner());
+	if (TF && TF->Contact != C.Id) { Reply(Fill(FString::Printf(TEXT("You're already on %s, {HeroName}. Finish that first."), *TF->Name), &C)); return; }
+	if (TF)
+	{
+		Page.Title += TEXT("  (") + TF->Name + TEXT(")");
+		UCoHStoryComponent* H = TF->Holder.Get();
+		if (const FCoHStoryProgress* HP = H ? H->Story() : nullptr)
+			for (const FCoHTaskState& T : HP->Tasks)
+			{
+				if (T.Contact != C.Id) continue;
+				const FCoHStoryTask* Tk = S->Task(T.Task);
+				if (T.bComplete)
+				{
+					Page.Body = Fill(Tk && !Tk->Return.IsEmpty() ? Tk->Return : TEXT("Well done, {HeroName}."), &C);
+					Page.Labels = { TEXT("Finish") }; Page.Actions = { TEXT("tfturnin|") + T.Task };
+					ShowContact(Page, C);
+				}
+				else Reply(Fill(Tk && !Tk->Busy.IsEmpty() ? Tk->Busy : Hello, &C));
+				return;
+			}
+		const FString Next = TaskForceNext(*TF, C);
+		const FCoHStoryTask* Tk = S->Task(Next);
+		if (!Tk) { Reply(Fill(C.NoTasks.IsEmpty() ? TEXT("You've done all I asked.") : C.NoTasks, &C)); return; }
+		Page.Body = Fill(Tk->Intro.IsEmpty() ? Tk->Active : Tk->Intro, &C);
+		if (TF->Done.Num() == 0 && !C.TaskForce.FirstVisit.IsEmpty()) Page.Body = Fill(C.TaskForce.FirstVisit, &C) + TEXT("\n\n") + Page.Body;
+		Page.Labels = { Fill(Tk->Accept.IsEmpty() ? TEXT("Accept") : Tk->Accept, &C), TEXT("Leave") };
+		Page.Actions = { FString::Printf(TEXT("tfaccept|%s|%s"), *Next, *C.Id), TEXT("close") };
+		ShowContact(Page, C);
+		return;
+	}
+	// not on one yet: can this hero's team start it?
+	const FString No = TaskForceRefusal(C);
+	if (!No.IsEmpty()) { Reply(No); return; }
+	if (TaskForceNext(FCoHTaskForce(), C).IsEmpty()) { Reply(Fill(C.NoTasks.IsEmpty() ? TEXT("I have nothing for you right now.") : C.NoTasks, &C)); return; }
+	Page.Body = Fill(C.TaskForce.Invite.IsEmpty() ? Hello : C.TaskForce.Invite, &C)
+		+ TEXT("\n\nStarting the task force locks your team: no one can join until it is over, and anyone who leaves the team leaves the task force.");
+	Page.Labels = { TEXT("Start the task force"), TEXT("Leave") };
+	Page.Actions = { TEXT("tfstart|") + C.Id, TEXT("close") };
+	ShowContact(Page, C);
 }
 
 void UCoHStoryComponent::ShowTask(const FString& TaskId, const FString& ContactId)
@@ -2146,7 +2570,7 @@ void UCoHStoryComponent::Accept(const FString& TaskId, const FString& ContactId)
 	const FCoHStoryTask* T = S ? S->Task(TaskId) : nullptr;
 	if (!P || !T) return;
 	// accepted from a contact window: it has to be on offer (compound parts come from CompleteTask)
-	if (C && LastContact == ContactId && !Offers(*C).Contains(TaskId) && !P->Tasks.ContainsByPredicate([&](const FCoHTaskState& X) { return X.Task == TaskId; }))
+	if (C && !C->bTaskForce && LastContact == ContactId && !Offers(*C).Contains(TaskId) && !P->Tasks.ContainsByPredicate([&](const FCoHTaskState& X) { return X.Task == TaskId; }))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CoH story: %s is not on offer from %s"), *TaskId, *ContactId);
 		return;
@@ -2162,6 +2586,14 @@ void UCoHStoryComponent::Accept(const FString& TaskId, const FString& ContactId)
 	P->Tasks.Add(St);
 	GiveClues(TaskId, T->BeginClues);
 	UE_LOG(LogTemp, Log, TEXT("CoH story: %s took %s (%s) from %s"), *HeroName(), *TaskId, *T->Type, *ContactId);
+	if (T->Type == TEXT("deliver") && !S->Contact(T->DeliverContact) && !S->Person(T->DeliverNpc))
+	{
+		// a task force step whose person is not in our city (a Flashback contact, a trial's computer):
+		// done at once, so the arc goes on
+		UE_LOG(LogTemp, Log, TEXT("CoH story: %s delivers to %s, who is not in the city: done at once"), *TaskId, *T->DeliverNpc);
+		CompleteTask(TaskId, T->Complete);
+		return;
+	}
 	Save();
 	if (C)
 	{
@@ -2186,6 +2618,11 @@ void UCoHStoryComponent::CompleteTask(const FString& TaskId, const FString& Mess
 	Say(TEXT("Mission complete!"), FLinearColor(1.f, 0.85f, 0.2f));
 	GiveReward(T->CompleteReward);
 	GiveClues(TaskId, T->CompleteClues);
+	// a task force's members share its rewards; SecondaryReward is the whole team's
+	ShareWithTaskForce(P->Tasks[Idx].Contact, TaskId, T->CompleteReward, T->CompleteClues, TEXT("Mission complete!"));
+	for (UCoHStoryComponent* M : Team()) M->GiveSecondary(T->Secondary);
+	P = Story();      // rewards can save and level the hero; the record stays put, but look again
+	if (!P || !P->Tasks.IsValidIndex(Idx) || P->Tasks[Idx].Task != TaskId) return;
 	if (T->bAutoNext && !T->Next.IsEmpty())
 	{
 		// the next part of the same task, at once
@@ -2278,7 +2715,30 @@ void UCoHStoryComponent::TurnIn(const FString& TaskId)
 	P->Done.AddUnique(TaskId);
 	GiveReward(T->Reward);
 	GiveClues(TaskId, T->ReturnClues);
+	ShareWithTaskForce(ContactId, TaskId, T->Reward, T->ReturnClues, nullptr);
+	for (UCoHStoryComponent* M : Team()) M->GiveSecondary(T->ReturnSecondary);
 	const FCoHStoryContact* C = S->Contact(ContactId);
+	// a task force episode: the next one, or the task force is done
+	if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld()))
+		if (FCoHTaskForce* TF = D->TaskForceOf(GetOwner()))
+			if (TF->Holder.Get() == this && TF->Contact == ContactId && C)
+			{
+				TF->Done.AddUnique(TaskId);
+				if (TaskForceNext(*TF, *C).IsEmpty())
+				{
+					D->EndTaskForce(TF->TeamId, true);
+					Save();
+					if (LastContact == ContactId)
+					{
+						FCoHDialogPage Page;
+						Page.Title = C->Name;
+						Page.Body = Fill(T->Return.IsEmpty() ? TEXT("You did it, heroes.") : T->Return, C);
+						Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
+						Show(Page);
+					}
+					return;
+				}
+			}
 	FString Extra;
 	if (C)
 	{
@@ -2349,7 +2809,9 @@ void UCoHStoryComponent::TalkToPerson(const FString& PersonId)
 	FCoHDialogPage Page;
 	Page.Title = Who->Name;
 	Page.Body = Fill(Who->Line.IsEmpty() ? TEXT("Hello there.") : Who->Line);
-	for (const FCoHTaskState& T : P->Tasks)
+	FString TFLine;
+	if (TaskForceDelivery(PersonId, TFLine)) Page.Body = TFLine;
+	else for (const FCoHTaskState& T : P->Tasks)
 	{
 		const FCoHStoryTask* D = S->Task(T.Task);
 		if (D && !T.bComplete && D->Type == TEXT("deliver") && D->DeliverNpc == PersonId)
@@ -2371,6 +2833,12 @@ void UCoHStoryComponent::TalkToPerson(const FString& PersonId)
 void UCoHStoryComponent::OnVillainDefeated(AActor* Hero, AActor* Villain)
 {
 	UCoHStoryComponent* Me = Of(Hero);
+	// on a task force, a defeat counts for the task the team's holder carries
+	if (Me)
+		if (ACoHStoryDirector* D = ACoHStoryDirector::Get(Me->GetWorld()))
+			if (const FCoHTaskForce* TF = D->TaskForceOf(Hero))
+				if (UCoHStoryComponent* H = TF->Holder.Get())
+					if (H != Me) OnVillainDefeated(H->GetOwner(), Villain);
 	const ACoHCombatEnemy* E = Cast<ACoHCombatEnemy>(Villain);
 	FCoHStoryProgress* P = Me ? Me->Story() : nullptr;
 	const UCoHStory* S = UCoHStory::Get(Hero);
@@ -2412,11 +2880,16 @@ void UCoHStoryComponent::TickComponent(float Delta, ELevelTick TickType, FActorC
 		}
 	// visit tasks: being there completes them
 	TArray<FString> Reached;
+	TArray<FVector> Here = { GetOwner()->GetActorLocation() };
+	if (const ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld()))
+		if (const FCoHTaskForce* TF = D->TaskForceOf(GetOwner()))
+			if (TF->Holder.Get() == this)
+				for (const UCoHStoryComponent* M : Team()) Here.AddUnique(M->GetOwner()->GetActorLocation());     // any of the task force
 	for (const FCoHTaskState& St : P->Tasks)
 	{
 		const FCoHStoryTask* T = S->Task(St.Task);
 		if (T && !St.bComplete && T->Type == TEXT("visit") && !St.Waypoint.IsZero()
-			&& FVector::Dist2D(St.Waypoint, GetOwner()->GetActorLocation()) < 1500.f) Reached.Add(St.Task);
+			&& Here.ContainsByPredicate([&](const FVector& At) { return FVector::Dist2D(St.Waypoint, At) < 1500.f; })) Reached.Add(St.Task);
 	}
 	for (const FString& Id : Reached) { const FCoHStoryTask* T = S->Task(Id); CompleteTask(Id, T ? T->Complete : FString()); }
 }

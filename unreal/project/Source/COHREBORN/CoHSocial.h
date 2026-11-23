@@ -49,6 +49,8 @@ public:
 	static int32 CombatLevelFor(const AActor* Hero, int32 OwnLevel);
 	/** Host: re-apply every teammate's level (team or leader changed). */
 	void RefreshTeamLevels();
+	/** Host: a new team number (teams and task forces of one). */
+	static int32 NewTeamId();
 	/** Host: every hero on this one's team (itself included; just itself when not teamed). */
 	TArray<APawn*> TeamMembers() const;
 	/** The hero's name as others see it. */
