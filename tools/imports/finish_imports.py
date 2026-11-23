@@ -6,6 +6,8 @@ PC from the original data, then import into the open Unreal editor.
 Convert stages (no editor needed; each takes seconds to a few minutes):
   encounters   every zone's original encounters (tools/zones/encounters.py)
                -> out/zone_encounters/<zone>/encounters.json, sites.json
+  zone_events  the zones' scripted events and the city-wide invasions
+               (tools/zones/zone_events.py) -> out/zone_encounters/zone_events.json
   enemies      enemy kit for every villain the 18 city-map zones can spawn
                (tools/zones/enemy_kit_all.py) -> out/enemies: kit.json (a
                superset of Atlas Park's, same format), roster.json, models/.
@@ -76,7 +78,7 @@ GS = os.path.join(REPO, "unreal", "scripts", "game_systems")
 NEEDED = ("texts/english", "scripts.loc/contacts", "scripts.loc/spawndefs",
           "maps/city_zones", "maps/missions", "object_library", "defs/powers", "sequencers",
           "aiscript", "menu")
-CONVERT = ["encounters", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
+CONVERT = ["encounters", "zone_events", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
            "items_game", "inventions_game", "badges_game", "chatter", "missions", "characters"]
 UNREAL = ["ue_fx", "ue_enemies", "ue_missions", "ue_presets", "ue_npcs"]
 
@@ -141,6 +143,9 @@ def convert(stage, data, piggs):
     if stage == "encounters":
         p = run([PY, "tools/zones/encounters.py", data, o("zone_encounters")])
         return p.returncode == 0, "%d zones" % len(os.listdir(o("zone_encounters")))
+    if stage == "zone_events":
+        p = run([PY, "tools/zones/zone_events.py", data, o("zone_encounters")])
+        return p.returncode == 0, last_line(p, "zone_events.json")
     if stage == "enemies":
         bk = o("enemies", "backup_" + time.strftime("%Y%m%d_%H%M%S"))
         for f in ("kit.json", "roster.json", "enemy_power_anims.json"):

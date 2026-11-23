@@ -5,6 +5,7 @@
 #include "CoHHeroProgress.h"
 #include "CoHCombat.h"
 #include "CoHItems.h"
+#include "CoHZoneEvents.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -227,7 +228,8 @@ void UCoHSocial::Submit(const FString& Line)
 	}
 	else if (Cmd == TEXT("invite") || Cmd == TEXT("i") || Cmd == TEXT("accept") || Cmd == TEXT("decline") || Cmd == TEXT("leave")
 		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges")
-		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("respec") || Cmd == TEXT("releasepets") || Cmd == TEXT("release"))
+		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("respec") || Cmd == TEXT("releasepets") || Cmd == TEXT("release")
+		|| Cmd == TEXT("zoneevent"))
 		ServerCommand(Cmd == TEXT("i") ? FString(TEXT("invite")) : Cmd, Rest);
 	else if (Cmd == TEXT("inventions") || Cmd == TEXT("invent") || Cmd == TEXT("salvage") || Cmd == TEXT("recipes"))
 	{
@@ -359,6 +361,15 @@ void UCoHSocial::ServerCommand_Implementation(const FString& Command, const FStr
 	else if (Command == TEXT("respec"))
 	{
 		if (UCoHHeroProgress* H = UCoHHeroProgress::Of(GetOwner())) H->ServerRespec_Implementation();
+	}
+	else if (Command == TEXT("zoneevent"))
+	{
+		// host only: start one now, stop them, or list them
+		const APawn* Me = Cast<APawn>(GetOwner());
+		ACoHZoneEvents* Z = ACoHZoneEvents::Get(GetWorld());
+		if (!Me || !Me->IsLocallyControlled()) Tell(ECoHChat::System, FString(), TEXT("Only the host can start zone events."));
+		else if (!Z) Tell(ECoHChat::System, FString(), TEXT("No zone events on this map."));
+		else Tell(ECoHChat::System, FString(), Z->Command(Arg.TrimStartAndEnd(), const_cast<APawn*>(Me)));
 	}
 	else if (Command == TEXT("releasepets") || Command == TEXT("release"))
 	{
