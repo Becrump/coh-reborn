@@ -851,6 +851,28 @@ bool ACoHStoryDirector::StandingSpot(const FVector& Pos, FVector& Out) const
 		if (H.ImpactPoint.Z >= Pos.Z - 300.f && (!Best || H.ImpactPoint.Z < Best->ImpactPoint.Z)) Best = &H;
 	if (!Best) return Ground(Pos, Out);
 	Out = Best->ImpactPoint;
+	// on top of something (a roof: the old interior position is now inside a solid rebuilt building)?
+	// then the lowest open ground nearby, the nearest of it
+	auto Lowest = [&](const FVector& At, FVector& Hit) -> bool
+	{
+		FHitResult H;
+		if (!W->LineTraceSingleByObjectType(H, At + FVector(0, 0, 60000.f), At - FVector(0, 0, 30000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q)) return false;
+		Hit = H.ImpactPoint;
+		return true;
+	};
+	if (Out.Z < Pos.Z + 1500.f) return true;                     // about where the data puts it: keep it
+	FVector BestNear = Out; float BestD = TNumericLimits<float>::Max();
+	for (float R : { 600.f, 1200.f, 2000.f, 3000.f, 4500.f })
+		for (int32 a = 0; a < 16; ++a)
+		{
+			const FVector At = Pos + FVector(FMath::Cos(a * PI / 8.f), FMath::Sin(a * PI / 8.f), 0.f) * R;
+			FVector H;
+			if (!Lowest(At, H) || H.Z > Out.Z - 500.f) continue;    // not clearly lower than where we are
+			// prefer the lowest ground, then the nearest
+			const float Score = H.Z * 4.f + R;
+			if (Score < BestD) { BestD = Score; BestNear = H; }
+		}
+	Out = BestNear;
 	return true;
 }
 
@@ -1476,6 +1498,10 @@ void ACoHStoryDirector::TickRuns(FMission& M)
 	for (const auto& KV : M.Left)
 		if (KV.Value > 0 && !M.Runs.ContainsByPredicate([&](const FMission::FRun& R) { return !R.bCreated && T->Spawns[R.Spawn].Objective.ToLower() == KV.Key; }))
 			bOthersDone = false;
+	// half the mission's villains down (and the hero inside): an ambush on a script trigger comes then
+	int32 FoesDown = 0;
+	for (const auto& F : M.Foes) if (!F.IsValid() || F->IsDead()) ++FoesDown;
+	const bool bHalfDown = M.bEntered && M.Foes.Num() > 0 && FoesDown * 2 >= M.Foes.Num();
 	for (int32 i = 0; i < M.Runs.Num(); ++i)
 	{
 		FMission::FRun& R = M.Runs[i];
@@ -1485,9 +1511,9 @@ void ACoHStoryDirector::TickRuns(FMission& M)
 			TArray<FString> On = Sp.CreateOn;
 			if (Sp.Kind == TEXT("ambush")) On.Append(Sp.ActivateOn);
 			bool bGo;
-			if (On.Num() == 0) bGo = Sp.Kind != TEXT("ambush") || M.Known.Num() == 0 || M.Done.Num() > 0;   // an ambush with no trigger: after the first objective
+			if (On.Num() == 0) bGo = Sp.Kind != TEXT("ambush") || M.Done.Num() > 0 || bHalfDown;          // an ambush with no trigger: after the first objective
 			else if (KnownAny(On)) bGo = Triggered(M, On);
-			else bGo = Sp.Kind != TEXT("ambush") || M.Done.Num() > 0 || M.Known.Num() == 0;              // its trigger is a script of the original: at once (ambush: after the first objective)
+			else bGo = Sp.Kind != TEXT("ambush") || M.Done.Num() > 0 || bHalfDown;                     // its trigger is a script of the original: at once (ambush: after the first objective, or half the villains down)
 			if (!bGo && bOthersDone && M.bEntered && M.Done.Num() > 0) bGo = true;                        // never leave a mission stuck on a trigger
 			if (!bGo) continue;
 			CreateRun(M, i);
@@ -1823,6 +1849,7 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 {
 	const AActor* Me = GetOwner();
 	if (!Me || !Story()) return;
+	if (const UCoHPowerComponent* Pw = UCoHPowerComponent::Of(Me)) if (Pw->IsDefeated()) return;   // down: no talking, clicking or freeing
 	AActor* Best = nullptr; float BestD = TNumericLimits<float>::Max();
 	for (TActorIterator<ACoHStoryNPC> It(GetWorld()); It; ++It)
 	{
@@ -2019,6 +2046,15 @@ void UCoHStoryComponent::TalkTo(const FString& ContactId)
 			const FCoHStoryTask* D = S->Task(T.Task);
 			Page.Body = Fill(D && !D->Return.IsEmpty() ? D->Return : TEXT("Well done, {HeroName}."), C);
 			Page.Labels = { TEXT("Finish") }; Page.Actions = { TEXT("turnin|") + T.Task };
+			ShowContact(Page, *C);
+			return;
+		}
+	if (const UCoHHeroProgress* HP = Progress())
+		if (!CoHContactAllows(C->Requires, HP->Hero))
+		{
+			// not for this hero (ContactRequires: Kheldian-only, level 20+ ...)
+			Page.Body = Fill(C->DontKnow.IsEmpty() ? TEXT("I don't think I can help you, {HeroName}.") : C->DontKnow, C);
+			Page.Labels = { TEXT("Leave") }; Page.Actions = { TEXT("close") };
 			ShowContact(Page, *C);
 			return;
 		}

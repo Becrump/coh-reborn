@@ -1434,3 +1434,9 @@ void ACoHHeroCharacter::ApplyTravel(const FCoHTravelState& State)
 	if (bFlight != State.bFlight) SetFlightEnabled(State.bFlight);
 	else ApplyMovementMode();
 }
+
+bool ACoHHeroCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
+{
+	if (UCoHSocial::SameTeam(this, ViewTarget) || UCoHSocial::SameTeam(this, RealViewer ? RealViewer->GetOwner() : nullptr)) return true;
+	return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
+}
