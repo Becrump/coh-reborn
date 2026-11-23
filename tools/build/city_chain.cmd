@@ -14,7 +14,8 @@ for %%r in ("%REPO%") do set "REPO=%%~fr"
 set "LOG=%~dp0city_chain_log.txt"
 set "HOLDDIR=C:\Users\rtcru\ClaudeProjects\COHReborn"
 set "UE=C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64"
-set "UPROJECT=%USERPROFILE%\OneDrive\Documents\Unreal Projects\COHREBORN\COHREBORN.uproject"
+if not defined COH_PROJECT set "COH_PROJECT=C:\UnrealProjects\COHREBORN"
+set "UPROJECT=%COH_PROJECT%\COHREBORN.uproject"
 echo %date% %time% chain started >> "%LOG%"
 
 :wait

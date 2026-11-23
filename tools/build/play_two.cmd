@@ -9,7 +9,7 @@ rem Close the Unreal editor first only if the build is out of date (run build_ga
 rem Overrides: UE_ROOT, COH_PROJECT, COH_MAP.
 setlocal EnableExtensions
 cd /d "%~dp0"
-if not defined COH_PROJECT set "COH_PROJECT=%USERPROFILE%\OneDrive\Documents\Unreal Projects\COHREBORN"
+if not defined COH_PROJECT set "COH_PROJECT=C:\UnrealProjects\COHREBORN"
 if not defined COH_MAP set "COH_MAP=/Game/AtlasPark4/AtlasPark_DressingStudy_Nanite"
 if not defined UE_ROOT (
   for /f "tokens=2,*" %%a in ('reg query "HKLM\SOFTWARE\EpicGames\Unreal Engine\5.8" /v InstalledDirectory 2^>nul ^| find "InstalledDirectory"') do set "UE_ROOT=%%b"
