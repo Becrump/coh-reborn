@@ -3,6 +3,7 @@
 #include "CoHPowers.h"
 #include "CoHBadges.h"
 #include "CoHHeroProgress.h"
+#include "CoHCombat.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -225,7 +226,7 @@ void UCoHSocial::Submit(const FString& Line)
 	}
 	else if (Cmd == TEXT("invite") || Cmd == TEXT("i") || Cmd == TEXT("accept") || Cmd == TEXT("decline") || Cmd == TEXT("leave")
 		|| Cmd == TEXT("kick") || Cmd == TEXT("team") || Cmd == TEXT("who") || Cmd == TEXT("badges")
-		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs"))
+		|| Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("respec") || Cmd == TEXT("releasepets") || Cmd == TEXT("release"))
 		ServerCommand(Cmd == TEXT("i") ? FString(TEXT("invite")) : Cmd, Rest);
 	else { Lines.Add({ ECoHChat::System, FString(), TEXT("Unknown command /") + Cmd }); ++LinesVersion; }
 }
@@ -349,6 +350,15 @@ void UCoHSocial::ServerCommand_Implementation(const FString& Command, const FStr
 	else if (Command == TEXT("badges"))
 	{
 		if (const UCoHBadges* B = UCoHBadges::Get(this)) Tell(ECoHChat::System, FString(), B->Describe(GetOwner()));
+	}
+	else if (Command == TEXT("respec"))
+	{
+		if (UCoHHeroProgress* H = UCoHHeroProgress::Of(GetOwner())) H->ServerRespec_Implementation();
+	}
+	else if (Command == TEXT("releasepets") || Command == TEXT("release"))
+	{
+		ACoHCombatEnemy::DismissPets(GetOwner(), NAME_None);
+		Tell(ECoHChat::System, FString(), TEXT("Your pets are dismissed."));
 	}
 	else if (Command == TEXT("clues") || Command == TEXT("souvenirs"))
 	{

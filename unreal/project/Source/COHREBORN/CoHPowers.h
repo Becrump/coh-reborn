@@ -47,6 +47,12 @@ struct FCoHMod
 	float Scale = 0, Magnitude = 1, Duration = 0, Delay = 0, Period = 0, Chance = 1;
 	int32 Requires = 0;     // 0 any, 1 only critters, 2 only players, -1 never (other conditions)
 	bool bAllowStrength = true;   // enhancements may strengthen it
+	/** kEntCreate: the villain definition summoned (a pet: Fire Imps, a Mastermind's henchmen, Rain of Fire's patch) */
+	FString EntityDef;
+	/** only once the caster is past this level (the original's "combatlevel source> N >": a Mastermind's 2nd and 3rd pets) */
+	int32 MinCasterLevel = 0;
+	/** the pet's level against the caster's (mod name Levelminus2: -2) */
+	int32 LevelOffset = 0;
 };
 
 struct FCoHPowerDef
@@ -215,7 +221,10 @@ public:
 	/** Archetype or critter class name (Class_Blaster, Class_Minion_Grunt...). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") FString ClassName = TEXT("Class_Blaster");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") int32 Level = 10;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CoH|Powers") bool bPlayerSide = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") bool bPlayerSide = true;
+	bool IsFoe(const UCoHPowerComponent* Other) const { return Other && Other->bPlayerSide != bPlayerSide; }
+	/** Can't be targeted or hit (the original's kUntouchable: pseudo-pets such as Rain of Fire's patch). */
+	UPROPERTY(Replicated) bool bUntouchable = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "CoH|Powers") FString DisplayName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CoH|Powers") float Health = 100;
@@ -335,7 +344,6 @@ private:
 	void ApplyMods(const FCoHPowerDef& P, UCoHPowerComponent* Victim, bool bSelf, float DurationOverride);
 	void ApplyMod(const FCoHPowerDef& P, const FCoHMod& M, UCoHPowerComponent* Victim, float DurationOverride);
 	TArray<UCoHPowerComponent*> Gather(const FCoHPowerDef& P, AActor* TargetActor, FVector Center) const;
-	bool IsFoe(const UCoHPowerComponent* Other) const { return Other && Other->bPlayerSide != bPlayerSide; }
 	float BuffSum(const FString& Attrib, const FString& Aspect) const;
 	void ToggleTick(const FCoHPowerDef& P);
 	void PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, FVector Location, uint8 Hits);
@@ -346,6 +354,11 @@ private:
 	float MezUntil = 0;
 	FString Mez;
 	float NextToggleTick = 0;
+	/** auto powers with a long period (10 s resistances, pet patches): when they pulse next */
+	TMap<FName, float> NextAutoPulse;
+	float NextPatchFx = 0.f;     // a pseudo-pet patch (Rain of Fire) shows its effect about once a second
+	/** kEntCreate mods of a power: its pets appear (CoHCombat.h ACoHCombatEnemy::SpawnPet) */
+	void SummonPets(const FCoHPowerDef& P, AActor* TargetActor, FVector Location);
 	float BusyUntil = 0;
 	float LastHurt = -100;
 	// auto-attack lock (owning client)

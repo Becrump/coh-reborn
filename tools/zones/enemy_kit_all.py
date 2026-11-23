@@ -6,7 +6,9 @@ This merges them (Atlas Park included), builds the roster the way
 tools/ai/coh_encounters.py does for Atlas Park, and writes into <out>:
 
   roster.json           villain -> group, rank, class, AI config, ally,
-                        powers, levels, costumes, encounters (zone:name)
+                        powers, levels, costumes, encounters (zone:name);
+                        plus the pets powers call (Fire Imps, henchmen...,
+                        ally "Pet", no encounters) unless --no-pets
   encounters_all.json   every zone's spawn definitions, keyed "<zone>:<name>"
                         (the game keeps reading Atlas Park's encounters.json;
                         this file only feeds the idle behaviors of the kit)
@@ -17,6 +19,7 @@ Content/CoH/Data/enemies/kit.json as is.
 
     python tools/zones/enemy_kit_all.py <i24>/data <piggs> <enc_dir> <out> \
         [--zones city_01_01 ...] [--events] [--no-models] [--all-costumes]
+        [--no-pets]
 
 Zones default to those in docs/zones/zone_offsets.json (the city map).
 Seasonal/zone-event spawn definitions are left out unless --events.
@@ -26,6 +29,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -91,6 +95,43 @@ def roster_of(villains, encounters):
     return out
 
 
+PLAYER_CATEGORIES = re.compile(
+    r"^(Blaster|Controller|Defender|Scrapper|Tanker|Peacebringer|Warshade|"
+    r"Brute|Stalker|Mastermind|Dominator|Corruptor|Arachnos_Soldiers|"
+    r"Arachnos_Widows|Sentinel)_|^(Pool|Epic|Inherent|Incarnate\w*|"
+    r"Temporary_Powers|Pets|Kheldian_Pets)$")
+
+
+def pets_of(powers, villains, roster):
+    """The pets heroes' powers call (kEntCreate entity defs of player power
+    categories: Fire Imps, Phantasm, Mastermind henchmen, patron pets) that
+    need a model: the invisible patches (Pets_Ignore: Rain of Fire, Ice
+    Slick, Caltrops) are left out."""
+    called = set()
+    for pid, pw in powers.items():
+        if PLAYER_CATEGORIES.match(pid.split(".")[0]):
+            called.update(m["EntityDef"] for m in pw.get("mods", [])
+                          if m.get("EntityDef"))
+    lower = {k.lower(): k for k in villains}
+    out = {}
+    for n in sorted(called):
+        n = lower.get(n.lower(), n)
+        v = villains.get(n)
+        if not v or n in roster or v.get("AIConfig") == "Pets_Ignore":
+            continue
+        costumes = ce._costumes(v)
+        if not costumes:
+            continue
+        out[n] = {"group": v.get("VillainGroup") or "Pets", "rank": v.get("Rank"),
+                  "class": v.get("Class"), "ai_config": v.get("AIConfig"),
+                  "ally": "Pet",
+                  "powers": [".".join(p) for p in v.get("powers", [])],
+                  "def_levels": sorted(v.get("levels", {})),
+                  "costumes": costumes, "spawn_levels": [], "weight": 0,
+                  "zones": [], "encounters": []}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("data")
@@ -101,12 +142,18 @@ def main():
     ap.add_argument("--events", action="store_true")
     ap.add_argument("--no-models", action="store_true")
     ap.add_argument("--all-costumes", action="store_true")
+    ap.add_argument("--no-pets", action="store_true")
     a = ap.parse_args()
     zones = a.zones or sorted(json.load(open(os.path.join(
         REPO, "docs", "zones", "zone_offsets.json")))["zones"])
     encounters = merge(a.enc_dir, zones, a.events)
     villains = coh_rules.load_villains(os.path.join(a.data, "defs"))
     roster = roster_of(villains, encounters)
+    if not a.no_pets:
+        pets = pets_of(coh_rules.load_powers(os.path.join(a.data, "defs")),
+                       villains, roster)
+        roster.update(pets)
+        print("%d pets" % len(pets), flush=True)
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, "roster.json"), "w") as f:
         json.dump(roster, f, indent=1)

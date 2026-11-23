@@ -561,6 +561,7 @@ bool UCoHGameRules::HeroFromJson(const FString& Text, FCoHHeroRecord& H) const
 	H.Name = S(O, TEXT("name")); H.Class = S(O, TEXT("class")); H.Origin = S(O, TEXT("origin"));
 	H.Level = FMath::Clamp((int32)N(O, TEXT("level"), 1), 1, MaxLevel);
 	H.XP = (int32)N(O, TEXT("xp")); H.Debt = (int32)N(O, TEXT("debt")); H.Influence = (int32)N(O, TEXT("influence"));
+	H.Respecs = (int32)N(O, TEXT("respecs"));
 	H.Primary = S(O, TEXT("primary")); H.Secondary = S(O, TEXT("secondary"));
 	const TSharedPtr<FJsonObject>* Model;
 	if (O->TryGetObjectField(TEXT("model"), Model)) H.Preset = S(*Model, TEXT("preset"));
@@ -615,6 +616,7 @@ FString UCoHGameRules::HeroToJson(const FCoHHeroRecord& H) const
 	O->SetStringField(TEXT("name"), H.Name); O->SetStringField(TEXT("class"), H.Class); O->SetStringField(TEXT("origin"), H.Origin);
 	O->SetNumberField(TEXT("level"), H.Level); O->SetNumberField(TEXT("xp"), H.XP);
 	O->SetNumberField(TEXT("debt"), H.Debt); O->SetNumberField(TEXT("influence"), H.Influence);
+	if (H.Respecs > 0) O->SetNumberField(TEXT("respecs"), H.Respecs);
 	TSharedRef<FJsonObject> M = MakeShared<FJsonObject>();
 	if (!H.Preset.IsEmpty()) M->SetStringField(TEXT("preset"), H.Preset);
 	O->SetObjectField(TEXT("model"), M);

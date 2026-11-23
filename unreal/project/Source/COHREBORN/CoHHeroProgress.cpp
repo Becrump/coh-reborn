@@ -13,6 +13,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Net/UnrealNetwork.h"
+#include "HAL/IConsoleManager.h"
 
 UCoHHeroProgress::UCoHHeroProgress()
 {
@@ -234,8 +235,39 @@ void UCoHHeroProgress::ServerTrain_Implementation()
 	FString Msg = FString::Printf(TEXT("Trained to level %d"), Hero.Level);
 	if (PicksOpen() > 0) Msg += TEXT(": choose a new power (P)");
 	Say(Msg, FLinearColor(1.f, 0.85f, 0.2f));
+	if (Hero.Level == 24 || Hero.Level == 34 || Hero.Level == 44)
+	{
+		// the original's respec trials (Terra Volta, Eden, Sewer) aren't in: the respec comes with the level
+		++Hero.Respecs;
+		Say(TEXT("You earned a respec (/respec to rebuild your powers)"), FLinearColor(1.f, 0.85f, 0.2f));
+	}
 	if (const UCoHBadges* B = UCoHBadges::Get(this)) B->Check(GetOwner());      // level badges
 	if (UCoHSocial* So = UCoHSocial::Of(GetOwner())) So->RefreshTeamLevels();      // a leader's new level moves the team
+	Save();
+}
+
+static TAutoConsoleVariable<bool> CVarRespecFree(TEXT("coh.Hero.RespecFree"), false,
+	TEXT("Tests: /respec works without a respec in hand"), ECVF_Default);
+
+void UCoHHeroProgress::ServerRespec_Implementation()
+{
+	if (!bHasRecord) return;
+	if (Hero.Respecs <= 0 && !CVarRespecFree.GetValueOnGameThread())
+	{
+		Say(TEXT("No respec available: you earn one at levels 24, 34 and 44"), FLinearColor::White);
+		return;
+	}
+	if (Hero.Respecs > 0) --Hero.Respecs;
+	// enhancements come out of their slots into the inventory; slots are placed again
+	for (const FCoHPowerSlots& Ps : Hero.Boosts.Slots)
+		for (const FString& E : Ps.Enh) if (!E.IsEmpty()) Hero.Boosts.Inventory.Add(E);
+	Hero.Boosts.Slots.Reset();
+	// every pick again, from the level 1 powers up (same archetype and sets)
+	Hero.Picks.Reset();
+	if (UCoHPowerComponent* C = Powers()) { C->ActiveToggles.Reset(); }
+	ACoHCombatEnemy::DismissPets(GetOwner(), NAME_None);
+	Apply(true);
+	Say(FString::Printf(TEXT("Respec: choose your %d powers again (P), then place your enhancement slots"), PicksOpen()), FLinearColor(1.f, 0.85f, 0.2f));
 	Save();
 }
 
@@ -249,7 +281,7 @@ void UCoHHeroProgress::ServerPick_Implementation(FName Power)
 	const int32 At = FMath::Max(R->PickLevel(N), 1);
 	const FString Why = R->CanPick(Hero, Power, At, N);
 	if (!Why.IsEmpty()) { Say(TEXT("Can't take that power: ") + Why, FLinearColor(1, 0.4f, 0.4f)); return; }
-	Hero.Picks.Add({ Hero.Level, Power });
+	Hero.Picks.Add({ At, Power });      // the level of the pick's slot (exemplars keep powers by it)
 	Apply(false);
 	Say(TEXT("New power: ") + Power.ToString().Mid(Power.ToString().Find(TEXT("."), ESearchCase::IgnoreCase, ESearchDir::FromEnd) + 1).Replace(TEXT("_"), TEXT(" ")), FLinearColor(1.f, 0.85f, 0.2f));
 	Save();

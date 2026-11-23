@@ -30,6 +30,9 @@
 #include "HAL/IConsoleManager.h"
 #include "Net/UnrealNetwork.h"
 #include "PhysicsEngine/PhysicsAsset.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #if WITH_EDITOR
 #include "PhysicsAssetUtils.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -131,6 +134,14 @@ FName ACoHCombatEnemy::PickAttack(float Distance,float& OutReach) const
 }
 void ACoHCombatEnemy::OnHurt(AActor* Causer,float Damage)
 {
+ // a patch on the ground (Rain of Fire, Caltrops) can't be fought: its caster takes the blame
+ if(const ACoHCombatEnemy* Pet=Cast<ACoHCombatEnemy>(Causer)) if(Pet->bPet && Pet->Powers && Pet->Powers->bUntouchable) Causer=CreditFor(Causer);
+ if(bPet)
+ {
+  // pets answer in PetThink (no shouting to the villains)
+  if(APawn* P=Cast<APawn>(Causer)) Threat.FindOrAdd(P)+=FMath::Max(1.f,Damage);
+  Causer=nullptr;
+ }
  if(APawn* P=Cast<APawn>(Causer))
  {
   const bool bNew=!Threat.Contains(P);
@@ -153,7 +164,15 @@ void ACoHCombatEnemy::OnHurt(AActor* Causer,float Damage)
 void ACoHCombatEnemy::OnDefeated(AActor* Causer)
 {
  if(IsDead()) return;
- UCoHHeroProgress::RewardDefeat(Powers,Rank.IsEmpty()?TEXT("Minion"):Rank,Faction);
+ if(bPet && GetMesh()->GetSkeletalMeshAsset()==nullptr)
+ {
+  // a stand-in orb just goes
+  if(auto* AI=Cast<AAIController>(GetController()))AI->StopMovement();
+  SetState(ECoHEnemyState::Dead);GetCharacterMovement()->DisableMovement();GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  SetLifeSpan(0.3f);
+  return;
+ }
+ if(!bPet) UCoHHeroProgress::RewardDefeat(Powers,Rank.IsEmpty()?TEXT("Minion"):Rank,Faction);
  GetWorldTimerManager().ClearTimer(AttackTimer);GetWorldTimerManager().ClearTimer(ReactionTimer);
  if(auto* AI=Cast<AAIController>(GetController()))AI->StopMovement();
  SetState(ECoHEnemyState::Dead);GetCharacterMovement()->DisableMovement();GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);SetLifeSpan(10.f);
@@ -298,6 +317,7 @@ void ACoHCombatEnemy::Tick(float Delta)
  if(bRagdoll || State==ECoHEnemyState::Dead || State==ECoHEnemyState::Hit || State==ECoHEnemyState::Attack) return;
  auto* AI=Cast<AAIController>(GetController()); if(!AI) return;
  if(Powers && Powers->IsMezzed()){AI->StopMovement();return;}
+ if(bPet){ PetThink(Delta,AI); return; }
  if(!bSaidIdle && !ChatIdle.IsEmpty() && !Target && HasAuthority() && GetWorld()->GetTimeSeconds()>=NextChatCheck)
  {
   // the idle line, once, when a hero first comes near (the original's Dialog_InActive)
@@ -640,7 +660,7 @@ void ACoHCombatEnemy::Shout(APawn* Who)
  for(TActorIterator<ACoHCombatEnemy> It(GetWorld());It;++It)
  {
   ACoHCombatEnemy* F=*It;
-  if(F==this || F->IsDead() || F->Target) continue;
+  if(F==this || F->IsDead() || F->Target || F->bPet) continue;
   const bool bGroup=GroupId!=INDEX_NONE && F->GroupId==GroupId;
   const bool bNear=FVector::Dist(F->GetActorLocation(),GetActorLocation())<=Cfg.ShoutRadius*30.48f;
   if(bGroup || (bNear && FMath::FRand()*100.f<Cfg.ShoutChance)) F->Alert(Who);
@@ -865,7 +885,7 @@ void ACoHCombatEnemy::CallForHelp(APawn* Who,float RadiusFeet)
  for(TActorIterator<ACoHCombatEnemy> It(GetWorld());It;++It)
  {
   ACoHCombatEnemy* F=*It;
-  if(F==this || F->IsDead() || F->Target || F->Faction!=Faction) continue;
+  if(F==this || F->IsDead() || F->Target || F->bPet || F->Faction!=Faction) continue;
   if(FVector::Dist(F->GetActorLocation(),GetActorLocation())<=RadiusFeet*30.48f)
   {
    // helpers come to the caller: the fight there becomes their home ground,
@@ -1104,7 +1124,7 @@ bool ACoHEnemySpawner::SpawnGroup(APawn* Near,const FString& ForceFaction,int32 
  for(const auto& F:Factions){ if(!Catalog.Contains(F.Key)) continue; Pick-=F.Value; if(Pick<=0){Faction=F.Key;break;} }
  if(!ForceFaction.IsEmpty()) Faction=ForceFaction;
  if(Faction.IsEmpty() || !Catalog.Contains(Faction)) return false;
- FVector Center; bool bFound=false;
+ FVector Center=FVector::ZeroVector; bool bFound=false;
  for(int32 Try=0;Try<12 && !bFound;++Try)
  {
   const FVector Dir=FVector(FMath::FRandRange(-1.f,1.f),FMath::FRandRange(-1.f,1.f),0).GetSafeNormal();
@@ -1330,7 +1350,7 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  if(Total>0){ int32 Roll=FMath::RandRange(0,Total-1); for(const FCoHEncounter* E:Pool){ if((Roll-=FMath::Max(0,E->Spots))<0){ Enc=E; break; } } }
  // a spot: open ground at the distance asked (the new map's layout differs
  // from the original, so spots are placed around the players)
- FVector Center; bool bFound=false;
+ FVector Center=FVector::ZeroVector; bool bFound=false;
  struct FRef{ FRef(UWorld* W,const APawn* N){ bool bLand=false; for(TActorIterator<AActor> It(W);It && !bLand;++It) bLand=It->GetClass()->GetName().Contains(TEXT("Landscape"));
   GOpenGroundRefZ=bLand?TNumericLimits<float>::Max():N->GetActorLocation().Z-90.f; } ~FRef(){ GOpenGroundRefZ=TNumericLimits<float>::Max(); } } Ref(W,Near);
  for(int32 Try=0;Try<16 && !bFound;++Try)
@@ -1391,6 +1411,7 @@ void ACoHCombatEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
  DOREPLIFETIME(ACoHCombatEnemy, Villain);
  DOREPLIFETIME(ACoHCombatEnemy, KitModel);
  DOREPLIFETIME(ACoHCombatEnemy, NetLook);
+ DOREPLIFETIME(ACoHCombatEnemy, PetLook);
 }
 void ACoHCombatEnemy::PublishLook()
 {
@@ -1447,3 +1468,167 @@ static FAutoConsoleCommandWithWorldAndArgs GCoHSpawnNearCommand(
 		const bool bOk = Spawner->SpawnEncounter(Hero, Group, FString(), HeroPowers ? HeroPowers->Level : 1, 1500.f);
 		UE_LOG(LogTemp, Log, TEXT("coh.SpawnNear: %s"), bOk ? TEXT("spawned") : TEXT("no spot (inside the City Hall no-spawn circle? step out of the plaza) or no encounter for that group"));
 	}));
+
+// ------------------------------------------------------------------ pets
+// The original kEntCreate mods call an entity def (a villain) for the caster.
+// Real pets (Fire Imps, Phantasm, henchmen) follow and fight; pseudo-pets
+// (Rain of Fire, Ice Slick: AIConfig Pets_Ignore with Pets.ResistAll) sit
+// unseen at the spot and pulse their auto powers until their time is up.
+ACoHCombatEnemy* ACoHCombatEnemy::SpawnPet(AActor* Owner,FName Power,const FString& VillainName,int32 InLevel,const FVector& At,float Duration)
+{
+ UWorld* W=Owner?Owner->GetWorld():nullptr;
+ const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(Owner);
+ const FCoHVillainDef* V=DB?DB->Villains.Find(VillainName):nullptr;
+ const UCoHPowerComponent* OP=UCoHPowerComponent::Of(Owner);
+ if(!W || !V || !OP || OP->IsDefeated()){ UE_LOG(LogTemp,Warning,TEXT("CoH pet %s: no villain def"),*VillainName); return nullptr; }
+ bool bUntouchablePet=false;
+ for(const FName& Id:V->Powers) if(Id.ToString().StartsWith(TEXT("Pets.ResistAll"))) bUntouchablePet=true;
+ if(V->AIConfig.Contains(TEXT("Untargetable"))) bUntouchablePet=true;
+ const bool bStill=V->AIConfig==TEXT("Pets_Ignore") || V->AIConfig==TEXT("Pets_Workbench") || V->AIConfig.Contains(TEXT("Stationary"));
+ // on the ground under the spot
+ FVector Spot=At; FHitResult Hit; FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPetSpot),false,Owner);
+ if(W->LineTraceSingleByChannel(Hit,At+FVector(0,0,300),At-FVector(0,0,2000),ECC_Visibility,Q)) Spot=Hit.ImpactPoint;
+ const FRotator Rot(0,Owner->GetActorRotation().Yaw,0);
+ ACoHCombatEnemy* E=nullptr;
+ if(!bUntouchablePet || !bStill)
+  if(ACoHEnemySpawner* S=Cast<ACoHEnemySpawner>(UGameplayStatics::GetActorOfClass(W,ACoHEnemySpawner::StaticClass())))
+   E=S->SpawnKitVillain(VillainName,InLevel,Spot,Rot);       // the pet's own model when it was imported
+ if(E && E->Villain!=VillainName){ E->Destroy(); E=nullptr; }
+ if(!E)
+ {
+  FActorSpawnParameters SP; SP.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+  E=W->SpawnActor<ACoHCombatEnemy>(Spot+FVector(0,0,95),Rot,SP);
+  if(!E) return nullptr;
+  E->Home=E->GetActorLocation();
+  E->ApplyVillain(VillainName,InLevel);
+  E->SpawnDefaultController();
+  if(E->Ragdoll) E->Ragdoll->bEnabled=false;
+  if(!bUntouchablePet || !bStill){ E->PetLook=1; E->OnRep_PetLook(); }
+ }
+ E->bPet=true; E->bStationaryPet=bStill; E->PetOwner=Owner; E->PetPower=Power;
+ E->Faction=FString(); E->GroupId=INDEX_NONE; E->IdleBehavior=TEXT("Loiter");
+ E->Powers->bPlayerSide=OP->bPlayerSide;
+ E->Powers->bUntouchable=bUntouchablePet;
+ E->Powers->DisplayName=OP->DisplayName.IsEmpty()?E->Powers->DisplayName:FString::Printf(TEXT("%s (%s)"),*E->Powers->DisplayName,*OP->DisplayName);
+ if(E->Attacks.Num()==1 && E->Attacks[0]==FName(TEXT("Inherent.Inherent.Brawl")) && bUntouchablePet) E->Attacks.Reset();   // patches don't punch
+ if(bUntouchablePet && bStill)
+ {
+  // nothing to see or bump into: the effect is its powers' FX
+  E->SetActorEnableCollision(false);
+  E->GetCharacterMovement()->DisableMovement();
+  E->GetCharacterMovement()->GravityScale=0.f;
+  E->SetActorLocation(Spot+FVector(0,0,95));
+ }
+ if(bStill) E->GetCharacterMovement()->DisableMovement();
+ if(Duration>0.f && Duration<9000.f) E->SetLifeSpan(Duration);
+ UE_LOG(LogTemp,Log,TEXT("CoH pet %s (level %d, %s%s) for %s"),*VillainName,InLevel,bUntouchablePet?TEXT("untouchable "):TEXT(""),bStill?TEXT("stationary"):TEXT("follows"),*GetNameSafe(Owner));
+ return E;
+}
+void ACoHCombatEnemy::DismissPets(const AActor* Owner,FName Power)
+{
+ if(!Owner) return;
+ for(TActorIterator<ACoHCombatEnemy> It(Owner->GetWorld());It;++It)
+  if(It->bPet && It->PetOwner.Get()==Owner && (Power.IsNone() || It->PetPower==Power)) It->Destroy();
+}
+AActor* ACoHCombatEnemy::CreditFor(AActor* Causer)
+{
+ const ACoHCombatEnemy* E=Cast<ACoHCombatEnemy>(Causer);
+ return E && E->bPet && E->PetOwner.IsValid() ? E->PetOwner.Get() : Causer;
+}
+void ACoHCombatEnemy::OnRep_PetLook()
+{
+ if(PetLook==0 || GetMesh()->GetSkeletalMeshAsset()) return;
+ // no imported model yet: a glowing orb at chest height stands in
+ UStaticMesh* Sphere=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+ if(!Sphere || FindComponentByTag<UStaticMeshComponent>(TEXT("CoHPetOrb"))) return;
+ auto* Orb=NewObject<UStaticMeshComponent>(this);
+ Orb->ComponentTags.Add(TEXT("CoHPetOrb"));
+ Orb->SetStaticMesh(Sphere);
+ Orb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+ Orb->SetCanEverAffectNavigation(false);
+ Orb->SetupAttachment(GetCapsuleComponent());
+ Orb->SetRelativeLocation(FVector(0,0,20));
+ Orb->SetRelativeScale3D(FVector(0.45f));
+ Orb->RegisterComponent();
+ if(UMaterialInstanceDynamic* M=Orb->CreateDynamicMaterialInstance(0)) M->SetVectorParameterValue(TEXT("Color"),FLinearColor(1.f,0.55f,0.15f));
+}
+void ACoHCombatEnemy::PetThink(float Delta,AAIController* AI)
+{
+ if(!HasAuthority()) return;
+ AActor* O=PetOwner.Get();
+ const UCoHPowerComponent* OP=UCoHPowerComponent::Of(O);
+ // the owner left or went down: the pet goes too (the original unsummons them)
+ if(!O || (OP && OP->IsDefeated())){ Destroy(); return; }
+ if(Powers->bUntouchable && bStationaryPet) return;        // a patch: its auto powers do the work
+ const double Now=GetWorld()->GetTimeSeconds();
+ if(!bStationaryPet && FVector::Dist(GetActorLocation(),O->GetActorLocation())>6000.f)
+ {
+  // left far behind (a jump, a train): catch up
+  Target=nullptr; AI->StopMovement();
+  SetActorLocation(O->GetActorLocation()-O->GetActorForwardVector()*200.f+FVector(0,0,20),false,nullptr,ETeleportType::TeleportPhysics);
+  Home=GetActorLocation();
+ }
+ auto Valid=[&](APawn* P)
+ {
+  const UCoHPowerComponent* C=UCoHPowerComponent::Of(P);
+  return IsValid(P) && C && !C->IsDefeated() && !C->bUntouchable && Powers->IsFoe(C);
+ };
+ if(Target && (!Valid(Target) || FVector::Dist(Target->GetActorLocation(),O->GetActorLocation())>2500.f)) Target=nullptr;
+ if(TauntedBy.IsValid() && Now<TauntUntil && Valid(TauntedBy.Get())) Target=TauntedBy.Get();
+ if(Now>=NextPetScan)
+ {
+  NextPetScan=Now+0.5;
+  // who to fight: whoever hurt me or the owner most, else the nearest foe in view
+  APawn* Best=nullptr; float BestScore=-1.f;
+  const float Reach=bStationaryPet?FMath::Max(AggroRange,2000.f):1500.f;
+  for(TActorIterator<ACharacter> It(GetWorld());It;++It)
+  {
+   APawn* P=*It;
+   if(!Valid(P)) continue;
+   const float DMe=FVector::Dist(P->GetActorLocation(),GetActorLocation());
+   const float DOwner=FVector::Dist(P->GetActorLocation(),O->GetActorLocation());
+   if(FMath::Min(DMe,DOwner)>Reach || !CanSee(P)) continue;
+   float Score=10000.f-DMe;
+   if(const float* T=Threat.Find(P)) Score+=*T*100.f;
+   if(const ACoHCombatEnemy* V=Cast<ACoHCombatEnemy>(P)) if(V->Target==O || V->Target==this) Score+=3000.f;   // defend
+   if(P==Target) Score+=1500.f;      // stick with it
+   if(Score>BestScore){BestScore=Score;Best=P;}
+  }
+  Target=Best;
+ }
+ if(!Target)
+ {
+  AI->ClearFocus(EAIFocusPriority::Gameplay);
+  if(bStationaryPet){ SetState(ECoHEnemyState::Idle); return; }
+  // heel: stay near the owner
+  if(FVector::Dist2D(GetActorLocation(),O->GetActorLocation())>400.f)
+  {
+   SetState(ECoHEnemyState::Chase);
+   GetCharacterMovement()->MaxWalkSpeed=FMath::Max(640.f,O->GetVelocity().Size2D()*1.1f);
+   if(Now>=NextPathTime){ GoToActor(O,250.f); NextPathTime=Now+0.4; }
+  }
+  else { AI->StopMovement(); SetState(ECoHEnemyState::Idle); }
+  return;
+ }
+ const float Distance=FVector::Dist(GetActorLocation(),Target->GetActorLocation());
+ float Reach=0; const FName Use=PickAttack(Distance,Reach);
+ if(Reach>0 && Distance<=Reach && CanSee(Target))
+ {
+  AI->StopMovement(); GetCharacterMovement()->StopMovementImmediately(); AI->SetFocus(Target);
+  if(!Use.IsNone() && Now>=NextAttackTime)
+  {
+   const UCoHPowerDatabase* DB=UCoHPowerDatabase::Get(this);
+   const FCoHPowerDef* P=DB?DB->FindPower(Use):nullptr;
+   const float Cast=P?FMath::Max(.5f,P->Activate):1.f;
+   SetState(ECoHEnemyState::Attack);
+   Powers->ServerActivate(Use,Target,Target->GetActorLocation());
+   NextAttackTime=Now+Cast+0.4f;
+   GetWorldTimerManager().SetTimer(ReactionTimer,this,&ACoHCombatEnemy::FinishReaction,Cast,false);
+  }
+  else SetState(ECoHEnemyState::Idle);
+  return;
+ }
+ if(bStationaryPet || Reach<=0){ SetState(ECoHEnemyState::Idle); return; }
+ SetState(ECoHEnemyState::Chase);
+ if(Now>=NextPathTime){ GoToActor(Target,FMath::Max(80.f,Reach*0.7f)); NextPathTime=Now+0.4; }
+}
