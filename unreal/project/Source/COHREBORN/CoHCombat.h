@@ -72,6 +72,21 @@ public:
  /** The encounter's idle behavior (AI_InActive, e.g. <<PL_SprayPaint>>): its
   *  moves loop while the villain is idle, and it holds its spot. */
  void SetEncounterIdle(const FString& Behavior);
+ /** Pets (the original kEntCreate mods: Fire Imps, Phantasm, Mastermind henchmen, patron
+  *  pets, and the invisible pseudo-pets behind Rain of Fire, Ice Slick, Caltrops...).
+  *  A pet fights on its owner's side and its damage counts as the owner's. */
+ TWeakObjectPtr<AActor> PetOwner;
+ FName PetPower;
+ bool bPet = false, bStationaryPet = false;
+ /** Host: call VillainName (an entity def) at At for Owner; Duration < 9000 s ends it. */
+ static ACoHCombatEnemy* SpawnPet(AActor* Owner, FName Power, const FString& VillainName, int32 Level, const FVector& At, float Duration);
+ /** Host: send home the pets Owner called with Power (all its pets with None). */
+ static void DismissPets(const AActor* Owner, FName Power);
+ /** Who gets the credit for damage: a pet's owner, else Causer. */
+ static AActor* CreditFor(AActor* Causer);
+ /** A pet with no imported model shows a small glowing orb (on every PC). */
+ UPROPERTY(ReplicatedUsing=OnRep_PetLook) uint8 PetLook = 0;
+ UFUNCTION() void OnRep_PetLook();
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category="CoH|Combat") FString KitModel;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString EncounterIdle;
  /** Use a villain definition from the rules (class, rank, powers). Auto
@@ -175,6 +190,8 @@ public:
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CoH|Combat") TObjectPtr<UAnimSequence> DeathClip;
 private:
  void RecoverRagdoll();
+ void PetThink(float Delta, AAIController* AI);
+ double NextPetScan = 0;
  bool bRagdoll = false;       // on the ground or getting up: the brain waits
  bool bGettingUp = false;
  double RagdollStarted = 0;

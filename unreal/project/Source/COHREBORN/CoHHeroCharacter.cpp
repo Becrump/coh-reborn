@@ -929,7 +929,7 @@ void ACoHHeroCharacter::LandPunch()
  for (const FHitResult& Hit : Hits)
  {
   auto* Enemy = Cast<ACoHCombatEnemy>(Hit.GetActor());
-  if (!Enemy || Enemy->IsDead() || Damaged.Contains(Enemy)) continue;
+  if (!Enemy || Enemy->IsDead() || Damaged.Contains(Enemy) || (Enemy->Powers && Enemy->Powers->bPlayerSide)) continue;   // not our own pets
   FHitResult Block;
   if (GetWorld()->LineTraceSingleByChannel(Block, Start, Enemy->GetActorLocation(), ECC_Visibility, Params) && Block.GetActor()!=Enemy) continue;
   Damaged.Add(Enemy);

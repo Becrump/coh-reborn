@@ -147,8 +147,19 @@ static FCoHPowerDef ReadPower(const FString& Id, const TSharedPtr<FJsonObject>& 
 			D.Scale = JNum(M, TEXT("Scale")); D.Magnitude = JNum(M, TEXT("Magnitude"), 1); D.Duration = JNum(M, TEXT("Duration"));
 			D.Delay = JNum(M, TEXT("Delay")); D.Period = JNum(M, TEXT("Period")); D.Chance = JNum(M, TEXT("Chance"), 1);
 			D.bAllowStrength = JStr(M, TEXT("AllowStrength")) != TEXT("kFalse");
+			D.EntityDef = JStr(M, TEXT("EntityDef"));
+			{
+				// pets a level or two below the caster: the mod's name says so (Levelminus2)
+				const FString ModName = JStr(M, TEXT("Name")).ToLower();
+				// (a bare "LevelMinus", Fire Imps: one below)
+				if (ModName.StartsWith(TEXT("levelminus"))) D.LevelOffset = ModName.Len() > 10 ? -FCString::Atoi(*ModName.Mid(10)) : -1;
+				else if (ModName.StartsWith(TEXT("levelplus"))) D.LevelOffset = ModName.Len() > 9 ? FCString::Atoi(*ModName.Mid(9)) : 1;
+			}
 			const FString Req = FString::Join(JList(M, TEXT("Requires")), TEXT(" ")).ToLower();
-			if (Req.IsEmpty()) D.Requires = 0;
+			TArray<FString> ReqTok; Req.ParseIntoArrayWS(ReqTok);
+			if (ReqTok.Num() == 4 && ReqTok[0] == TEXT("combatlevel") && ReqTok[1] == TEXT("source>") && ReqTok[3] == TEXT(">") && ReqTok[2].IsNumeric())
+				{ D.Requires = 0; D.MinCasterLevel = FCString::Atoi(*ReqTok[2]) + 1; }     // a Mastermind's later pets
+			else if (Req.IsEmpty()) D.Requires = 0;
 			else if (Req == TEXT("enttype target> critter eq")) D.Requires = 1;
 			else if (Req == TEXT("enttype target> player eq")) D.Requires = 2;
 			else D.Requires = -1;
@@ -402,6 +413,8 @@ void UCoHPowerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(UCoHPowerComponent, Reputation);
 	DOREPLIFETIME_CONDITION(UCoHPowerComponent, Owned, COND_OwnerOnly);
 	DOREPLIFETIME(UCoHPowerComponent, Body);
+	DOREPLIFETIME(UCoHPowerComponent, bPlayerSide);
+	DOREPLIFETIME(UCoHPowerComponent, bUntouchable);
 }
 
 float UCoHPowerComponent::HitDelay(FName Power, float DistanceCm) const
@@ -788,7 +801,7 @@ static AActor* NearestFoe(const UCoHPowerComponent* Me, float MaxRange, bool bIn
 	for (TActorIterator<ACharacter> It(Me->GetWorld()); It; ++It)
 	{
 		const UCoHPowerComponent* C = UCoHPowerComponent::Of(*It);
-		if (!C || C == Me || C->IsDefeated() || C->bPlayerSide == Me->bPlayerSide) continue;
+		if (!C || C == Me || C->IsDefeated() || C->bPlayerSide == Me->bPlayerSide || C->bUntouchable) continue;
 		const FVector To = It->GetActorLocation() - Owner->GetActorLocation();
 		if (bInFront && FVector::DotProduct(To.GetSafeNormal2D(), Owner->GetActorForwardVector()) < 0.2f) continue;
 		const float D = To.SizeSquared();
@@ -918,6 +931,7 @@ TArray<UCoHPowerComponent*> UCoHPowerComponent::Gather(const FCoHPowerDef& P, AA
 	auto Wants = [&](UCoHPowerComponent* C)
 	{
 		if (!C || C->IsDefeated()) return false;
+		if (C->bUntouchable && C != this) return false;      // pseudo-pets: nothing touches them
 		if (C == this) return bSelf || (bFriends && P.Area != TEXT("kCharacter"));
 		return IsFoe(C) ? bFoes : bFriends;
 	};
@@ -1007,10 +1021,50 @@ void UCoHPowerComponent::Execute(const FCoHPowerDef& P, AActor* TargetActor, FVe
 		}
 		ApplyMods(P, V, bSelf, -1.f);
 	}
+	SummonPets(P, TargetActor, Location);
 	// mods that always target the caster (self buffs on attacks)
 	for (const FCoHMod& M : P.Mods)
 		if (M.Target == TEXT("kSelf") && M.Aspect != TEXT("kStr") && P.Target != TEXT("kCaster")) ApplyMod(P, M, this, -1.f);
 	PushProps(this, P, TargetActor, Location);
+}
+
+void UCoHPowerComponent::SummonPets(const FCoHPowerDef& P, AActor* TargetActor, FVector Location)
+{
+	AActor* Owner = GetOwner();
+	if (!Owner || GetOwnerRole() != ROLE_Authority) return;
+	TArray<const FCoHMod*> Pets;
+	bool bLasting = false;
+	for (const FCoHMod& M : P.Mods)
+	{
+		if (M.Attrib != TEXT("kEntCreate") || M.EntityDef.IsEmpty() || M.Requires < 0 || Level < M.MinCasterLevel) continue;
+		Pets.Add(&M);
+		bLasting |= M.Duration >= 9000.f;
+	}
+	if (Pets.Num() == 0) return;
+	// a recast calls the pets anew: the ones this power called before go
+	if (bLasting) ACoHCombatEnemy::DismissPets(Owner, P.Id);
+	// where: the spot picked (Rain of Fire, Fire Imps), the target (patches on a foe), else beside the caster
+	FVector At = Owner->GetActorLocation() + Owner->GetActorForwardVector() * 200.f;
+	if (P.Target == TEXT("kLocation") && !Location.IsNearlyZero()) At = Location;
+	else if (TargetActor && TargetActor != Owner && P.Target == TEXT("kFoe")) At = TargetActor->GetActorLocation();
+	const int32 Count = Pets.Num();
+	for (int32 i = 0; i < Count; ++i)
+	{
+		const FCoHMod& M = *Pets[i];
+		if (M.Chance < 1.f && FMath::FRand() > M.Chance) continue;
+		const FVector Spot = Count > 1 ? At + FRotator(0.f, 360.f * i / Count, 0.f).RotateVector(FVector(150.f, 0.f, 0.f)) : At;
+		const int32 PetLevel = FMath::Max(1, Level + M.LevelOffset);
+		const FName Power = P.Id;
+		const FString Def = M.EntityDef;
+		const float Duration = M.Duration;
+		TWeakObjectPtr<AActor> WeakOwner(Owner);
+		auto Spawn = [WeakOwner, Power, Def, PetLevel, Spot, Duration]()
+		{
+			if (AActor* O = WeakOwner.Get()) ACoHCombatEnemy::SpawnPet(O, Power, Def, PetLevel, Spot, Duration);
+		};
+		if (M.Delay > 0.f) { FTimerHandle H; GetWorld()->GetTimerManager().SetTimer(H, FTimerDelegate::CreateLambda(Spawn), M.Delay, false); }
+		else Spawn();
+	}
 }
 
 void UCoHPowerComponent::ApplyMods(const FCoHPowerDef& P, UCoHPowerComponent* Victim, bool bSelf, float DurationOverride)
@@ -1024,7 +1078,7 @@ void UCoHPowerComponent::ApplyMods(const FCoHPowerDef& P, UCoHPowerComponent* Vi
 
 void UCoHPowerComponent::ApplyMod(const FCoHPowerDef& P, const FCoHMod& M, UCoHPowerComponent* Victim, float DurationOverride)
 {
-	if (!Victim || M.Requires < 0) return;
+	if (!Victim || M.Requires < 0 || M.Attrib == TEXT("kEntCreate")) return;      // pets: SummonPets
 	if (M.Requires == 1 && Victim->bPlayerSide) return;
 	if (M.Requires == 2 && !Victim->bPlayerSide) return;
 	if (M.Aspect == TEXT("kStr")) return;                       // enhancement-style strength mods: later
@@ -1156,7 +1210,7 @@ float UCoHPowerComponent::ApplyDamage(float Amount, ECoHDamage Type, AActor* Cau
 {
 	if (IsDefeated() || Amount <= 0.f || GetOwnerRole() != ROLE_Authority) return 0.f;
 	const float Final = Amount * (1.f - Resistance(Type));
-	if (Causer) DamageBy.FindOrAdd(Causer) += FMath::Min(Final, Health);
+	if (Causer) DamageBy.FindOrAdd(ACoHCombatEnemy::CreditFor(Causer)) += FMath::Min(Final, Health);      // a pet's damage is its owner's
 	Health = FMath::Max(0.f, Health - Final);
 	LastHurt = GetWorld()->GetTimeSeconds();
 	MulticastText(Final < 1.f ? FString::Printf(TEXT("%.1f"), Final) : FString::Printf(TEXT("%.0f"), Final), DamageColour(Type));
@@ -1225,10 +1279,26 @@ void UCoHPowerComponent::TickComponent(float Dt, ELevelTick TickType, FActorComp
 		for (const FName& Id : TArray<FName>(ActiveToggles))
 			if (const FCoHPowerDef* P = Def(Id)) ToggleTick(*P);
 		// auto powers in the tray, and the ones a built hero owns, are always on
+		// (a long ActivatePeriod pulses that often, at most every 10 s so a revived hero gets them back)
+		auto Pulse = [&](FName Id, const FCoHPowerDef& P)
+		{
+			if (P.Period > 0.6f)
+			{
+				float& Next = NextAutoPulse.FindOrAdd(Id);
+				if (Now < Next) return;
+				Next = Now + FMath::Min(P.Period, 10.f);
+			}
+			ToggleTick(P);
+			if (bUntouchable && P.IsHostile() && Now >= NextPatchFx)
+			{
+				NextPatchFx = Now + 1.f;
+				MulticastPlay(Id, GetOwner(), GetOwner()->GetActorLocation(), 0);
+			}
+		};
 		for (const FName& Id : Tray)
-			if (const FCoHPowerDef* P = Def(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
+			if (const FCoHPowerDef* P = Def(Id)) if (P->Type == TEXT("kAuto")) Pulse(Id, *P);
 		for (const FName& Id : Owned)
-			if (!Tray.Contains(Id)) if (const FCoHPowerDef* P = Def(Id)) if (P->Type == TEXT("kAuto")) ToggleTick(*P);
+			if (!Tray.Contains(Id)) if (const FCoHPowerDef* P = Def(Id)) if (P->Type == TEXT("kAuto")) Pulse(Id, *P);
 	}
 }
 
@@ -1290,6 +1360,13 @@ void UCoHPowerComponent::PlayLocal(const FCoHPowerDef& P, AActor* TargetActor, F
 	Fx.Primary = S.Tint.A > 0.f ? S.Tint : S.Tint2; Fx.Secondary = S.Tint2.A > 0.f ? S.Tint2 : Fx.Primary;
 	Fx.Theme = S.Theme;
 	if (UCoHFxLibrary::PlayPower(Owner, P.Id, TargetActor, Hit >= 0.f ? Hit : Release, &Fx)) return;
+	if (bUntouchable && P.IsHostile())
+	{
+		// a patch (Rain of Fire, Ice Slick): its area in the element's colour
+		for (const FCoHMod& M : P.Mods) { ECoHDamage D; if (ParseDamage(M.Attrib, D)) { Colour = DamageColour(D); break; } }
+		ACoHPowerFX::Burst(Owner, Owner->GetActorLocation() - FVector(0, 0, 80), FMath::Max(P.Radius, 8.f) * FeetToCm, Colour, 0.9f, 0.f);
+		return;
+	}
 	if (P.Type == TEXT("kToggle") || P.Type == TEXT("kAuto"))
 	{
 		ACoHPowerFX::Burst(Owner, Owner->GetActorLocation(), 150.f, Colour, 0.6f, 0.f);

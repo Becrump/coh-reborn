@@ -152,6 +152,8 @@ struct FCoHHeroRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 XP = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Debt = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Influence = 0;
+	/** Respecs in hand (the original earned them from the respec trials at 24, 34 and 44). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Respecs = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Preset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Primary;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Secondary;

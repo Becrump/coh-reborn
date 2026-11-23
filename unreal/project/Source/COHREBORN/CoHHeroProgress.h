@@ -66,6 +66,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void SaveLooks();
 	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void UseInspiration(int32 Index);
 	UFUNCTION(Server, Reliable) void ServerTrain();
+	/** Respec (/respec): every power pick and enhancement slot is chosen again;
+	 *  slotted enhancements go back to the inventory. Uses one respec. */
+	UFUNCTION(BlueprintCallable, Category = "CoH|Hero") void Respec() { ServerRespec(); }
+	UFUNCTION(Server, Reliable) void ServerRespec();
 	UFUNCTION(Server, Reliable) void ServerPick(FName Power);
 	UFUNCTION(Server, Reliable) void ServerUseInspiration(int32 Index);
 	/** The customize panel closed on a player's PC: the host takes the looks, saves, and everyone sees them. */
