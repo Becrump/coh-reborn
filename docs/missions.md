@@ -32,7 +32,7 @@ shadows; a post process volume for indoor exposure; a nav mesh bounds volume), s
 ## In the game (`CoHStory.h`)
 
 - Using a mission door picks an imported layout (`UCoHStory::PickMap`) and loads it as a level instance
-  far below the city (`ACoHMissionMap`, replicated: the host and every client stream the same instance).
+  3 km above the city, clear of the height fog (`ACoHMissionMap`, replicated: the host and every client stream the same instance).
   One slot per running mission, 1.5 km apart.
 - When it is in, the mission fills: the task's own spawns at encounters of their placement (Front,
   Middle, Back, Lobby), the boss on the group's first spot; then up to 14 more groups of the mission's

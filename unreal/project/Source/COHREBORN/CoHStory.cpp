@@ -123,7 +123,7 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 			C.Busy = StoryStr(O, TEXT("busy")); C.ComeBack = StoryStr(O, TEXT("come_back"));
 			C.ToFriend = StoryStr(O, TEXT("to_friend")); C.ToConfidant = StoryStr(O, TEXT("to_confidant"));
 			C.Tasks = StoryList(O, TEXT("tasks")); C.Arcs = StoryList(O, TEXT("arcs"));
-			C.Stores = StoryList(O, TEXT("stores"));
+			C.Stores = StoryList(O, TEXT("stores")); C.Requires = StoryList(O, TEXT("requires"));
 			Contacts.Add(C.Id, MoveTemp(C));
 		}
 	if (const auto Ps = StoryObj(Root, TEXT("people")))
@@ -838,6 +838,22 @@ bool ACoHStoryDirector::Ground(const FVector& Near, FVector& Out) const
 	return true;
 }
 
+bool ACoHStoryDirector::StandingSpot(const FVector& Pos, FVector& Out) const
+{
+	// the lowest surface at or above the data position: the street, not a roof over it, and not the
+	// ground far below when the position itself is under the rebuilt city (it came from the old map)
+	UWorld* W = GetWorld();
+	TArray<FHitResult> Hits;
+	FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHStoryStand), true);
+	W->LineTraceMultiByObjectType(Hits, Pos + FVector(0, 0, 60000.f), Pos - FVector(0, 0, 3000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q);
+	const FHitResult* Best = nullptr;
+	for (const FHitResult& H : Hits)
+		if (H.ImpactPoint.Z >= Pos.Z - 300.f && (!Best || H.ImpactPoint.Z < Best->ImpactPoint.Z)) Best = &H;
+	if (!Best) return Ground(Pos, Out);
+	Out = Best->ImpactPoint;
+	return true;
+}
+
 bool ACoHStoryDirector::RandomSpot(const FVector& Center, float Radius, FVector& Out) const
 {
 	if (UNavigationSystemV1* Nav = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
@@ -877,7 +893,7 @@ void ACoHStoryDirector::Stream()
 		}
 		if (D > StandDistance) return;
 		FVector At;
-		if (!Ground(Pos, At)) return;           // the ground there is not streamed in yet: next time
+		if (!StandingSpot(Pos, At)) return;     // the ground there is not streamed in yet: next time
 		FActorSpawnParameters P; P.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		// game yaw -> Unreal: the converter's yaw is already Unreal's
 		ACoHStoryNPC* N = GetWorld()->SpawnActor<ACoHStoryNPC>(At + FVector(0, 0, 92.f), FRotator(0.f, Yaw, 0.f), P);
@@ -935,16 +951,35 @@ ACoHMissionMarker* ACoHStoryDirector::SpawnMarker(ECoHMarkerKind Kind, const FVe
 	return Mk;
 }
 
-bool UCoHStory::NearestHospital(const FVector& From, FVector& Out) const
+bool UCoHStory::NearestHospital(const UObject* WorldContext, const FVector& From, FVector& Out) const
 {
+	// only the zone the hero is in: other zones' beds may not be streamed in (or the zone is far away)
+	const FString Zone = ZoneAt(WorldContext, From);
+	if (Zone.IsEmpty()) return false;
+	const TArray<FVector>* Beds = Gurneys.Find(Zone);
+	if (!Beds) return false;
 	float Best = TNumericLimits<float>::Max();
-	for (const auto& KV : Gurneys)
-		for (const FVector& G : KV.Value)
-		{
-			const float D = FVector::DistSquared(G, From);
-			if (D < Best) { Best = D; Out = G; }
-		}
+	for (const FVector& G : *Beds)
+	{
+		const float D = FVector::DistSquared(G, From);
+		if (D < Best) { Best = D; Out = G; }
+	}
 	return Best < TNumericLimits<float>::Max();
+}
+
+bool ACoHStoryDirector::LeaveForHospital(APawn* Who, FVector& Door)
+{
+	if (!Who || !IsMissionSpace(Who->GetActorLocation())) return false;
+	for (FMission& M : Missions)
+	{
+		const UCoHStoryComponent* For = M.Hero.Get();
+		const bool bOwner = For && For->GetOwner() == Who;
+		if (!bOwner && !M.Guests.Contains(Who)) continue;
+		Door = M.Door;
+		if (bOwner) M.bInside = false; else M.Guests.Remove(Who);
+		return true;
+	}
+	return false;
 }
 
 ACoHStoryDirector::FMission* ACoHStoryDirector::Find(UCoHStoryComponent* For, const FString& TaskId)
@@ -1050,7 +1085,7 @@ void ACoHStoryDirector::EnterMission(UCoHStoryComponent* For, const FString& Tas
 	if (!Map) { if (M->DoorMarker.IsValid()) M->DoorMarker->Destroy(); SpawnOutdoor(*M); return; }
 	M->Slot = FreeSlot();
 	M->MapId = Map->Id;
-	M->Origin = FVector(M->Slot * MissionSlotSpacing, 0.f, -MissionDepth) - Map->Start;     // the map's start ends up at the slot point
+	M->Origin = FVector(M->Slot * MissionSlotSpacing, 0.f, MissionHeight) - Map->Start;     // the map's start ends up at the slot point
 	FActorSpawnParameters P; P.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	ACoHMissionMap* MA = GetWorld()->SpawnActor<ACoHMissionMap>(M->Origin, FRotator::ZeroRotator, P);
 	if (!MA) { SpawnOutdoor(*M); return; }
@@ -1661,7 +1696,7 @@ void ACoHStoryDirector::FreeMission(FMission& M)
 {
 	// teammates still inside come out at the door before the map goes
 	for (const TWeakObjectPtr<APawn>& G : M.Guests)
-		if (APawn* P = G.Get()) if (P->GetActorLocation().Z < -MissionDepth * 0.5f) PutAtDoor(M, P);
+		if (APawn* P = G.Get()) if (IsMissionSpace(P->GetActorLocation())) PutAtDoor(M, P);
 	M.Guests.Reset();
 	for (auto& O : M.Objectives) if (O.IsValid()) O->Destroy();
 	for (FMission::FRun& R : M.Runs) if (R.Hostage.IsValid()) R.Hostage->Destroy();
@@ -1874,12 +1909,49 @@ bool UCoHStoryComponent::Available(const FCoHStoryTask& T) const
 	return T.Type == TEXT("mission") || T.Type == TEXT("killx") || T.Type == TEXT("deliver") || T.Type == TEXT("visit");
 }
 
+// ContactRequires, the original's postfix test of the hero: "class_peacebringer arch char> eq",
+// "level char> 20 >=", "alignment char> hero eq ... ||". Tokens and products we don't keep are false.
+static bool CoHContactAllows(const TArray<FString>& Req, const FCoHHeroRecord& H)
+{
+	if (Req.Num() == 0) return true;
+	TArray<FString> St;
+	auto Pop = [&]() { return St.Num() ? St.Pop() : FString(); };
+	auto Truth = [](const FString& V) { return !V.IsEmpty() && V != TEXT("0"); };
+	for (const FString& Tok : Req)
+	{
+		const FString T = Tok.ToLower();
+		if (T == TEXT("char>"))
+		{
+			const FString What = Pop().ToLower();
+			if (What == TEXT("arch") || What == TEXT("archetype") || What == TEXT("class")) St.Push(H.Class.ToLower());
+			else if (What == TEXT("level")) St.Push(FString::FromInt(H.Level));
+			else if (What == TEXT("origin")) St.Push(H.Origin.ToLower());
+			else if (What == TEXT("alignment") || What == TEXT("allyid") || What == TEXT("type")) St.Push(TEXT("hero"));
+			else St.Push(FString());
+		}
+		else if (T == TEXT("eq")) { const FString B = Pop(), A = Pop(); St.Push(A.Equals(B, ESearchCase::IgnoreCase) ? TEXT("1") : TEXT("0")); }
+		else if (T == TEXT(">=") || T == TEXT("<=") || T == TEXT(">") || T == TEXT("<"))
+		{
+			const float B = FCString::Atof(*Pop()), A = FCString::Atof(*Pop());
+			const bool R = T == TEXT(">=") ? A >= B : T == TEXT("<=") ? A <= B : T == TEXT(">") ? A > B : A < B;
+			St.Push(R ? TEXT("1") : TEXT("0"));
+		}
+		else if (T == TEXT("&&") || T == TEXT("||")) { const bool B = Truth(Pop()), A = Truth(Pop()); St.Push((T == TEXT("&&") ? A && B : A || B) ? TEXT("1") : TEXT("0")); }
+		else if (T == TEXT("!")) St.Push(Truth(Pop()) ? TEXT("0") : TEXT("1"));
+		else if (T == TEXT("productowned?") || T == TEXT("owned?")) { Pop(); St.Push(TEXT("1")); }   // store products: every hero owns them
+		else if (T.EndsWith(TEXT("?")) || T == TEXT("tokenval>")) { Pop(); St.Push(TEXT("0")); }   // story tokens: not kept yet
+		else St.Push(Tok);
+	}
+	return St.Num() && Truth(St.Last());
+}
+
 TArray<FString> UCoHStoryComponent::Offers(const FCoHStoryContact& C) const
 {
 	const UCoHStory* S = UCoHStory::Get(this);
 	const FCoHStoryProgress* P = Story();
 	TArray<FString> Out;
 	if (!S || !P) return Out;
+	if (const UCoHHeroProgress* HP = Progress()) if (!CoHContactAllows(C.Requires, HP->Hero)) return Out;   // e.g. Kheldian-only contacts
 	auto Active = [&](const FString& First)
 	{
 		// any part of the chain that starts here is in hand

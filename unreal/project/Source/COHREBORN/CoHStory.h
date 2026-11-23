@@ -86,6 +86,8 @@ struct FCoHStoryContact
 	TArray<FString> Tasks, Arcs;
 	/** Stores the contact sells from: "<x>_CL1" / "_CL2" / "_CL3" by relationship, or all. */
 	TArray<FString> Stores;
+	/** ContactRequires (postfix: "class_peacebringer arch char> eq"); empty: anyone */
+	TArray<FString> Requires;
 };
 
 /** A story NPC who is not a contact (delivery targets and the like). */
@@ -152,8 +154,8 @@ public:
 	TMap<FString, TArray<FVector>> Gurneys;
 	/** Zones whose original hospital is gone (Atlas Park was rebuilt): heroes wake at the start point. */
 	UPROPERTY(Config) TArray<FString> NoHospitalZones = { TEXT("city_01_01") };
-	/** The nearest hospital bed; false: none (use the start point). */
-	bool NearestHospital(const FVector& From, FVector& Out) const;
+	/** The nearest hospital bed in the zone at From; false: none there (use the start point). */
+	bool NearestHospital(const UObject* WorldContext, const FVector& From, FVector& Out) const;
 	TMap<FString, TMap<int32, FCoHStoryReward>> Rewards;
 	TMap<FString, FCoHMissionMap> Maps;
 	/** map set (lower case) -> length -> map ids */
@@ -271,8 +273,9 @@ public:
 	/** NPCs stand when a player is this close (cm) and go past LeaveDistance. */
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float StandDistance = 12000.f;
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float LeaveDistance = 20000.f;
-	/** Indoor mission maps load this far below the city (cm), one slot apart along X. */
-	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionDepth = 250000.f;
+	/** Indoor mission maps load this far above the city (cm), one slot apart along X: high above the
+	 *  height fog, which is thickest low down (below the city they were lost in it). */
+	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionHeight = 300000.f;
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") float MissionSlotSpacing = 150000.f;
 	/** At most this many encounter groups fill an indoor map besides the mission's own spawns. */
 	UPROPERTY(EditAnywhere, Config, Category = "CoH|Story") int32 MaxFillerGroups = 14;
@@ -292,6 +295,11 @@ public:
 	{
 		return Missions.ContainsByPredicate([&](const FMission& M) { return M.Hero.Get() == For && M.Task == TaskId && M.bInside; });
 	}
+	/** A hero defeated inside an indoor map goes to the hospital: true and the mission's door when it was
+	 *  inside one (it is no longer inside). */
+	bool LeaveForHospital(APawn* Who, FVector& Door);
+	/** Is this place inside an indoor mission map (above the city)? */
+	bool IsMissionSpace(const FVector& P) const { return P.Z > MissionHeight * 0.5f; }
 	/** The hero clicked an objective (or an object to destroy that stands in as a marker). */
 	void UseObjective(class UCoHStoryComponent* For, ACoHMissionMarker* Marker, APawn* By = nullptr);
 	/** A hero (owner or teammate) used a hostage: freed once its captors are down, then it follows. */
@@ -357,6 +365,8 @@ private:
 	int32 NextGroupId = 900000;
 	void Stream();
 	bool Ground(const FVector& Near, FVector& Out) const;
+	/** where a story NPC stands: the lowest surface at or above its data position */
+	bool StandingSpot(const FVector& Pos, FVector& Out) const;
 	bool RandomSpot(const FVector& Center, float Radius, FVector& Out) const;
 	ACoHMissionMarker* SpawnMarker(ECoHMarkerKind Kind, const FVector& At, APawn* For, const FString& Text, const FString& Task);
 	FMission* Find(class UCoHStoryComponent* For, const FString& TaskId);

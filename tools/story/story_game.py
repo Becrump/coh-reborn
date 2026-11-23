@@ -578,6 +578,7 @@ def main():
             "complete_level": num("CompletePlayerLevel", 54), "failsafe_level": num("FailsafePlayerLevel", 54),
             "friend_cp": num("FriendCP", 10), "confidant_cp": num("ConfidantCP", 20),
             "complete_cp": num("CompleteCP", 30),
+            "requires": (kid(c, "ContactRequires") or {}).get("a", []),
             "stature_set": arg(c, "StatureSet"), "next_stature_set": arg(c, "NextStatureSet"),
             "flags": flags, "task_force": kid(c, "TaskForceName") is not None,
             "hello": [x for x in hello if x],
