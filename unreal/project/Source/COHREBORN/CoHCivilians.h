@@ -142,7 +142,7 @@ private:
 	TArray<FVis> Pool;
 	UPROPERTY() TArray<TObjectPtr<USkeletalMeshComponent>> Comps;
 	UPROPERTY() TArray<TObjectPtr<UObject>> Keep;
-	double NextSpawn = 0.0;
+	double NextSpawn = 0.0, NextStatus = 0.0;
 	int32 LoadsThisTick = 0;
 
 	FVector CameraLocation() const;
