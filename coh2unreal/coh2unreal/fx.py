@@ -240,7 +240,7 @@ def color_nav(block):
         t = block.first(tk) if tk else ["0"]
         if t is None and atk:
             t = block.first(atk)
-        rgb = [int(float(x)) for x in (rgb or [])[:3]] + [0, 0, 0]
+        rgb = [int(float(x.strip(',') or 0)) for x in (rgb or [])[:3]] + [0, 0, 0]
         pt = ("primarytint%d" % i) if i else "primarytint"
         st = ("secondarytint%d" % i) if i else "secondarytint"
         pts.append([int(float((t or ["0"])[0])), rgb[0], rgb[1], rgb[2],
