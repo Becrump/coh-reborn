@@ -6,6 +6,7 @@
 #include "CoHCombat.h"
 #include "CoHItems.h"
 #include "CoHZoneEvents.h"
+#include "CoHCivilians.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -230,6 +231,13 @@ void UCoHSocial::Submit(const FString& Line)
 	{
 		// the nav windows (CoHNavWindows.h); /nav shows or hides the compass
 		if (UCoHStoryComponent* St = UCoHStoryComponent::Of(GetOwner())) { if (Cmd == TEXT("nav")) St->ToggleCompass(); else St->ToggleNavWindow(Cmd); }
+	}
+	else if (Cmd == TEXT("civilians"))
+	{
+		// the original civilians and traffic run on each PC: on, off or a status line
+		ACoHCivilians* C = ACoHCivilians::Get(GetWorld());
+		Lines.Add({ ECoHChat::System, FString(), C ? C->Command(Rest.TrimStartAndEnd()) : FString(TEXT("No original civilians on this map.")) });
+		++LinesVersion;
 	}
 	else if (Cmd == TEXT("badgelist") || Cmd == TEXT("cluelist") || Cmd == TEXT("souvenirlist"))
 		ServerCommand(Cmd.LeftChop(4) + TEXT("s"), Rest);   // the old chat lists

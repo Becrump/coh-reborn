@@ -13,7 +13,7 @@ _LIGHT_KEYS = {"omni", "sound", "fog", "cubemap", "volume", "ambient"}
 
 class Def:
     __slots__ = ("name", "groups", "obj", "flags", "has_editor_only",
-                 "source", "lod_far", "omni", "fx", "props")
+                 "source", "lod_far", "omni", "fx", "props", "beacon")
 
     def __init__(self, name, source):
         self.name = name
@@ -26,6 +26,7 @@ class Def:
         self.omni = None          # (r, g, b, radius ft) point light
         self.fx = None            # particle effect file ("Type ...fx")
         self.props = {}           # Property "name" "value"
+        self.beacon = None        # ("BasicBeacon" / "TrafficBeacon", radius ft)
 
 
 def _lines(text):
@@ -92,6 +93,11 @@ def _parse_def(it, d):
             d.fx = tok[1].replace("\\", "/")
         elif key == "property" and len(tok) > 2:
             d.props[tok[1].strip('"').lower()] = tok[2].strip('"')
+        elif key == "beacon" and len(tok) > 2:
+            try:
+                d.beacon = (tok[1], float(tok[2]))
+            except ValueError:
+                pass
         elif key in _LIGHT_KEYS:
             d.has_editor_only = True
             if key == "omni" and len(tok) >= 5:
@@ -244,6 +250,7 @@ class Library:
         old.omni = d.omni or old.omni
         old.fx = d.fx or old.fx
         old.props.update(d.props)
+        old.beacon = d.beacon or old.beacon
 
     def trick_for(self, model_name):
         n = model_name.lower()

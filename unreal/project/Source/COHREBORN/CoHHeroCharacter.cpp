@@ -14,6 +14,7 @@
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
 #include "CoHZoneEvents.h"
+#include "CoHCivilians.h"
 #include "CoHPowerUI.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/Skeleton.h"
@@ -114,6 +115,12 @@ void ACoHHeroCharacter::BeginPlay()
 		for (int32 i = 0; i < StartTray.Num() && i < 10; ++i) Powers->Tray[i] = StartTray[i];
 	}
 	Super::BeginPlay();
+	// the original civilians and traffic: one per PC, cosmetic, not replicated
+	if (GetNetMode() != NM_DedicatedServer && GetWorld() && !ACoHCivilians::Get(GetWorld()))
+	{
+		const UCoHFrontend* Front = UCoHFrontend::Get(this);
+		if (!Front || !Front->IsFrontendMap(GetWorld())) GetWorld()->SpawnActor<ACoHCivilians>(ACoHCivilians::StaticClass(), FTransform::Identity);
+	}
  Health = MaxHealth;
  RespawnLocation = GetActorLocation();
  auto* Invoker = NewObject<UNavigationInvokerComponent>(this);

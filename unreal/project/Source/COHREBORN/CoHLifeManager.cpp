@@ -1,4 +1,5 @@
 #include "CoHLifeManager.h"
+#include "CoHCivilians.h"
 
 #include "Animation/AnimSequence.h"
 #include "Camera/PlayerCameraManager.h"
@@ -867,6 +868,7 @@ void ACoHLifeManager::ReportDanger(UObject* WorldContextObject, FVector Location
 	{
 		return;
 	}
+	ACoHCivilians::ReportDanger(WorldContextObject, Location, Radius);   // the original civilians too
 	for (TActorIterator<ACoHLifeManager> It(World); It; ++It)
 	{
 		ACoHLifeManager* Mgr = *It;

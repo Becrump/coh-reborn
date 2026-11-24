@@ -46,6 +46,11 @@ BODIES = {"male": ("male", 0), "fem": ("fem", 1), "huge": ("huge", 4)}
 PLAYER_MOVES = [("idle", ["Ready"]),
                 ("combat_idle", ["CombatReady"]),
                 ("run", ["RunCycle"]),
+                # civilians (BM/BF sequencers name these Walk, Fear_A ...);
+                # cars drive on WalkCycle (the wheels turn)
+                ("walk", ["WalkCycle", "Walk"]),
+                ("fear_run", ["FearRun_runCycle", "F_runCycle"]),
+                ("fear", ["Fear_A"]),
                 ("attack", ["Brawl_R", "Initial_Strike"]),
                 ("hit", ["HitQuick", "C_HitQuick"]),
                 ("death", ["Default_Death", "Death_Mid_Air"])]
@@ -214,6 +219,9 @@ def main(argv=None):
     sm.add_argument("--costume", action="append", default=[],
                     help="costume .json file")
     sm.add_argument("--all-presets", action="store_true")
+    sm.add_argument("--npc-list", help="JSON list of more NPC costume names")
+    sm.add_argument("--add", action="store_true",
+                    help="keep models.json; export only names not in it")
     sa = sub.add_parser("anims")
     sa.add_argument("--list", required=True, help="anim_list.json")
     sa.add_argument("--body", action="append", choices=list(BODIES))
@@ -234,13 +242,22 @@ def main(argv=None):
             print("%-40s %-5s %s" % (p["npc"], p["body"], p["file"]))
         print("%d presets" % len(ps))
     elif args.cmd == "models":
-        jobs = [(n, None) for n in args.npc]
+        names = list(args.npc)
+        if args.npc_list:
+            with open(args.npc_list) as f:
+                names += json.load(f)
+        jobs = [(n, None) for n in names]
         if args.all_presets:
             jobs += [(p["npc"], None) for p in presets(gd)]
         for path in args.costume:
             with open(path, encoding="utf-8") as f:
                 jobs.append((None, json.load(f)))
         index = []
+        mpath = os.path.join(args.out, "models.json")
+        if args.add and os.path.isfile(mpath):
+            # keep the models exported before; export only the new names
+            with open(mpath) as f:
+                index = json.load(f)
         for npc_name, spec in jobs:
             if spec is not None:
                 npc = costume_npc(spec)
@@ -264,7 +281,7 @@ def main(argv=None):
             r.update({"name": npc_name, "body": body,
                       "gltf": os.path.relpath(r["gltf"], args.out)})
             index.append(r)
-        with open(os.path.join(args.out, "models.json"), "w") as f:
+        with open(mpath, "w") as f:
             json.dump(index, f, indent=1)
         print("%d models" % len(index))
     elif args.cmd == "anims":
