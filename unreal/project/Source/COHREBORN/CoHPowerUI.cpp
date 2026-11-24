@@ -183,7 +183,7 @@ void SCoHHud::Construct(const FArguments& InArgs)
 				{
 					if (const APlayerController* PC = Player.Get()) if (UCoHEnhancements* E = UCoHEnhancements::Of(PC->GetPawn())) E->ToggleInventions();
 				}
-				else if (Command == TEXT("nav") || Command == TEXT("contacts") || Command == TEXT("missions") || Command == TEXT("clues") || Command == TEXT("badges"))
+				else if (Command == TEXT("nav") || Command == TEXT("map") || Command == TEXT("contacts") || Command == TEXT("missions") || Command == TEXT("clues") || Command == TEXT("badges"))
 				{
 					if (const APlayerController* PC = Player.Get())
 						if (UCoHStoryComponent* St = UCoHStoryComponent::Of(PC->GetPawn())) { if (Command == TEXT("nav")) St->ToggleCompass(); else St->ToggleNavWindow(Command); }

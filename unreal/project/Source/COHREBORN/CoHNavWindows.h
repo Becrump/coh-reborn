@@ -1,5 +1,5 @@
 // The original's navigation windows (uiCompass.c, uiContact.c, uiMission.c,
-// uiClue.c, uiBadge.c): the compass at the top of the screen with the
+// uiClue.c, uiBadge.c, uiMap.c): the compass at the top of the screen with the
 // waypoint, and the Contacts, Missions, Clues/Souvenirs and Badges windows
 // its tabs open. Built on the player's PC from the replicated hero record
 // (story and badges) and the story and badge data every PC loads.
@@ -48,6 +48,10 @@ private:
 	void BuildMissions(class SScrollBox& Scroll);
 	void BuildClues(class SScrollBox& Scroll, bool bSouvenirs);
 	void BuildBadges(class SScrollBox& Scroll);
+public:
+	/** The map window's view: centre offset from the hero (cm) and scale (cm per pixel). */
+	float MapScale = 300.f;
+private:
 	TSharedRef<SWidget> TabButton(const FString& Id, const FString& Label);
 	TSharedRef<SWidget> Row(const FString& Key, const FString& Head, const FString& Sub, const FString& Detail, FLinearColor Colour, const FVector* Way, const FString& WayName);
 };

@@ -4,6 +4,8 @@
 #include "CoHGameRules.h"
 #include "CoHHeroProgress.h"
 #include "Framework/Application/SlateApplication.h"
+#include "EngineUtils.h"
+#include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Rendering/DrawElements.h"
@@ -110,13 +112,142 @@ private:
 	SCoHNavPanel* Panel = nullptr;
 };
 
+/** The map (uiMap.c): the city around the hero, north up. Zone outlines and names on the
+ *  one-world map, the hero, teammates, contacts met and mission waypoints. Wheel zooms,
+ *  a click sets the waypoint there. */
+class SCoHNavMap : public SLeafWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SCoHNavMap) {}
+		SLATE_ARGUMENT(TWeakObjectPtr<UCoHStoryComponent>, Owner)
+		SLATE_ARGUMENT(SCoHNavPanel*, Panel)
+	SLATE_END_ARGS()
+	void Construct(const FArguments& A) { Owner = A._Owner; Panel = A._Panel; }
+	virtual FVector2D ComputeDesiredSize(float) const override { return FVector2D(400, 400); }
+
+	FVector2f ToScreen(const FVector& P, const FVector& Center, const FVector2f& Size) const
+	{
+		// map north = Unreal +Y (up), map east = Unreal -X (right)
+		return FVector2f(Size.X * 0.5f - (P.X - Center.X) / Panel->MapScale, Size.Y * 0.5f - (P.Y - Center.Y) / Panel->MapScale);
+	}
+	FVector ToWorld(const FVector2f& S, const FVector& Center, const FVector2f& Size) const
+	{
+		return FVector(Center.X - (S.X - Size.X * 0.5f) * Panel->MapScale, Center.Y - (S.Y - Size.Y * 0.5f) * Panel->MapScale, Center.Z);
+	}
+	const APawn* Me() const { const UCoHStoryComponent* C = Owner.Get(); return C ? Cast<APawn>(C->GetOwner()) : nullptr; }
+
+	virtual int32 OnPaint(const FPaintArgs&, const FGeometry& G, const FSlateRect& Cull, FSlateWindowElementList& Out, int32 Layer, const FWidgetStyle&, bool) const override
+	{
+		const APawn* Hero = Me();
+		const UCoHStoryComponent* C = Owner.Get();
+		if (!Hero || !C || !Panel) return Layer;
+		const FSlateBrush* White = FCoreStyle::Get().GetBrush("WhiteBrush");
+		const FVector2f Size = FVector2f(G.GetLocalSize());
+		const FVector Center = Hero->GetActorLocation();
+		FSlateDrawElement::MakeBox(Out, Layer, G.ToPaintGeometry(), White, ESlateDrawEffect::None, FLinearColor(0.02f, 0.05f, 0.09f, 0.95f));
+		const FSlateFontInfo Small = FCoreStyle::GetDefaultFontStyle("Regular", 8);
+		const FSlateFontInfo Bold = FCoreStyle::GetDefaultFontStyle("Bold", 10);
+		auto Inside = [&](const FVector2f& S) { return S.X >= 0 && S.Y >= 0 && S.X <= Size.X && S.Y <= Size.Y; };
+		auto Dot = [&](const FVector2f& S, float R, const FLinearColor& Col, int32 L)
+		{
+			FSlateDrawElement::MakeBox(Out, L, G.ToPaintGeometry(FVector2f(R * 2, R * 2), FSlateLayoutTransform(S - FVector2f(R, R))), White, ESlateDrawEffect::None, Col);
+		};
+		auto Text = [&](const FVector2f& S, const FString& T, const FSlateFontInfo& F, const FLinearColor& Col, int32 L)
+		{
+			FSlateDrawElement::MakeText(Out, L, G.ToPaintGeometry(FVector2f(220.f, 16.f), FSlateLayoutTransform(S)), T, F, ESlateDrawEffect::None, Col);
+		};
+		// the zones (one-world map): outlines, names from the contacts' locations
+		const UCoHGameRules* GR = UCoHGameRules::Get(Hero);
+		const UCoHStory* St = UCoHStory::Get(Hero);
+		if (GR && Hero->GetWorld() && Hero->GetWorld()->GetMapName().Contains(TEXT("ParagonCity")))
+		{
+			TMap<FString, FString> Names;
+			if (St) for (const auto& KV : St->Contacts) if (!KV.Value.Zone.IsEmpty() && !KV.Value.Location.IsEmpty()) Names.FindOrAdd(KV.Value.Zone.ToLower(), KV.Value.Location);
+			for (const auto& R : GR->ZoneRects)
+			{
+				const FVector2f A = ToScreen(FVector(R.Value.Min.X, R.Value.Min.Y, 0), Center, Size);
+				const FVector2f B = ToScreen(FVector(R.Value.Max.X, R.Value.Max.Y, 0), Center, Size);
+				const FVector2f Lo(FMath::Min(A.X, B.X), FMath::Min(A.Y, B.Y)), Hi(FMath::Max(A.X, B.X), FMath::Max(A.Y, B.Y));
+				if (Hi.X < 0 || Hi.Y < 0 || Lo.X > Size.X || Lo.Y > Size.Y) continue;
+				TArray<FVector2f> Pts = { Lo, FVector2f(Hi.X, Lo.Y), Hi, FVector2f(Lo.X, Hi.Y), Lo };
+				FSlateDrawElement::MakeLines(Out, Layer + 1, G.ToPaintGeometry(), Pts, ESlateDrawEffect::None, FLinearColor(0.2f, 0.6f, 1.f, 0.7f), true, 1.5f);
+				const FString* N = Names.Find(R.Key.ToLower());
+				const FVector2f Mid((Lo.X + Hi.X) * 0.5f, (Lo.Y + Hi.Y) * 0.5f);
+				Text(FVector2f(FMath::Clamp(Mid.X - 40.f, 2.f, Size.X - 90.f), FMath::Clamp(Mid.Y, 2.f, Size.Y - 16.f)), N ? *N : R.Key, Bold, FLinearColor(0.55f, 0.8f, 1.f, 0.8f), Layer + 2);
+			}
+		}
+		// contacts met (gold), turn-ins ready (green)
+		if (const UCoHHeroProgress* P = C->Progress())
+		{
+			if (St)
+				for (const FCoHContactState& X : P->Hero.Story.Contacts)
+					if (const FCoHStoryContact* D = St->Contact(X.Contact))
+					{
+						if (D->Pos.IsZero()) continue;
+						const FVector2f S = ToScreen(D->Pos, Center, Size);
+						if (!Inside(S)) continue;
+						const bool bReady = P->Hero.Story.Tasks.ContainsByPredicate([&](const FCoHTaskState& T) { return T.Contact == D->Id && T.bComplete; });
+						Dot(S, 4.f, bReady ? CoHNav::Done : CoHNav::Gold, Layer + 3);
+						if (Panel->MapScale < 600.f) Text(S + FVector2f(6, -7), D->Name, Small, CoHNav::Gold, Layer + 3);
+					}
+			// mission waypoints (red)
+			for (const FCoHTaskState& T : P->Hero.Story.Tasks)
+				if (!T.Waypoint.IsZero() && !T.bComplete)
+				{
+					const FVector2f S = ToScreen(T.Waypoint, Center, Size);
+					if (!Inside(S)) continue;
+					Dot(S, 5.f, FLinearColor(1.f, 0.25f, 0.2f), Layer + 3);
+				}
+		}
+		// the set waypoint
+		FVector Way; FString WayName;
+		if (Panel->Waypoint(Way, WayName))
+		{
+			const FVector2f S = ToScreen(Way, Center, Size);
+			if (Inside(S)) { Dot(S, 6.f, FLinearColor::White, Layer + 4); Dot(S, 4.f, CoHNav::Gold, Layer + 5); }
+		}
+		// teammates and other heroes (light blue), the hero (white, with its facing)
+		for (TActorIterator<APawn> It(Hero->GetWorld()); It; ++It)
+			if (*It != Hero && UCoHHeroProgress::Of(*It))
+			{
+				const FVector2f S = ToScreen(It->GetActorLocation(), Center, Size);
+				if (Inside(S)) Dot(S, 4.f, FLinearColor(0.5f, 0.85f, 1.f), Layer + 5);
+			}
+		const FVector2f Mid = Size * 0.5f;
+		Dot(Mid, 5.f, FLinearColor::White, Layer + 6);
+		const FVector F = Hero->GetActorForwardVector();
+		TArray<FVector2f> Dir = { Mid, Mid + FVector2f(-F.X, -F.Y) * 14.f };
+		FSlateDrawElement::MakeLines(Out, Layer + 6, G.ToPaintGeometry(), Dir, ESlateDrawEffect::None, FLinearColor::White, true, 2.f);
+		Text(FVector2f(4, Size.Y - 16), FString::Printf(TEXT("N up   %d m across   wheel: zoom   click: waypoint"), FMath::RoundToInt(Size.X * Panel->MapScale / 100.f)), Small, CoHNav::Dim, Layer + 6);
+		return Layer + 7;
+	}
+	virtual FReply OnMouseWheel(const FGeometry& G, const FPointerEvent& E) override
+	{
+		if (Panel) Panel->MapScale = FMath::Clamp(Panel->MapScale * (E.GetWheelDelta() > 0 ? 0.8f : 1.25f), 25.f, 20000.f);
+		return FReply::Handled();
+	}
+	virtual FReply OnMouseButtonDown(const FGeometry& G, const FPointerEvent& E) override
+	{
+		const APawn* Hero = Me();
+		UCoHStoryComponent* C = Owner.Get();
+		if (!Hero || !C || !Panel) return FReply::Unhandled();
+		const FVector2f Local = FVector2f(G.AbsoluteToLocal(E.GetScreenSpacePosition()));
+		C->NavWaypoint = ToWorld(Local, Hero->GetActorLocation(), FVector2f(G.GetLocalSize()));
+		C->NavWaypointName = TEXT("Map waypoint");
+		return FReply::Handled();
+	}
+private:
+	TWeakObjectPtr<UCoHStoryComponent> Owner;
+	SCoHNavPanel* Panel = nullptr;
+};
+
 void SCoHNavPanel::Construct(const FArguments& Args)
 {
 	Owner = Args._Owner;
 	const FSlateBrush* White = FCoreStyle::Get().GetBrush("WhiteBrush");
 	TSharedRef<SHorizontalBox> Tabs = SNew(SHorizontalBox);
 	for (const auto& T : { TPair<FString, FString>(TEXT("contacts"), TEXT("Contacts")), TPair<FString, FString>(TEXT("missions"), TEXT("Missions")),
-		TPair<FString, FString>(TEXT("clues"), TEXT("Clues")), TPair<FString, FString>(TEXT("souvenirs"), TEXT("Souvenirs")), TPair<FString, FString>(TEXT("badges"), TEXT("Badges")) })
+		TPair<FString, FString>(TEXT("clues"), TEXT("Clues")), TPair<FString, FString>(TEXT("souvenirs"), TEXT("Souvenirs")), TPair<FString, FString>(TEXT("badges"), TEXT("Badges")), TPair<FString, FString>(TEXT("map"), TEXT("Map")) })
 		Tabs->AddSlot().AutoWidth().Padding(0, 0, 3, 0)[TabButton(T.Key, T.Value)];
 	ChildSlot
 	[
@@ -217,7 +348,7 @@ FString SCoHNavPanel::Signature() const
 {
 	const UCoHStoryComponent* C = Owner.Get();
 	const UCoHHeroProgress* P = C ? C->Progress() : nullptr;
-	if (!P || !P->bHasRecord) return Tab;
+	if (!P || !P->bHasRecord || Tab == TEXT("map")) return Tab + (P && P->bHasRecord ? TEXT("+") : TEXT(""));
 	const FCoHStoryProgress& S = P->Hero.Story;
 	FString Out = FString::Printf(TEXT("%s|%s|%d|%d|%d|%d|%d|%d|%s|%s|"), *Tab, *Selected, bEarnedOnly ? 1 : 0, S.Contacts.Num(), S.Clues.Num(), S.Souvenirs.Num(),
 		P->Hero.Badges.Owned.Num(), P->Hero.Level, *C->TaskForceLine, *C->NavWaypointName);
@@ -263,12 +394,13 @@ void SCoHNavPanel::Rebuild()
 	if (!Body.IsValid()) return;
 	Body->ClearChildren();
 	static const TMap<FString, FString> Titles = { { TEXT("contacts"), TEXT("Contacts") }, { TEXT("missions"), TEXT("Missions") },
-		{ TEXT("clues"), TEXT("Clues") }, { TEXT("souvenirs"), TEXT("Souvenirs") }, { TEXT("badges"), TEXT("Badges") } };
+		{ TEXT("clues"), TEXT("Clues") }, { TEXT("souvenirs"), TEXT("Souvenirs") }, { TEXT("badges"), TEXT("Badges") }, { TEXT("map"), TEXT("Map") } };
 	const FString* T = Titles.Find(Tab);
 	Title->SetText(FText::FromString(T ? *T : Tab));
 	const UCoHStoryComponent* C = Owner.Get();
 	const UCoHHeroProgress* P = C ? C->Progress() : nullptr;
 	if (!P || !P->bHasRecord) { Body->AddSlot().AutoHeight()[CoHNav::Label(TEXT("No hero loaded."), CoHNav::Dim)]; return; }
+	if (Tab == TEXT("map")) { Body->AddSlot().FillHeight(1.f)[SNew(SCoHNavMap).Owner(Owner).Panel(this)]; return; }
 	TSharedRef<SScrollBox> Scroll = SNew(SScrollBox);
 	if (Tab == TEXT("contacts")) BuildContacts(*Scroll);
 	else if (Tab == TEXT("clues")) BuildClues(*Scroll, false);

@@ -226,7 +226,7 @@ void UCoHSocial::Submit(const FString& Line)
 		if (Rest.Split(TEXT(","), &Who, &Text)) ServerSay(ECoHChat::Tell, Who.TrimStartAndEnd(), Text.TrimStartAndEnd());
 		else { Lines.Add({ ECoHChat::System, FString(), TEXT("Use /tell name, message") }); ++LinesVersion; }
 	}
-	else if (Cmd == TEXT("contacts") || Cmd == TEXT("missions") || Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("badges") || Cmd == TEXT("nav"))
+	else if (Cmd == TEXT("contacts") || Cmd == TEXT("missions") || Cmd == TEXT("clues") || Cmd == TEXT("souvenirs") || Cmd == TEXT("badges") || Cmd == TEXT("nav") || Cmd == TEXT("map"))
 	{
 		// the nav windows (CoHNavWindows.h); /nav shows or hides the compass
 		if (UCoHStoryComponent* St = UCoHStoryComponent::Of(GetOwner())) { if (Cmd == TEXT("nav")) St->ToggleCompass(); else St->ToggleNavWindow(Cmd); }
