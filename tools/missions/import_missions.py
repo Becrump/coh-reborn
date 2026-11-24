@@ -8,6 +8,9 @@ imported once, so later maps of a set mostly just place. Stages per map, run in 
   index filter level meshes mats link place interior save
 Levels are plain (not World Partition): the game streams one in as a level instance per mission.
 Resumes from <out>/missions/import_state.json; one line per map in <out>/missions/import_log.txt.
+All steps go through one open connection to the editor (a new connection per step cost 2-3 s each,
+about half of the time per map). Remote execution has one command port, so other scripts cannot reach the
+editor until this ends; stop this one first (it resumes).
 """
 import argparse
 import json
@@ -22,6 +25,8 @@ sys.path.insert(0, os.path.join(REPO, "tools", "zones"))
 import import_zones as iz  # noqa: E402
 
 OUT = os.environ.get("COH_OUT", r"C:\Users\rtcru\CoHReborn\out")
+UE_PYTHON = os.path.join(os.environ.get("UE_ROOT", r"C:\Program Files\Epic Games\UE_5.8"),
+                         "Engine", "Plugins", "Experimental", "PythonScriptPlugin", "Content", "Python")
 STAGES = ["index", "filter", "level", "meshes", "mats", "link", "place", "interior", "save"]
 
 
@@ -29,7 +34,91 @@ def now():
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def run_map(mdir, mid, info, st, logf):
+class Editor:
+    """One remote execution connection to the open editor, kept for the whole run."""
+
+    def __init__(self):
+        self.r = None
+
+    def close(self):
+        if self.r:
+            try:
+                self.r.stop()
+            except Exception:
+                pass
+            self.r = None
+
+    def connect(self):
+        """Opens the connection; False when no editor answers (busy, or not open)."""
+        if self.r:
+            return True
+        sys.path.insert(0, UE_PYTHON)
+        import remote_execution as rx
+        self.rx = rx
+        self.r = rx.RemoteExecution()
+        self.r.start()
+        t0 = time.time()
+        while not self.r.remote_nodes and time.time() - t0 < 10:
+            time.sleep(0.2)
+        # several nodes when a game runs next to the editor: use the one with the editor subsystems
+        time.sleep(1.0)
+        for n in list(self.r.remote_nodes):
+            try:
+                self.r.open_command_connection(n["node_id"])
+                p = self.r.run_command(
+                    "print(unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem) is not None)",
+                    unattended=True, exec_mode=rx.MODE_EXEC_STATEMENT, raise_on_failure=False)
+            except Exception as e:
+                print("no answer from a node: %r" % e, flush=True)
+                continue
+            if any("True" in o["output"] for o in p.get("output", [])):
+                return True
+            self.r.close_command_connection()
+        self.close()
+        return False
+
+    def run(self, code):
+        """(ok, output), as import_zones.ue. A step that was sent is never sent again here."""
+        for attempt in range(40):
+            if self.connect():
+                break
+            print("editor busy, waiting (%d)" % attempt, flush=True)
+            time.sleep(60)
+        else:
+            return False, "no Unreal editor found"
+        os.makedirs(iz.WORK, exist_ok=True)
+        f = os.path.join(iz.WORK, "_mission_stage.py")
+        open(f, "w", encoding="utf-8").write(code)
+        try:
+            res = self.r.run_command(f, unattended=True, exec_mode=self.rx.MODE_EXEC_FILE,
+                                     raise_on_failure=False)
+        except Exception as e:  # the editor closed or crashed: the next step connects again
+            self.close()
+            return False, "connection lost: %r" % e
+        out = "".join(("" if o["type"] == "Info" else "[%s] " % o["type"]) + o["output"].rstrip() + "\n"
+                      for o in res.get("output", []))
+        if not res.get("success"):
+            out += "%s\n" % res.get("result")
+        return bool(res.get("success")), out
+
+
+    def wait_free(self):
+        """As import_zones.wait_free, but through the open connection (there is one command port)."""
+        if not self.r:
+            if not iz.wait_free():
+                return False
+        while True:
+            ok, out = self.run("import unreal\nprint('PIE', unreal.get_editor_subsystem("
+                               "unreal.UnrealEditorSubsystem).get_game_world() is not None)\n")
+            if ok and "PIE False" in out:
+                return True
+            print("waiting for editor: PIE or no response: %s" % out[-200:], flush=True)
+            time.sleep(60)
+            if not self.r:
+                return iz.wait_free() and self.wait_free()
+
+
+def run_map(mdir, mid, info, st, logf, editor):
     ms = st.setdefault(mid, {"done": []})
     if "save" in ms["done"]:
         return "done"
@@ -59,7 +148,7 @@ def run_map(mdir, mid, info, st, logf):
             cfg.update(f)
             ok, out = True, "new models %d, new materials %d" % (len(f["new_mesh_names"]), len(f["new_mat_names"]))
         else:
-            ok, out = iz.ue(iz.stage_code(cfg, stage), 7200)
+            ok, out = editor.run(iz.stage_code(cfg, stage))
         with open(os.path.join(mdir, "import_report.txt"), "a", encoding="utf-8") as f:
             lines = [l for l in out.splitlines() if l.startswith(("[zone]", "[Error]"))]
             f.write("%s %s %s\n%s\n" % (now(), stage, "OK" if ok else "FAIL", "\n".join(lines) or out[-1500:]))
@@ -91,6 +180,7 @@ def main():
             f.write("%s  %s\n" % (now(), line))
     want = set(a.only.split(",")) if a.only else None
     counts = {"ok": 0, "fail": 0, "done": 0, "skip": 0}
+    editor = Editor()
     for mid, info in sorted(index["maps"].items()):
         if want and mid not in want:
             continue
@@ -98,12 +188,13 @@ def main():
         if not os.path.isfile(os.path.join(mdir, "DONE.txt")):
             counts["skip"] += 1
             continue
-        if "save" not in st.get(mid, {}).get("done", []) and not iz.wait_free():
+        if "save" not in st.get(mid, {}).get("done", []) and not editor.wait_free():
             return 2
-        r = run_map(mdir, mid, info, st, logf)
+        r = run_map(mdir, mid, info, st, logf, editor)
         counts[r] += 1
         if a.one and r in ("ok", "fail"):
             break
+    editor.close()
     logf("MISSIONS %d imported, %d already, %d failed, %d not converted" % (
         counts["ok"], counts["done"], counts["fail"], counts["skip"]))
     return 1 if counts["fail"] else 0
