@@ -3,6 +3,7 @@
 #include "CoHBodyAnim.h"
 #include "CoHActiveRagdoll.h"
 #include "CoHGameRules.h"
+#include "CoHEffects.h"
 #include "CoHHeroProgress.h"
 #include "CoHSocial.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -312,6 +313,7 @@ void ACoHCombatEnemy::PlayStateClip(ECoHEnemyState Next)
 void ACoHCombatEnemy::Tick(float Delta)
 {
  Super::Tick(Delta);
+ UpdateBodyFx();
  if((State==ECoHEnemyState::Chase || State==ECoHEnemyState::ReturnHome) && !bRagdoll && RunClip)
   { const float Rate=FMath::Clamp(GetVelocity().Size2D()/380.f,0.35f,1.4f); if(UCoHBodyAnim* BA=BodyAnim()) BA->SetBase(RunClip,true,Rate); else GetMesh()->SetPlayRate(Rate); }
  if(bRagdoll || State==ECoHEnemyState::Dead || State==ECoHEnemyState::Hit || State==ECoHEnemyState::Attack) return;
@@ -1535,9 +1537,39 @@ AActor* ACoHCombatEnemy::CreditFor(AActor* Causer)
  const ACoHCombatEnemy* E=Cast<ACoHCombatEnemy>(Causer);
  return E && E->bPet && E->PetOwner.IsValid() ? E->PetOwner.Get() : Causer;
 }
+void ACoHCombatEnemy::UpdateBodyFx()
+{
+ UWorld* W=GetWorld();
+ if(!W || W->GetNetMode()==NM_DedicatedServer || Villain.IsEmpty()) return;
+ const double Now=W->GetTimeSeconds();
+ if(Now<NextBodyFxCheck) return;
+ NextBodyFxCheck=Now+1.0;
+ const UCoHGameRules* R=UCoHGameRules::Get(this);
+ const FCoHKitVillain* K=R?R->Kit(Villain):nullptr;
+ if(!K || K->BodyFx.Num()==0) return;
+ // worn near the player only (80 m on, 100 m off), so a whole zone of glows costs nothing
+ const APlayerController* PC=W->GetFirstPlayerController();
+ const APawn* Me=PC?PC->GetPawn():nullptr;
+ const float D=Me?FVector::Dist(Me->GetActorLocation(),GetActorLocation()):1e9f;
+ BodyFxRuns.RemoveAll([](const TWeakObjectPtr<ACoHFxRunner>& X){ return !X.IsValid(); });
+ const bool bWant=D<(BodyFxRuns.Num()?10000.f:8000.f) && State!=ECoHEnemyState::Dead;
+ if(!bWant){ for(auto& X:BodyFxRuns) if(X.IsValid()) X->Stop(); BodyFxRuns.Reset(); return; }
+ if(BodyFxRuns.Num()) return;
+ for(const FString& Fx:K->BodyFx)
+  if(ACoHFxRunner* Run=UCoHFxLibrary::Play(this,Fx,nullptr))
+  { Run->bPersistent=true; Run->Holder=this; BodyFxRuns.Add(Run); }
+}
+void ACoHCombatEnemy::EndPlay(const EEndPlayReason::Type Reason)
+{
+ for(auto& X:BodyFxRuns) if(X.IsValid()) X->Stop();
+ BodyFxRuns.Reset();
+ Super::EndPlay(Reason);
+}
 void ACoHCombatEnemy::OnRep_PetLook()
 {
  if(PetLook==0 || GetMesh()->GetSkeletalMeshAsset()) return;
+ // an effect-only pet (Dark Servant, Seeker Drones): its body effects are its look
+ if(const UCoHGameRules* GR=UCoHGameRules::Get(this)) if(const FCoHKitVillain* K=GR->Kit(Villain)) if(K->BodyFx.Num()) return;
  // no imported model yet: a glowing orb at chest height stands in
  UStaticMesh* Sphere=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Sphere.Sphere"));
  if(!Sphere || FindComponentByTag<UStaticMeshComponent>(TEXT("CoHPetOrb"))) return;

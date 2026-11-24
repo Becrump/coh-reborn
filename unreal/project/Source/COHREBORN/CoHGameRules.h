@@ -216,6 +216,11 @@ struct FCoHKitVillain
 	bool IsFoe() const { return !Ally.Equals(TEXT("Hero"), ESearchCase::IgnoreCase); }
 	TArray<FString> Costumes;
 	TArray<FString> Models;                       // costumes with an exported model
+	/** Effects it always wears: its ent type's Fx and its auto/toggle powers' lasting effects
+	 *  (a Spectre's glow; the whole body of a Dark Servant or Seeker Drone). */
+	TArray<FString> BodyFx;
+	/** No model at all: the effects are the body. */
+	bool bFxBody = false;
 	TArray<FCoHKitPower> Powers;
 	TMap<FString, TArray<FString>> AnimLists;     // anim list -> its move chain (clip names)
 	TMap<FString, TArray<FString>> BehaviorLists; // idle behavior (<<PL_SprayPaint>>) -> anim lists

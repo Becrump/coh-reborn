@@ -299,6 +299,9 @@ def load_powers(paths, data_dir):
             if k.lower() == "end" and custom is not None:
                 custom = None
                 continue
+            if k.lower() == "type" and custom is None and len(t) > 1:
+                cur[1].f["Type"] = t[1]      # kClick / kAuto / kToggle
+                continue
             (custom or cur[1]).add(k, t[1:])
     return out
 

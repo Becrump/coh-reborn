@@ -38,6 +38,10 @@ public:
  void InitializeFromPreview(AActor* Preview, const TMap<FString,FString>& Clips);
  virtual void BeginPlay() override;
  virtual void Tick(float DeltaSeconds) override;
+ /** Every PC: the effects the villain always wears (FCoHKitVillain::BodyFx), near the player only. */
+ void UpdateBodyFx();
+ TArray<TWeakObjectPtr<class ACoHFxRunner>> BodyFxRuns;
+ double NextBodyFxCheck = 0;
  virtual float TakeDamage(float Damage, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer) override;
  /** Replicated: each player's PC plays the state's clip itself. */
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_State, Category="CoH|Combat") ECoHEnemyState State = ECoHEnemyState::Idle;
@@ -87,6 +91,7 @@ public:
  /** A pet with no imported model shows a small glowing orb (on every PC). */
  UPROPERTY(ReplicatedUsing=OnRep_PetLook) uint8 PetLook = 0;
  UFUNCTION() void OnRep_PetLook();
+ virtual void EndPlay(const EEndPlayReason::Type Reason) override;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category="CoH|Combat") FString KitModel;
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="CoH|Combat") FString EncounterIdle;
  /** Use a villain definition from the rules (class, rank, powers). Auto

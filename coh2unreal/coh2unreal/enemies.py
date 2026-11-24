@@ -134,6 +134,44 @@ def readies_of(seq):
     return out
 
 
+def norm_fx(path):
+    if not path or not isinstance(path, str) or path.upper() == "PFX":
+        return None
+    p = path.replace("\\", "/").strip().strip('"').lower().lstrip("/")
+    if p.startswith("fx/"):
+        p = p[3:]
+    if not p.endswith(".fx"):
+        p += ".fx"
+    return p
+
+
+def ent_fx(gd, ent_name):
+    """The Fx lines of an ent type: effects the entity always wears (a Spectre's
+    glow, a Seeker Drone's whole body)."""
+    try:
+        text = gd._text("ent_types/%s.txt" % ent_name.lower())
+    except Exception:  # noqa: BLE001
+        return []
+    out = []
+    for m in re.findall(r"(?im)^\s*fx\s+(\S+)", text or ""):
+        fx = norm_fx(m)
+        if fx and fx not in out:
+            out.append(fx)
+    return out
+
+
+def has_geometry(gd, npc, et):
+    """Whether a costume has any model: costume parts, or the ent type's Graphics."""
+    try:
+        _ent, _prefix, parts = resolve_costume(gd, npc, lambda *a: None)
+    except ValueError:
+        return False
+    if parts:
+        return True
+    g = (et.get("graphics") or [None])[0]
+    return bool(g and gd.geo(g.replace("\\", "/").lower()))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--data", required=True, help="i24/data folder")
@@ -197,6 +235,7 @@ def main(argv=None):
             print("%s: %s" % (name, e))
             continue
         et = gd.ent_type(ent_name)
+        body_fx = ent_fx(gd, ent_name)
         seq_file = (et.get("sequencer") or ["player.txt"])[0]
         # no SequencerType: the sequencer's file name (seqtype.c)
         seq_type = (et.get("sequencertype") or [os.path.splitext(
@@ -222,6 +261,16 @@ def main(argv=None):
             base, _themes = powers[pname]
             if not base.f:
                 continue
+            # the look of many pets and spirits is the lasting effect of an auto
+            # or toggle power (Shade: Haunt_Shade_Pet.fx on its Resistance)
+            if base.f.get("Type", "").lower() in ("kauto", "ktoggle"):
+                keys = ["ContinuingFX", "ContinuingFX2", "ContinuingFX3", "ConditionalFX"]
+                if base.f.get("Type", "").lower() == "kauto" and not any(base.f.get(k) for k in keys):
+                    keys.append("ActivationFX")     # Force Field Generator: its body is the auto's start effect
+                for k in keys:
+                    fx = norm_fx(base.f.get(k))
+                    if fx and fx not in body_fx:
+                        body_fx.append(fx)
             res = P.resolve(seq, base.f, seq_type, readies)
             p = dict(base.f)
             p["moves"] = res
@@ -263,7 +312,13 @@ def main(argv=None):
         need([[m] for m in core])
         entry["clips"] = moves_needed
         entry["models"] = []
-        for c in (costumes if args.all_costumes else costumes[:1]):
+        entry["body_fx"] = body_fx
+        # nothing to model: an effect is the whole body (Dark Servant, Seeker
+        # Drones) or nothing is seen at all (Rain of Fire's spot)
+        fx_body = not has_geometry(gd, npc, et)
+        if fx_body:
+            entry["fx_body"] = True
+        for c in ([] if fx_body else costumes if args.all_costumes else costumes[:1]):
             # models already exported stay listed (also with --no-models)
             if os.path.exists(os.path.join(model_dir, c + ".gltf")):
                 entry["models"].append("models/%s.gltf" % c)
@@ -288,6 +343,9 @@ def main(argv=None):
         json.dump(kit, f, indent=1)
     with open(os.path.join(args.out, "enemy_power_anims.json"), "w") as f:
         json.dump(power_out, f, indent=1)
+    # the always-on effects, for the effect export (coh2unreal.fx --fx-file)
+    with open(os.path.join(args.out, "body_fx.json"), "w") as f:
+        json.dump(sorted({x for e in kit.values() for x in e.get("body_fx", [])}), f, indent=1)
     print("%d villains, %d powers" % (len(kit), len(power_out)))
     return 0
 

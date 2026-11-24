@@ -158,7 +158,8 @@ def convert(stage, data, piggs):
     if stage == "enemy_fx":
         p = run([PY, "-m", "coh2unreal.fx", "--data", data, "--piggs", piggs, "--out",
                  o("enemies", "fx"), "export", "--powers-json",
-                 o("enemies", "enemy_power_anims.json"), "--all"])
+                 o("enemies", "enemy_power_anims.json"), "--all",
+                 "--fx-file", o("enemies", "body_fx.json")])
         return p.returncode == 0, "fx library %s" % os.path.isfile(o("enemies", "fx", "fx_library.json"))
     if stage == "player_fx":
         if os.path.isfile(o("fx", "fx_library.json")):

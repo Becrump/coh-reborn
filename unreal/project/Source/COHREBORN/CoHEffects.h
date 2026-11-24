@@ -135,6 +135,9 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	/** Ends the effect: systems stop spawning and fade out. */
 	void Stop();
+	/** A worn effect (CoHCombat body effects): no time limit; it ends with its holder. */
+	bool bPersistent = false;
+	TWeakObjectPtr<AActor> Holder;
 
 	struct FGeo;
 	struct FSystem;
