@@ -158,7 +158,9 @@ TSharedPtr<FCoHCivZone> ACoHCivilians::LoadZone(const FString& File, const FStri
 			if (T->TryGetNumberField(TEXT("run_var"), N)) Ty.RunVar = (float)N;
 			if (T->TryGetNumberField(TEXT("scared"), N)) Ty.Scared = (int32)N;
 			if (T->TryGetNumberField(TEXT("typenum"), N)) Ty.TypeNum = (int32)N;
-			if (Ty.Costumes.Num()) TypeIdx.Add(Ty.Name, Z->Types.Add(MoveTemp(Ty)));
+			// the name is copied first: in Add(Name, Types.Add(MoveTemp(Ty))) the move may run before the name is read
+			const FString TypeName = Ty.Name;
+			if (Ty.Costumes.Num()) TypeIdx.Add(TypeName, Z->Types.Add(MoveTemp(Ty)));
 		}
 	TMap<FString, int32> GenIdx;
 	if (R->TryGetObjectField(TEXT("generators"), O))
