@@ -33,14 +33,25 @@ for name, v in kit.items():
     for m in v.get("models", []):
         c = os.path.splitext(os.path.basename(m))[0]
         models.setdefault(c, set()).update(v.get("clips", []))
+# models that gave no skeletal mesh (props, vehicles, a missing file) are
+# recorded and skipped, so a batch is never filled with retries of them
+skip_p = os.path.join(OUT, "enemies_no_skeletal_mesh.json")
+skip = set(json.load(open(skip_p))) if os.path.isfile(skip_p) else set()
 done = 0
 for costume, clips in sorted(models.items()):
     dest = "%s/%s" % (ROOT, costume)
+    if costume in skip:
+        continue
     if assets_in(dest, "SkeletalMesh"):
         print("have", costume)
         continue
     if limit and done >= limit:
         break
+    if not os.path.isfile(os.path.join(OUT, "models", costume + ".gltf")):
+        skip.add(costume)
+        json.dump(sorted(skip), open(skip_p, "w"), indent=1)
+        print("  no file", costume)
+        continue
     pipe = unreal.InterchangeGenericAssetsPipeline()
     pipe.set_editor_property("scene_name_sub_folder", False)
     pipe.set_editor_property("asset_type_sub_folders", False)
@@ -72,6 +83,11 @@ for costume, clips in sorted(models.items()):
         if a:
             el.save_loaded_asset(a, False)
     done += 1
+    if not assets_in(dest, "SkeletalMesh"):
+        skip.add(costume)
+        json.dump(sorted(skip), open(skip_p, "w"), indent=1)
     print("ENEMY", costume, "meshes", len(assets_in(dest, "SkeletalMesh")),
           "clips", len(assets_in(dest, "AnimSequence")), "renamed", renamed)
-print("ENEMIES", len([c for c in models if assets_in("%s/%s" % (ROOT, c), "SkeletalMesh")]), "/", len(models))
+wanted = [c for c in models if c not in skip]
+print("ENEMIES", len([c for c in wanted if assets_in("%s/%s" % (ROOT, c), "SkeletalMesh")]), "/", len(wanted),
+      "(%d without a skeletal mesh, in %s)" % (len(skip), os.path.basename(skip_p)))

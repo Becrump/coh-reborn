@@ -315,8 +315,8 @@ bool ARebornMonorail::IsAboard(const APawn* Pawn) const
 	// standing on any part of this train (car floor, door sill...). The Cars
 	// list can point at stale components in a duplicated (PIE) world, so test
 	// the base's owner instead.
-	const UPrimitiveComponent* Base = C->GetMovementBase();
-	return Base && Base->GetOwner() == this;
+	const UPrimitiveComponent* BaseComp = Cast<UPrimitiveComponent>(C->GetMovementBaseObject());
+	return BaseComp && BaseComp->GetOwner() == this;
 }
 
 void ARebornMonorail::ChooseDestination(int32 Index, APawn* Who)
