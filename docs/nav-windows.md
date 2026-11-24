@@ -22,8 +22,14 @@ and badge data every PC loads, so they need no new server calls.
 - **Badges** (`/badges`): earned badges by category (or all of them, dim when
   not earned), click for the badge text.
 
+- **Map** (`/map`): the city around the hero, north up. On the one-world map it
+  draws the zone outlines with their names, plus contacts met (gold, green when
+  a mission is ready to turn in), mission waypoints (red), the set waypoint,
+  other heroes and the hero with its facing. The mouse wheel zooms, and a click
+  sets the waypoint there.
+
 The old chat lists are now `/badgelist`, `/cluelist` and `/souvenirlist`.
 The HUD's Salvage and Recipe tray tabs open the inventions window.
 
-Not yet: the map window (zone map art from texMaps.pigg), badge icons,
+Not yet: the original zone map art (texMaps.pigg) under the map, badge icons,
 calling a contact from the window, the original frame art for these windows.
