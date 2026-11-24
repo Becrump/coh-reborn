@@ -107,6 +107,15 @@ def power_fx_roots(p):
     return out
 
 
+def body_fx_roots(lib_dir):
+    """Effects villains always wear (enemies/body_fx.json, written next to the
+    enemies' effect library's parent): Spectre glows, Seeker Drone bodies."""
+    p = os.path.join(os.path.dirname(lib_dir), "body_fx.json")
+    if not os.path.isfile(p):
+        return []
+    return [str(x).lower() for x in json.load(open(p))]
+
+
 def wanted():
     """Textures and sounds the chosen powers' effects use (child effects included)."""
     prefixes = globals().get("GS_POWERS")
@@ -114,7 +123,7 @@ def wanted():
     for lib_dir in LIBS:
         lib = json.load(open(os.path.join(lib_dir, "fx_library.json")))
         pfx = json.load(open(os.path.join(lib_dir, "power_fx.json")))
-        todo = []
+        todo = [] if prefixes else body_fx_roots(lib_dir)
         for pname, p in pfx.items():
             if prefixes and not any(pname.startswith(x) for x in prefixes):
                 continue
@@ -246,7 +255,7 @@ def import_geoms():
     for lib_dir in LIBS:
         lib = json.load(open(os.path.join(lib_dir, "fx_library.json")))
         pfx = json.load(open(os.path.join(lib_dir, "power_fx.json")))
-        todo, seen, models = [], set(), set()
+        todo, seen, models = ([] if prefixes else body_fx_roots(lib_dir)), set(), set()
         for pname, p in pfx.items():
             if prefixes and not any(pname.startswith(x) for x in prefixes):
                 continue

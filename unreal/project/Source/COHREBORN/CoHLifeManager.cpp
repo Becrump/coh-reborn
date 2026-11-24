@@ -1206,7 +1206,7 @@ void ACoHLifeManager::TickWalkers(float Dt, const FVector& Cam)
     // Every candidate, including circuit commuters, uses the same clearance score.
     auto Place = [&](FCoHMover& M, float MinDist) {
         FCoHMover Best;
-        FVector BestPos;
+        FVector BestPos = FVector::ZeroVector;
         FRotator BestRot;
         float BestGap = 0.f, BestScore = -FLT_MAX;
         for (int32 Try = 0; Try < 48; ++Try)
