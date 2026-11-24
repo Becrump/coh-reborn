@@ -37,6 +37,11 @@ Convert stages (no editor needed; each takes seconds to a few minutes):
                length (tools/missions/mission_maps.py) -> out/missions
   characters   the 120 hero presets and every contact/mission NPC model
                (coh2unreal.player models) -> out/player/models, models.json
+  civilians    the original civilians and traffic of every zone: spawn rules,
+               generator points, walk wire and lane arrows
+               (tools/zones/civilians.py) -> out/civilians/<zone>.json
+  civilian_models  their costumes (people, cars, boats, the blimp) added to
+               out/player/models.json without re-exporting the others
 
 Unreal stages (exactly one editor open, Python Remote Execution on, nobody
 else using it; each call imports a small batch and saves, so it can stop
@@ -77,9 +82,10 @@ UE_EXEC = os.path.join(REPO, "unreal", "scripts", "ue_exec.py")
 GS = os.path.join(REPO, "unreal", "scripts", "game_systems")
 NEEDED = ("texts/english", "scripts.loc/contacts", "scripts.loc/spawndefs",
           "maps/city_zones", "maps/missions", "object_library", "defs/powers", "sequencers",
-          "aiscript", "menu")
+          "aiscript", "menu", "server")
 CONVERT = ["encounters", "zone_events", "enemies", "enemy_fx", "player_fx", "story", "items", "story_game",
-           "items_game", "inventions_game", "badges_game", "chatter", "missions", "characters"]
+           "items_game", "inventions_game", "badges_game", "chatter", "missions", "characters",
+           "civilians", "civilian_models"]
 UNREAL = ["ue_fx", "ue_enemies", "ue_missions", "ue_presets", "ue_npcs"]
 
 
@@ -143,6 +149,13 @@ def convert(stage, data, piggs):
     if stage == "encounters":
         p = run([PY, "tools/zones/encounters.py", data, o("zone_encounters")])
         return p.returncode == 0, "%d zones" % len(os.listdir(o("zone_encounters")))
+    if stage == "civilians":
+        p = run([PY, "tools/zones/civilians.py", data, o("civilians")])
+        return p.returncode == 0, last_line(p, "civilians.json")
+    if stage == "civilian_models":
+        p = run([PY, "-m", "coh2unreal.player", "--data", data, "--piggs", piggs,
+                 "--out", o("player"), "models", "--add", "--npc-list", o("civilians", "models.json")])
+        return p.returncode == 0, last_line(p, "models")
     if stage == "zone_events":
         p = run([PY, "tools/zones/zone_events.py", data, o("zone_encounters")])
         return p.returncode == 0, last_line(p, "zone_events.json")
@@ -204,6 +217,8 @@ def convert(stage, data, piggs):
                 "--out", o("player"), "models", "--all-presets"]
         for m in models:
             args += ["--npc", m]
+        if os.path.isfile(o("civilians", "models.json")):
+            args += ["--npc-list", o("civilians", "models.json")]   # keep the civilians in models.json
         p = run(args)
         return p.returncode == 0, last_line(p, "models")
     raise ValueError(stage)
