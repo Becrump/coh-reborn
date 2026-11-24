@@ -430,7 +430,15 @@ def main():
     st = load_state()
     # by default only zones that join the city map (docs/zones/zone_offsets.json); --all for the separate levels
     on_map = set(json.load(open(os.path.join(REPO, "docs", "zones", "zone_offsets.json")))["zones"])
-    for zid, name, zone in ORDER:
+    order = list(ORDER)
+    if a.all:
+        # every other converted zone (convert_all_zones.py --all), each on its own level
+        known = {z for z, _n, _l in ORDER}
+        for d in sorted(os.listdir(EXPORTS)):
+            m = re.match(r"^(\w+?)_\1$", d)   # <id>_<id>: named by its id
+            if m and m.group(1) not in known and os.path.isfile(os.path.join(EXPORTS, d, "DONE.txt")):
+                order.append((m.group(1), m.group(1), m.group(1).title()))
+    for zid, name, zone in order:
         if want and zone not in want and zid not in want:
             continue
         if not want and not a.all and zid not in on_map:
