@@ -239,7 +239,9 @@ void ACoHCivilians::WakeZones(const FVector& Cam)
 			const FString File = Folder / (KV.Key + TEXT(".json"));
 			const FString Id = KV.Key;
 			const FVector2D Off = KV.Value;
-			Loading.Add(New, Async(EAsyncExecution::ThreadPool, [File, Id, Off]() { return LoadZone(File, Id, Off); }));
+			// its own thread: the shared pool stays busy for minutes while the world streams in
+			Loading.Add(New, Async(EAsyncExecution::Thread, [File, Id, Off]() { return LoadZone(File, Id, Off); }));
+			UE_LOG(LogTemp, Log, TEXT("CoH civilians: loading %s"), *KV.Key);
 			continue;
 		}
 		FCoHCivZone& Z = Zones[*Idx];
@@ -269,6 +271,9 @@ void ACoHCivilians::WakeZones(const FVector& Cam)
 			for (FCoHCivType& T : Got->Types)
 				for (const FString& S : SkipTypes) if (T.Name.Contains(S)) { T.Costumes.Reset(); break; }
 			Zones[It.Key()] = MoveTemp(*Got);
+			const FCoHCivZone& Z = Zones[It.Key()];
+			UE_LOG(LogTemp, Log, TEXT("CoH civilians: loaded %s: %d types, %d generators, %d spawn points, %d walk beacons, %d lane arrows"),
+				*Id, Z.Types.Num(), Z.Gens.Num(), Z.Spawns.Num(), Z.WireP.Num(), Z.LaneP.Num());
 		}
 		else UE_LOG(LogTemp, Warning, TEXT("CoH civilians: could not read %s"), *(Folder / (Id + TEXT(".json"))));
 		Zones[It.Key()].Id = Id;
@@ -614,6 +619,15 @@ void ACoHCivilians::Tick(float Dt)
 	const FVector Cam = CameraLocation();
 	if (Cam.X == FLT_MAX) return;
 	WakeZones(Cam);
+	if (Now >= NextStatus)
+	{
+		NextStatus = Now + 60.0;
+		FString InZone = TEXT("none");
+		if (const UCoHGameRules* GR = UCoHGameRules::Get(this))
+			for (const auto& R : GR->ZoneRects) if (R.Value.IsInside(FVector2D(Cam))) { InZone = R.Key; break; }
+		UE_LOG(LogTemp, Log, TEXT("CoH civilians: camera %s in zone %s, %d zones loaded, %d loading; %s"),
+			*Cam.ToCompactString(), *InZone, Zones.Num(), Loading.Num(), *Command(FString()));
+	}
 	if (Now >= NextSpawn)
 	{
 		NextSpawn = Now + 1.0;                  // entgenProcess runs about once a second

@@ -99,7 +99,8 @@ def models():
     return {m["name"]: m for m in json.load(open(os.path.join(OUT, "models.json")))}
 
 
-CLIPS = ("combat_idle", "idle", "run", "attack", "hit", "death")
+# longest first: fear_run before run, so MaleNPC_10fear_run -> fear_run
+CLIPS = ("combat_idle", "idle", "fear_run", "run", "walk", "attack", "hit", "death", "fear")
 
 
 def rename_clips(dest):
