@@ -6,7 +6,10 @@ spawn points. Follows the faithful-conversion rule (docs/zones/one-world-plan.md
 buildings and props as in the original, original parked cars left out (cars
 come later), trees listed for replacement, no civilians.
 
-    python convert_all_zones.py --work <folder> [--only city_02_01,...] [--redo]
+    python convert_all_zones.py --work <folder> [--only city_02_01,...] [--all] [--redo]
+
+--all adds every other zone folder of the original (Rogue Isles, Praetoria, PvP, co-op,
+event and unused maps), named by its id.
 
 <work> gets:
   i24/       sparse clone of Thunderspies/i24 (made if missing)
@@ -172,6 +175,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--work", required=True)
     ap.add_argument("--only", default="", help="comma list of zone ids")
+    ap.add_argument("--all", action="store_true", help="also every other zone folder of the original")
     ap.add_argument("--redo", action="store_true")
     a = ap.parse_args()
     work = os.path.abspath(a.work)
@@ -185,7 +189,13 @@ def main():
     status_path = os.path.join(work, "status.json")
     status = json.load(open(status_path)) if os.path.exists(status_path) else {}
     counts = {"OK": 0, "FAIL": 0, "SKIP": 0}
-    for zone, name in ZONES:
+    zones = list(ZONES)
+    if a.all:
+        maps = os.path.join(data, "maps", "city_zones")
+        known = {z for z, _n in ZONES} | {"city_01_01"}   # Atlas Park keeps its own map
+        zones += [(z, z.lower()) for z in sorted(os.listdir(maps))
+                  if z not in known and os.path.isdir(os.path.join(maps, z))]
+    for zone, name in zones:
         if only and zone not in only:
             continue
         print("== %s (%s)" % (name, zone), flush=True)
