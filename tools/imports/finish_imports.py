@@ -8,7 +8,8 @@ Convert stages (no editor needed; each takes seconds to a few minutes):
                -> out/zone_encounters/<zone>/encounters.json, sites.json
   zone_events  the zones' scripted events and the city-wide invasions
                (tools/zones/zone_events.py) -> out/zone_encounters/zone_events.json
-  enemies      enemy kit for every villain the 18 city-map zones can spawn
+  enemies      enemy kit for every villain the 18 city-map zones can spawn,
+               plus every other villain definition with a costume (--all-villains)
                (tools/zones/enemy_kit_all.py) -> out/enemies: kit.json (a
                superset of Atlas Park's, same format), roster.json, models/.
                The old kit.json and roster.json are backed up first;
@@ -166,7 +167,7 @@ def convert(stage, data, piggs):
                 os.makedirs(bk, exist_ok=True)
                 shutil.copy2(o("enemies", f), bk)
         p = run([PY, "tools/zones/enemy_kit_all.py", data, piggs, o("zone_encounters"),
-                 o("enemies")])
+                 o("enemies"), "--all-villains"])   # import everything: every villain definition
         return p.returncode == 0, last_line(p, "villains,")
     if stage == "enemy_fx":
         p = run([PY, "-m", "coh2unreal.fx", "--data", data, "--piggs", piggs, "--out",

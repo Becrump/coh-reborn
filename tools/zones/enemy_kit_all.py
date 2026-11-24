@@ -20,7 +20,11 @@ Content/CoH/Data/enemies/kit.json as is.
 
     python tools/zones/enemy_kit_all.py <i24>/data <piggs> <enc_dir> <out> \
         [--zones city_01_01 ...] [--events] [--no-models] [--all-costumes]
-        [--no-pets]
+        [--no-pets] [--all-villains]
+
+--all-villains adds every other villain definition that has a costume (the
+Rogue Isles, Praetoria, trials, Incarnate content ...: about 5,900), with no
+encounters yet, so their models and powers are in for later zones.
 
 Zones default to those in docs/zones/zone_offsets.json (the city map).
 Seasonal/zone-event spawn definitions are left out unless --events.
@@ -161,6 +165,23 @@ def event_villains(enc_dir, villains, roster):
     return out
 
 
+def all_villains(villains, roster):
+    """Every villain definition with a costume that is not in the roster yet."""
+    out = {}
+    for n, v in sorted(villains.items()):
+        if n in roster or v.get("AIConfig") == "Pets_Ignore":
+            continue
+        costumes = ce._costumes(v)
+        if not costumes:
+            continue
+        out[n] = {"group": v.get("VillainGroup"), "rank": v.get("Rank"), "class": v.get("Class"),
+                  "ai_config": v.get("AIConfig"), "ally": v.get("Ally") or "Monster",
+                  "powers": [".".join(p) for p in v.get("powers", [])],
+                  "def_levels": sorted(v.get("levels", {})), "costumes": costumes,
+                  "spawn_levels": [], "weight": 0, "zones": [], "encounters": []}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("data")
@@ -172,6 +193,7 @@ def main():
     ap.add_argument("--no-models", action="store_true")
     ap.add_argument("--all-costumes", action="store_true")
     ap.add_argument("--no-pets", action="store_true")
+    ap.add_argument("--all-villains", action="store_true")
     a = ap.parse_args()
     zones = a.zones or sorted(json.load(open(os.path.join(
         REPO, "docs", "zones", "zone_offsets.json")))["zones"])
@@ -186,6 +208,10 @@ def main():
     evs = event_villains(a.enc_dir, villains, roster)
     roster.update(evs)
     print("%d zone event villains" % len(evs), flush=True)
+    if a.all_villains:
+        rest = all_villains(villains, roster)
+        roster.update(rest)
+        print("%d more villain definitions (--all-villains)" % len(rest), flush=True)
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, "roster.json"), "w") as f:
         json.dump(roster, f, indent=1)
