@@ -904,6 +904,8 @@ void UCoHGameRules::LoadEnemies(const FString& Dir)
 			if (!S(O, TEXT("ally")).IsEmpty()) V.Ally = S(O, TEXT("ally"));
 			V.Costumes = L(O, TEXT("costumes"));
 			for (const FString& M : L(O, TEXT("models"))) V.Models.Add(FPaths::GetBaseFilename(M));
+			V.BodyFx = L(O, TEXT("body_fx"));
+			O->TryGetBoolField(TEXT("fx_body"), V.bFxBody);
 			const TSharedPtr<FJsonObject>* Pw;
 			if (O->TryGetObjectField(TEXT("powers"), Pw))
 				for (const auto& P : (*Pw)->Values)

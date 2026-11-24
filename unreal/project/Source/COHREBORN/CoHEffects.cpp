@@ -576,7 +576,8 @@ void ACoHFxRunner::Tick(float Dt)
 	while (Accum >= TickSeconds && Steps < 6) { Accum -= TickSeconds; ++Steps; Step(); }
 	if (Steps == 6) Accum = 0.f;
 	// a safety net for effects that loop on conditions not played yet
-	if (Ticks > 30 * 20) Stop();
+	if (bPersistent) { if (!Holder.IsValid()) Stop(); }
+	else if (Ticks > 30 * 20) Stop();
 	Draw();
 	if (Runs.Num() == 0) Destroy();
 }

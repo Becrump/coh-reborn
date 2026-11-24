@@ -819,6 +819,7 @@ def main(argv=None):
     se.add_argument("--all", action="store_true", help="every player power")
     se.add_argument("--fx", action="append", default=[],
                     help="effect file relative to data/fx")
+    se.add_argument("--fx-file", help="JSON list of more effect files (enemies' body_fx.json)")
     se.add_argument("--no-sounds", action="store_true")
     se.add_argument("--no-themes", action="store_true",
                     help="skip the customizable power themes")
@@ -847,7 +848,11 @@ def main(argv=None):
     for name, pf in powers.items():
         for path in fx_paths(pf):
             lib.load_fx(path)
-    for path in args.fx:
+    extra = list(args.fx)
+    if args.fx_file and os.path.isfile(args.fx_file):
+        with open(args.fx_file, encoding="utf-8") as f:
+            extra += json.load(f)
+    for path in extra:
         lib.load_fx(path)
     if store:
         lib.load_geoms()
