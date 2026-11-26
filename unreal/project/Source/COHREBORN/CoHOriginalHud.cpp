@@ -289,6 +289,10 @@ void SCoHOriginalHud::DrawJelly(FCoHPainter& P, int32 Id, const FVector2f& Scree
 	const float Goal = Dragging == Id ? 1.f : (bOver ? JELLY_MOUSE_OPACITY : JELLY_MIN_OPACITY);
 	W.Opacity = W.Opacity < Goal ? FMath::Min(Goal, W.Opacity + Step * JELLY_FADE_SPEED) : FMath::Max(Goal, W.Opacity - Step * JELLY_FADE_SPEED);
 
+	// the jelly bar first: hits are checked last-added first, so the child
+	// buttons on it must come after it or a click on one only starts a drag
+	Hits.Add({ Box, HitJelly, Id, 0 });
+
 	// child buttons (childButton_getCenter)
 	float Tx = X + (FMath::Min(13, W.Radius) + CHILD_BUTTON_SPACE);
 	float Cy = bBelow ? Y + Ht + JELLY_HT / 2 : Y - JELLY_HT / 2;
@@ -308,7 +312,6 @@ void SCoHOriginalHud::DrawJelly(FCoHPainter& P, int32 Id, const FVector2f& Scree
 		Hits.Add({ CB, HitChild, Id, i });
 		Tx += Tw + CHILD_BUTTON_SPACE;
 	}
-	Hits.Add({ Box, HitJelly, Id, 0 });
 }
 
 void SCoHOriginalHud::DrawHealthBar(FCoHPainter& P, float X, float Y, float Z, float Width, float Pct, uint32 Frame, uint32 BarColor, bool bHealth, FGlow& G, float Dt) const
