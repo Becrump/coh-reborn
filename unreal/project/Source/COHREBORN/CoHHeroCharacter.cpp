@@ -984,10 +984,26 @@ void ACoHHeroCharacter::OnRep_Downed()
   GetCharacterMovement()->DisableMovement();
   if (!bDownedMeshSaved && !(Rag && Rag->IsPhysical())) { DownedMeshRel = GetMesh()->GetRelativeTransform(); bDownedMeshSaved = true; }
   if (Rag) Rag->StartRagdoll(FVector::ZeroVector, true);
+  // no ragdoll (a CoH preset body has no physics asset): fall with the body's death clip and hold its last frame
+  if (!(Rag && Rag->IsPhysical()))
+   if (UCoHBodyAnim* A = BodyAnim())
+   {
+    const UCoHGameRules* R = UCoHGameRules::Get(this);
+    UAnimSequenceBase* Death = R ? R->ClipIn(R->PresetRoot / CoHBodyType / BodyPreset, TEXT("death")) : nullptr;
+    if (!Death && R) Death = R->ClipIn(R->PlayerAnimRoot / CoHBodyType, CoHBodyType + TEXT("__death_front"));
+    if (Death)
+    {
+     A->StopSegments();
+     A->bAutoLocomotion = false;
+     A->SetBase(Death, false);
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("CoH hero: no death clip for %s (%s): the body stays standing"), *BodyPreset, *CoHBodyType);
+   }
  }
  else
  {
   if (Rag && Rag->IsPhysical()) Rag->StopPhysics();
+  if (UCoHBodyAnim* A = BodyAnim()) { A->Freeze(false); A->StopSegments(); A->bAutoLocomotion = true; }
   GetMesh()->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
   if (bDownedMeshSaved) { GetMesh()->SetRelativeTransform(DownedMeshRel); bDownedMeshSaved = false; }
   GetCharacterMovement()->SetMovementMode(MOVE_Walking);
