@@ -46,6 +46,8 @@ void SCoHHud::Construct(const FArguments& InArgs)
 {
 	Player = InArgs._Player;
 	TextHandle = UCoHPowerComponent::OnCombatText.AddSP(this, &SCoHHud::OnText);
+	// fills the screen: only its windows take clicks (the panels above it, contacts, chat... must get theirs)
+	SetVisibility(EVisibility::SelfHitTestInvisible);
 
 	TSharedRef<SHorizontalBox> Tray = SNew(SHorizontalBox);
 	for (int32 i = 0; i < 10; ++i) Tray->AddSlot().AutoWidth().Padding(3.f)[MakeSlot(i)];

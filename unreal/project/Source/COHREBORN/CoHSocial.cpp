@@ -61,6 +61,8 @@ public:
 	void Construct(const FArguments& Args)
 	{
 		Owner = Args._Owner;
+		// the panel fills the whole viewport: only its windows take clicks, the rest goes through
+		SetVisibility(EVisibility::SelfHitTestInvisible);
 		ChildSlot
 		.HAlign(HAlign_Left).VAlign(VAlign_Bottom).Padding(FMargin(12, 0, 0, 150))
 		[
@@ -194,7 +196,7 @@ void UCoHSocial::BeginPlay()
 	if (Pawn && Pawn->IsLocallyControlled() && GEngine && GEngine->GameViewport)
 	{
 		Panel = SNew(SCoHChatPanel).Owner(this);
-		PanelHost = SNew(SWeakWidget).PossiblyNullContent(Panel);
+		PanelHost = SNew(SWeakWidget).Visibility(EVisibility::SelfHitTestInvisible).PossiblyNullContent(Panel);
 		GEngine->GameViewport->AddViewportWidgetContent(PanelHost.ToSharedRef(), 8);
 		Lines.Add({ ECoHChat::System, FString(), TEXT("Welcome to Paragon City. Enter to chat, /invite name to team up.") });
 		++LinesVersion;
