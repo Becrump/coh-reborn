@@ -266,7 +266,6 @@ void UCoHStory::Initialize(FSubsystemCollectionBase& Collection)
 		for (const auto& KV : Sp->Values)
 		{
 			const FString Zone = FString(KV.Key);
-			if (NoHospitalZones.Contains(Zone)) continue;
 			for (const auto& V : KV.Value->AsArray())
 			{
 				const auto O = V->AsObject();

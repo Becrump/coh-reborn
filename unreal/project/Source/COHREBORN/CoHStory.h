@@ -166,7 +166,8 @@ public:
 	TMap<FString, TArray<TPair<FString, FVector>>> Visits;
 	/** Hospital beds ("gurney" spawn points) by zone: where defeated heroes wake up. */
 	TMap<FString, TArray<FVector>> Gurneys;
-	/** Zones whose original hospital is gone (Atlas Park was rebuilt): heroes wake at the start point. */
+	/** Zones rebuilt over the original (Atlas Park): the hospital's beds are inside the new buildings, so
+	 *  heroes wake on the open ground nearest to them (ACoHHeroCharacter::ServerHospital). */
 	UPROPERTY(Config) TArray<FString> NoHospitalZones = { TEXT("city_01_01") };
 	/** The nearest hospital bed in the zone at From; false: none there (use the start point). */
 	bool NearestHospital(const UObject* WorldContext, const FVector& From, FVector& Out) const;

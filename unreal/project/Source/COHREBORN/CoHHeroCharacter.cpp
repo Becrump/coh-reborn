@@ -1016,20 +1016,41 @@ void ACoHHeroCharacter::ServerHospital_Implementation()
  FVector Bed, From = GetActorLocation();
  // defeated inside a mission map: the hospital of the zone its door is in
  if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld())) { FVector Door; if (D->LeaveForHospital(this, Door)) From = Door; }
+ const float Half = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f;
+ FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHHospital), true, this);
+ bool bBed = false;
  if (S && S->NearestHospital(this, From, Bed))
  {
-  // only a bed with ground under it (its tile streamed in); else the start point
   FHitResult Hit;
-  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHHospital), true, this);
-  if (GetWorld()->LineTraceSingleByObjectType(Hit, Bed + FVector(0, 0, 300.f), Bed - FVector(0, 0, 5000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q))
-   At = Hit.ImpactPoint + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f);
+  if (S->NoHospitalZones.Contains(S->ZoneAt(this, Bed)))
+  {
+   // rebuilt zone (Atlas Park): the original beds sit inside the new buildings; wake on the lowest open
+   // ground near them (the street by the hospital), nearest first
+   float Best = TNumericLimits<float>::Max();
+   for (float R : { 0.f, 1500.f, 3000.f, 4500.f, 6000.f })
+    for (int32 a = 0; a < (R > 0.f ? 16 : 1); ++a)
+    {
+     const FVector P = Bed + FVector(FMath::Cos(a * PI / 8.f), FMath::Sin(a * PI / 8.f), 0.f) * R;
+     if (!GetWorld()->LineTraceSingleByObjectType(Hit, FVector(P.X, P.Y, 60000.f), FVector(P.X, P.Y, -30000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q)) continue;
+     const float Score = Hit.ImpactPoint.Z * 4.f + R;
+     if (Score < Best) { Best = Score; At = Hit.ImpactPoint + FVector(0, 0, Half); bBed = true; }
+    }
+  }
+  // only a bed with ground under it (its tile streamed in)
+  else if (GetWorld()->LineTraceSingleByObjectType(Hit, Bed + FVector(0, 0, 300.f), Bed - FVector(0, 0, 5000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Q))
+  {
+   At = Hit.ImpactPoint + FVector(0, 0, Half);
+   bBed = true;
+  }
  }
+ if (!bBed) UE_LOG(LogTemp, Warning, TEXT("CoH hospital: no hospital bed found near %s (zone %s): waking at the start point"),
+  *From.ToCompactString(), S ? *S->ZoneAt(this, From) : TEXT("?"));
  Powers->Reset();
  Health = Powers->Health;
  bDowned = false;
  OnRep_Downed();
  SetActorLocation(At, false, nullptr, ETeleportType::TeleportPhysics);
- Powers->MulticastText(TEXT("You wake up in the hospital"), FLinearColor(0.6f, 0.85f, 1.f));
+ Powers->MulticastText(bBed ? TEXT("You wake up in the hospital") : TEXT("You wake up at the start point (no hospital here yet)"), FLinearColor(0.6f, 0.85f, 1.f));
 }
 
 void ACoHHeroCharacter::PlayPowerAnimation(int32 Kind, float Duration, int32 AnimIndex, const FSoftObjectPath& Clip)
