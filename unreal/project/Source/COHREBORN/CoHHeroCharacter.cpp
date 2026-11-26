@@ -1198,6 +1198,35 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
   const float Score = Off / Tol + Along / 10000.f;
   if (Score < BestScore) { BestScore = Score; Best = *It; }
  }
+ // contacts, story people, hostages and this hero's mission markers are not
+ // combat characters: a click on one talks to it / uses it, as in the original
+ AActor* StoryPick = nullptr;
+ auto ConsiderStory = [&](AActor* A, float Height)
+ {
+  const FVector Feet = A->GetActorLocation();
+  FVector OnRay, OnBody;
+  FMath::SegmentDistToSegmentSafe(Origin, RayEnd, Feet - FVector(0, 0, 20.f), Feet + FVector(0, 0, Height), OnRay, OnBody);
+  const float Along = FVector::DotProduct(OnRay - Origin, Dir);
+  if (Along < 0.f) return;
+  const float Tol = 70.f + Along * 0.02f;
+  const float Off = FVector::Dist(OnRay, OnBody);
+  if (Off > Tol) return;
+  FHitResult Block;
+  FCollisionQueryParams Q(SCENE_QUERY_STAT(CoHPick), true, this); Q.AddIgnoredActor(A);
+  if (GetWorld()->LineTraceSingleByObjectType(Block, Origin, OnBody, FCollisionObjectQueryParams(ECC_WorldStatic), Q)
+   && !Cast<AVolume>(Block.GetActor()) && Block.Distance < FVector::Dist(Origin, OnBody) - 60.f) return;
+  const float Score = Off / Tol + Along / 10000.f;
+  if (Score < BestScore) { BestScore = Score; StoryPick = A; }
+ };
+ for (TActorIterator<ACoHStoryNPC> It(GetWorld()); It; ++It) ConsiderStory(*It, 190.f);
+ for (TActorIterator<ACoHMissionMarker> It(GetWorld()); It; ++It)
+  if (It->ForHero.Get() == this || UCoHSocial::SameTeam(It->ForHero.Get(), this)) ConsiderStory(*It, 220.f);
+ if (StoryPick)
+ {
+  UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> interact %s"), *GetNameSafe(StoryPick));
+  if (Story) Story->InteractWith(StoryPick);
+  return;
+ }
  // a click on empty ground clears the target, as in the original
  UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> select %s"), Best ? *GetNameSafe(Best) : TEXT("nothing (target cleared)"));
  Powers->Target = Best;

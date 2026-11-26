@@ -244,6 +244,8 @@ private:
 void SCoHNavPanel::Construct(const FArguments& Args)
 {
 	Owner = Args._Owner;
+	// the panel fills the whole viewport: only its windows take clicks, the rest goes through
+	SetVisibility(EVisibility::SelfHitTestInvisible);
 	const FSlateBrush* White = FCoreStyle::Get().GetBrush("WhiteBrush");
 	TSharedRef<SHorizontalBox> Tabs = SNew(SHorizontalBox);
 	for (const auto& T : { TPair<FString, FString>(TEXT("contacts"), TEXT("Contacts")), TPair<FString, FString>(TEXT("missions"), TEXT("Missions")),

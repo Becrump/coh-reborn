@@ -482,6 +482,8 @@ public:
 	void Construct(const FArguments& Args)
 	{
 		Owner = Args._Owner;
+		// the panel fills the whole viewport: only its windows take clicks, the rest goes through
+		SetVisibility(EVisibility::SelfHitTestInvisible);
 		ChildSlot
 		[
 			SNew(SOverlay)
@@ -2013,10 +2015,10 @@ void UCoHStoryComponent::BeginPlay()
 	if (Pawn && Pawn->IsLocallyControlled() && GEngine && GEngine->GameViewport)
 	{
 		Panel = SNew(SCoHStoryPanel).Owner(this);
-		PanelHost = SNew(SWeakWidget).PossiblyNullContent(Panel);
+		PanelHost = SNew(SWeakWidget).Visibility(EVisibility::SelfHitTestInvisible).PossiblyNullContent(Panel);
 		GEngine->GameViewport->AddViewportWidgetContent(PanelHost.ToSharedRef(), 8);
 		Nav = SNew(SCoHNavPanel).Owner(this);
-		NavHost = SNew(SWeakWidget).PossiblyNullContent(Nav);
+		NavHost = SNew(SWeakWidget).Visibility(EVisibility::SelfHitTestInvisible).PossiblyNullContent(Nav);
 		GEngine->GameViewport->AddViewportWidgetContent(NavHost.ToSharedRef(), 7);
 	}
 	// the host stands the contacts in the world (one director per map)
@@ -2099,6 +2101,41 @@ void UCoHStoryComponent::Interact()
 	ServerInteract();
 }
 
+// how close a hero must be to talk to someone or use a marker (E or a click)
+static constexpr float CoHTalkRange = 500.f;
+static constexpr float CoHMarkerRange = 600.f;
+
+void UCoHStoryComponent::InteractWith(AActor* Target)
+{
+	const AActor* Me = GetOwner();
+	if (!Me || !Target) return;
+	const bool bMarker = Target->IsA<ACoHMissionMarker>();
+	const float D = bMarker ? FVector::Dist2D(Target->GetActorLocation(), Me->GetActorLocation()) : FVector::Dist(Target->GetActorLocation(), Me->GetActorLocation());
+	// slack for the host's view of the hero lagging a little behind this PC's
+	if (D > (bMarker ? CoHMarkerRange : CoHTalkRange) + 150.f)
+	{
+		const ACoHStoryNPC* N = Cast<ACoHStoryNPC>(Target);
+		const FString Who = N && !N->DisplayName.IsEmpty() ? N->DisplayName : FString(TEXT("that"));
+		if (GEngine) GEngine->AddOnScreenDebugMessage(7131, 2.5f, FColor::Yellow, FString::Printf(TEXT("Get closer to %s to interact (%.0f ft away)."), *Who, D / 30.48f));
+		return;
+	}
+	ServerInteractWith(Target);
+}
+
+void UCoHStoryComponent::ServerInteractWith_Implementation(AActor* Target)
+{
+	const AActor* Me = GetOwner();
+	if (!Me || !Target || !Story()) return;
+	if (const UCoHPowerComponent* Pw = UCoHPowerComponent::Of(Me)) if (Pw->IsDefeated()) return;
+	if (const ACoHMissionMarker* Mk = Cast<ACoHMissionMarker>(Target))
+	{
+		if (Mk->ForHero.Get() != Me && !UCoHSocial::SameTeam(Mk->ForHero.Get(), Me)) return;
+		if (FVector::Dist2D(Mk->GetActorLocation(), Me->GetActorLocation()) > CoHMarkerRange + 150.f) return;
+	}
+	else if (!Target->IsA<ACoHStoryNPC>() || FVector::Dist(Target->GetActorLocation(), Me->GetActorLocation()) > CoHTalkRange + 150.f) return;
+	UseStoryActor(Target);
+}
+
 void UCoHStoryComponent::ServerInteract_Implementation()
 {
 	const AActor* Me = GetOwner();
@@ -2108,14 +2145,20 @@ void UCoHStoryComponent::ServerInteract_Implementation()
 	for (TActorIterator<ACoHStoryNPC> It(GetWorld()); It; ++It)
 	{
 		const float D = FVector::Dist(It->GetActorLocation(), Me->GetActorLocation());
-		if (D < 500.f && D < BestD) { BestD = D; Best = *It; }
+		if (D < CoHTalkRange && D < BestD) { BestD = D; Best = *It; }
 	}
 	for (TActorIterator<ACoHMissionMarker> It(GetWorld()); It; ++It)
 	{
 		if (It->ForHero.Get() != Me && !UCoHSocial::SameTeam(It->ForHero.Get(), Me)) continue;
 		const float D = FVector::Dist2D(It->GetActorLocation(), Me->GetActorLocation());
-		if (D < 600.f && D < BestD) { BestD = D; Best = *It; }
+		if (D < CoHMarkerRange && D < BestD) { BestD = D; Best = *It; }
 	}
+	UseStoryActor(Best);
+}
+
+void UCoHStoryComponent::UseStoryActor(AActor* Best)
+{
+	if (!Best) return;
 	if (ACoHStoryNPC* N = Cast<ACoHStoryNPC>(Best))
 	{
 		if (N->bHostage) { if (ACoHStoryDirector* D = ACoHStoryDirector::Get(GetWorld())) D->UseHostage(Cast<APawn>(GetOwner()), N); }

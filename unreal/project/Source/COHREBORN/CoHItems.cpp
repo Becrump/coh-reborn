@@ -352,6 +352,8 @@ public:
 	void Construct(const FArguments& Args)
 	{
 		Owner = Args._Owner;
+		// the panel fills the whole viewport: only its windows take clicks, the rest goes through
+		SetVisibility(EVisibility::SelfHitTestInvisible);
 		ChildSlot
 		[
 			SNew(SOverlay)
@@ -569,7 +571,7 @@ void UCoHEnhancements::BeginPlay()
 	if (Pawn && Pawn->IsLocallyControlled() && GEngine && GEngine->GameViewport)
 	{
 		Panel = SNew(SCoHEnhPanel).Owner(this);
-		PanelHost = SNew(SWeakWidget).PossiblyNullContent(Panel);
+		PanelHost = SNew(SWeakWidget).Visibility(EVisibility::SelfHitTestInvisible).PossiblyNullContent(Panel);
 		GEngine->GameViewport->AddViewportWidgetContent(PanelHost.ToSharedRef(), 9);
 	}
 }

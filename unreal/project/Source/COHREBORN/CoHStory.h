@@ -455,6 +455,9 @@ public:
 	/** E: talk to the contact, use the door or objective in front of the hero. */
 	UFUNCTION(BlueprintCallable, Category = "CoH|Story") void Interact();
 	UFUNCTION(Server, Reliable) void ServerInteract();
+	/** A click on a contact, person, hostage or this hero's marker: use that one (if close enough). */
+	void InteractWith(AActor* Target);
+	UFUNCTION(Server, Reliable) void ServerInteractWith(AActor* Target);
 	/** A button of the contact window. */
 	UFUNCTION(Server, Reliable) void ServerChoose(const FString& Action);
 	UFUNCTION(Client, Reliable) void ClientShowPage(const FCoHDialogPage& Page);
@@ -474,6 +477,8 @@ public:
 	FString Fill(const FString& Text, const FCoHStoryContact* C = nullptr) const;
 	/** Console: coh.Story.Give <task id> (tests), coh.Story.Contact <id> (talk from anywhere). */
 	void TalkTo(const FString& ContactId);
+	/** Host: talk to / use one story actor (contact, person, hostage, marker). */
+	void UseStoryActor(AActor* Target);
 	void Accept(const FString& TaskId, const FString& ContactId);
 	/** Host: clues and souvenirs a task step gives or takes (shown as a line; /clues lists them). */
 	void GiveClues(const FString& TaskId, const FCoHStoryClues& C);
