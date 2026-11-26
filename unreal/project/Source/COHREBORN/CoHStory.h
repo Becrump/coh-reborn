@@ -463,6 +463,8 @@ public:
 	UFUNCTION(Client, Reliable) void ClientShowPage(const FCoHDialogPage& Page);
 	/** The contact window closed on the player's PC. */
 	void ClosePage();
+	/** The player's own PC: number key n picks option n of an open contact window (true when one was picked). */
+	bool PickOption(int32 Index);
 
 	/** Host: a villain the hero helped defeat (defeat-X tasks). */
 	static void OnVillainDefeated(AActor* Hero, AActor* Villain);

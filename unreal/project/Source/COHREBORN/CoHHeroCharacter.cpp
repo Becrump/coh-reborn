@@ -166,6 +166,8 @@ void ACoHHeroCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 				|| PC->IsInputKeyDown(EKeys::LeftAlt) || PC->IsInputKeyDown(EKeys::RightAlt)))) return;
 			UE_LOG(LogTemp, Log, TEXT("CoH key: %d -> fire slot %d once%s"), (i + 1) % 10, i + 1,
 				PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)) ? TEXT(" (Shift held: no effect)") : TEXT(""));
+			// an open contact window takes 1..9 as its options
+			if (i < 9) if (UCoHStoryComponent* St = UCoHStoryComponent::Of(this)) if (St->PickOption(i)) return;
 			Powers->ActivateSlot(i);
 		});
 		Input->KeyBindings.Add(KB);

@@ -534,9 +534,11 @@ public:
 		Title->SetText(FText::FromString(Page.Title));
 		Body->SetText(FText::FromString(Page.Body));
 		Buttons->ClearChildren();
+		Actions.Reset();
 		for (int32 i = 0; i < Page.Labels.Num() && i < Page.Actions.Num(); ++i)
 		{
 			const FString Action = Page.Actions[i];
+			Actions.Add(Action);
 			Buttons->AddSlot().AutoHeight().Padding(0, 2)
 			[
 				SNew(SButton).OnClicked_Lambda([this, Action]()
@@ -549,7 +551,8 @@ public:
 					return FReply::Handled();
 				})
 				[
-					SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", 12)).Text(FText::FromString(Page.Labels[i]))
+					SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", 12))
+					.Text(FText::FromString(i < 9 ? FString::Printf(TEXT("%d. %s"), i + 1, *Page.Labels[i]) : Page.Labels[i]))
 				]
 			];
 		}
@@ -557,8 +560,18 @@ public:
 	}
 	void Hide() { if (Window.IsValid()) Window->SetVisibility(EVisibility::Collapsed); }
 	bool IsOpen() const { return Window.IsValid() && Window->GetVisibility() == EVisibility::Visible; }
+	/** Number keys: the option shown as "n." (0-based index). False when the window is shut or has no such option. */
+	bool Pick(int32 Index)
+	{
+		UCoHStoryComponent* C = Owner.Get();
+		if (!C || !IsOpen() || !Actions.IsValidIndex(Index)) return false;
+		const FString Action = Actions[Index];
+		if (Action == TEXT("close")) C->ClosePage(); else C->ServerChoose(Action);
+		return true;
+	}
 
 private:
+	TArray<FString> Actions;
 	FString TrackerText() const
 	{
 		const UCoHStoryComponent* C = Owner.Get();
@@ -2086,6 +2099,7 @@ void UCoHStoryComponent::ClientShowPage_Implementation(const FCoHDialogPage& Pag
 }
 
 void UCoHStoryComponent::ClosePage() { if (Panel.IsValid()) Panel->Hide(); }
+bool UCoHStoryComponent::PickOption(int32 Index) { return Panel.IsValid() && Panel->Pick(Index); }
 
 FCoHContactState& UCoHStoryComponent::ContactState(const FString& Id)
 {
