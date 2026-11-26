@@ -1,0 +1,76 @@
+Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" COHREBORNEditor Win64 Development -Project="C:\UnrealProjects\COHREBORN\COHREBORN.uproject" -WaitMutex
+Log file: C:\Users\rtcru\AppData\Local\UnrealBuildTool\Log.txt
+Determining max actions to execute in parallel (8 physical cores, 16 logical cores)
+  Executing up to 8 processes, one per physical core
+UbaServer - Listening on 0.0.0.0:1345
+Invalidating makefile for COHREBORNEditor (COHREBORNEditor.Target.cs modified)
+Plugin 'MetaHumanGenerator' depends on plugin 'StructUtils' which was deprecated in 5.5 and will soon be removed. Please update your dependencies.
+Project 'COHREBORNEditor' depends on plugin 'StructUtils' which was deprecated in 5.5 and will soon be removed. Please update your dependencies.
+UHT compiled-in object format Default
+Building COHREBORNEditor...
+===== Toolchain Information =====
+Using ISPC compiler (C:\Program Files\Epic Games\UE_5.8\Engine\Source\ThirdParty\Intel\ISPC\bin\Windows\ispc.exe)
+  Intel(r) Implicit SPMD Program Compiler (Intel(r) ISPC), 1.24.0 (build commit  @ 20250404, LLVM 18.1.2) 
+Using Visual Studio 14.50.35723 toolchain (C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717) and Windows 10.0.22621.0 SDK (C:\Program Files (x86)\Windows Kits\10).
+[Adaptive Build] Excluded from MassTrafficEditor unity file: MassTrafficBuilderBaseActor.cpp, MassTrafficBuilderMarkerActor.cpp, MassTrafficEditor.cpp, MassTrafficEditorBaseActor.cpp, MassTrafficEditorFunctionLibrary.cpp, MassTrafficIntersectionComponentVisualizer.cpp, MassTrafficParkingSpotComponentVisualizer.cpp, MassTrafficPathFinderVisualizer.cpp, MassTrafficPathFollowerVisualizer.cpp, MassTrafficTrackNearVehiclesVisualizer.cpp, MassTrafficZoneGraphDataModifier.cpp
+[Adaptive Build] Excluded from COHREBORN unity file: CoHActiveRagdoll.cpp, CoHBadges.cpp, CoHBodyAnim.cpp, CoHCivilians.cpp, CoHCombat.cpp, CoHEffects.cpp, CoHFlythrough.cpp, CoHFrontend.cpp, CoHGameRules.cpp, CoHGraphicsMenu.cpp, CoHHeroCharacter.cpp, CoHHeroProgress.cpp, CoHHeroStage.cpp, CoHIdleAnimInstance.cpp, CoHIdleComponent.cpp, CoHInstances.cpp, CoHItems.cpp, CoHLifeManager.cpp, CoHLoadingScreen.cpp, CoHLobbyNet.cpp, CoHNavWindows.cpp, CoHOriginalHud.cpp, CoHPerformance.cpp, CoHPortMapper.cpp, CoHPowerFX.cpp, CoHPowers.cpp, CoHPowerUI.cpp, COHREBORN.cpp, CoHSocial.cpp, CoHStationLamp.cpp, CoHStory.cpp, CoHTargetRing.cpp, CoHUIArt.cpp, CoHWorldTools.cpp, CoHZoneEvents.cpp, RebornMonorail.cpp, RebornRideDirector.cpp, SCoHLobby.cpp, SCoHTerminal.cpp
+[Adaptive Build] Excluded from MassTraffic unity file: MassTraffic.cpp, MassTrafficActorVehiclePhysicsProcessor.cpp, MassTrafficBaseVehicle.cpp, MassTrafficBubble.cpp, MassTrafficChooseNextLaneProcessor.cpp, MassTrafficConstrainedTrailerTrait.cpp, MassTrafficControlledVehicle.cpp, MassTrafficDamageRepairProcessor.cpp, MassTrafficDebugHelpers.cpp, MassTrafficDelegates.cpp, MassTrafficDriverVisualizationProcessor.cpp, MassTrafficDriverVisualizationTrait.cpp, MassTrafficEvaluateSequenceAnimInstance.cpp, MassTrafficFieldActor.cpp, MassTrafficFieldComponent.cpp, MassTrafficFieldOperations.cpp, MassTrafficFindDeviantParkedVehiclesProcessor.cpp, MassTrafficFindDeviantTrafficVehiclesProcessor.cpp, MassTrafficFindNextVehicleProcessor.cpp, MassTrafficFindObstaclesProcessor.cpp, MassTrafficFragments.cpp, MassTrafficFunctionLibrary.cpp, MassTrafficInitInterpolationProcessor.cpp, MassTrafficInitIntersectionsProcessor.cpp, MassTrafficInitParkedVehiclesProcessor.cpp, MassTrafficInitTrafficVehicleSpeedProcessor.cpp, MassTrafficInitTrafficVehiclesProcessor.cpp, MassTrafficInitTrailersProcessor.cpp, MassTrafficInstancePlaybackHelpers.cpp, MassTrafficInterpolation.cpp, MassTrafficInterpolationProcessor.cpp, MassTrafficIntersectionComponent.cpp, MassTrafficIntersectionLightComponent.cpp, MassTrafficIntersections.cpp, MassTrafficIntersectionSimulationTrait.cpp, MassTrafficIntersectionSpawnDataGenerator.cpp, MassTrafficLaneChange.cpp, MassTrafficLaneChangingProcessor.cpp, MassTrafficLightActor.cpp, MassTrafficLightRepresentationActorManagement.cpp, MassTrafficLights.cpp, MassTrafficLightVisualizationProcessor.cpp, MassTrafficLightVisualizationTrait.cpp, MassTrafficLightweightMontageInstance.cpp, MassTrafficMovement.cpp, MassTrafficObstacleTrait.cpp, MassTrafficOverseerProcessor.cpp, MassTrafficParkedVehicleRepresentationActorManagement.cpp, MassTrafficParkedVehicleSpawnDataGenerator.cpp, MassTrafficParkedVehicleVisualizationProcessor.cpp, MassTrafficParkedVehicleVisualizationTrait.cpp, MassTrafficParkingSpotActor.cpp, MassTrafficParkingSpotComponent.cpp, MassTrafficPathFinder.cpp, MassTrafficPathFollower.cpp, MassTrafficPhysics.cpp, MassTrafficPlayerVehicleLODProcessor.cpp, MassTrafficPostPhysicsUpdateDisturbedVehiclesProcessor.cpp, MassTrafficPostPhysicsUpdateTrafficVehiclesProcessor.cpp, MassTrafficPostPhysicsUpdateTrailersProcessor.cpp, MassTrafficProcessorBase.cpp, MassTrafficProxyActor.cpp, MassTrafficRecycleVehiclesOverlappingPlayersProcessor.cpp, MassTrafficReplicator.cpp, MassTrafficRescueLaneProcessor.cpp, MassTrafficSubsystem.cpp, MassTrafficTrackNearVehicles.cpp, MassTrafficTrailerRepresentationActorManagement.cpp, MassTrafficTrailerSimulationTrait.cpp, MassTrafficTrailerSpawnDataGenerator.cpp, MassTrafficTrailerVisualizationProcessor.cpp, MassTrafficTrailerVisualizationTrait.cpp, MassTrafficTypes.cpp, MassTrafficUpdateDistanceToNearestObstacleProcessor.cpp, MassTrafficUpdateIntersectionsProcessor.cpp, MassTrafficUpdateTrailersProcessor.cpp, MassTrafficUpdateVelocityProcessor.cpp, MassTrafficUtils.cpp, MassTrafficValidationProcessor.cpp, MassTrafficVehicleComponent.cpp, MassTrafficVehicleControlInterface.cpp, MassTrafficVehicleControlProcessor.cpp, MassTrafficVehicleDimensionsTrait.cpp, MassTrafficVehicleInterface.cpp, MassTrafficVehiclePhysicsProcessor.cpp, MassTrafficVehicleRepresentationActorManagement.cpp, MassTrafficVehicleSimulationLODProcessor.cpp, MassTrafficVehicleSimulationTrait.cpp, MassTrafficVehicleSpawnDataGenerator.cpp, MassTrafficVehicleSyncTrait.cpp, MassTrafficVehicleVisualizationLODProcessor.cpp, MassTrafficVehicleVisualizationProcessor.cpp, MassTrafficVehicleVisualizationTrait.cpp, MassTrafficVehicleVolumeTrait.cpp, MassTrafficWheeledVehicle.cpp
+===== End Toolchain Information =====
+Using Unreal Build Accelerator local executor to run 43 action(s)
+  CPU 8 physical cores, 16 logical cores
+  Memory 63.93 GB physical, 29.81 GB/89.93 GB committed
+  UBA Storage capacity 40 GB
+[1/43] Compile [x64] COHREBORN.cpp
+[2/43] Compile [x64] CoHActiveRagdoll.cpp
+[3/43] Compile [x64] CoHBodyAnim.cpp
+[4/43] Compile [x64] CoHFlythrough.cpp
+[5/43] Compile [x64] CoHBadges.cpp
+[6/43] Compile [x64] CoHEffects.cpp
+[7/43] Compile [x64] CoHCivilians.cpp
+[8/43] Compile [x64] CoHCombat.cpp
+[9/43] Compile [x64] CoHHeroStage.cpp
+[10/43] Compile [x64] CoHGraphicsMenu.cpp
+[11/43] Compile [x64] CoHIdleAnimInstance.cpp
+[12/43] Compile [x64] CoHFrontend.cpp
+[13/43] Compile [x64] CoHHeroProgress.cpp
+[14/43] Compile [x64] CoHGameRules.cpp
+[15/43] Compile [x64] CoHInstances.cpp
+[16/43] Compile [x64] CoHIdleComponent.cpp
+[17/43] Compile [x64] CoHLoadingScreen.cpp
+[18/43] Compile [x64] CoHLobbyNet.cpp
+[19/43] Compile [x64] CoHLifeManager.cpp
+[20/43] Compile [x64] CoHOriginalHud.cpp
+[21/43] Compile [x64] CoHItems.cpp
+[22/43] Compile [x64] CoHPortMapper.cpp
+[23/43] Compile [x64] CoHNavWindows.cpp
+[24/43] Compile [x64] CoHHeroCharacter.cpp
+[25/43] Compile [x64] CoHPowerFX.cpp
+[26/43] Compile [x64] CoHPerformance.cpp
+[27/43] Compile [x64] CoHStationLamp.cpp
+[28/43] Compile [x64] CoHTargetRing.cpp
+[29/43] Compile [x64] CoHUIArt.cpp
+C:\UnrealProjects\COHREBORN\Source\COHREBORN\CoHUIArt.cpp(142,19): warning C4996: 'FSlateFontInfo::FSlateFontInfo': Use constructor with FCompositeFont instead. - Please update your code to the new API before upgrading to the next release, otherwise your project will no longer compile.
+		? FSlateFontInfo(Path, Points)
+		                ^
+[30/43] Compile [x64] CoHSocial.cpp
+[31/43] Compile [x64] CoHWorldTools.cpp
+[32/43] Compile [x64] CoHPowers.cpp
+[33/43] Compile [x64] CoHZoneEvents.cpp
+[34/43] Compile [x64] RebornRideDirector.cpp
+[35/43] Compile [x64] RebornMonorail.cpp
+[36/43] Compile [x64] CoHPowerUI.cpp
+[37/43] Compile [x64] CoHStory.cpp
+[38/43] Compile [x64] SCoHLobby.cpp
+[39/43] Compile [x64] Module.COHREBORN.cpp
+[40/43] Compile [x64] SCoHTerminal.cpp
+[41/43] Link [x64] UnrealEditor-COHREBORN.lib
+[42/43] Link [x64] UnrealEditor-COHREBORN.dll
+[43/43] WriteMetadata COHREBORNEditor.target [NoUba]
+
+Total time in Unreal Build Accelerator local executor: 46.71 seconds
+Output binary: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe
+
+Result: Succeeded
+Total execution time: 56.41 seconds
+Trace written to file C:\Users\rtcru\AppData\Local\UnrealBuildTool\Trace.uba with size 19.6kb
