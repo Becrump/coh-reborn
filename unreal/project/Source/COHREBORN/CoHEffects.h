@@ -106,7 +106,8 @@ public:
 	bool IsLoaded() const { return FxTable.Num() > 0; }
 
 	/** Plays an effect on Owner (with Target); returns the runner or null. */
-	static class ACoHFxRunner* Play(AActor* Owner, const FString& Path, AActor* Target, float Delay = 0.f, const FCoHFxStyle* Style = nullptr);
+	/** StopAfter > 0: the effect stops (spawning ends, particles fade) that many seconds after it starts. */
+	static class ACoHFxRunner* Play(AActor* Owner, const FString& Path, AActor* Target, float Delay = 0.f, const FCoHFxStyle* Style = nullptr, float StopAfter = 0.f);
 	/** Plays a power's start effects now and its hit effect on the target at the hit.
 	 *  Style (optional) restyles it: the emitter point moves only the start effects. */
 	static bool PlayPower(AActor* Owner, FName Power, AActor* Target, float HitDelay, const FCoHFxStyle* Style = nullptr);
@@ -138,6 +139,8 @@ public:
 	/** A worn effect (CoHCombat body effects): no time limit; it ends with its holder. */
 	bool bPersistent = false;
 	TWeakObjectPtr<AActor> Holder;
+	/** Seconds after the start when a one-shot effect stops (0: only the safety net). */
+	float StopAfter = 0.f;
 
 	struct FGeo;
 	struct FSystem;
@@ -149,5 +152,6 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<UProceduralMeshComponent>> Pool;
 	float Accum = 0.f;
 	int32 Ticks = 0;
+	bool bStopped = false;
 	FCoHFxStyle Style;
 };
