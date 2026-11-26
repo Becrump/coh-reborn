@@ -166,7 +166,8 @@ public:
 	TMap<FString, TArray<TPair<FString, FVector>>> Visits;
 	/** Hospital beds ("gurney" spawn points) by zone: where defeated heroes wake up. */
 	TMap<FString, TArray<FVector>> Gurneys;
-	/** Zones whose original hospital is gone (Atlas Park was rebuilt): heroes wake at the start point. */
+	/** Zones rebuilt over the original (Atlas Park): the hospital's beds are inside the new buildings, so
+	 *  heroes wake on the open ground nearest to them (ACoHHeroCharacter::ServerHospital). */
 	UPROPERTY(Config) TArray<FString> NoHospitalZones = { TEXT("city_01_01") };
 	/** The nearest hospital bed in the zone at From; false: none there (use the start point). */
 	bool NearestHospital(const UObject* WorldContext, const FVector& From, FVector& Out) const;
@@ -463,6 +464,8 @@ public:
 	UFUNCTION(Client, Reliable) void ClientShowPage(const FCoHDialogPage& Page);
 	/** The contact window closed on the player's PC. */
 	void ClosePage();
+	/** The player's own PC: number key n picks option n of an open contact window (true when one was picked). */
+	bool PickOption(int32 Index);
 
 	/** Host: a villain the hero helped defeat (defeat-X tasks). */
 	static void OnVillainDefeated(AActor* Hero, AActor* Villain);
