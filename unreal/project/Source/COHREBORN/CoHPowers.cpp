@@ -725,7 +725,8 @@ void UCoHPowerComponent::ActivatePower(FName Power)
 {
 	AActor* T = Target.Get();
 	FVector Loc = T ? T->GetActorLocation() : GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 1500.f;
-	ServerActivate(Power, T, Loc);
+	// a selected contact is no one to use a power on (its spot still counts)
+	ServerActivate(Power, Of(T) ? T : nullptr, Loc);
 }
 
 static float Now0(const UWorld* W) { return W ? W->GetTimeSeconds() : 0.f; }

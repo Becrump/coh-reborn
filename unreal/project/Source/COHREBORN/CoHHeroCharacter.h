@@ -12,6 +12,7 @@ class UInputMappingContext;
 class UCoHPowerComponent;
 class UCoHActiveRagdoll;
 class UCoHHudWidget;
+class ACoHTargetRing;
 struct FInputActionValue;
 
 /** Travel powers and climbing as one state: the player's PC sets it, the host
@@ -235,6 +236,9 @@ public:
 	UFUNCTION() void OnRep_Downed();
 	/** Tab: the nearest foe in view first, then the next nearest. */
 	void CycleTarget();
+	/** the ground ring under this player's current target (local only) */
+	void UpdateTargetRing();
+	UPROPERTY(Transient) TObjectPtr<ACoHTargetRing> TargetRing;
 	/** Left mouse: target whoever is under the cursor / crosshair. */
 	void SelectTarget(const FInputActionValue& Value);
 
