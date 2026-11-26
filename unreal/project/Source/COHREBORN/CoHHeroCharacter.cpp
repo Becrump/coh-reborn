@@ -16,6 +16,7 @@
 #include "CoHZoneEvents.h"
 #include "CoHCivilians.h"
 #include "CoHPowerUI.h"
+#include "CoHTargetRing.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/Skeleton.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -778,6 +779,7 @@ void ACoHHeroCharacter::Tick(float DeltaSeconds)
 	}
 	ComboWindow = FMath::Max(0.f, ComboWindow - DeltaSeconds);
 	UpdateCamera(DeltaSeconds);
+	if (IsLocallyControlled()) UpdateTargetRing();
 	if (PunchTimeLeft > 0.f)
 	{
 		PunchHitTimeLeft -= DeltaSeconds;
@@ -1156,6 +1158,20 @@ void ACoHHeroCharacter::CycleTarget()
   Foes[Next].Key / 100.f, Next + 1, Foes.Num());
 }
 
+void ACoHHeroCharacter::UpdateTargetRing()
+{
+ if (!Powers || GetNetMode() == NM_DedicatedServer) return;
+ AActor* T = Powers->Target.Get();
+ if (!TargetRing && T)
+ {
+  FActorSpawnParameters SP;
+  SP.Owner = this;
+  SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+  TargetRing = GetWorld()->SpawnActor<ACoHTargetRing>(T->GetActorLocation(), FRotator::ZeroRotator, SP);
+ }
+ if (TargetRing) TargetRing->Follow(T, this);
+}
+
 void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
 {
  APlayerController* PC = Cast<APlayerController>(GetController());
@@ -1224,6 +1240,9 @@ void ACoHHeroCharacter::SelectTarget(const FInputActionValue&)
  if (StoryPick)
  {
   UE_LOG(LogTemp, Log, TEXT("CoH key: Left mouse -> interact %s"), *GetNameSafe(StoryPick));
+  // a contact or story person becomes the selection too (its ring shows), as in
+  // the original; mission markers are only used
+  if (Cast<ACoHStoryNPC>(StoryPick)) Powers->Target = StoryPick;
   if (Story) Story->InteractWith(StoryPick);
   return;
  }
