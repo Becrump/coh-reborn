@@ -8,15 +8,15 @@
 // the placeholder power effects' unlit additive glow (Colour, Opacity)
 static const TCHAR* RingMaterial = TEXT("/Game/CoH/FX/M_CoH_PowerFX.M_CoH_PowerFX");
 
-const FLinearColor ACoHTargetRing::FoeColour(1.f, 0.10f, 0.06f);
-const FLinearColor ACoHTargetRing::FriendColour(0.15f, 1.f, 0.30f);
-const FLinearColor ACoHTargetRing::ContactColour(0.25f, 0.55f, 1.f);
+static const FLinearColor FoeColour(1.f, 0.10f, 0.06f);
+static const FLinearColor FriendColour(0.15f, 1.f, 0.30f);
+static const FLinearColor ContactColour(0.25f, 0.55f, 1.f);
 
 ACoHTargetRing::ACoHTargetRing()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	// after everyone has moved and animated, so the ring never trails its target
-	PrimaryActorTick.TickGroup = TG_PostUpdateWorkGroup;
+	PrimaryActorTick.TickGroup = TG_PostUpdateWork;
 	SetReplicates(false);
 	Ring = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Ring"));
 	Ring->SetCollisionEnabled(ECollisionEnabled::NoCollision);

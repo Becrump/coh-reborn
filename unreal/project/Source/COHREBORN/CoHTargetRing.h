@@ -23,7 +23,6 @@ public:
 	 *  selection it is: foe or friend is judged from their side. */
 	void Follow(AActor* InTarget, const AActor* InViewer);
 
-	static const FLinearColor FoeColour, FriendColour, ContactColour;
 
 private:
 	UPROPERTY(VisibleAnywhere) TObjectPtr<UProceduralMeshComponent> Ring;
