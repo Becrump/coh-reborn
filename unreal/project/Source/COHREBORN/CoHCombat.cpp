@@ -1115,6 +1115,19 @@ const TMap<FString,FString>& ACoHEnemySpawner::BodyFor(const FCoHVillainDef* V,i
    for(const auto& M:Members) for(const FString& N:*Names) if(M.FindRef(TEXT("name")).Equals(N,ESearchCase::IgnoreCase)) Match.Add(&M);
    if(Match.Num()) return *Match[FMath::RandRange(0,Match.Num()-1)];
   }
+ // no costume of its own: a plain member of the gang. The catalog files other
+ // groups' bodies under a faction (Mastermind demonlings, a Behemoth and Duke
+ // Mordrogar under Hellions, Necromancy undead under Skulls) and named
+ // characters (archvillains, Godwin Blaire, Kelvin): never a random street thug
+ auto Special=[](const FString& N)
+ {
+  static const TCHAR* Prefixes[]={TEXT("Mastermind_"),TEXT("Behemoth"),TEXT("Duke_"),TEXT("Model_"),TEXT("Necromancy_"),TEXT("Eidolon_")};
+  for(const TCHAR* P:Prefixes) if(N.StartsWith(P,ESearchCase::IgnoreCase)) return true;
+  return N.Contains(TEXT("_AV_"),ESearchCase::IgnoreCase) || N.Contains(TEXT("Demon"),ESearchCase::IgnoreCase);
+ };
+ TArray<const TMap<FString,FString>*> Plain;
+ for(const auto& M:Members) if(!Special(M.FindRef(TEXT("name")))) Plain.Add(&M);
+ if(Plain.Num()) return *Plain[FMath::RandRange(0,Plain.Num()-1)];
  return Members[FMath::RandRange(0,Members.Num()-1)];
 }
 bool ACoHEnemySpawner::SpawnGroup(APawn* Near,const FString& ForceFaction,int32 ForceLevel,float ForceDistance)
@@ -1296,7 +1309,9 @@ ACoHCombatEnemy* ACoHEnemySpawner::SpawnKitVillain(const FString& VillainName,in
  const FCoHVillainDef* V=DB?DB->Villains.Find(VillainName):nullptr;
  const auto* Members=V?Catalog.Find(V->Group):nullptr;
  if(!V || !Members || Members->Num()==0){ E->Destroy(); return nullptr; }
- E->InitializeFromCatalog(BodyFor(V,Level,*Members),V->Group,V->Class,Level);
+ const TMap<FString,FString>& Body=BodyFor(V,Level,*Members);
+ UE_LOG(LogTemp,Log,TEXT("CoH spawn: %s has no imported model, using catalog body %s"),*VillainName,*Body.FindRef(TEXT("name")));
+ E->InitializeFromCatalog(Body,V->Group,V->Class,Level);
  E->ApplyVillain(VillainName,Level);
  return E;
 }
@@ -1347,9 +1362,9 @@ bool ACoHEnemySpawner::SpawnEncounter(APawn* Near,const FString& Group,const FSt
  }
  if(BestGap>0) UE_LOG(LogTemp,Log,TEXT("CoH encounters: nothing at level %d, using the nearest (%d levels off)"),Level,BestGap);
  const FCoHEncounter* Enc=Pool[FMath::RandRange(0,Pool.Num()-1)];
+ if(Total>0){ int32 Roll=FMath::RandRange(0,Total-1); for(const FCoHEncounter* E:Pool){ if((Roll-=FMath::Max(0,E->Spots))<0){ Enc=E; break; } } }
  UE_LOG(LogTemp,Log,TEXT("CoH encounters: spawning '%s' at X %.0f m Y %.0f m (list of %d)"),*Enc->Name,
   Near->GetActorLocation().X/100.0,Near->GetActorLocation().Y/100.0,EncList.Num());
- if(Total>0){ int32 Roll=FMath::RandRange(0,Total-1); for(const FCoHEncounter* E:Pool){ if((Roll-=FMath::Max(0,E->Spots))<0){ Enc=E; break; } } }
  // a spot: open ground at the distance asked (the new map's layout differs
  // from the original, so spots are placed around the players)
  FVector Center=FVector::ZeroVector; bool bFound=false;
