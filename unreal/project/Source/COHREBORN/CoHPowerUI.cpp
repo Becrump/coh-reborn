@@ -173,6 +173,10 @@ void SCoHHud::Construct(const FArguments& InArgs)
 			.OnCommand([this](const FString& Command)
 			{
 				if (Command == TEXT("powers")) ToggleBrowser();
+				else if (Command == TEXT("menu"))
+				{
+					if (const APlayerController* PC = Player.Get()) if (ACoHHeroCharacter* H = Cast<ACoHHeroCharacter>(PC->GetPawn())) H->ToggleLeaveMenu();
+				}
 				else if (Command == TEXT("chat"))
 				{
 					if (const APlayerController* PC = Player.Get()) if (UCoHSocial* So = UCoHSocial::Of(PC->GetPawn())) So->ToggleChat();

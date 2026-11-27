@@ -326,7 +326,7 @@ USoundAttenuation* UCoHFxLibrary::Attenuation(float RadiusFeet)
 	return A;
 }
 
-ACoHFxRunner* UCoHFxLibrary::Play(AActor* Owner, const FString& Path, AActor* Target, float Delay, const FCoHFxStyle* Style)
+ACoHFxRunner* UCoHFxLibrary::Play(AActor* Owner, const FString& Path, AActor* Target, float Delay, const FCoHFxStyle* Style, float StopAfter)
 {
 	UWorld* Wd = Owner ? Owner->GetWorld() : nullptr;
 	UCoHFxLibrary* Lib = Get(Owner);
@@ -338,13 +338,13 @@ ACoHFxRunner* UCoHFxLibrary::Play(AActor* Owner, const FString& Path, AActor* Ta
 		const FCoHFxStyle St = Style ? *Style : FCoHFxStyle();
 		const bool bSt = Style != nullptr;
 		FTimerHandle H;
-		Wd->GetTimerManager().SetTimer(H, FTimerDelegate::CreateLambda([O, T, P, St, bSt]() { if (O.IsValid()) Play(O.Get(), P, T.Get(), 0.f, bSt ? &St : nullptr); }), Delay, false);
+		Wd->GetTimerManager().SetTimer(H, FTimerDelegate::CreateLambda([O, T, P, St, bSt, StopAfter]() { if (O.IsValid()) Play(O.Get(), P, T.Get(), 0.f, bSt ? &St : nullptr, StopAfter); }), Delay, false);
 		return nullptr;
 	}
 	FActorSpawnParameters SP;
 	SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	ACoHFxRunner* R = Wd->SpawnActor<ACoHFxRunner>(ACoHFxRunner::StaticClass(), FTransform::Identity, SP);
-	if (R) R->Start(Path, Owner, Target, Style);
+	if (R) { R->StopAfter = StopAfter; R->Start(Path, Owner, Target, Style); }
 	return R;
 }
 
@@ -393,7 +393,10 @@ bool UCoHFxLibrary::PlayPower(AActor* Owner, FName Power, AActor* Target, float 
 	const FString Hit = Str(P, TEXT("HitFX"));
 	if (!Hit.IsEmpty() && Target && Target != Owner)
 	{
-		Play(Target, Hit, Owner, FMath::Max(0.f, HitDelay), Style ? &HitStyle : nullptr);
+		// a hit is one burst: without the power's move chain to end it, effects
+		// that keep emitting (burbles, flames) would go on going off for the
+		// whole 20 s safety net
+		Play(Target, Hit, Owner, FMath::Max(0.f, HitDelay), Style ? &HitStyle : nullptr, 2.0f);
 		bAny = true;
 	}
 	return bAny;
@@ -577,7 +580,7 @@ void ACoHFxRunner::Tick(float Dt)
 	if (Steps == 6) Accum = 0.f;
 	// a safety net for effects that loop on conditions not played yet
 	if (bPersistent) { if (!Holder.IsValid()) Stop(); }
-	else if (Ticks > 30 * 20) Stop();
+	else if (Ticks > 30 * 20 || (StopAfter > 0.f && Ticks > StopAfter * 30.f && !bStopped)) { bStopped = true; Stop(); }
 	Draw();
 	if (Runs.Num() == 0) Destroy();
 }
